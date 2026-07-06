@@ -220,8 +220,8 @@ public:
 	MidiState& operator=(const MidiState&) = delete;
 
 private:
-	std::array<bool, NumMidiNotes* NumMidiChannels> note_on_tracker = {};
-	std::array<uint8_t, NumMidiChannels> channel_volume_tracker     = {};
+	std::array<bool, NumMidiNotes * NumMidiChannels> note_on_tracker = {};
+	std::array<uint8_t, NumMidiChannels> channel_volume_tracker      = {};
 
 	inline size_t NoteAddr(const uint8_t channel, const uint8_t note)
 	{
@@ -587,14 +587,18 @@ void MIDI_Unmute()
 
 // Pause MIDI output as part of a DOSBox pause.
 //
-// !!! ORDER MATTERS: this must be called BEFORE MIXER_Pause() !!!
+// Halting the software synth renderer keeps it from advancing the synth's
+// internal clock while the mixer is halted; without it the renderer rushes
+// to fill the `audio_frame_fifo` headroom that opens up the moment the mixer
+// halts, advancing the synth clock and leaking music into the next capture.
 //
-// Halting the software synth renderer before the mixer stops draining keeps
-// the renderer from rushing to fill the `audio_frame_fifo` headroom that
-// opens up the moment the mixer halts. With the reverse order, the synth's
-// internal clock advances by up to one mixer pull (~21 ms) per pause cycle,
-// and the rendered samples reach the capture queue on resume. As a result,
-// captured music gets "stretched" by N * ~21 ms across N pause/resume cycles.
+// The renderer stops its own `audio_frame_fifo` while parked (see the synth
+// `Render()` loops), so a mixer `BulkDequeue()` racing this gets a short read
+// instead of blocking on the empty-but-running queue. That former block --
+// `mix_samples()` stuck mid-`BulkDequeue()` waiting for a halted renderer
+// while holding `mixer.mutex` -- was the pause/resume deadlock. The fifo stop
+// removes it, so this no longer needs `MIXER_LockMixerThread()` coverage or a
+// strict order relative to `MIXER_Pause()`.
 //
 void MIDI_Pause()
 {
@@ -618,12 +622,15 @@ void MIDI_Pause()
 
 // Resume MIDI output as part of a DOSBox resume.
 //
-// !!! ORDER MATTERS: this must be called AFTER MIXER_Resume() !!!
-//
-// The mixer must drain the pre-pause buffered audio from `audio_frame_fifo`
-// before the renderer wakes; otherwise the renderer refills the fifo headroom
-// in the gap before the mixer starts pulling, the synth's internal clock
-// advances, and the extra samples reach the capture queue.
+// Waking the renderer no longer has to precede `MIXER_Resume()`. The synth's
+// `audio_frame_fifo` is stopped while the renderer is parked, so if the mixer
+// races into `mix_samples()` first (in the window between
+// `pause_state.store(Running)` and the renderer waking), its `BulkDequeue()`
+// returns a short read -- silence-padded by the synth's `MixerCallback` --
+// instead of blocking on a still-parked renderer while holding `mixer.mutex`.
+// That block was the pause/resume deadlock; the fifo stop removes it. The
+// renderer restarts its fifo on wake and the buffered pre-pause frames drain
+// normally.
 //
 void MIDI_Resume()
 {
@@ -951,16 +958,16 @@ static void init_midiconfig_settings(SectionProp& secprop)
 
 	str_prop->SetEnabledOptions({
 #if (defined(MACOSX) || defined(WIN32))
-		"windows_or_macos",
+	        "windows_or_macos",
 #endif
 #if defined(MACOSX)
-		        "coreaudio",
+	        "coreaudio",
 #endif
 #if C_ALSA
-		        "linux",
+	        "linux",
 #endif
-		        "internal_synth", "physical_mt32"
-	});
+	        "internal_synth",
+	        "physical_mt32"});
 }
 
 void init_midi_config_settings(SectionProp& secprop)
