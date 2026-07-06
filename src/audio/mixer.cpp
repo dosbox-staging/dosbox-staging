@@ -61,6 +61,7 @@ constexpr auto EnvelopeMaxExpansionOverMs = 15;
 // should the envelope monitor the initial signal? (recommended > 5s)
 constexpr auto EnvelopeExpiresAfterSeconds = 10;
 
+constexpr auto DefaultPrebufferMs = 20;
 constexpr auto MaxPrebufferMs = 100;
 
 template <class T, size_t ROWS, size_t COLS>
@@ -184,7 +185,7 @@ struct MixerSettings {
 
 	// Matches SDL AudioSpec.samples type
 	int blocksize    = 0;
-	int prebuffer_ms = 25;
+	int prebuffer_ms = DefaultPrebufferMs;
 
 	SDL_AudioDeviceID sdl_device = 0;
 	SDL_AudioStream* sdl_stream  = nullptr;
@@ -3114,13 +3115,11 @@ static void init_mixer_config_settings(SectionProp& sec_prop)
 #if defined(WIN32)
 	// Longstanding known-good defaults for Windows
 	constexpr auto DefaultBlocksize      = 1024;
-	constexpr auto DefaultPrebufferMs    = 25;
 	constexpr bool DefaultAllowNegotiate = false;
 
 #else
 	// Non-Windows platforms tolerate slightly lower latency
 	constexpr auto DefaultBlocksize      = 512;
-	constexpr auto DefaultPrebufferMs    = 20;
 	constexpr bool DefaultAllowNegotiate = true;
 #endif
 
