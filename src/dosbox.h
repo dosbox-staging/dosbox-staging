@@ -70,6 +70,20 @@ void DOSBOX_SetPauseState(PauseState new_state);
 void DOSBOX_RequestUserPause();
 void DOSBOX_RequestUserResume();
 
+// Auto-driven pause / resume intent. Focus-loss / focus-gain handlers
+// route through these so they don't have to encode FSM policy at the
+// call site.
+//
+// `DOSBOX_RequestAutoPause()`: `Running` -> `AutoPaused`. No-op when
+// already user-paused (user pauses survive auto signals) or already
+// auto-paused.
+//
+// `DOSBOX_RequestAutoResume()`: `AutoPaused` -> `Running`. No-op
+// otherwise; never auto-resumes a user pause.
+//
+void DOSBOX_RequestAutoPause();
+void DOSBOX_RequestAutoResume();
+
 inline bool DOSBOX_IsRunning()
 {
 	return (DOSBOX_GetPauseState() == PauseState::Running);

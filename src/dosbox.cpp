@@ -288,9 +288,40 @@ void DOSBOX_RequestUserResume()
 	case UserPaused: DOSBOX_SetPauseState(Running); break;
 
 	case Running:
+	case AutoPaused: break;
+
+	default: assertm(false, "Invalid PauseState value");
+	}
+}
+
+void DOSBOX_RequestAutoPause()
+{
+	using enum PauseState;
+
+	switch (DOSBOX_GetPauseState()) {
+	case Running: DOSBOX_SetPauseState(AutoPaused); break;
+
+	case UserPaused:
 	case AutoPaused:
-		// only the focus handler resumes auto-pauses
+		// user-pause survives auto signals; auto-pause is idempotent
 		break;
+
+	default: assertm(false, "Invalid PauseState value");
+	}
+}
+
+void DOSBOX_RequestAutoResume()
+{
+	using enum PauseState;
+
+	switch (DOSBOX_GetPauseState()) {
+	case AutoPaused: DOSBOX_SetPauseState(Running); break;
+
+	case Running:
+	case UserPaused:
+		// never auto-resume a user pause
+		break;
+
 	default: assertm(false, "Invalid PauseState value");
 	}
 }
