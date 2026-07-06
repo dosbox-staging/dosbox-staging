@@ -186,7 +186,8 @@ struct MixerSettings {
 	int blocksize    = 0;
 	int prebuffer_ms = 25;
 
-	SDL_AudioStream* sdl_device = nullptr;
+	SDL_AudioDeviceID sdl_device = 0;
+	SDL_AudioStream* sdl_stream  = nullptr;
 
 	std::atomic<MixerState> state = {};
 
@@ -2741,9 +2742,14 @@ void MIXER_CloseAudioDevice()
 		channel->Enable(false);
 	}
 
-	if (mixer.sdl_device != nullptr) {
-		SDL_DestroyAudioStream(mixer.sdl_device);
-		mixer.sdl_device = nullptr;
+	if (mixer.sdl_stream != nullptr) {
+		SDL_DestroyAudioStream(mixer.sdl_stream);
+		mixer.sdl_stream = nullptr;
+	}
+
+	if (mixer.sdl_device != 0) {
+		SDL_CloseAudioDevice(mixer.sdl_device);
+		mixer.sdl_device = 0;
 	}
 }
 
@@ -2782,36 +2788,61 @@ static bool init_sdl_sound(const int requested_sample_rate_hz,
 		return false;
 	}
 
-	if ((mixer.sdl_device = SDL_OpenAudioDeviceStream(
-	             SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &desired, mixer_callback, nullptr)) ==
-	    nullptr) {
+	mixer.sdl_device = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &desired);
+	if (mixer.sdl_device == 0) {
 		LOG_ERR("MIXER: Can't open audio device: '%s'; sound output is disabled",
 		        SDL_GetError());
-
 		return false;
 	}
 
-	const auto driver_name = SDL_GetCurrentAudioDriver();
-	const auto playback_name = SDL_GetAudioDeviceName(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK);
-	LOG_MSG("MIXER: Initialised '%s' audio driver using '%s' output device", driver_name, playback_name);
-
-	// Opening SDL audio device succeeded
-	//
-	// An opened audio device starts out paused, and should be enabled for
-	// playing by calling `SDL_PauseAudioDevice()` when you are ready for
-	// your audio callback function to be called. We do that in
-	// `set_mixer_state()`.
-	//
+	// We open the audio device with our desired audio specs but these are only a hint.
+	// The hardware and/or platform may not support what we requested.
+	// Check here to see what the device actually got opened with.
 	int obtained_blocksize = 0;
+	SDL_GetAudioDeviceFormat(mixer.sdl_device, &obtained, &obtained_blocksize);
 
-	SDL_GetAudioDeviceFormat(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &obtained, &obtained_blocksize);
+	// An audio stream can accept any arbitary format.
+	// SDL will do any necessary conversion to match the device specs.
+	// We always output 2 channel F32 audio but let's change the sample rate
+	// to match the device's rate to avoid SDL having to resample our
+	// already resampled audio.
 	const auto obtained_sample_rate_hz = obtained.freq;
+	desired.freq = obtained_sample_rate_hz;
 
+	// This is a playback stream so the source must match our mixer's output.
+	// The destination spec will be set by SDL in SDL_BindAudioStream()
+	// to match the audio device we bind to. We can leave it nullptr here.
+	SDL_AudioSpec* stream_src = &desired;
+	SDL_AudioSpec* stream_dst = nullptr;
+	mixer.sdl_stream = SDL_CreateAudioStream(stream_src, stream_dst);
+	if (mixer.sdl_stream == nullptr) {
+		LOG_ERR("MIXER: Failed to create audio stream: '%s'; sound output is disabled",
+		        SDL_GetError());
+
+		SDL_CloseAudioDevice(mixer.sdl_device);
+		mixer.sdl_device = 0;
+		return false;
+	}
+
+	if (!SDL_BindAudioStream(mixer.sdl_device, mixer.sdl_stream)) {
+		LOG_ERR("MIXER: Failed to bind audio stream: '%s'; sound output is disabled",
+		        SDL_GetError());
+
+		SDL_DestroyAudioStream(mixer.sdl_stream);
+		mixer.sdl_stream = nullptr;
+
+		SDL_CloseAudioDevice(mixer.sdl_device);
+		mixer.sdl_device = 0;
+		return false;
+	}
+
+	// Set these mixer values after we've passed all error points.
 	mixer.sample_rate_hz = obtained_sample_rate_hz;
 	mixer.blocksize = obtained_blocksize;
 
-	assert(obtained.channels == NumStereoChannels);
-	assert(obtained.format == desired.format);
+	const auto driver_name = SDL_GetCurrentAudioDriver();
+	const auto playback_name = SDL_GetAudioDeviceName(mixer.sdl_device);
+	LOG_MSG("MIXER: Initialised '%s' audio driver using '%s' output device", driver_name, playback_name);
 
 	// Did SDL negotiate a different playback rate?
 	if (obtained_sample_rate_hz != requested_sample_rate_hz) {
@@ -2901,7 +2932,8 @@ void MIXER_Init()
 	                                                     : MixerState::On;
 
 	auto set_no_sound = [&] {
-		assert(mixer.sdl_device == nullptr);
+		assert(mixer.sdl_device == 0);
+		assert(mixer.sdl_stream == nullptr);
 
 		LOG_MSG("MIXER: Sound output disabled ('nosound' mode)");
 
@@ -2922,11 +2954,10 @@ void MIXER_Init()
 
 			mixer.final_output.Start();
 
-			// SDL starts out paused so unpause it when we first set
-			// the mixer state. We always keep SDL running in the
-			// future. When the mixer becomes muted, we just write
-			// silence.
-			SDL_ResumeAudioStreamDevice(mixer.sdl_device);
+			// The stream becomes live (unpaused) during the SDL_BindAudioStream() call.
+			// It will play silence until we start the callback here and start feeding it audio.
+			// We never use SDL's pause feature. Instead we write silence when we mute the audio.
+			SDL_SetAudioStreamGetCallback(mixer.sdl_stream, mixer_callback, nullptr);
 
 			set_mixer_state(MixerState::On);
 		} else {
