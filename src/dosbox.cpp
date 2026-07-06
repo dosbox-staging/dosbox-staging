@@ -170,6 +170,21 @@ PauseState DOSBOX_GetPauseState()
 // `mapper.cpp`, which composes correctly with this path because both agree on
 // `mixer.mutex`.
 //
+// !!! ORDERING IS CRITICAL. !!!
+//
+// The MIDI software synths (FluidSynth, MT-32, SoundCanvas) each run a
+// renderer thread that fills an `audio_frame_fifo` ahead of the mixer's
+// consumption. If the mixer stops draining BEFORE the renderer halts, or the
+// renderer wakes BEFORE the mixer starts draining, the renderer rushes to
+// fill the fifo headroom and the synth's internal clock advances by up to one
+// mixer pull (potentially up to 21 ms with common buffer sizes) per cycle.
+// Those extra samples reach the capture queue on resume and "stretch" the
+// captured music by N * ~21 ms over N pause/resume cycles.
+//
+// Therefore, on pause, we must halt the *renderer* FIRST. On resume, we must
+// wake the *mixer* FIRST. Do NOT swap these without understanding what you're
+// doing!
+//
 static void set_subsystems_paused(const bool paused)
 {
 	static bool audio_paused = false;
@@ -178,11 +193,16 @@ static void set_subsystems_paused(const bool paused)
 	}
 	audio_paused = paused;
 	if (paused) {
-		MIXER_Pause();
+		// MIDI first so the synth renderer stops before the mixer
+		// stops draining.
 		MIDI_Pause();
+		MIXER_Pause();
+
 	} else {
-		MIDI_Resume();
+		// MIXER first so the mixer drains the pre-pause buffered
+		// audio before the renderer wakes and refills the headroom.
 		MIXER_Resume();
+		MIDI_Resume();
 	}
 }
 

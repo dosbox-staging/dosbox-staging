@@ -33,6 +33,15 @@ public:
 
 	virtual void SendMidiMessage(const MidiMessage& msg)      = 0;
 	virtual void SendSysExMessage(uint8_t* sysex, size_t len) = 0;
+
+	// Halt / resume the internal renderer thread (FluidSynth, MT-32,
+	// SoundCanvas).
+	//
+	// No-op default for External devices, which don't run
+	// a renderer; their pause path is the volume-zero broadcast in
+	// `MIDI_Mute()`.
+	virtual void Pause() {}
+	virtual void Resume() {}
 };
 
 void MIDI_Reset(MidiDevice* device);
