@@ -598,17 +598,19 @@ void MIDI_Unmute()
 //
 void MIDI_Pause()
 {
-	// If the user has already muted via the mixer, don't double-mute.
-	// `MIDI_Resume()` queries `MIXER_IsManuallyMuted()` to decide whether to
-	// undo on resume; that check is the single source of truth.
-	if (!MIXER_IsManuallyMuted()) {
+	// External devices need an explicit volume-zero broadcast during pause
+	// so they go silent (the mixer's silence path only affects SDL output,
+	// not the side channel out to external MIDI). Skip if the mixer is
+	// already in a non-Audible mute state -- the FSM transition that put us
+	// there already broadcast volume-0; the resume side will undo only if
+	// mute is back to Audible by then.
+	if (MIXER_GetMuteState() == MixerMuteState::Audible) {
 		MIDI_Mute();
 	}
 
-	// External devices got the volume-zero broadcast above. For internal
-	// software synths (FluidSynth/MT-32/SoundCanvas) this halts their
-	// renderer thread so the synth's internal clock doesn't advance
-	// during the pause; default no-op override for External.
+	// For internal software synths (FluidSynth/MT-32/SoundCanvas) this
+	// halts their renderer thread so the synth's internal clock doesn't
+	// advance during the pause; default no-op override for External.
 	if (MIDI_IsAvailable()) {
 		midi.device->Pause();
 	}
@@ -628,7 +630,11 @@ void MIDI_Resume()
 	if (MIDI_IsAvailable()) {
 		midi.device->Resume();
 	}
-	if (!MIXER_IsManuallyMuted()) {
+	// Only restore MIDI volume if the mixer is back to Audible. If the user
+	// toggled mute during the pause and we're still UserMuted (or
+	// AutoMuted), leave MIDI silent -- the FSM transition will undo the
+	// MIDI mute when the user un-mutes.
+	if (MIXER_GetMuteState() == MixerMuteState::Audible) {
 		MIDI_Unmute();
 	}
 }

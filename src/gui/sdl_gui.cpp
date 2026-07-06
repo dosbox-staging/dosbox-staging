@@ -1617,8 +1617,10 @@ static void apply_active_settings()
 {
 	MOUSE_NotifyWindowActive(true);
 
-	if (sdl.mute_when_inactive && !MIXER_IsManuallyMuted()) {
-		MIXER_Unmute();
+	if (sdl.mute_when_inactive) {
+		// No-op if the user has manually muted -- the mute FSM
+		// preserves UserMuted across focus changes.
+		MIXER_RequestAutoUnmute();
 	}
 
 	// At least on some platforms grabbing the keyboard has to be repeated
@@ -1631,7 +1633,9 @@ static void apply_inactive_settings()
 	MOUSE_NotifyWindowActive(false);
 
 	if (sdl.mute_when_inactive) {
-		MIXER_Mute();
+		// No-op if the user has manually muted -- the mute FSM
+		// preserves UserMuted; AutoMuted layers under it logically.
+		MIXER_RequestAutoMute();
 	}
 }
 
