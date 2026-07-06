@@ -15,6 +15,7 @@
 
 #include "config/config.h"
 #include "config/setup.h"
+#include "dosbox.h"
 #include "dosbox_config.h"
 #include "gui/mapper.h"
 #include "gui/titlebar.h"
@@ -354,8 +355,15 @@ void CAPTURE_StartVideoCapture()
 	switch (capture.state.video) {
 	case CaptureState::Off:
 		capture.state.video = CaptureState::Pending;
+
 		TITLEBAR_NotifyVideoCaptureStatus(true);
+
+		if (DOSBOX_IsPaused()) {
+			LOG_MSG("CAPTURE: Preparing to capture video output; "
+					"capturing will start once unpaused");
+		}
 		break;
+
 	case CaptureState::Pending:
 	case CaptureState::InProgress:
 		LOG_WARNING("CAPTURE: Already capturing video output");
@@ -369,17 +377,22 @@ void CAPTURE_StopVideoCapture()
 	case CaptureState::Off:
 		LOG_WARNING("CAPTURE: Not capturing video output");
 		break;
+
 	case CaptureState::Pending:
-		// It's very hard to hit this branch; handling it for
-		// completeness only
-		LOG_MSG("CAPTURE: Cancelling pending video output capture");
 		capture.state.video = CaptureState::Off;
+
 		TITLEBAR_NotifyVideoCaptureStatus(false);
+
+		LOG_MSG("CAPTURE: Stopped capturing video output "
+		        "(no frames were written)");
 		break;
+
 	case CaptureState::InProgress:
 		capture_video_finalise();
 		capture.state.video = CaptureState::Off;
+
 		TITLEBAR_NotifyVideoCaptureStatus(false);
+
 		LOG_MSG("CAPTURE: Stopped capturing video output");
 	}
 }
@@ -451,19 +464,24 @@ static void handle_capture_audio_event(bool pressed)
 
 	switch (capture.state.audio) {
 	case CaptureState::Off:
-		// Capturing the audio output will start in the next few
-		// milliseconds when CAPTURE_AddAudioData is called
 		capture.state.audio = CaptureState::Pending;
+		if (DOSBOX_IsPaused()) {
+			LOG_MSG("CAPTURE: Preparing to capture audio output; "
+			        "capturing will start with the next audio frame");
+		}
 		break;
+
 	case CaptureState::Pending:
-		// It's practically impossible to hit this branch; handling it
-		// for completeness only
 		capture.state.audio = CaptureState::Off;
-		LOG_MSG("CAPTURE: Cancelled pending audio output capture");
+
+		LOG_MSG("CAPTURE: Stopped capturing audio output "
+		        "(no audio was written)");
 		break;
+
 	case CaptureState::InProgress:
 		capture_audio_finalise();
 		capture.state.audio = CaptureState::Off;
+
 		LOG_MSG("CAPTURE: Stopped capturing audio output");
 		break;
 	}
@@ -485,14 +503,18 @@ static void handle_capture_midi_event(bool pressed)
 		LOG_MSG("CAPTURE: Preparing to capture MIDI output; "
 		        "capturing will start on the first MIDI message");
 		break;
+
 	case CaptureState::Pending:
 		capture.state.midi = CaptureState::Off;
-		LOG_MSG("CAPTURE: Stopped capturing MIDI output before any "
-		        "MIDI message was output (no MIDI file has been created)");
+
+		LOG_MSG("CAPTURE: Stopped capturing MIDI output "
+		        "(no MIDI messages were written)");
 		break;
+
 	case CaptureState::InProgress:
 		capture_midi_finalise();
 		capture.state.midi = CaptureState::Off;
+
 		LOG_MSG("CAPTURE: Stopped capturing MIDI output");
 		break;
 	}
