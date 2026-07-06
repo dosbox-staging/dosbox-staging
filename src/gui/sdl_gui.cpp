@@ -1613,8 +1613,46 @@ static void set_keyboard_capture()
 	}
 }
 
-static void apply_active_settings()
+// Window-inactive coordinator. Single entry point for everything that
+// should happen when the host window loses focus.
+static void on_window_inactive()
 {
+	MOUSE_NotifyWindowActive(false);
+
+	if (sdl.mute_when_inactive) {
+		// No-op if the user has manually muted
+		MIXER_RequestAutoMute();
+	}
+	if (sdl.pause_when_inactive) {
+		KEYBOARD_ClrBuffer();
+		DOSBOX_RequestAutoPause();
+	}
+}
+
+// Window-active coordinator.
+//
+// `focus_gained` is true for the FOCUS_GAINED SDL window event and false for
+// WINDOW_RESTORED" and WINDOW_EXPOSED. Only FOCUS_GAINED re-applies host-side
+// state (keyboard grab, mouse-active, and auto-unmute).
+//
+// Pause auto-resume runs on all three events, so a minimized/uncovered window
+// comes back up.
+//
+static void on_window_active(const bool focus_gained)
+{
+	if (sdl.pause_when_inactive) {
+		DOSBOX_RequestAutoResume();
+
+		// ALT can stick on focus loss -- `paused_tick` doesn't
+		// process key events normally, so release on the "user is
+		// back" edge regardless of which active-event got us here.
+		KEYBOARD_AddKey(KBD_leftalt, false);
+		KEYBOARD_AddKey(KBD_rightalt, false);
+	}
+	if (!focus_gained) {
+		return;
+	}
+
 	MOUSE_NotifyWindowActive(true);
 
 	if (sdl.mute_when_inactive) {
@@ -1626,17 +1664,6 @@ static void apply_active_settings()
 	// At least on some platforms grabbing the keyboard has to be repeated
 	// each time we regain focus
 	set_keyboard_capture();
-}
-
-static void apply_inactive_settings()
-{
-	MOUSE_NotifyWindowActive(false);
-
-	if (sdl.mute_when_inactive) {
-		// No-op if the user has manually muted -- the mute FSM
-		// preserves UserMuted; AutoMuted layers under it logically.
-		MIXER_RequestAutoMute();
-	}
 }
 
 static void restart_hotkey_handler([[maybe_unused]] bool pressed)
@@ -1915,7 +1942,8 @@ void GFX_InitAndStartGui()
 	set_minimum_window_size();
 
 	// Assume focus on startup
-	apply_active_settings();
+	constexpr auto FocusGained = true;
+	on_window_active(FocusGained);
 
 	RENDER_SetShaderWithFallback();
 
@@ -2121,42 +2149,10 @@ int GFX_GetUserSdlEventId(DosBoxSdlEvent event)
 	return sdl.start_event_id + enum_val(event);
 }
 
-// Focus-loss / focus-gain hook. Routes window-focus events into the FSM
-// via the idempotent auto-request helpers; they encode the policy that
-// user-initiated pauses survive focus changes, so we don't have to.
-//
-static void handle_pause_when_inactive(const SDL_Event& event)
-{
-	switch (event.type) {
-	case SDL_EVENT_WINDOW_FOCUS_LOST:
-	case SDL_EVENT_WINDOW_MINIMIZED:
-		apply_inactive_settings();
-		KEYBOARD_ClrBuffer();
-		DOSBOX_RequestAutoPause();
-		break;
-
-	case SDL_EVENT_WINDOW_FOCUS_GAINED:
-	case SDL_EVENT_WINDOW_RESTORED:
-	case SDL_EVENT_WINDOW_EXPOSED: {
-		DOSBOX_RequestAutoResume();
-
-		if (event.type == SDL_EVENT_WINDOW_FOCUS_GAINED) {
-			apply_active_settings();
-		}
-		// Release ALT keys; ALT can stick on focus loss.
-		KEYBOARD_AddKey(KBD_leftalt, false);
-		KEYBOARD_AddKey(KBD_rightalt, false);
-		break;
-	}
-
-	default: break;
-	}
-}
-
 static bool handle_sdl_windowevent(const SDL_Event& event)
 {
 	switch (event.type) {
-	case SDL_EVENT_WINDOW_RESTORED:
+	case SDL_EVENT_WINDOW_RESTORED: {
 		log_window_event("SDL: Window has been restored");
 
 		// We may need to re-create a texture and more on Android.
@@ -2174,7 +2170,11 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		}
 #endif
 		focus_input();
+
+		constexpr auto FocusGained = false;
+		on_window_active(FocusGained);
 		return true;
+	}
 
 	case SDL_EVENT_WINDOW_RESIZED: {
 		// Window dimensions in logical coordinates
@@ -2212,11 +2212,9 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 
 	case SDL_EVENT_WINDOW_FOCUS_GAINED:
 		log_window_event("SDL: Window has gained keyboard focus");
-
-		apply_active_settings();
 		[[fallthrough]];
 
-	case SDL_EVENT_WINDOW_EXPOSED:
+	case SDL_EVENT_WINDOW_EXPOSED: {
 		log_window_event("SDL: Window has been exposed and should be redrawn");
 
 		// TODO: below is not consistently true :( seems incorrect on
@@ -2228,17 +2226,26 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		// Framebuffer); therefore we rely on the FOCUS_GAINED event to
 		// catch window startup and size toggles.
 
+		const bool focus_gained = (event.type ==
+		                           SDL_EVENT_WINDOW_FOCUS_GAINED);
+		on_window_active(focus_gained);
+
 		if (sdl.draw.callback) {
 			sdl.draw.callback(GFX_CallbackRedraw);
 		}
 		focus_input();
 		return true;
+	}
 
 	case SDL_EVENT_WINDOW_FOCUS_LOST:
 		log_window_event("SDL: Window has lost keyboard focus");
 
-		apply_inactive_settings();
+		// `GFX_LosingFocus()` deactivates mapper events, which can
+		// enqueue key-up scancodes; `on_window_inactive()`'s
+		// `KEYBOARD_ClrBuffer` must run after that so pause starts
+		// with an empty keyboard buffer.
 		GFX_LosingFocus();
+		on_window_inactive();
 		return false;
 
 	case SDL_EVENT_WINDOW_MOUSE_ENTER:
@@ -2326,7 +2333,7 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 	case SDL_EVENT_WINDOW_MINIMIZED:
 		log_window_event("SDL: Window has been minimized");
 
-		apply_inactive_settings();
+		on_window_inactive();
 		return false;
 
 	case SDL_EVENT_WINDOW_MAXIMIZED:
@@ -2344,7 +2351,7 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 	// 	log_window_event("SDL: Window is being offered a focus");
 
 	// 	focus_input();
-	// 	apply_active_settings();
+	// 	on_window_active(/* focus_gained = */ true);
 	// 	return true;
 
 	case SDL_EVENT_WINDOW_HIT_TEST:
@@ -2494,18 +2501,7 @@ bool GFX_PollAndHandleEvents()
 		}
 
 		if (is_window_event(event)) {
-			const auto handling_finished = handle_sdl_windowevent(event);
-
-			// Pause-when-inactive must run for BOTH focus loss
-			// (`FOCUS_LOST` / `MINIMIZED`, which return `false`)
-			// and focus gain (`FOCUS_GAINED` / `RESTORED` /
-			// `EXPOSED`, which return `true`). Bailing on
-			// `handling_finished` before this point would skip the
-			// focus-gain side and leave `AutoPaused` stuck.
-			if (sdl.pause_when_inactive) {
-				handle_pause_when_inactive(event);
-			}
-			if (handling_finished) {
+			if (handle_sdl_windowevent(event)) {
 				continue;
 			}
 		}
