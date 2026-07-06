@@ -284,40 +284,56 @@ static void halt_render()
 	render.active             = false;
 }
 
-static void handle_capture_frame()
+// Returns a non-owning view into the latched source frame
+// (`render.last_complete_source`) -- never the live `render.scale.cache`,
+// so callers can't see a torn mid-scanout state. When deinterlacing is on,
+// the returned image is the deinterlacer's output (either in-place over the
+// latch for 32-bit BGRX, or in the deinterlacer's internal decode buffer
+// for other pixel formats).
+//
+// `image_data` is null until the first complete frame has been latched;
+// callers must check.
+//
+// Callers that need to outlive the next latched frame must deep-copy.
+//
+RenderedImage RENDER_GetCurrentImage()
 {
 	RenderedImage image = {};
 
-	image.params = render.src;
-	image.pitch  = render.scale.cache_pitch;
+	if (!render.last_complete_source.valid) {
+		return image;
+	}
 
-	image.image_data = reinterpret_cast<uint8_t*>(render.scale.cache.data());
+	image.params = render.last_complete_source.src;
+	image.pitch  = render.last_complete_source.pitch;
 
-	image.palette = render.palette.rgb;
+	image.image_data = reinterpret_cast<uint8_t*>(
+	        render.last_complete_source.cache.data());
 
-	const auto frames_per_second = static_cast<float>(render.fps);
+	image.palette = render.last_complete_source.palette.rgb;
 
 	if (is_deinterlacing()) {
-		// The pixel data in the returned new image points either to the
-		// input image's data (for 32-bit BGRX images), or to the
-		// deinterlacer's internal decode buffer (for any other pixel
-		// format). We *must not* call `free()` on `new_image` in either
-		// case as it doesn't own these pixel data buffers.
-		//
-		auto new_image = render.deinterlacer->Deinterlace(
-		        image, render.deinterlacing_strength);
-
-		// The image capturer will create its own deep copy the rendered
-		// image (and thus of the pixel data), and will free it when
-		// it's done with it.
-		//
-		// The video capturer doesn't create a copy, and consequently
-		// doesn't free the rendered image either.
-		CAPTURE_AddFrame(new_image, frames_per_second);
-
-	} else {
-		CAPTURE_AddFrame(image, frames_per_second);
+		return render.deinterlacer->Deinterlace(image,
+		                                        render.deinterlacing_strength);
 	}
+	return image;
+}
+
+static void handle_capture_frame()
+{
+	const auto image = RENDER_GetCurrentImage();
+	if (!image.image_data) {
+		return;
+	}
+
+	// The image capturer will create its own deep copy of the rendered
+	// image (and thus of the pixel data), and will free it when it's done
+	// with it.
+	//
+	// The video capturer doesn't create a copy, and consequently doesn't
+	// free the rendered image either.
+	//
+	CAPTURE_AddFrame(image, static_cast<float>(render.fps));
 }
 
 static void deinterlace_rendered_output()
