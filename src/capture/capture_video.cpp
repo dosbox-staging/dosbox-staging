@@ -495,8 +495,8 @@ void capture_video_add_frame(const RenderedImage& image, const float frames_per_
 		              video.audio.buf,
 		              0);
 
-		video.audio.bytes_written = video.audio.buf_frames_used *
-		                            SampleFrameSize;
+		video.audio.bytes_written += video.audio.buf_frames_used *
+		                             SampleFrameSize;
 		video.audio.buf_frames_used = 0;
 	}
 }
