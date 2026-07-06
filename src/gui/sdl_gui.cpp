@@ -328,6 +328,18 @@ void GFX_ResetScreen()
 
 	VGA_SetupDrawing(0);
 	GFX_Start();
+
+	// While paused, we are not producing fresh frames, so the just recreated
+	// renderer would draw a blank or stale stretched framebuffer until
+	// resume. Drive a synthetic rescale of the latched last completed source
+	// frame at the new dimensions, then present immediately so the held frame
+	// shows correctly after viewport dimension updates (resizing the window,
+	// fullscreen/windowed toggle, etc.)
+	//
+	if (DOSBOX_IsPaused()) {
+		RENDER_RescaleLastFrame();
+		GFX_MaybePresentFrame();
+	}
 }
 
 static bool is_vsync_enabled()

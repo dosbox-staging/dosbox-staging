@@ -401,11 +401,20 @@ void RENDER_EndUpdate(const bool abort)
 		latch_last_complete_source();
 	}
 
-	// Aborted scanouts (vertical retrace cleanup, `VGA_KillDrawing()`) leave
-	// a half-filled cache. Very rarely, such a frame could end up in the
-	// video or image captures, resulting in random garbage.
+	// Two gates on captures:
 	//
-	if (!abort && (CAPTURE_IsCapturingImage() || CAPTURE_IsCapturingVideo())) {
+	//   * `!abort`: Aborted scanouts (vertical retrace cleanup,
+	//     `VGA_KillDrawing()`) leave a half-filled cache. Very rarely, such
+	//     a frame could end up in the video or image captures, resulting in
+	//     random garbage.
+	//
+	//   * `DOSBOX_IsRunning()`: synthetic frames produced by
+	//     `RENDER_RescaleLastFrame()` during a pause must not pollute an
+	//     active video capture.
+	//
+	if (!abort && DOSBOX_IsRunning() &&
+	    (CAPTURE_IsCapturingImage() || CAPTURE_IsCapturingVideo())) {
+
 		handle_capture_frame();
 	}
 
