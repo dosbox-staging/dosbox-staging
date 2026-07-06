@@ -99,6 +99,8 @@ private:
 	void ConfigureGroupedMode(const std::string& prefs);
 
 	ImageSaver& GetNextImageSaver();
+
+	void MaybeDrainOnPause();
 };
 
 #endif // DOSBOX_IMAGE_CAPTURER_H
