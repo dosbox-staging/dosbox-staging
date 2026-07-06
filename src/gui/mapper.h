@@ -55,6 +55,12 @@ void MAPPER_AddHandler(MAPPER_Handler *handler,
 
 void MAPPER_BindKeys(Section *sec);
 void MAPPER_Run(bool pressed);
+
+// Open the mapper UI if a previous MAPPER_Run latched a request. Drained
+// from normal_loop's idle branch and from paused_tick so the mapper hotkey
+// works during pause (the prior PIC_AddEvent deferral didn't fire then).
+void MAPPER_RunPending();
+
 void MAPPER_DisplayUI();
 void MAPPER_LosingFocus();
 
