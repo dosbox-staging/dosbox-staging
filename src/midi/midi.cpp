@@ -33,6 +33,7 @@
 #include "config/config.h"
 #include "config/setup.h"
 #include "dos/programs.h"
+#include "dosbox.h"
 #include "dosbox_config.h"
 #include "gui/mapper.h"
 #include "hardware/audio/mpu401.h"
@@ -584,6 +585,17 @@ void MIDI_Unmute()
 	midi.is_muted = false;
 }
 
+// Pause MIDI output as part of a DOSBox pause.
+//
+// !!! ORDER MATTERS: this must be called BEFORE MIXER_Pause() !!!
+//
+// Halting the software synth renderer before the mixer stops draining keeps
+// the renderer from rushing to fill the `audio_frame_fifo` headroom that
+// opens up the moment the mixer halts. With the reverse order, the synth's
+// internal clock advances by up to one mixer pull (~21 ms) per pause cycle,
+// and the rendered samples reach the capture queue on resume. As a result,
+// captured music gets "stretched" by N * ~21 ms across N pause/resume cycles.
+//
 void MIDI_Pause()
 {
 	// If the user has already muted via the mixer, don't double-mute.
@@ -592,10 +604,30 @@ void MIDI_Pause()
 	if (!MIXER_IsManuallyMuted()) {
 		MIDI_Mute();
 	}
+
+	// External devices got the volume-zero broadcast above. For internal
+	// software synths (FluidSynth/MT-32/SoundCanvas) this halts their
+	// renderer thread so the synth's internal clock doesn't advance
+	// during the pause; default no-op override for External.
+	if (MIDI_IsAvailable()) {
+		midi.device->Pause();
+	}
 }
 
+// Resume MIDI output as part of a DOSBox resume.
+//
+// !!! ORDER MATTERS: this must be called AFTER MIXER_Resume() !!!
+//
+// The mixer must drain the pre-pause buffered audio from `audio_frame_fifo`
+// before the renderer wakes; otherwise the renderer refills the fifo headroom
+// in the gap before the mixer starts pulling, the synth's internal clock
+// advances, and the extra samples reach the capture queue.
+//
 void MIDI_Resume()
 {
+	if (MIDI_IsAvailable()) {
+		midi.device->Resume();
+	}
 	if (!MIXER_IsManuallyMuted()) {
 		MIDI_Unmute();
 	}
@@ -758,6 +790,17 @@ void MIDI_Init()
 		try {
 			midi_instance = std::make_unique<MIDI>();
 			midi_state.Reset();
+
+			// The device may have been re-created while paused (a
+			// config change via hot-reload or the HTTP API).
+			// Re-engage the pause hook so the fresh synth renderer
+			// starts out halted too; otherwise it would keep
+			// rendering into its `audio_frame_fifo` during the
+			// pause, advancing the synth clock past the pause edge
+			// (see `MIDI_Pause()`).
+			if (DOSBOX_IsPaused()) {
+				MIDI_Pause();
+			}
 
 			// A MIDI device has been successfully initialised
 			return;

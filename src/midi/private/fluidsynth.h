@@ -7,8 +7,10 @@
 #include "midi_device.h"
 
 #include <atomic>
+#include <condition_variable>
 #include <fluidsynth.h>
 #include <memory>
+#include <mutex>
 #include <optional>
 #include <thread>
 #include <vector>
@@ -101,6 +103,9 @@ public:
 	void SendMidiMessage(const MidiMessage& msg) override;
 	void SendSysExMessage(uint8_t* sysex, size_t len) override;
 
+	void Pause() override;
+	void Resume() override;
+
 	std_fs::path GetSoundFontPath();
 
 	void SetChorus();
@@ -136,6 +141,13 @@ private:
 	RWQueue<AudioFrame> audio_frame_fifo{1};
 	RWQueue<MidiWork> work_fifo{1};
 	std::thread renderer = {};
+
+	// Pause primitives for the renderer thread. The `Render()` loop blocks
+	// on `pause_cv` while `is_paused` is set so the synth's internal clock
+	// doesn't advance during a DOSBox pause.
+	std::atomic<bool> is_paused      = false;
+	std::mutex pause_mutex           = {};
+	std::condition_variable pause_cv = {};
 
 	std_fs::path soundfont_path = {};
 

@@ -6,8 +6,12 @@
 
 #include "midi_device.h"
 
+#include <atomic>
+#include <condition_variable>
 #include <memory>
+#include <mutex>
 #include <optional>
+#include <thread>
 
 #include "audio/clap/event_list.h"
 #include "audio/clap/plugin.h"
@@ -73,6 +77,9 @@ public:
 	void SendMidiMessage(const MidiMessage& msg) override;
 	void SendSysExMessage(uint8_t* sysex, size_t len) override;
 
+	void Pause() override;
+	void Resume() override;
+
 private:
 	void MixerCallback(const int requested_audio_frames);
 	void ProcessWorkFromFifo();
@@ -96,6 +103,13 @@ private:
 	} clap = {};
 
 	std::thread renderer = {};
+
+	// Pause primitives for the renderer thread. The `Render()` loop blocks
+	// on `pause_cv` while `is_paused` is set so the synth's internal clock
+	// doesn't advance during a DOSBox pause.
+	std::atomic<bool> is_paused      = false;
+	std::mutex pause_mutex           = {};
+	std::condition_variable pause_cv = {};
 
 	SoundCanvas::SynthModel model = {};
 

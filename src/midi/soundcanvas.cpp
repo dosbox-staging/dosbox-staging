@@ -511,6 +511,10 @@ MidiDeviceSoundCanvas::~MidiDeviceSoundCanvas()
 	work_fifo.Stop();
 	audio_frame_fifo.Stop();
 
+	// Wake the renderer if it's blocked in the pause condvar so it sees
+	// `work_fifo.IsRunning() == false` and exits cleanly.
+	Resume();
+
 	// Wait for the rendering thread to finish
 	if (renderer.joinable()) {
 		renderer.join();
@@ -594,16 +598,19 @@ void MidiDeviceSoundCanvas::MixerCallback(const int requested_audio_frames)
 
 	static std::vector<AudioFrame> audio_frames = {};
 
-	const auto has_dequeued = audio_frame_fifo.BulkDequeue(audio_frames,
+	// A short read means the fifo was stopped for a pause (or a genuine
+	// underrun): add whatever we got and pad the shortfall with silence.
+	// Never hand `AddSamples_sfloat` fewer frames than it will read.
+	const auto num_dequeued = audio_frame_fifo.BulkDequeue(audio_frames,
 	                                                       requested_audio_frames);
 
-	if (has_dequeued) {
-		mixer_channel->AddSamples_sfloat(requested_audio_frames,
+	if (num_dequeued > 0) {
+		mixer_channel->AddSamples_sfloat(check_cast<int>(num_dequeued),
 		                                 &audio_frames[0][0]);
 
 		last_rendered_ms = PIC_AtomicIndex();
-	} else {
-		assert(!audio_frame_fifo.IsRunning());
+	}
+	if (check_cast<int>(num_dequeued) < requested_audio_frames) {
 		mixer_channel->AddSilence();
 	}
 }
@@ -756,14 +763,53 @@ void MidiDeviceSoundCanvas::ProcessWorkFromFifoBacklogged()
 void MidiDeviceSoundCanvas::Render()
 {
 	while (work_fifo.IsRunning()) {
+		if (is_paused.load(std::memory_order_acquire)) {
+			// Halt the synth so its internal clock doesn't advance
+			// past the pause edge. Stop `audio_frame_fifo` while
+			// parked so a concurrent mixer `BulkDequeue()` returns
+			// a short read instead of blocking on the
+			// empty-but-running queue -- that block (while holding
+			// `mixer.mutex`) was the pause/resume deadlock the
+			// `MIDI_Pause`/`MIDI_Resume` lock + ordering used to
+			// guard against. Buffered pre-pause frames survive the
+			// stop and drain on resume.
+			std::unique_lock lock(pause_mutex);
+
+			audio_frame_fifo.Stop();
+
+			pause_cv.wait(lock, [this] {
+				return !is_paused.load(std::memory_order_acquire) ||
+				       !work_fifo.IsRunning();
+			});
+
+			audio_frame_fifo.Start();
+
+			continue;
+		}
+
 		if (is_work_fifo_backlogged) {
 			RenderBacklogged();
+
 		} else {
 			constexpr auto OneFrame = 1;
 			work_fifo.IsEmpty() ? RenderAudioFramesToFifo(OneFrame)
 			                    : ProcessWorkFromFifo();
 		}
 	}
+}
+
+void MidiDeviceSoundCanvas::Pause()
+{
+	is_paused.store(true, std::memory_order_release);
+}
+
+void MidiDeviceSoundCanvas::Resume()
+{
+	{
+		const std::lock_guard lock(pause_mutex);
+		is_paused.store(false, std::memory_order_release);
+	}
+	pause_cv.notify_all();
 }
 
 static std::set<const SoundCanvas::SynthModel*> available_models = {};
