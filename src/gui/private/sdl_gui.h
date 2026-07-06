@@ -96,7 +96,6 @@ struct SDL_Block {
 	float dpi_scale    = 1.0f;
 	bool is_fullscreen = false;
 
-	bool is_paused           = false;
 	bool mute_when_inactive  = false;
 	bool pause_when_inactive = false;
 
