@@ -618,6 +618,13 @@ void DOSBOX_RunMachine()
 void DOSBOX_RequestShutdown()
 {
 	is_shutdown_requested.store(true, std::memory_order_relaxed);
+
+	// Force-resume so `paused_tick()` exits and subsystem teardown happens
+	// from a known-running state. Without this, teardown would block on
+	// the mixer / synth threads that are parked in their pause hooks.
+	if (DOSBOX_IsPaused()) {
+		DOSBOX_SetPauseState(PauseState::Running);
+	}
 }
 
 bool DOSBOX_IsShutdownRequested()
