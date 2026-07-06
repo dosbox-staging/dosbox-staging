@@ -64,6 +64,8 @@ constexpr auto EnvelopeExpiresAfterSeconds = 10;
 constexpr auto DefaultPrebufferMs = 20;
 constexpr auto MaxPrebufferMs = 100;
 
+constexpr auto DefaultBlocksize = 1024;
+
 template <class T, size_t ROWS, size_t COLS>
 using matrix = std::array<std::array<T, COLS>, ROWS>;
 
@@ -184,7 +186,7 @@ struct MixerSettings {
 	std::atomic<int> sample_rate_hz = 0;
 
 	// Matches SDL AudioSpec.samples type
-	int blocksize    = 0;
+	int blocksize    = DefaultBlocksize;
 	int prebuffer_ms = DefaultPrebufferMs;
 
 	SDL_AudioDeviceID sdl_device = 0;
@@ -3114,12 +3116,10 @@ static void init_mixer_config_settings(SectionProp& sec_prop)
 {
 #if defined(WIN32)
 	// Longstanding known-good defaults for Windows
-	constexpr auto DefaultBlocksize      = 1024;
 	constexpr bool DefaultAllowNegotiate = false;
 
 #else
 	// Non-Windows platforms tolerate slightly lower latency
-	constexpr auto DefaultBlocksize      = 512;
 	constexpr bool DefaultAllowNegotiate = true;
 #endif
 
