@@ -194,7 +194,15 @@ struct MixerSettings {
 	SDL_AudioDeviceID sdl_device = 0;
 	SDL_AudioStream* sdl_stream  = nullptr;
 
-	std::atomic<MixerState> state = {};
+	// Config-time flag from the `nosound` setting. If set, there is no SDL
+	// audio device and the mixer thread just sleeps for the expected
+	// per-block duration to simulate timing. Never changes after init.
+	bool no_sound = false;
+
+	// Mute FSM (see `MixerMuteState` in mixer.h). When non-Audible, the
+	// mixer still runs `mix_samples()` (so the capture queue IS fed at full
+	// level) but overwrites the SDL-bound buffer with silence.
+	std::atomic<MixerMuteState> mute_state = MixerMuteState::Audible;
 
 	HighpassFilter highpass_filter = {};
 	Compressor compressor          = {};
@@ -208,11 +216,6 @@ struct MixerSettings {
 
 	ChorusSettings chorus = {};
 	bool do_chorus        = false;
-
-	bool is_manually_muted = false;
-
-	// State to restore on `MIXER_Resume()`. Written under `mutex`.
-	MixerState pre_pause_state = MixerState::On;
 
 	std::atomic<bool> fast_forward_mode = false;
 
@@ -2586,9 +2589,18 @@ static void capture_callback()
 	CAPTURE_AddAudioData(mixer.sample_rate_hz, num_frames, frames.data());
 }
 
+// Returns whether the SDL output buffer should currently be silenced.
+// Used both by the mixer thread (to silence `final_output` content under
+// mute) and by `mixer_callback()` (to drive the silence-edge gain ramp).
+static bool mixer_should_silence_output()
+{
+	return DOSBOX_IsPaused() ||
+	       (mixer.mute_state.load(std::memory_order_acquire) !=
+	        MixerMuteState::Audible);
+}
+
 static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
-                                   SDL_AudioStream* stream,
-                                   int bytes_requested,
+                                   SDL_AudioStream* stream, int bytes_requested,
                                    [[maybe_unused]] int total_bytes)
 {
 	if (bytes_requested <= 0) {
@@ -2624,13 +2636,11 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 	// capture path stays at full level and the fades don't end up in the
 	// captured WAV/AVI audio.
 	//
-	const auto state = mixer.state.load(std::memory_order_relaxed);
-
-	const bool should_silence = (state == MixerState::Paused ||
-	                             state == MixerState::Muted);
+	const bool should_silence = mixer_should_silence_output();
 
 	static float playback_gain  = 1.0f;
 	const float target_gain     = should_silence ? 0.0f : 1.0f;
+
 	constexpr float SmoothingMs = 5.0f;
 
 	const float fade_step = 1.0f / (SmoothingMs *
@@ -2638,17 +2648,18 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 	                                1000.0f);
 
 	// Fade-in is gated on actually receiving real samples from
-	// `final_output`. When resuming, `set_mixer_state()` clears the queue;
-	// if SDL polls before the mixer thread has had a chance to push fresh
-	// real audio, the buffer is silence-filled by the shortfall path above.
-	// Ramping gain up over that silence would hit 1.0 before any real audio
-	// arrives, and the first real sample behind the silence would land at
-	// full gain, resulting in a click. We hold the ramp at its current
-	// value until we see real samples.
+	// `final_output`. On the leave-silent edge we clear the queue (see
+	// `maybe_clear_final_output_on_unsilence`); if SDL polls before the
+	// mixer thread has had a chance to push fresh real audio, the buffer is
+	// silence-filled by the shortfall path above. Ramping gain up over that
+	// silence would hit 1.0 before any real audio arrives, and the first
+	// real sample behind the silence would land at full gain, resulting in
+	// an audible click. We hold the ramp at its current value until we see
+	// real samples.
 	//
 	// Fade-out has no such gating: when there's nothing to drain, gain just
-	// settles at 0.0 against whatever silence the mixer thread pushed,
-	// which is the desired end state.
+	// settles at 0 against whatever silence the mixer thread pushed, which
+	// is the desired end state.
 	//
 	const bool got_real_samples = (frames_received > 0);
 
@@ -2678,8 +2689,7 @@ static void mixer_thread_loop()
 		// Paused short-circuits BEFORE `mix_samples()` to keep frozen channel
 		// state out of the capture queue. Enqueue silence so SDL playback
 		// stays fed.
-		//
-		if (mixer.state == MixerState::Paused) {
+		if (DOSBOX_IsPaused()) {
 			lock.unlock();
 			mixer.output_buffer.assign(mixer.blocksize, AudioFrame{});
 			mixer.final_output.BulkEnqueue(mixer.output_buffer);
@@ -2716,7 +2726,7 @@ static void mixer_thread_loop()
 
 		lock.unlock();
 
-		if (mixer.state == MixerState::NoSound) {
+		if (mixer.no_sound) {
 			// SDL callback is not running. Mixed sound gets
 			// discarded. Sleep for the expected duration to
 			// simulate the time it would have taken to playback the
@@ -2729,9 +2739,16 @@ static void mixer_thread_loop()
 			std::this_thread::sleep_for(
 			        std::chrono::nanoseconds(nap_time));
 			continue;
+		}
 
-		} else if (mixer.state == MixerState::Muted) {
-			// SDL callback remains active. Enqueue silence.
+		if (mixer.mute_state.load(std::memory_order_acquire) !=
+		    MixerMuteState::Audible) {
+
+			// Mute path: `mix_samples()` already ran and the
+			// capture queue is fed at full level (mute should not
+			// silence captures). Overwrite the SDL-bound buffer
+			// with silence before it reaches `final_output`.
+			//
 			mixer.output_buffer.clear();
 			mixer.output_buffer.resize(mixer.blocksize);
 
@@ -2779,58 +2796,183 @@ static void mixer_thread_loop()
 	}
 }
 
-[[maybe_unused]] static const char* to_string(const MixerState s)
+[[maybe_unused]] static const char* to_string(const MixerMuteState s)
 {
 	switch (s) {
-	case MixerState::NoSound: return "No sound";
-	case MixerState::On: return "On";
-	case MixerState::Muted: return "Mute";
-	case MixerState::Paused: return "Paused";
-	default: assertm(false, "Invalid MixerState"); return "";
+	case MixerMuteState::Audible: return "Audible";
+	case MixerMuteState::UserMuted: return "UserMuted";
+	case MixerMuteState::AutoMuted: return "AutoMuted";
+	}
+	assertm(false, "Invalid MixerMuteState");
+	return "";
+}
+
+// Drop any silence the mixer thread queued into `final_output` while we were
+// silent so the fade-in ramp in `mixer_callback()` (silent->Audible edge)
+// lifts gain from 0.0 to 1.0 against the next fresh real audio rather than
+// against the queued silence. Otherwise gain hits 1.0 over the silence, the
+// first real sample lands at full gain, and we get the click the fade was
+// supposed to mask. `capture_queue` is NOT cleared; that's a separate path
+// with its own FIFO invariant.
+//
+// On the way INTO a silent state we intentionally do NOT clear -- any
+// pre-silent real audio still queued drains naturally as SDL pulls, and
+// `mixer_callback()` applies its gain ramp to those samples before they reach
+// the host.
+static void maybe_clear_final_output_on_unsilence(const bool was_silent,
+                                                  const bool will_be_silent)
+{
+	if (was_silent && !will_be_silent) {
+		mixer.final_output.Clear();
 	}
 }
 
-static void set_mixer_state(const MixerState new_state)
+static void set_mute_state(const MixerMuteState new_state)
 {
-	assert(new_state == MixerState::Muted || new_state == MixerState::On ||
-	       new_state == MixerState::Paused);
+	const auto prev_state = mixer.mute_state.load(std::memory_order_acquire);
+	if (prev_state == new_state) {
+		return;
+	}
 
 #ifdef DEBUG_MIXER
-	LOG_MSG("MIXER: Changing mixer state from %s to '%s'",
-	        to_string(mixer.state),
+	LOG_MSG("MIXER: Changing mute state from %s to '%s'",
+	        to_string(prev_state),
 	        to_string(new_state));
 #endif
 
-	if (new_state == MixerState::Muted || new_state == MixerState::Paused) {
-		// Clear queued audio so resume doesn't replay pre-pause samples.
-		// `capture_queue` is NOT cleared; it's a separate path for video
-		// capture that must drain in FIFO order for bit-identical output.
-		mixer.final_output.Clear();
-	}
+	const bool was_audible     = (prev_state == MixerMuteState::Audible);
+	const bool will_be_audible = (new_state == MixerMuteState::Audible);
 
-	mixer.state = new_state;
+	// Only the Audible<->non-Audible edge matters for the SDL fade and for
+	// MIDI/titlebar coordination. UserMuted<->AutoMuted is a pure
+	// bookkeeping change -- the listener experiences continuous silence.
+	//
+	const bool audible_edge = (was_audible != will_be_audible);
+
+	mixer.mute_state.store(new_state, std::memory_order_release);
+
+	if (audible_edge) {
+		// Mute is just one source of silence; pause is the other. The
+		// fade-in clear only matters when the COMBINED silence
+		// condition flips from true to false, so factor in pause too.
+		const bool paused         = DOSBOX_IsPaused();
+		const bool was_silent     = !was_audible || paused;
+		const bool will_be_silent = !will_be_audible || paused;
+
+		maybe_clear_final_output_on_unsilence(was_silent, will_be_silent);
+
+		if (will_be_audible) {
+			MIDI_Unmute();
+			TITLEBAR_NotifyAudioMutedStatus(false);
+
+			LOG_MSG("MIXER: Unmuted audio output");
+
+		} else {
+			MIDI_Mute();
+			TITLEBAR_NotifyAudioMutedStatus(true);
+
+			LOG_MSG("MIXER: Muted audio output");
+		}
+	}
 }
 
-// `MIXER_Pause()` / `MIXER_Resume()` must go through MIXER_LockMixerThread,
-// NOt raw `mixer.mutex`, to compose with the queue-stop / queue-start
-// protocol every other mutator uses.
+MixerMuteState MIXER_GetMuteState()
+{
+	return mixer.mute_state.load(std::memory_order_acquire);
+}
+
+// User-driven path: pressing the mute hotkey (or invoking it remotely).
+// Trumps any `AutoMuted` state in effect -- once the user has decided, only
+// the user can clear it. Callers are responsible for the `no_sound` guard if
+// they want one (the hotkey handler logs a warning there).
+void MIXER_RequestUserMute()
+{
+	using enum MixerMuteState;
+
+	switch (mixer.mute_state.load(std::memory_order_acquire)) {
+	case Audible:
+	case AutoMuted: set_mute_state(UserMuted); break;
+
+	case UserMuted:
+		// already user-muted
+		break;
+	}
+}
+
+void MIXER_RequestUserUnmute()
+{
+	using enum MixerMuteState;
+
+	switch (mixer.mute_state.load(std::memory_order_acquire)) {
+	case UserMuted:
+	case AutoMuted:
+		// User-initiated unmute clears either kind of mute. We treat
+		// "user pressed unmute" as the user taking control regardless
+		// of which path got us here.
+		set_mute_state(Audible);
+		break;
+
+	case Audible:
+		// already audible
+		break;
+	}
+}
+
+// `mute_when_inactive` path: window lost focus.
+void MIXER_RequestAutoMute()
+{
+	using enum MixerMuteState;
+
+	switch (mixer.mute_state.load(std::memory_order_acquire)) {
+	case Audible: set_mute_state(AutoMuted); break;
+
+	case UserMuted:
+	case AutoMuted:
+		// UserMuted survives focus changes. AutoMuted is already in
+		// place. Both no-op.
+		break;
+	}
+}
+
+// `mute_when_inactive` path: window regained focus.
+void MIXER_RequestAutoUnmute()
+{
+	using enum MixerMuteState;
+	switch (mixer.mute_state.load(std::memory_order_acquire)) {
+	case AutoMuted: set_mute_state(Audible); break;
+	case UserMuted:
+	case Audible:
+		// UserMuted must not be cleared by focus gain -- only the user
+		// can clear a user-mute. Audible is a no-op.
+		break;
+	}
+}
+
+// `MIXER_Pause()` / `MIXER_Resume()` don't carry pause state of their own;
+// `DOSBOX_IsPaused()` is the single source of truth and the mixer thread
+// reads it directly at the top of its loop. These functions are just the
+// synchronization barrier: by the time `MIXER_Pause()` returns, the mixer
+// thread has finished any in-flight `mix_samples()` and is at a clean loop
+// boundary; `MIXER_Resume()` additionally clears `final_output` if the
+// listener is now audible (so the fade-in ramps against fresh real audio
+// rather than the silence the mixer thread queued during pause).
 //
-// The mixer thread can be blocked inside a channel handler's
-// `output_queue.BulkDequeue()` (e.g., SB, PC Speaker, GUS, etc.) waiting for
-// samples produced on the main thread. A raw lock would deadlock here: the
-// main thread is stuck waiting for `mixer.mutex`, while the mixer thread
-// holds `mixer.mutex` inside `BulkDequeue()` waiting for samples only the
-// main thread can produce. `NotifyLockMixer()`'s `Stop()` call unblocks
-// `BulkDequeue()` so the mixer thread can release the mutex.
+// Both must go through `MIXER_LockMixerThread()` (NOT raw `mixer.mutex`!) to
+// compose with the queue-stop / queue-start protocol every other mutator
+// uses. The mixer thread can be blocked inside a channel handler's
+// `output_queue.BulkDequeue` (SB, PC Speaker, GUS, etc.) waiting for samples
+// produced on the main thread. A raw lock would deadlock here: the main
+// thread is stuck waiting for `mixer.mutex`, while the mixer thread holds
+// `mixer.mutex` inside `BulkDequeue()` waiting for samples only the main
+// thread can produce. `NotifyLockMixer()`'s `Stop()` unblocks `BulkDequeue()`
+// so the mixer thread can release the mutex.
+//
+// !!! ORDER MATTERS relative to MIDI_Pause/Resume. See the comments on
+// `set_subsystems_paused` in dosbox.cpp. !!!
+//
 void MIXER_Pause()
 {
 	MIXER_LockMixerThread();
-
-	if (mixer.state != MixerState::Paused) {
-		mixer.pre_pause_state = mixer.state;
-		set_mixer_state(MixerState::Paused);
-	}
-
 	MIXER_UnlockMixerThread();
 }
 
@@ -2838,9 +2980,18 @@ void MIXER_Resume()
 {
 	MIXER_LockMixerThread();
 
-	if (mixer.state == MixerState::Paused) {
-		set_mixer_state(mixer.pre_pause_state);
-	}
+	// Callers (`set_subsystems_paused()`) only invoke this on a
+	// Paused -> Running edge, so we always know we were silent due to
+	// pause. If mute is also non-Audible we stay silent and skip the
+	// clear (else we'd nuke the silence the mixer thread is queueing
+	// to keep SDL fed); if mute is Audible the listener is going back
+	// to audible and we drop the queued silence so the fade-in ramps
+	// against fresh real audio.
+	const bool will_be_silent = (mixer.mute_state.load(std::memory_order_acquire) !=
+	                             MixerMuteState::Audible);
+
+	constexpr auto WasSilent = true;
+	maybe_clear_final_output_on_unsilence(WasSilent, will_be_silent);
 
 	MIXER_UnlockMixerThread();
 }
@@ -3058,8 +3209,7 @@ void MIXER_Init()
 	// Initialize the 8-bit to 16-bit lookup table
 	fill_8to16_lut();
 
-	const auto mixer_state = section->GetBool("nosound") ? MixerState::NoSound
-	                                                     : MixerState::On;
+	const auto requested_no_sound = section->GetBool("nosound");
 
 	auto set_no_sound = [&] {
 		assert(mixer.sdl_device == 0);
@@ -3067,7 +3217,7 @@ void MIXER_Init()
 
 		LOG_MSG("MIXER: Sound output disabled ('nosound' mode)");
 
-		mixer.state = MixerState::NoSound;
+		mixer.no_sound = true;
 		set_section_property_value("mixer", "nosound", "on");
 	};
 
@@ -3078,7 +3228,7 @@ void MIXER_Init()
 	const auto blocksize   = parse_blocksize(section);
 	mixer.blocksize        = blocksize.value_or(DefaultBlocksize);
 
-	if (mixer_state == MixerState::NoSound) {
+	if (requested_no_sound) {
 		set_no_sound();
 
 	} else {
@@ -3091,7 +3241,8 @@ void MIXER_Init()
 			// We never use SDL's pause feature. Instead we write silence when we mute the audio.
 			SDL_SetAudioStreamGetCallback(mixer.sdl_stream, mixer_callback, nullptr);
 
-			set_mixer_state(MixerState::On);
+			// `mute_state` defaults to Audible and `paused`
+			// defaults to false; nothing more to set here.
 		} else {
 			set_no_sound();
 		}
@@ -3186,101 +3337,34 @@ static void notify_mixer_setting_updated(SectionProp& section,
 	MIXER_UnlockMixerThread();
 }
 
-void MIXER_Mute()
-{
-	if (mixer.state == MixerState::On) {
-		set_mixer_state(MixerState::Muted);
-		MIDI_Mute();
-
-		TITLEBAR_NotifyAudioMutedStatus(true);
-		LOG_MSG("MIXER: Muted audio output");
-	}
-}
-
-void MIXER_Unmute()
-{
-	if (mixer.state == MixerState::Muted) {
-		set_mixer_state(MixerState::On);
-		MIDI_Unmute();
-
-		TITLEBAR_NotifyAudioMutedStatus(false);
-		LOG_MSG("MIXER: Unmuted audio output");
-	}
-}
-
-bool MIXER_IsManuallyMuted()
-{
-	return mixer.is_manually_muted;
-}
-
-// Toggle the mixer on/off when a 'true' bool is passed in.
+// Mute hotkey handler.
+//
+// Toggle semantics: audible -> mute, any-muted -> audible. We do NOT upgrade
+// `AutoMuted` to `UserMuted` here; a user pressing the hotkey while
+// focus-loss has silenced the mixer is asking for sound, not asking to
+// "double-down" on the silence. (The FSM does support that upgrade via
+// `MIXER_RequestUserMute()` directly, for callers that genuinely want it,
+// e.g., a future HTTP API command.)
 static void handle_toggle_mute(const bool was_pressed)
 {
-	using enum MixerState;
-
 	// The "pressed" bool argument is used by the Mapper API, which sends a
 	// true-bool for key down events and a false-bool for key up events.
 	if (!was_pressed) {
 		return;
 	}
 
-	switch (mixer.state) {
-	case NoSound:
-		LOG_WARNING("MIXER: Mute requested, but sound is disabled ('nosound' mode)");
-		break;
+	if (mixer.no_sound) {
+		LOG_WARNING(
+		        "MIXER: Mute requested, but sound is disabled "
+		        "('nosound' mode)");
+		return;
+	}
 
-	case Muted:
-		MIXER_Unmute();
-		mixer.is_manually_muted = false;
-		break;
-
-	case On:
-		MIXER_Mute();
-		mixer.is_manually_muted = true;
-		break;
-
-	case Paused:
-		// We're paused. `MIXER_Pause()` saved the previous state for
-		// `MIXER_Resume()` to restore. Flip that saved state and the
-		// manual-mute flag here so resume picks up what the user just asked
-		// for. Also update external MIDI mute and the titlebar so the user
-		// sees the change right away.
-		//
-		// Lock the mixer thread while writing; the mixer thread reads
-		// `pre_pause_state` with the same lock held in `MIXER_Resume()`.
-		MIXER_LockMixerThread();
-
-		switch (mixer.pre_pause_state) {
-		case On:
-			mixer.pre_pause_state   = Muted;
-			mixer.is_manually_muted = true;
-
-			MIDI_Mute();
-			TITLEBAR_NotifyAudioMutedStatus(true);
-
-			LOG_MSG("MIXER: Muted audio output");
-			break;
-
-		case Muted:
-			mixer.pre_pause_state   = On;
-			mixer.is_manually_muted = false;
-
-			MIDI_Unmute();
-			TITLEBAR_NotifyAudioMutedStatus(false);
-
-			LOG_MSG("MIXER: Unmuted audio output");
-			break;
-
-		default:
-			// `pre_pause_state` is captured by `MIXER_Pause()` from
-			// the live state and only ever `On` or `Muted`.
-			assertm(false, "Invalid pre-pause MixerState");
-			break;
-		}
-
-		MIXER_UnlockMixerThread();
-		break;
-	};
+	if (MIXER_GetMuteState() == MixerMuteState::Audible) {
+		MIXER_RequestUserMute();
+	} else {
+		MIXER_RequestUserUnmute();
+	}
 }
 
 static void init_mixer_config_settings(SectionProp& sec_prop)
