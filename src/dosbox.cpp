@@ -78,10 +78,10 @@
 #include "webserver/bridge.h"
 #include "webserver/webserver.h"
 
-MachineType machine   = MachineType::None;
-SvgaType    svga_type = SvgaType::None;
+MachineType machine = MachineType::None;
+SvgaType svga_type  = SvgaType::None;
 
-static LoopHandler * loop;
+static LoopHandler* loop;
 
 static struct {
 	int64_t remain    = {};
@@ -121,7 +121,8 @@ void DOSBOX_SetTicksScheduled(const int64_t ticks_scheduled)
 	ticks.scheduled = ticks_scheduled;
 }
 
-void Null_Init([[maybe_unused]] Section *sec) {
+void Null_Init([[maybe_unused]] Section* sec)
+{
 	// do nothing
 }
 
@@ -210,20 +211,33 @@ bool DOSBOX_IsPaused()
 // mapper.cpp, which composes correctly with this path because both agree on
 // mixer.mutex.
 //
-// !!! ORDERING IS CRITICAL. !!!
+// !!! PAUSE ORDERING IS CRITICAL; resume ordering is not. !!!
 //
 // The MIDI software synths (FluidSynth, MT-32, SoundCanvas) each run a
 // renderer thread that fills an `audio_frame_fifo` ahead of the mixer's
-// consumption. If the mixer stops draining BEFORE the renderer halts, or the
-// renderer wakes BEFORE the mixer starts draining, the renderer rushes to
-// fill the fifo headroom and the synth's internal clock advances by up to one
-// mixer pull (potentially up to 21 ms with common buffer sizes) per cycle.
-// Those extra samples reach the capture queue on resume and "stretch" the
-// captured music by N * ~21 ms over N pause/resume cycles.
+// consumption.
 //
-// Therefore, on pause, we must halt the *renderer* FIRST. On resume, we must
-// wake the *mixer* FIRST. Do NOT swap these without understanding what you're
-// doing!
+// On PAUSE: halt the renderer FIRST. If the mixer halted first, the
+// still-running renderer would rush to fill the fifo headroom that
+// opens up, advancing the synth's internal clock by up to one mixer
+// pull (~21 ms) per cycle. Those extra samples reach the capture queue
+// on resume and stretch captured music by N * ~21 ms over N
+// pause/resume cycles.
+//
+// The renderers stop their own `audio_frame_fifo` while parked (see the
+// synth `Render()` loops), so a mixer `BulkDequeue()` that races the
+// halt gets a short read -- silence-padded by the synth's
+// `MixerCallback()` -- instead of blocking on the empty-but-running
+// queue. That block (`mix_samples()` stuck mid-`BulkDequeue()` waiting
+// for a halted renderer while holding `mixer.mutex`) was the
+// pause/resume deadlock; the fifo stop removes it. `MIDI_Pause()` and
+// `MIDI_Resume()` therefore need no `MIXER_LockMixerThread()` coverage.
+//
+// On RESUME: order no longer matters for correctness. Even if the mixer
+// races into `mix_samples()` before the renderer wakes, its
+// `BulkDequeue()` short-reads on the stopped fifo rather than blocking
+// on a still-parked renderer. We wake the renderer first anyway,
+// mirroring the pause path.
 //
 static void set_subsystems_paused(const bool paused)
 {
@@ -231,7 +245,9 @@ static void set_subsystems_paused(const bool paused)
 	if (paused == audio_paused) {
 		return;
 	}
+
 	audio_paused = paused;
+
 	if (paused) {
 		// MIDI first so the synth renderer stops before the mixer
 		// stops draining.
@@ -239,10 +255,11 @@ static void set_subsystems_paused(const bool paused)
 		MIXER_Pause();
 
 	} else {
-		// MIXER first so the mixer drains the pre-pause buffered
-		// audio before the renderer wakes and refills the headroom.
-		MIXER_Resume();
+		// Order-independent now: the stopped fifo makes a racing
+		// mixer `BulkDequeue()` short-read instead of deadlocking.
+		// Wake the renderer first anyway, mirroring the pause path.
 		MIDI_Resume();
+		MIXER_Resume();
 	}
 }
 
@@ -623,7 +640,8 @@ static void increase_ticks()
 					         (ratio_not_removed +
 					          1024.0 / (static_cast<double>(ratio)));
 
-					new_cycle_max = static_cast<int>(CPU_CycleMax * r + 1);
+					new_cycle_max = static_cast<int>(
+					        CPU_CycleMax * r + 1);
 				} else {
 					auto ratio_with_removed = static_cast<int64_t>(
 					        ((static_cast<double>(ratio) - 1024.0) *
@@ -762,10 +780,12 @@ static void DOSBOX_UnlockSpeed(bool pressed)
 		MIXER_EnableFastForwardMode();
 
 		if (CPU_CycleAutoAdjust) {
-			autoadjust = true;
+			autoadjust          = true;
 			CPU_CycleAutoAdjust = false;
 			CPU_CycleMax /= 3;
-			if (CPU_CycleMax<1000) CPU_CycleMax=1000;
+			if (CPU_CycleMax < 1000) {
+				CPU_CycleMax = 1000;
+			}
 		}
 	} else {
 		LOG_MSG("Fast Forward OFF");
@@ -773,7 +793,7 @@ static void DOSBOX_UnlockSpeed(bool pressed)
 		MIXER_DisableFastForwardMode();
 
 		if (autoadjust) {
-			autoadjust = false;
+			autoadjust          = false;
 			CPU_CycleAutoAdjust = true;
 		}
 	}
@@ -783,7 +803,8 @@ void DOSBOX_SetMachineTypeFromConfig(SectionProp& section)
 {
 	const auto arguments = &control->arguments;
 	if (!arguments->machine.empty()) {
-		//update value in config (else no matching against suggested values
+		// update value in config (else no matching against suggested
+		// values
 		section.HandleInputLine(std::string("machine=") + arguments->machine);
 	}
 
@@ -822,7 +843,7 @@ void DOSBOX_SetMachineTypeFromConfig(SectionProp& section)
 		int10.vesa_nolfb = true;
 	} else if (machine_str == "vesa_oldvbe") {
 
-		svga_type = SvgaType::S3;
+		svga_type         = SvgaType::S3;
 		int10.vesa_oldvbe = true;
 
 	} else if (machine_str == "svga_et3000") {
@@ -1089,8 +1110,8 @@ static void notify_dosbox_setting_updated(const SectionProp& section,
 		VGA_SetRefreshRateMode(section.GetString("dos_rate"));
 
 	} else if (prop_name == "shell_config_shortcuts") {
-		// No need to re-init anything; the setting is always queried when
-		// executing a command.
+		// No need to re-init anything; the setting is always queried
+		// when executing a command.
 	}
 }
 
