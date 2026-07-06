@@ -2122,8 +2122,8 @@ int GFX_GetUserSdlEventId(DosBoxSdlEvent event)
 }
 
 // Focus-loss / focus-gain hook. Routes window-focus events into the FSM:
-// loss requests a `FocusLossPaused`; gain resumes IFF the current pause is
-// a focus-loss one (user-initiated pauses survive focus changes -- the FSM
+// loss requests an `AutoPaused`; gain resumes IFF the current pause is
+// an auto one (user-initiated pauses survive focus changes -- the FSM
 // encodes that).
 //
 static void handle_pause_when_inactive(const SDL_Event& event)
@@ -2137,14 +2137,14 @@ static void handle_pause_when_inactive(const SDL_Event& event)
 		KEYBOARD_ClrBuffer();
 
 		if (DOSBOX_GetPauseState() == Running) {
-			DOSBOX_SetPauseState(FocusLossPaused);
+			DOSBOX_SetPauseState(AutoPaused);
 		}
 		break;
 
 	case SDL_EVENT_WINDOW_FOCUS_GAINED:
 	case SDL_EVENT_WINDOW_RESTORED:
 	case SDL_EVENT_WINDOW_EXPOSED: {
-		if (DOSBOX_GetPauseState() == FocusLossPaused) {
+		if (DOSBOX_GetPauseState() == AutoPaused) {
 			DOSBOX_SetPauseState(Running);
 		}
 		if (event.type == SDL_EVENT_WINDOW_FOCUS_GAINED) {
@@ -2508,7 +2508,7 @@ bool GFX_PollAndHandleEvents()
 			// and focus gain (`FOCUS_GAINED` / `RESTORED` /
 			// `EXPOSED`, which return `true`). Bailing on
 			// `handling_finished` before this point would skip the
-			// focus-gain side and leave `FocusLossPaused` stuck.
+			// focus-gain side and leave `AutoPaused` stuck.
 			if (sdl.pause_when_inactive) {
 				handle_pause_when_inactive(event);
 			}

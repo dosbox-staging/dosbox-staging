@@ -60,7 +60,7 @@ enum class PauseState {
 	// This gets "upgraded" to `UserPaused` if we receive a pause HTTP
 	// API call while focus-loss-paused (you can't do this via hotkey
 	// interactions; window must get the focus first which will unpause).
-	FocusLossPaused,
+	AutoPaused,
 };
 
 PauseState DOSBOX_GetPauseState();
