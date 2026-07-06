@@ -164,8 +164,29 @@ PauseState DOSBOX_GetPauseState()
 	return pause_state.load();
 }
 
-// Forward decl; body lives next to the `ticks` struct it operates on.
-static void rebase_wall_clock_on_resume();
+// Idempotent subsystem pause hook driven by the FSM. Mapper UI doesn't go
+// through here -- it pauses audio via `MIXER_LockMixerThread()` directly in
+// `mapper.cpp`, which composes correctly with this path because both agree on
+// `mixer.mutex`.
+//
+static void set_subsystems_paused(const bool paused)
+{
+	static bool audio_paused = false;
+	if (paused == audio_paused) {
+		return;
+	}
+	audio_paused = paused;
+	if (paused) {
+		MIXER_Pause();
+	} else {
+		MIXER_Resume();
+	}
+}
+
+static void update_subsystem_pause_state()
+{
+	set_subsystems_paused(DOSBOX_IsPaused());
+}
 
 void DOSBOX_SetPauseState(const PauseState new_state)
 {
@@ -194,6 +215,8 @@ void DOSBOX_SetPauseState(const PauseState new_state)
 	if (was_paused && now_running) {
 		rebase_wall_clock_on_resume();
 	}
+
+	update_subsystem_pause_state();
 
 	LOG_MSG("DOSBOX: Pause %s -> %s",
 	        to_string(prev),
