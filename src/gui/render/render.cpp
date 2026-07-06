@@ -348,7 +348,7 @@ static void deinterlace_rendered_output()
 	render.deinterlacer->Deinterlace(image, render.deinterlacing_strength);
 }
 
-void RENDER_EndUpdate([[maybe_unused]] bool abort)
+void RENDER_EndUpdate(const bool abort)
 {
 	if (!render.render_in_progress) {
 		return;
@@ -356,7 +356,11 @@ void RENDER_EndUpdate([[maybe_unused]] bool abort)
 
 	RENDER_DrawLine = empty_line_handler;
 
-	if (CAPTURE_IsCapturingImage() || CAPTURE_IsCapturingVideo()) {
+	// Aborted scanouts (vertical retrace cleanup, `VGA_KillDrawing()`) leave
+	// a half-filled cache. Very rarely, such a frame could end up in the
+	// video or image captures, resulting in random garbage.
+	//
+	if (!abort && (CAPTURE_IsCapturingImage() || CAPTURE_IsCapturingVideo())) {
 		handle_capture_frame();
 	}
 
