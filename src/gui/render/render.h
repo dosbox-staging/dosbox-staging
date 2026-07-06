@@ -122,8 +122,22 @@ struct Render {
 
 		int pitch = 0;
 
-		// `false` until the first frame has been latched.
+		// `true` when the latched data matches `render.src` exactly
+		// (width, height, pixel format). Reset by `RENDER_SetSize()`,
+		// so e.g. a pause-time scan-doubling toggle (`crt-hyllian` ->
+		// `sharp` and back) drops it to false.
+		// `RENDER_GetCurrentImage()` gates on this so screenshots /
+		// video capture never pick up a frame at the previous geometry.
 		bool valid = false;
+
+		// `true` once any frame has ever been latched. *Not* reset by
+		// `RENDER_SetSize()` -- the cache lives in a fixed-size array
+		// embedded in this struct, so the bytes survive that reset.
+		// `RENDER_RescaleLastFrame()` reads via this flag during
+		// pause-time recreates: with no scanout coming to repopulate
+		// the latch, the held bytes are the only source we can
+		// replay through the freshly-configured scaler.
+		bool populated = false;
 	} last_complete_source = {};
 
 	RenderPalette palette = {};
@@ -289,6 +303,12 @@ void RENDER_EndUpdate(bool abort);
 // until the first complete frame has been latched (e.g. right after a
 // video mode change); callers must check.
 RenderedImage RENDER_GetCurrentImage();
+
+// Rescale the latched source frame at the current output dimensions and
+// run it through `RENDER_EndUpdate(false)` so the renderer's
+// `last_framebuf` is refreshed. No effect on VGA timing or PIC -- the
+// emulator core stays paused. No-op if no frame has been latched yet.
+void RENDER_RescaleLastFrame();
 
 void RENDER_SetPalette(const uint8_t entry, const uint8_t red,
                        const uint8_t green, const uint8_t blue);
