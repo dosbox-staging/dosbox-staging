@@ -211,6 +211,9 @@ struct MixerSettings {
 
 	bool is_manually_muted = false;
 
+	// State to restore on `MIXER_Resume()`. Written under `mutex`.
+	MixerState pre_pause_state = MixerState::On;
+
 	std::atomic<bool> fast_forward_mode = false;
 
 	std::recursive_mutex mutex = {};
@@ -2621,6 +2624,17 @@ static void mixer_thread_loop()
 	while (!mixer.thread_should_quit) {
 		std::unique_lock lock(mixer.mutex);
 
+		// Paused short-circuits BEFORE `mix_samples()` to keep frozen channel
+		// state out of the capture queue. Enqueue silence so SDL playback
+		// stays fed.
+		//
+		if (mixer.state == MixerState::Paused) {
+			lock.unlock();
+			mixer.output_buffer.assign(mixer.blocksize, AudioFrame{});
+			mixer.final_output.BulkEnqueue(mixer.output_buffer);
+			continue;
+		}
+
 		// This code is mostly for the fast-forward button (hold Alt + F12)
 		const double now         = PIC_AtomicIndex();
 		const double actual_time = now - last_mixed;
@@ -2720,13 +2734,15 @@ static void mixer_thread_loop()
 	case MixerState::NoSound: return "No sound";
 	case MixerState::On: return "On";
 	case MixerState::Muted: return "Mute";
+	case MixerState::Paused: return "Paused";
 	default: assertm(false, "Invalid MixerState"); return "";
 	}
 }
 
 static void set_mixer_state(const MixerState new_state)
 {
-	assert(new_state == MixerState::Muted || new_state == MixerState::On);
+	assert(new_state == MixerState::Muted || new_state == MixerState::On ||
+	       new_state == MixerState::Paused);
 
 #ifdef DEBUG_MIXER
 	LOG_MSG("MIXER: Changing mixer state from %s to '%s'",
@@ -2734,12 +2750,48 @@ static void set_mixer_state(const MixerState new_state)
 	        to_string(new_state));
 #endif
 
-	if (new_state == MixerState::Muted) {
-		// Clear out any audio in the queue to avoid a stutter on un-mute
+	if (new_state == MixerState::Muted || new_state == MixerState::Paused) {
+		// Clear queued audio so resume doesn't replay pre-pause samples.
+		// `capture_queue` is NOT cleared; it's a separate path for video
+		// capture that must drain in FIFO order for bit-identical output.
 		mixer.final_output.Clear();
 	}
 
 	mixer.state = new_state;
+}
+
+// `MIXER_Pause()` / `MIXER_Resume()` must go through MIXER_LockMixerThread,
+// NOt raw `mixer.mutex`, to compose with the queue-stop / queue-start
+// protocol every other mutator uses.
+//
+// The mixer thread can be blocked inside a channel handler's
+// `output_queue.BulkDequeue()` (e.g., SB, PC Speaker, GUS, etc.) waiting for
+// samples produced on the main thread. A raw lock would deadlock here: the
+// main thread is stuck waiting for `mixer.mutex`, while the mixer thread
+// holds `mixer.mutex` inside `BulkDequeue()` waiting for samples only the
+// main thread can produce. `NotifyLockMixer()`'s `Stop()` call unblocks
+// `BulkDequeue()` so the mixer thread can release the mutex.
+void MIXER_Pause()
+{
+	MIXER_LockMixerThread();
+
+	if (mixer.state != MixerState::Paused) {
+		mixer.pre_pause_state = mixer.state;
+		set_mixer_state(MixerState::Paused);
+	}
+
+	MIXER_UnlockMixerThread();
+}
+
+void MIXER_Resume()
+{
+	MIXER_LockMixerThread();
+
+	if (mixer.state == MixerState::Paused) {
+		set_mixer_state(mixer.pre_pause_state);
+	}
+
+	MIXER_UnlockMixerThread();
 }
 
 void MIXER_CloseAudioDevice()
@@ -3108,6 +3160,8 @@ bool MIXER_IsManuallyMuted()
 // Toggle the mixer on/off when a 'true' bool is passed in.
 static void handle_toggle_mute(const bool was_pressed)
 {
+	using enum MixerState;
+
 	// The "pressed" bool argument is used by the Mapper API, which sends a
 	// true-bool for key down events and a false-bool for key up events.
 	if (!was_pressed) {
@@ -3115,21 +3169,61 @@ static void handle_toggle_mute(const bool was_pressed)
 	}
 
 	switch (mixer.state) {
-	case MixerState::NoSound:
+	case NoSound:
 		LOG_WARNING("MIXER: Mute requested, but sound is disabled ('nosound' mode)");
 		break;
 
-	case MixerState::Muted:
+	case Muted:
 		MIXER_Unmute();
 		mixer.is_manually_muted = false;
 		break;
 
-	case MixerState::On:
+	case On:
 		MIXER_Mute();
 		mixer.is_manually_muted = true;
 		break;
 
-	default: break;
+	case Paused:
+		// We're paused. `MIXER_Pause()` saved the previous state for
+		// `MIXER_Resume()` to restore. Flip that saved state and the
+		// manual-mute flag here so resume picks up what the user just asked
+		// for. Also update external MIDI mute and the titlebar so the user
+		// sees the change right away.
+		//
+		// Lock the mixer thread while writing; the mixer thread reads
+		// `pre_pause_state` with the same lock held in `MIXER_Resume()`.
+		MIXER_LockMixerThread();
+
+		switch (mixer.pre_pause_state) {
+		case On:
+			mixer.pre_pause_state   = Muted;
+			mixer.is_manually_muted = true;
+
+			MIDI_Mute();
+			TITLEBAR_NotifyAudioMutedStatus(true);
+
+			LOG_MSG("MIXER: Muted audio output");
+			break;
+
+		case Muted:
+			mixer.pre_pause_state   = On;
+			mixer.is_manually_muted = false;
+
+			MIDI_Unmute();
+			TITLEBAR_NotifyAudioMutedStatus(false);
+
+			LOG_MSG("MIXER: Unmuted audio output");
+			break;
+
+		default:
+			// `pre_pause_state` is captured by `MIXER_Pause()` from
+			// the live state and only ever `On` or `Muted`.
+			assertm(false, "Invalid pre-pause MixerState");
+			break;
+		}
+
+		MIXER_UnlockMixerThread();
+		break;
 	};
 }
 

@@ -34,7 +34,7 @@
 // 48000 Hz, that's 48 frames.
 using MIXER_Handler = std::function<void(int frames)>;
 
-enum class MixerState { NoSound, On, Muted };
+enum class MixerState { NoSound, On, Muted, Paused };
 
 static constexpr int MixerBufferByteSize = 16 * 1024;
 static constexpr int MixerBufferMask     = MixerBufferByteSize - 1;
@@ -471,6 +471,12 @@ void MIXER_SetMasterVolume(const AudioFrame gain);
 
 void MIXER_Mute();
 void MIXER_Unmute();
+
+// Enter `MixerState::Paused` (mixer thread short-circuits before
+// `mix_samples()`). Acquires `mixer.mutex`; on return any in-flight mix is
+// over. Captures the pre-pause state so `MIXER_Resume()` can restore it.
+void MIXER_Pause();
+void MIXER_Resume();
 
 void MIXER_LockMixerThread();
 void MIXER_UnlockMixerThread();
