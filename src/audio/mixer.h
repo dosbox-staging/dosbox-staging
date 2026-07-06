@@ -521,17 +521,18 @@ void MIXER_RequestUserUnmute();
 void MIXER_RequestAutoMute();
 void MIXER_RequestAutoUnmute();
 
-// Pause synchronization barrier. The mixer reads `DOSBOX_IsPaused()` directly
-// at the top of its loop, so these don't mutate any mixer-side state -- they
-// just serialize against in-flight `mix_samples()`. By the time
-// `MIXER_Pause()` returns the mixer thread is at a clean loop boundary;
-// `MIXER_Resume()` additionally clears `final_output` so the silence-edge
-// fade-in ramps against fresh real audio.
+// Pause synchronization barrier. The mixer reads `DOSBOX_IsPaused()`
+// directly at the top of its loop, so these don't mutate any mixer-side
+// state -- they just serialize against in-flight `mix_samples()`. By
+// the time `MIXER_Pause()` returns, the mixer thread is at a clean loop
+// boundary.
 //
-// Pause is orthogonal to mute: the mixer is silent on the SDL side if either
-// is in effect. Pause additionally short-circuits `mix_samples()` so the
-// capture queue isn't fed during pause; mute lets `mix_samples()` run and
-// overwrites only the SDL-bound buffer, so captures stay full-volume.
+// Pause is orthogonal to mute: the mixer output is silent if either is
+// in effect (via the silence-edge fade in `mixer_thread_loop()`). Pause
+// additionally short-circuits `mix_samples()` so the capture queue
+// isn't fed during pause; mute lets `mix_samples()` run and folds mute
+// into the fade target, so captures stay full-volume while SDL output
+// smoothly attenuates to silence.
 //
 // !!! PAUSE ORDER MATTERS relative to MIDI_Pause/Resume (halt the synth
 // renderer first); resume order does not. See `set_subsystems_paused` in
@@ -540,11 +541,11 @@ void MIXER_RequestAutoUnmute();
 void MIXER_Pause();
 void MIXER_Resume();
 
-// Current SDL-side fade-out/-in gain (0.0 = silent, 1.0 = full). Updated
-// by `mixer_callback()` on each SDL callback. Read by the PausePending
-// FSM in dosbox.cpp to know when a fade-out has completed, so it can
-// hand off to the actually-paused state at the exact moment the
-// audible fade reaches zero.
+// Current fade-out/-in gain (0.0 = silent, 1.0 = full). Updated by the
+// mixer thread on each iteration. Read by the PausePending FSM in
+// dosbox.cpp to know when a fade-out has completed, so it can hand off
+// to the actually-paused state at the exact moment the audible fade
+// reaches zero.
 float MIXER_GetPlaybackGain();
 
 void MIXER_LockMixerThread();

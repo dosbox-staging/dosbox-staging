@@ -140,9 +140,9 @@ void Null_Init([[maybe_unused]] Section* sec)
 // midway and click. During pending we keep producing real audio, so the
 // fade always has ~5 ms of it to attenuate.
 //
-// Resume has no equivalent pending state because the fade-in works "for
-// free": on `MIXER_Resume()`, the mixer immediately starts producing real
-// audio and the SDL-side fade-in ramps against it.
+// Resume has no equivalent pending state because the fade-in works for
+// free: on resume the mixer thread immediately starts producing real
+// audio and ramps the fade-in gain up over it, in-buffer.
 //
 // All transitions go through `set_pause_state()` (validated against
 // `is_valid_transition()`). Public callers express intent via the four
@@ -185,11 +185,12 @@ enum class PauseState {
 	// happens.
 	AutoPausePending,
 
-	// User-initiated pause is active.
+	// User-initiated pause is fully engaged (subsystems halted).
 	UserPaused,
 
-	// Auto-pause initiated from window focus loss is active; only the
-	// focus-gain handler resumes this, leaving user-pauses alone.
+	// Auto-paused when the window lost focus (if the `pause_when_inactive`
+	// conf setting is enabled); only the auto-resume path clears this,
+	// leaving user-pauses alone.
 	//
 	// Gets "upgraded" to `UserPaused` if the user activates pause mode while
 	// auto-paused -- it shouldn't auto-resume on focus gain after that. This
@@ -256,16 +257,16 @@ bool DOSBOX_IsRunning()
 bool DOSBOX_IsPaused()
 {
 	// Only the actually-paused states -- pending states still have the
-	// emulator core, mixer, and MIDI renderer running so the SDL fade
-	// has audio to work against. See the FSM header comment.
+	// emulator core, mixer, and MIDI renderer running so the fade has
+	// audio to work against. See the FSM header comment.
 	return is_paused_state(get_pause_state());
 }
 
 bool DOSBOX_IsPauseRequested()
 {
 	// True for any non-Running state (pending or paused). Callers that
-	// want "user has asked to pause" semantics -- e.g. the SDL fade
-	// trigger, or the shutdown force-resume -- use this.
+	// want "user has asked to pause" semantics -- e.g. the fade trigger,
+	// or the shutdown force-resume -- use this.
 	return get_pause_state() != PauseState::Running;
 }
 
@@ -398,15 +399,17 @@ static void set_pause_state_locked(const PauseState new_state)
 
 // Drives the `*Pending` -> `*Paused` transition. Runs on the emulator
 // thread via PIC's 1 kHz ticker so it fires from a context that's safe
-// to call `MIXER_LockMixerThread()` from (unlike, say, an
-// `SDL_AddTimer` on the SDL timer thread which is a different thread
-// than the mixer thread but still an unsafe caller in principle).
+// to call `MIXER_LockMixerThread()` from.
 //
-// The transition is gated on the SDL fade actually completing --
-// `MIXER_GetPlaybackGain()` reflects the ramp maintained by the SDL
-// callback, so we hand off to the actually-paused state exactly when
+// The transition is gated on the fade actually completing --
+// `MIXER_GetPlaybackGain()` reflects the ramp maintained by the mixer
+// thread, so we hand off to the actually-paused state exactly when
 // the audible fade-out reaches zero, not on a wall-clock deadline. No
-// timeout fallback: the fade completing IS the signal.
+// timeout fallback: the fade completing IS the signal. Nosound-mode
+// works too because the mixer thread snaps the gain directly to
+// target when it hits the `no_sound` sleep path -- the FSM sees 0
+// immediately and transitions without waiting for a non-existent
+// audible fade.
 //
 static void pending_pause_tick_handler()
 {
@@ -1242,7 +1245,7 @@ void DOSBOX_Init()
 	CMOS_Init();
 
 	// Register the PIC-tick handler that completes pending pauses once
-	// the SDL fade-out has reached zero. See `pending_pause_tick_handler`.
+	// the fade-out has reached zero. See `pending_pause_tick_handler`.
 	TIMER_AddTickHandler(pending_pause_tick_handler);
 }
 
