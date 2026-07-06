@@ -608,7 +608,10 @@ void MIDI_Pause()
 	//
 	// Called unconditionally: `MIDI_Mute()` is idempotent (early-returns if
 	// already muted), so if the mute FSM already muted us there's no
-	// double-mute.
+	// double-mute. This also covers the case where the user toggled mute
+	// during `Pending` -- `set_mute_state()` skips MIDI while a pause is in
+	// flight (so it can't accidentally unmute hanging notes mid-pause), and
+	// we catch up here.
 	MIDI_Mute();
 
 	// For internal software synths (FluidSynth/MT-32/SoundCanvas) this
