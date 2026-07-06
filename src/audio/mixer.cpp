@@ -2674,7 +2674,7 @@ static float compute_fade_step()
 
 static float target_fade_gain()
 {
-	const bool should_silence = DOSBOX_IsPauseRequested() ||
+	const auto should_silence = DOSBOX_IsPauseRequested() ||
 	                            (mixer.mute_state.load(std::memory_order_acquire) !=
 	                             MixerMuteState::Audible);
 
@@ -2871,14 +2871,14 @@ static void set_mute_state(const MixerMuteState new_state)
 	        to_string(new_state));
 #endif
 
-	const bool was_audible     = (prev_state == MixerMuteState::Audible);
-	const bool will_be_audible = (new_state == MixerMuteState::Audible);
+	const auto was_audible     = (prev_state == MixerMuteState::Audible);
+	const auto will_be_audible = (new_state == MixerMuteState::Audible);
 
 	// Only the Audible<->non-Audible edge matters for MIDI / titlebar
 	// coordination. UserMuted<->AutoMuted is a pure bookkeeping change
 	// -- the listener experiences continuous silence.
 	//
-	const bool audible_edge = (was_audible != will_be_audible);
+	const auto audible_edge = (was_audible != will_be_audible);
 
 	mixer.mute_state.store(new_state, std::memory_order_release);
 

@@ -186,12 +186,13 @@ static const char* to_string(const PauseState s)
 
 static bool is_pending_state(const PauseState s)
 {
-	return s == PauseState::UserPausePending || s == PauseState::AutoPausePending;
+	return (s == PauseState::UserPausePending ||
+	        s == PauseState::AutoPausePending);
 }
 
 static bool is_paused_state(const PauseState s)
 {
-	return s == PauseState::UserPaused || s == PauseState::AutoPaused;
+	return (s == PauseState::UserPaused || s == PauseState::AutoPaused);
 }
 
 // Structural guard for the application layer: which edges the FSM permits at
@@ -380,6 +381,7 @@ bool DOSBOX_IsPauseRequested()
 static void set_subsystems_paused(const bool paused)
 {
 	static bool audio_paused = false;
+
 	if (paused == audio_paused) {
 		return;
 	}
@@ -421,26 +423,27 @@ static void set_pause_state_locked(const PauseState new_state)
 {
 	using enum PauseState;
 
-	const PauseState prev = pause_state.load();
-	if (prev == new_state) {
+	const auto prev_state = pause_state.load();
+
+	if (prev_state == new_state) {
 		return;
 	}
 
-	if (!is_valid_transition(prev, new_state)) {
+	if (!is_valid_transition(prev_state, new_state)) {
 		LOG_WARNING("DOSBOX: Invalid pause transition %s -> %s",
-		            to_string(prev),
+		            to_string(prev_state),
 		            to_string(new_state));
 
 		assertm(false, "Invalid PauseState transition");
 		return;
 	}
 
-	const bool was_paused_actual   = is_paused_state(prev);
-	const bool was_pause_requested = (prev != Running);
+	const auto was_paused_actual   = is_paused_state(prev_state);
+	const auto was_pause_requested = (prev_state != Running);
 
-	const bool now_paused_actual   = is_paused_state(new_state);
-	const bool now_pause_requested = (new_state != Running);
-	const bool now_running         = (new_state == Running);
+	const auto now_paused_actual   = is_paused_state(new_state);
+	const auto now_pause_requested = (new_state != Running);
+	const auto now_running         = (new_state == Running);
 
 	pause_state.store(new_state);
 
