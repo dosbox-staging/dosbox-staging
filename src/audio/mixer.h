@@ -13,6 +13,7 @@
 #include <map>
 #include <memory>
 #include <mutex>
+#include <optional>
 #include <set>
 #include <string>
 #include <utility>
@@ -69,6 +70,17 @@ enum class MixerMuteState {
 	// `mute_when_inactive` kicked in on focus loss.
 	// Cleared automatically on focus gain.
 	AutoMuted
+};
+
+// Intent signals that drive the mute FSM.
+enum class MuteRequest {
+	// Intent coming from the hotkey invocations / HTTP API
+	UserMute,
+	UserUnmute,
+
+	// Intenet coming from the `mute_when_inactive` focus loss / gain path.
+	AutoMute,
+	AutoUnmute
 };
 
 static constexpr int MixerBufferByteSize = 16 * 1024;
@@ -511,6 +523,12 @@ void MIXER_SetMasterVolume(const AudioFrame gain);
 // Mute FSM. See the comment on `MixerMuteState` above for the state graph
 // and the rationale for orthogonal pause / mute states.
 MixerMuteState MIXER_GetMuteState();
+
+// Pure mute-transition policy: the next state for `request` in `current`, or
+// `nullopt` if the request is a no-op there. No side effects -- the
+// `MIXER_Request*()` functions below apply its result.
+std::optional<MixerMuteState> MIXER_NextMuteState(MixerMuteState current,
+                                                  MuteRequest request);
 
 // User-driven hotkey path. Overrides any AutoMuted state in effect.
 void MIXER_RequestUserMute();
