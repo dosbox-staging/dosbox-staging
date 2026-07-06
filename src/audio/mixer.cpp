@@ -2788,7 +2788,6 @@ static bool init_sdl_sound(const int requested_sample_rate_hz,
 		LOG_ERR("MIXER: Can't open audio device: '%s'; sound output is disabled",
 		        SDL_GetError());
 
-		set_section_property_value("mixer", "nosound", "off");
 		return false;
 	}
 
@@ -2907,6 +2906,7 @@ void MIXER_Init()
 		LOG_MSG("MIXER: Sound output disabled ('nosound' mode)");
 
 		mixer.state = MixerState::NoSound;
+		set_section_property_value("mixer", "nosound", "on");
 	};
 
 	mixer.sample_rate_hz = section->GetInt("rate");
