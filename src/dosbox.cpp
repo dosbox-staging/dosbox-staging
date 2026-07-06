@@ -430,7 +430,7 @@ static void set_pause_state_locked(const PauseState new_state)
 	}
 
 	if (!is_valid_transition(prev_state, new_state)) {
-		LOG_WARNING("DOSBOX: Invalid pause transition %s -> %s",
+		LOG_WARNING("DOSBOX: Invalid pause transition %s -> %s", //-V510
 		            to_string(prev_state),
 		            to_string(new_state));
 
