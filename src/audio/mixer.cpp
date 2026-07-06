@@ -2591,19 +2591,13 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 
 	// Mac OSX has been observed to be problematic if we ever block inside
 	// SDL's callback. This ensures that we do not block waiting for more
-	// audio. If the queue has run dry, we write what we have available and
-	// the rest of the request is silence.
+	// audio. If the queue has run dry, we write what we have available.
 	const auto frames_to_dequeue = std::min(mixer.final_output.Size(),
 	                                        frames_requested);
 
-	output.resize(frames_requested);
+	const auto frames_received = mixer.final_output.BulkDequeue(output, frames_to_dequeue);
 
-	const auto frames_received = mixer.final_output.BulkDequeue(output.data(),
-	                                                             frames_to_dequeue);
-	// Satisfy any shortfall with silence
-	std::fill(output.begin() + frames_received, output.end(), AudioFrame{});
-
-	SDL_PutAudioStreamData(stream, output.data(), bytes_requested);
+	SDL_PutAudioStreamData(stream, output.data(), check_cast<int>(frames_received) * BytesPerAudioFrame);
 }
 
 static void mixer_thread_loop()
