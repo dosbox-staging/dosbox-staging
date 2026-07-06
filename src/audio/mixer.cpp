@@ -65,6 +65,8 @@ constexpr auto DefaultPrebufferMs = 20;
 constexpr auto MaxPrebufferMs = 100;
 
 constexpr auto DefaultBlocksize = 1024;
+constexpr auto MinBlocksize     = 16;
+constexpr auto MaxBlocksize     = 8192;
 
 template <class T, size_t ROWS, size_t COLS>
 using matrix = std::array<std::array<T, COLS>, ROWS>;
@@ -2758,8 +2760,7 @@ void MIXER_CloseAudioDevice()
 
 // Sets `mixer.sample_rate_hz` and `mixer.blocksize` on success
 static bool init_sdl_sound(const int requested_sample_rate_hz,
-                           const int requested_blocksize_in_frames,
-                           const bool allow_negotiate)
+                           const std::optional<int> requested_blocksize_in_frames)
 {
 	SDL_AudioSpec desired  = {};
 	SDL_AudioSpec obtained = {};
@@ -2770,18 +2771,8 @@ static bool init_sdl_sound(const int requested_sample_rate_hz,
 	desired.format   = SDL_AUDIO_F32;
 	desired.freq     = requested_sample_rate_hz;
 
-	// The relationship between negotiate and blocksize changed in SDL3. In SDL2,
-	// you requested a blocksize via the `samples` field, and then if negotiate
-	// was true, SDL could try for a 'better' blocksize. In SDL3, you now use a 
-	// hint to request a specific blocksize; negotiate doesn't affect SDL's 
-	// behavior in that regard anymore. To maintain the old behavior for the
-	// user, we set the hint only when negotiate is false. If negotiate is true,
-	// we just let SDL decide everything. However, the hint is still just a
-	// request, and SDL may still return a different blocksize, according to the
-	// docs. https://wiki.libsdl.org/SDL3/SDL_HINT_AUDIO_DEVICE_SAMPLE_FRAMES
-	// TODO: clean these options up and just let SDL3 do its thing
-	if (!allow_negotiate) {
-		const std::string samples = std::to_string(requested_blocksize_in_frames);
+	if (requested_blocksize_in_frames) {
+		const auto samples = std::to_string(*requested_blocksize_in_frames);
 		SDL_SetHint(SDL_HINT_AUDIO_DEVICE_SAMPLE_FRAMES, samples.c_str());
 	}
 
@@ -2860,10 +2851,10 @@ static bool init_sdl_sound(const int requested_sample_rate_hz,
 	}
 
 	// Did SDL adjust the hint request?
-	if (!allow_negotiate && obtained_blocksize != requested_blocksize_in_frames) {
+	if (requested_blocksize_in_frames && obtained_blocksize != *requested_blocksize_in_frames) {
 		LOG_MSG("MIXER: SDL changed the requested blocksize of "
 		        "%d to %d frames",
-		        requested_blocksize_in_frames,
+		        *requested_blocksize_in_frames,
 		        obtained_blocksize);
 
 		set_section_property_value("mixer",
@@ -2921,6 +2912,25 @@ static void init_denoiser(bool enabled)
 	}
 }
 
+static std::optional<int> parse_blocksize(SectionProp *section)
+{
+	const auto str = section->GetString("blocksize");
+	if (str == "auto") {
+		return {};
+	}
+	const auto blocksize = parse_int(str);
+	if (!blocksize || *blocksize < MinBlocksize || *blocksize > MaxBlocksize) {
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "MIXER",
+		                      "PROGRAM_CONFIG_INVALID_SETTING",
+		                      "blocksize",
+		                      str.c_str(),
+		                      "auto");
+		return {};
+	}
+	return blocksize;
+}
+
 void MIXER_Init()
 {
 	auto section = get_section("mixer");
@@ -2944,16 +2954,18 @@ void MIXER_Init()
 		set_section_property_value("mixer", "nosound", "on");
 	};
 
-	mixer.sample_rate_hz = section->GetInt("rate");
-	mixer.blocksize      = section->GetInt("blocksize");
+	// Default values set for "nosound" case.
+	// These get over-written inside init_sdl_sound if there are no errors.
+	const auto sample_rate = section->GetInt("rate");
+	mixer.sample_rate_hz   = sample_rate;
+	const auto blocksize   = parse_blocksize(section);
+	mixer.blocksize        = blocksize.value_or(DefaultBlocksize);
 
 	if (mixer_state == MixerState::NoSound) {
 		set_no_sound();
 
 	} else {
-		if (init_sdl_sound(section->GetInt("rate"),
-		                   section->GetInt("blocksize"),
-		                   section->GetBool("negotiate"))) {
+		if (init_sdl_sound(sample_rate, blocksize)) {
 
 			mixer.final_output.Start();
 
@@ -3114,15 +3126,6 @@ static void handle_toggle_mute(const bool was_pressed)
 
 static void init_mixer_config_settings(SectionProp& sec_prop)
 {
-#if defined(WIN32)
-	// Longstanding known-good defaults for Windows
-	constexpr bool DefaultAllowNegotiate = false;
-
-#else
-	// Non-Windows platforms tolerate slightly lower latency
-	constexpr bool DefaultAllowNegotiate = true;
-#endif
-
 	using enum Property::Changeable::Value;
 
 	auto bool_prop = sec_prop.AddBool("nosound", OnlyAtStart, false);
@@ -3142,13 +3145,16 @@ static void init_mixer_config_settings(SectionProp& sec_prop)
 	        "good reason to change it. The OS will most likely resample non-standard sample\n"
 	        "rates to 48000 Hz anyway.");
 
-	int_prop = sec_prop.AddInt("blocksize", OnlyAtStart, DefaultBlocksize);
-	int_prop->SetMinMax(64, 8192);
-	int_prop->SetHelp(
-	        "Block size of the host audio device in sample frames (%s by default). Valid\n"
-	        "range is 64 to 8192. Should be set to power-of-two values (e.g., 256, 512, 1024,\n"
+	constexpr auto DefaultBlocksizeString = "auto";
+	auto string_prop = sec_prop.AddString("blocksize", OnlyAtStart, DefaultBlocksizeString);
+	string_prop->SetHelp(format_str(
+	        "Block size of the host audio device in sample frames ('%s' by default). Valid\n"
+	        "range is %d to %d. Should be set to power-of-two values (e.g., 256, 512, 1024,\n"
 	        "etc.) Larger values might help with sound stuttering but will introduce more\n"
-	        "latency. Also see 'negotiate'.");
+	        "latency.",
+	        DefaultBlocksizeString,
+	        MinBlocksize,
+	        MaxBlocksize));
 
 	int_prop = sec_prop.AddInt("prebuffer", OnlyAtStart, DefaultPrebufferMs);
 	int_prop->SetMinMax(0, MaxPrebufferMs);
@@ -3157,11 +3163,11 @@ static void init_mixer_config_settings(SectionProp& sec_prop)
 	        "(%s by default). Larger values might help with sound stuttering but will\n"
 	        "introduce more latency.");
 
-	bool_prop = sec_prop.AddBool("negotiate", OnlyAtStart, DefaultAllowNegotiate);
+	bool_prop = sec_prop.AddBool("negotiate", Deprecated, false);
 	bool_prop->SetHelp(
-	        "Negotiate a possibly better 'blocksize' setting (%s by default). Enable it if\n"
-	        "you're not getting audio or the sound is stuttering with your 'blocksize'\n"
-	        "setting. Disable it to force the manually set 'blocksize' value.");
+	        "Removed as of SDL3. This used to tell SDL2 whether to negotiate blocksize\n"
+	        "with the audio driver or to force/emulate any arbitary value.\n"
+	        "As of SDL3, blocksize is a hint which may or may not be honored.");
 
 	constexpr auto DefaultOn = true;
 	bool_prop = sec_prop.AddBool("compressor", WhenIdle, DefaultOn);
@@ -3172,7 +3178,7 @@ static void init_mixer_config_settings(SectionProp& sec_prop)
 	        "  off:  Disable compressor.\n"
 	        "  on:   Enable compressor (default).");
 
-	auto string_prop = sec_prop.AddString("crossfeed", WhenIdle, "off");
+	string_prop = sec_prop.AddString("crossfeed", WhenIdle, "off");
 	string_prop->SetHelp(
 	        "Set crossfeed on the OPL and CMS (Gameblaster) mixer channels ('off' by\n"
 	        "default). Many games pan the instruments 100%% left and 100%% right in the\n"
