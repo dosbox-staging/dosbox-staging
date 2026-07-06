@@ -379,10 +379,11 @@ static void latch_last_complete_source()
 	            render.scale.cache.data(),
 	            bytes);
 
-	render.last_complete_source.src     = render.src;
-	render.last_complete_source.palette = render.palette;
-	render.last_complete_source.pitch   = render.scale.cache_pitch;
-	render.last_complete_source.valid   = true;
+	render.last_complete_source.src       = render.src;
+	render.last_complete_source.palette   = render.palette;
+	render.last_complete_source.pitch     = render.scale.cache_pitch;
+	render.last_complete_source.valid     = true;
+	render.last_complete_source.populated = true;
 }
 
 void RENDER_EndUpdate(const bool abort)
@@ -417,6 +418,84 @@ void RENDER_EndUpdate(const bool abort)
 
 	render.render_in_progress = false;
 	render.updating_frame     = false;
+}
+
+// Repaint the held frame at the current render geometry without
+// waiting for a fresh `VGA` scanout. Called from `GFX_ResetScreen()`
+// during pause to handle window-event recreates (resize, fullscreen
+// toggle, mapper close, DPI change).
+//
+// Two concrete cases drive the row mapping below. In both, the user
+// pauses, resizes the window, and the auto-shader picks a different
+// shader on the new canvas size:
+//
+//   1. `crt-hyllian` -> `sharp`. The double-scan -> single-scan flip
+//      retoggles `VGA` scan-doubling: latched cache holds 400 rows
+//      (each `VGA` line emitted twice), `render.src.height` is now
+//      200. We feed every other latched row.
+//
+//   2. `sharp` -> `crt-hyllian`. Single -> double: latched has 200,
+//      `render.src.height` is now 400. We feed each latched row twice.
+//
+// A resize that stays within the same shader family (e.g. an
+// `crt-hyllian` preset switch from 1400p to 4k) keeps the height and
+// runs the loop as a 1:1 copy.
+//
+// Pause-only: the `VGA` palette is CPU-driven and frozen across pause,
+// so the live `render.palette` still matches the latched palette.
+// Outside pause this breaks.
+//
+void RENDER_RescaleLastFrame()
+{
+	if (!render.last_complete_source.populated || !render.active) {
+		return;
+	}
+	if (render.last_complete_source.src.width != render.src.width ||
+	    render.last_complete_source.src.pixel_format != render.src.pixel_format) {
+		return;
+	}
+
+	const auto latched_height = render.last_complete_source.src.height;
+	const auto render_height  = render.src.height;
+
+	// Heights must match one of: 1:1 (same-family resize), latched is
+	// double (case 1 above), or render is double (case 2). Anything
+	// else is an actual `VGA` mode change -- impossible during pause
+	// since the emulated CPU is frozen, so just bail.
+	if (latched_height != render_height && latched_height != render_height * 2 &&
+	    latched_height * 2 != render_height) {
+		return;
+	}
+
+	// Tear down any in-flight scanout cleanly so `RENDER_StartUpdate()`
+	// below can take ownership. `abort = true` skips capture and the
+	// latch update -- both correct: we'd be re-latching the same data
+	// we're about to drive through.
+	if (render.render_in_progress) {
+		RENDER_EndUpdate(true);
+	}
+
+	// Force every line as changed so the scaler rewrites the full
+	// output (otherwise the per-line diff cache may skip lines).
+	render.scale.clear_cache = true;
+
+	if (!RENDER_StartUpdate()) {
+		return;
+	}
+
+	const auto pitch     = render.last_complete_source.pitch;
+	const auto* row_base = reinterpret_cast<const uint8_t*>(
+	        render.last_complete_source.cache.data());
+
+	// Pick the latched row to feed for each output row. The ratio
+	// `latched_height / render_height` is one of {1/1, 2/1, 1/2} per
+	// the check above, so `latched_y` always lands on an integer row.
+	for (int y = 0; y < render_height; ++y) {
+		const auto latched_y = (y * latched_height) / render_height;
+		RENDER_DrawLine(row_base + latched_y * pitch);
+	}
+
+	RENDER_EndUpdate(false);
 }
 
 static SectionProp& get_render_section()
@@ -557,9 +636,11 @@ void RENDER_SetSize(const ImageInfo& image_info, const double frames_per_second)
 {
 	halt_render();
 
-	// Source dimensions or pixel format may change; the latched frame is
-	// only meaningful at the dimensions it was captured at. Drop it and let
-	// the next `RENDER_EndUpdate(false)` re-populate it.
+	// Drop `valid` -- the latched bytes describe the previous source
+	// geometry, so screenshots / video capture must wait for a fresh
+	// `RENDER_EndUpdate(false)` to re-latch. Keep `populated`: the
+	// cache bytes survive (fixed-size embedded array) and
+	// `RENDER_RescaleLastFrame()` adapts them to the new geometry.
 	render.last_complete_source.valid = false;
 
 	if (image_info.width == 0 || image_info.height == 0 ||

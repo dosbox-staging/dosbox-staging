@@ -390,6 +390,18 @@ void GFX_ResetScreen()
 
 	CPU_ResetAutoAdjust();
 
+	// The callback's `update_viewport()` may have triggered an auto-shader
+	// switch (e.g. resize crossed the scan-doubling threshold while the
+	// mapper was open). Push the new shader's `force_single_scan` into
+	// `vga.draw.scan_doubling_allowed` here so the `VGA_SetupDrawing()` call
+	// below sees it, otherwise `render.src.height` will stay wrong.
+	//
+	// This matters even while paused: `RENDER_RescaleLastFrame()` below reads
+	// `render.src.height` as its destination height for the height
+	// doubling/halving of the last latched frame. Stale height will mean
+	// stride mismatch, resulting in garbage output.
+	RENDER_SetScanAndPixelDoubling();
+
 	VGA_SetupDrawing(0);
 	GFX_Start();
 }

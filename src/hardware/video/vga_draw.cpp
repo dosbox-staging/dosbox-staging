@@ -3305,6 +3305,14 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 		        image_info.video_mode);
 
 		if (shader_changed) {
+			// `RENDER_NotifyVideoModeChanged()` may itself have picked a new
+			// shader in auto-shader modes. Re-sync
+			// `vga.draw.scan_doubling_allowed` before recomputing geometry;
+			// otherwise `setup_drawing()` reads the stale
+			// `scan_doubling_allowed` flag and we write a
+			// `vga.draw.image_info` that mismatches what the new shader
+			// expects (results as stride-mismatched garbage output).
+			RENDER_SetScanAndPixelDoubling();
 			image_info = setup_drawing();
 		}
 
