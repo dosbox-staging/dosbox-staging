@@ -35,6 +35,7 @@
 #include "dos/dos.h"
 #include "dos/dos_locale.h"
 #include "dos/programs.h"
+#include "dosbox_pause_fsm.h"
 #include "fpu/fpu.h"
 #include "gui/common.h"
 #include "gui/mapper.h"
@@ -146,7 +147,10 @@ void Null_Init([[maybe_unused]] Section* sec)
 //
 // All transitions go through `set_pause_state()` (validated against
 // `is_valid_transition()`). Public callers express intent via the four
-// `DOSBOX_Request{User,Auto}{Pause,Resume}()` API functions.
+// `DOSBOX_Request{User,Auto}{Pause,Resume}()` API functions, each of which
+// consults the pure `NextPauseState()` policy in `dosbox_pause_fsm.h` and
+// applies the result. That policy is the single source of truth for what
+// each event does; it is exhaustively unit tested in isolation.
 //
 // THREADING: every mutator runs on the main (emulation) thread -- hotkeys
 // and window events via the SDL event loop, HTTP commands via the
@@ -157,46 +161,10 @@ void Null_Init([[maybe_unused]] Section* sec)
 // trip the `is_valid_transition()` guard rather than corrupt state). Keep
 // it that way: other threads may only *read* the state, via the
 // `DOSBOX_Is*()` query functions.
+//
+// The `PauseState` and `PauseEvent` enums and the pure `NextPauseState()`
+// transition table live in `dosbox_pause_fsm.h`.
 // ---------------------------------------------------------------------------
-
-enum class PauseState {
-	// Emulator running normally.
-	Running,
-
-	// User has been requested (via hotkey or HTTP API call) but the audio
-	// fade-out that starts when pausing has been initiated is still in
-	// progress (takes ~5 ms to complete).
-	//
-	// The emulator core, mixer, MIDI renderer, and capture path all still run
-	// normally -- this is what supplies the audio the fade-out attenuates.
-	//
-	// `pending_pause_tick_handler()` on the PIC 1 kHz ticker watches for
-	// the fade to reach zero (`MIXER_GetPlaybackGain() == 0`) and then
-	// transitions us into the actually-paused `UserPaused` state.
-	UserPausePending,
-
-	// Same as `UserPausePending`, just we enter this state on auto-pause from
-	// window focus loss (when the `pause_when_inactive` conf setting is
-	// enabled). Transitions to `AutoPaused` on fade-out completion.
-	//
-	// Gets "upgraded" to `UserPausePending` if the user activates pause mode
-	// while auto-pausing is pending -- it shouldn't auto-resume on focus gain
-	// after that. This can only be done via the HTTP API. The reverse never
-	// happens.
-	AutoPausePending,
-
-	// User-initiated pause is fully engaged (subsystems halted).
-	UserPaused,
-
-	// Auto-paused when the window lost focus (if the `pause_when_inactive`
-	// conf setting is enabled); only the auto-resume path clears this,
-	// leaving user-pauses alone.
-	//
-	// Gets "upgraded" to `UserPaused` if the user activates pause mode while
-	// auto-paused -- it shouldn't auto-resume on focus gain after that. This
-	// can only be done via the HTTP API. The reverse never happens.
-	AutoPaused,
-};
 
 static std::mutex pause_state_mutex;
 static std::atomic<PauseState> pause_state{PauseState::Running};
@@ -226,6 +194,11 @@ static bool is_paused_state(const PauseState s)
 	return s == PauseState::UserPaused || s == PauseState::AutoPaused;
 }
 
+// Structural guard for the application layer: which edges the FSM permits at
+// all. Every state produced by `NextPauseState()` satisfies this, plus the
+// unconditional force-to-`Running` used on shutdown. `set_pause_state_locked()`
+// asserts on it to catch a bad direct store or a race between an unlocked
+// request read and the locked write.
 static bool is_valid_transition(const PauseState from, const PauseState to)
 {
 	using enum PauseState;
@@ -242,6 +215,107 @@ static bool is_valid_transition(const PauseState from, const PauseState to)
 
 	default: assertm(false, "Invalid PauseState value"); return false;
 	}
+}
+
+// Pure pause-transition policy; it just maps (current state, event) to the
+// next state, or `nullopt` for a no-op.
+//
+// The `DOSBOX_Request*()` API and `pending_pause_tick_handler()` below apply
+// its result. Exhaustively unit tested in `dosbox_pause_fsm_tests.cpp`.
+//
+std::optional<PauseState> NextPauseState(const PauseState current,
+                                         const PauseEvent event)
+{
+	using enum PauseState;
+
+	switch (event) {
+	case PauseEvent::UserPause:
+		// User pause trumps auto: it engages from Running, upgrades a
+		// pending/engaged auto-pause, and is idempotent once user-paused.
+		//
+		switch (current) {
+		case Running: return UserPausePending;
+		case AutoPausePending: return UserPausePending;
+		case AutoPaused: return UserPaused;
+
+		case UserPausePending:
+		case UserPaused: return {};
+
+		default:
+			assertm(false, "Invalid PauseState value");
+			return {};
+		}
+		break;
+
+	case PauseEvent::UserResume:
+		// Only clears a user pause; auto-pauses are left for auto-resume.
+		//
+		switch (current) {
+		case UserPausePending: return Running;
+		case UserPaused: return Running;
+
+		case Running:
+		case AutoPausePending:
+		case AutoPaused: return {};
+
+		default:
+			assertm(false, "Invalid PauseState value");
+			return {};
+		}
+		break;
+
+	case PauseEvent::AutoPause:
+		// Engages only from Running; a user-pause survives it and an
+		// existing auto-pause is idempotent.
+		switch (current) {
+		case Running: return AutoPausePending;
+
+		case UserPausePending:
+		case UserPaused:
+		case AutoPausePending:
+		case AutoPaused: return {};
+
+		default:
+			assertm(false, "Invalid PauseState value");
+			return {};
+		}
+		break;
+
+	case PauseEvent::AutoResume:
+		// Clears an auto-pause only; never resumes a user pause.
+		//
+		switch (current) {
+		case AutoPausePending: return Running;
+		case AutoPaused: return Running;
+
+		case Running:
+		case UserPausePending:
+		case UserPaused: return {};
+
+		default:
+			assertm(false, "Invalid PauseState value");
+			return {};
+		}
+		break;
+
+	case PauseEvent::FadeComplete:
+		// The audio fade-out reached zero -- engage the pending pause.
+		switch (current) {
+		case UserPausePending: return UserPaused;
+		case AutoPausePending: return AutoPaused;
+
+		case Running:
+		case UserPaused:
+		case AutoPaused: return {};
+
+		default:
+			assertm(false, "Invalid PauseState value");
+			return {};
+		}
+		break;
+	}
+
+	return {};
 }
 
 static PauseState get_pause_state()
@@ -430,19 +504,14 @@ static void pending_pause_tick_handler()
 	// Re-check under the lock in case the state moved between the
 	// unlocked fast-path checks and now (e.g. the user resumed during
 	// the fade).
-	const auto s = pause_state.load();
-	if (s == UserPausePending) {
-		set_pause_state_locked(UserPaused);
-
-	} else if (s == AutoPausePending) {
-		set_pause_state_locked(AutoPaused);
+	if (const auto next = NextPauseState(pause_state.load(),
+	                                     PauseEvent::FadeComplete)) {
+		set_pause_state_locked(*next);
 	}
 }
 
 void DOSBOX_RequestUserPause()
 {
-	using enum PauseState;
-
 	// Never engage a new pause once shutdown has been requested --
 	// `DOSBOX_RequestShutdown()` force-resumes so teardown runs from a
 	// known-running state, and a late pause request must not undo that
@@ -451,77 +520,39 @@ void DOSBOX_RequestUserPause()
 		return;
 	}
 
-	switch (get_pause_state()) {
-	case Running: set_pause_state(UserPausePending); break;
-	case AutoPausePending: set_pause_state(UserPausePending); break;
-	case AutoPaused: set_pause_state(UserPaused); break;
-
-	case UserPausePending:
-	case UserPaused:
-		// already user-paused (or pending)
-		break;
-
-	default: assertm(false, "Invalid PauseState value");
+	if (const auto next = NextPauseState(get_pause_state(),
+	                                     PauseEvent::UserPause)) {
+		set_pause_state(*next);
 	}
 }
 
 void DOSBOX_RequestUserResume()
 {
-	using enum PauseState;
-
-	switch (get_pause_state()) {
-	case UserPausePending: set_pause_state(Running); break;
-	case UserPaused: set_pause_state(Running); break;
-
-	case Running:
-	case AutoPausePending:
-	case AutoPaused:
-		// only the auto-resume path resumes auto-pauses
-		break;
-
-	default: assertm(false, "Invalid PauseState value");
+	if (const auto next = NextPauseState(get_pause_state(),
+	                                     PauseEvent::UserResume)) {
+		set_pause_state(*next);
 	}
 }
 
 void DOSBOX_RequestAutoPause()
 {
-	using enum PauseState;
-
 	// Never engage a new pause after a shutdown request; see
 	// `DOSBOX_RequestUserPause()`.
 	if (DOSBOX_IsShutdownRequested()) {
 		return;
 	}
 
-	switch (get_pause_state()) {
-	case Running: set_pause_state(AutoPausePending); break;
-
-	case UserPausePending:
-	case UserPaused:
-	case AutoPausePending:
-	case AutoPaused:
-		// user-pause survives auto signals; auto-pause is idempotent
-		break;
-
-	default: assertm(false, "Invalid PauseState value");
+	if (const auto next = NextPauseState(get_pause_state(),
+	                                     PauseEvent::AutoPause)) {
+		set_pause_state(*next);
 	}
 }
 
 void DOSBOX_RequestAutoResume()
 {
-	using enum PauseState;
-
-	switch (get_pause_state()) {
-	case AutoPausePending: set_pause_state(Running); break;
-	case AutoPaused: set_pause_state(Running); break;
-
-	case Running:
-	case UserPausePending:
-	case UserPaused:
-		// never auto-resume a user pause
-		break;
-
-	default: assertm(false, "Invalid PauseState value");
+	if (const auto next = NextPauseState(get_pause_state(),
+	                                     PauseEvent::AutoResume)) {
+		set_pause_state(*next);
 	}
 }
 
