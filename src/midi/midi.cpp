@@ -602,15 +602,14 @@ void MIDI_Unmute()
 //
 void MIDI_Pause()
 {
-	// External devices need an explicit volume-zero broadcast during pause
-	// so they go silent (the mixer's silence path only affects SDL output,
-	// not the side channel out to external MIDI). Skip if the mixer is
-	// already in a non-Audible mute state -- the FSM transition that put us
-	// there already broadcast volume-0; the resume side will undo only if
-	// mute is back to Audible by then.
-	if (MIXER_GetMuteState() == MixerMuteState::Audible) {
-		MIDI_Mute();
-	}
+	// External MIDI devices need an explicit volume-zero broadcast on pause
+	// so they go silent (the mixer's fade only silences internal audio
+	// flowing through SDL; external MIDI is a side channel).
+	//
+	// Called unconditionally: `MIDI_Mute()` is idempotent (early-returns if
+	// already muted), so if the mute FSM already muted us there's no
+	// double-mute.
+	MIDI_Mute();
 
 	// For internal software synths (FluidSynth/MT-32/SoundCanvas) this
 	// halts their renderer thread so the synth's internal clock doesn't
