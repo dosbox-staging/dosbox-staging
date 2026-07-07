@@ -183,7 +183,7 @@ struct MixerSettings {
 
 	// Sample rate negotiated with SDL (technically, this is the rate of
 	// sample *frames* per second).
-	std::atomic<int> sample_rate_hz = 0;
+	std::atomic<int> sample_rate_hz = DefaultSampleRateHz;
 
 	// Matches SDL AudioSpec.samples type
 	int blocksize    = DefaultBlocksize;
