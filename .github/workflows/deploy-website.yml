@@ -114,7 +114,7 @@ jobs:
       # whole build. Retry the build itself; staging below cannot fail
       # transiently and stays a plain `run:`.
       - name: Build documentation
-        uses: ./.github/actions/retry
+        uses: ./dosbox-staging/.github/actions/retry
         with:
           cmd: |
             cd dosbox-staging.github.io
@@ -160,7 +160,7 @@ jobs:
       # is not synchronous) may land its push between our checkout and ours.
       - name: Publish new release
         if:   steps.commit_release.outputs.publish == 'true'
-        uses: ./.github/actions/retry
+        uses: ./dosbox-staging/.github/actions/retry
         with:
           cmd: |
             cd dosbox-staging.github.io
