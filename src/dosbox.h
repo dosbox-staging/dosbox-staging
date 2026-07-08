@@ -51,7 +51,7 @@ bool DOSBOX_IsShutdownRequested();
 // from two sources: the user (via hotkeys or the HTTP API), and host-window
 // inactivity (when `pause_when_inactive` conf setting is enabled).
 //
-// We express only *intent* via these API calls; the actuall implements
+// We express only *intent* via these API calls; the actual implementation
 // decides the appropriate course of action (e.g., user pause trumps
 // auto-pausing, and auto-resume never resumes a user pause).
 //
