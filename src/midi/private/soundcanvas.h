@@ -5,11 +5,9 @@
 #define DOSBOX_SOUNDCANVAS_H
 
 #include "midi_device.h"
+#include "synth_render_pauser.h"
 
-#include <atomic>
-#include <condition_variable>
 #include <memory>
-#include <mutex>
 #include <optional>
 #include <thread>
 
@@ -104,12 +102,8 @@ private:
 
 	std::thread renderer = {};
 
-	// Pause primitives for the renderer thread. The `Render()` loop blocks
-	// on `pause_cv` while `is_paused` is set so the synth's internal clock
-	// doesn't advance during a DOSBox pause.
-	std::atomic<bool> is_paused      = false;
-	std::mutex pause_mutex           = {};
-	std::condition_variable pause_cv = {};
+	// Parks the renderer thread during a DOSBox pause.
+	SynthRenderPauser pauser = {};
 
 	SoundCanvas::SynthModel model = {};
 
