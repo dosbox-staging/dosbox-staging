@@ -63,7 +63,7 @@ enum class MixerMuteState {
 	// Output flows normally to SDL.
 	Audible,
 
-	// User toggled the via the hotkey or the HTTP API.
+	// User toggled the mute via the hotkey or the HTTP API.
 	// Survives focus changes; only the user can clear it.
 	UserMuted,
 
@@ -78,7 +78,7 @@ enum class MuteRequest {
 	UserMute,
 	UserUnmute,
 
-	// Intenet coming from the `mute_when_inactive` focus loss / gain path.
+	// Intent coming from the `mute_when_inactive` focus loss / gain path.
 	AutoMute,
 	AutoUnmute
 };
