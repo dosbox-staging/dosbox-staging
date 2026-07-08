@@ -13,6 +13,22 @@ dosbox /path/to/game/GAME.EXE
 dosbox disk.img
 ```
 
+### Windows users
+
+When specifying a path using quotation marks, you must omit the trailing `\`
+or use double backslashes before the final quotation mark. For example:
+
+```
+dosbox "C:\Users\My User\My Game"
+dosbox "C:\Users\My User\My Game\\"
+```
+
+The following will **not** work as the final `\"` will translate to a literal quotation mark.
+
+```
+dosbox "C:\Users\My User\My Game\"
+```
+
 ## Preferred usage
 
 While this might be alright for some quick testing, a much better way is to
