@@ -34,8 +34,8 @@ emulated, but no audio reaches the host. This can be useful for capturing
 the emulated audio output to a WAV file without hearing it, or for running
 DOSBox on headless systems without audio hardware.
 
-For buffer tuning ([`blocksize`](#blocksize), [`prebuffer`](#prebuffer),
-[`negotiate`](#negotiate)) and troubleshooting audio glitches, see
+For buffer tuning ([`blocksize`](#blocksize), [`prebuffer`](#prebuffer))
+and troubleshooting audio glitches, see
 [Minimising audio glitches](#minimising-audio-glitches) below.
 
 
@@ -220,9 +220,8 @@ particular hardware, audio driver, and operating system combination.
 
 Increasing the audio buffer sizes usually helps. The trade-off is higher
 audio latency (a longer delay between an action and its sound). The
-default `blocksize` is 1024 on Windows and 512 on macOS and Linux
-(in sample frames). The default `prebuffer` is 25 ms on Windows and 20 ms
-on the other platforms.
+default [`blocksize`](#blocksize) is `auto` which selects a platform dependant default.
+(usually around 512-1024 sample frames). The default [`prebuffer`](#prebuffer) is 20ms.
 
 Try doubling both values as a starting point:
 
@@ -232,15 +231,10 @@ blocksize = 2048
 prebuffer = 50
 ```
 
-The `blocksize` should be a power of two: 256, 512, 1024, 2048, 4096, or
-8192. The `prebuffer` can be any value in milliseconds. Increase
+The [`blocksize`](#blocksize) should be a power of two: 256, 512, 1024, 2048, 4096, or
+8192. The [`prebuffer`](#prebuffer) can be any value in milliseconds. Increase
 further if glitches persist, but keep in mind that larger buffers mean more
 noticeable input-to-sound delay.
-
-The [`negotiate`](#negotiate) setting lets the audio driver override your
-[`blocksize`](#blocksize) with a value it considers optimal. It's enabled by
-default on macOS and Linux; disable it only if you need to force a specific
-buffer size.
 
 Also make sure your [`cpu_cycles`](../system/cpu.md#cpu_cycles) isn't set
 higher than the game actually needs --- overdoing it wastes host CPU
@@ -276,29 +270,17 @@ settings (crossfeed, reverb, chorus), see [Mixer effects](mixer-effects.md#confi
 
 ##### blocksize
 
-:   Block size of the host audio device in sample frames (`1024` on Windows,
-    `512` on other platforms by default). Valid range is 64 to 8192. Should
-    be set to power-of-two values (e.g., 256, 512, 1024). Larger values
-    might help with sound stuttering but will introduce more latency. Also
-    see [`negotiate`](#negotiate).
+:   Block size of the host audio device in sample frames ('auto' by default). Valid
+    range is 16 to 8192. Should be set to power-of-two values (e.g., 256, 512, 1024,
+    etc.) Larger values might help with sound stuttering but will introduce more
+    latency.
 
 
 ##### prebuffer
 
 :   How many milliseconds of sound to render in advance on top of
-    [`blocksize`](#blocksize) (`25` on Windows, `20` on other platforms by
-    default). Larger values might help with sound stuttering but will
-    introduce more latency.
-
-
-##### negotiate
-
-:   Negotiate a possibly better [`blocksize`](#blocksize) setting (`off` on
-    Windows, `on` on other platforms by default). Enable if you're not
-    getting audio or the sound is stuttering with your `blocksize` setting.
-    Disable to force the manually set `blocksize` value.
-
-    Possible values: `on`, `off`
+    [`blocksize`](#blocksize) (`20` by default). Larger values might
+    help with sound stuttering but will introduce more latency.
 
 
 ##### compressor
