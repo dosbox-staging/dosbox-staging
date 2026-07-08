@@ -954,27 +954,7 @@ void MidiDeviceMt32::ProcessWorkFromFifo()
 void MidiDeviceMt32::Render()
 {
 	while (work_fifo.IsRunning()) {
-		if (is_paused.load(std::memory_order_acquire)) {
-			// Halt the synth so its internal clock doesn't advance
-			// past the pause edge. Stop `audio_frame_fifo` while
-			// parked so a concurrent mixer `BulkDequeue()` returns
-			// a short read instead of blocking on the
-			// empty-but-running queue -- that block (while holding
-			// `mixer.mutex`) was the pause/resume deadlock the
-			// `MIDI_Pause`/`MIDI_Resume` lock + ordering used to
-			// guard against. Buffered pre-pause frames survive the
-			// stop and drain on resume.
-			std::unique_lock lock(pause_mutex);
-
-			audio_frame_fifo.Stop();
-
-			pause_cv.wait(lock, [this] {
-				return !is_paused.load(std::memory_order_acquire) ||
-				       !work_fifo.IsRunning();
-			});
-
-			audio_frame_fifo.Start();
-
+		if (pauser.ParkIfPaused(audio_frame_fifo, work_fifo)) {
 			continue;
 		}
 
@@ -985,16 +965,12 @@ void MidiDeviceMt32::Render()
 
 void MidiDeviceMt32::Pause()
 {
-	is_paused.store(true, std::memory_order_release);
+	pauser.Pause();
 }
 
 void MidiDeviceMt32::Resume()
 {
-	{
-		const std::lock_guard lock(pause_mutex);
-		is_paused.store(false, std::memory_order_release);
-	}
-	pause_cv.notify_all();
+	pauser.Resume();
 }
 
 ModelAndDir MidiDeviceMt32::GetModelAndDir()
