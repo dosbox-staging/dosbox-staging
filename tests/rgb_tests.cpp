@@ -209,3 +209,39 @@ TEST(rgb, bgrx8888_object)
 	EXPECT_EQ(byte_array[1], g);
 	EXPECT_EQ(byte_array[2], r);
 }
+
+TEST(rgb, Rgb888_FromHexString_valid_6digit)
+{
+	EXPECT_EQ(Rgb888::FromHexString("#000000"), Rgb888(0x00, 0x00, 0x00));
+	EXPECT_EQ(Rgb888::FromHexString("#ffffff"), Rgb888(0xff, 0xff, 0xff));
+	EXPECT_EQ(Rgb888::FromHexString("#ff0000"), Rgb888(0xff, 0x00, 0x00));
+	EXPECT_EQ(Rgb888::FromHexString("#00ff00"), Rgb888(0x00, 0xff, 0x00));
+	EXPECT_EQ(Rgb888::FromHexString("#0000ff"), Rgb888(0x00, 0x00, 0xff));
+	EXPECT_EQ(Rgb888::FromHexString("#2c2c98"), Rgb888(0x2c, 0x2c, 0x98));
+}
+
+TEST(rgb, Rgb888_FromHexString_valid_3digit)
+{
+	EXPECT_EQ(Rgb888::FromHexString("#000"), Rgb888(0x00, 0x00, 0x00));
+	EXPECT_EQ(Rgb888::FromHexString("#fff"), Rgb888(0xff, 0xff, 0xff));
+	EXPECT_EQ(Rgb888::FromHexString("#f00"), Rgb888(0xff, 0x00, 0x00));
+	EXPECT_EQ(Rgb888::FromHexString("#abc"), Rgb888(0xaa, 0xbb, 0xcc));
+}
+
+TEST(rgb, Rgb888_FromHexString_uppercase)
+{
+	EXPECT_EQ(Rgb888::FromHexString("#FF0000"), Rgb888(0xff, 0x00, 0x00));
+	EXPECT_EQ(Rgb888::FromHexString("#FFFFFF"), Rgb888(0xff, 0xff, 0xff));
+	EXPECT_EQ(Rgb888::FromHexString("#ABC"), Rgb888(0xaa, 0xbb, 0xcc));
+}
+
+TEST(rgb, Rgb888_FromHexString_invalid)
+{
+	EXPECT_EQ(Rgb888::FromHexString(""), std::nullopt);
+	EXPECT_EQ(Rgb888::FromHexString("000000"), std::nullopt);
+	EXPECT_EQ(Rgb888::FromHexString("#0"), std::nullopt);
+	EXPECT_EQ(Rgb888::FromHexString("#00000"), std::nullopt);
+	EXPECT_EQ(Rgb888::FromHexString("#0000000"), std::nullopt);
+	EXPECT_EQ(Rgb888::FromHexString("#gggggg"), std::nullopt);
+	EXPECT_EQ(Rgb888::FromHexString("#xyz"), std::nullopt);
+}

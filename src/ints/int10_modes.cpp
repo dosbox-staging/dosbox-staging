@@ -9,6 +9,8 @@
 #include <cassert>
 #include <cstring>
 #include <optional>
+#include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 #include "config/setup.h"
@@ -16,7 +18,10 @@
 #include "hardware/pci_bus.h"
 #include "hardware/port.h"
 #include "hardware/video/vga.h"
+#include "misc/notifications.h"
+#include "misc/support.h"
 #include "misc/video.h"
+#include "simpleini/SimpleIni.h"
 #include "utils/bitops.h"
 #include "utils/math_utils.h"
 #include "utils/rgb666.h"
@@ -414,79 +419,6 @@ constexpr cga_colors_t cga_colors_ibm5153 = { Rgb666
 
 	{0x13, 0x13, 0x13}, {0x13, 0x13, 0x37}, {0x13, 0x37, 0x13}, {0x13, 0x3c, 0x3c},
 	{0x37, 0x13, 0x13}, {0x3c, 0x13, 0x3c}, {0x3c, 0x3c, 0x13}, {0x3f, 0x3f, 0x3f},
-};
-
-// Original LucasArts/SCUMM and Sierra/AGI Amiga palettes (from ScummVM)
-// https://github.com/scummvm/scummvm/blob/master/engines/agi/palette.h
-constexpr cga_colors_t cga_colors_scumm_amiga = { Rgb666
-	{0x00, 0x00, 0x00}, {0x00, 0x00, 0x2e}, {0x00, 0x2e, 0x00}, {0x00, 0x2e, 0x2e},
-	{0x2e, 0x00, 0x00}, {0x2e, 0x00, 0x2e}, {0x2e, 0x1d, 0x00}, {0x2e, 0x2e, 0x2e},
-	{0x1d, 0x1d, 0x1d}, {0x1d, 0x1d, 0x3f}, {0x00, 0x3f, 0x00}, {0x00, 0x3f, 0x3f},
-	{0x3f, 0x22, 0x22}, {0x3f, 0x00, 0x3f}, {0x3f, 0x3f, 0x00}, {0x3f, 0x3f, 0x3f}
-};
-
-constexpr cga_colors_t cga_colors_agi_amiga_v1 = { Rgb666
-	{0x00, 0x00, 0x00}, {0x00, 0x00, 0x3f}, {0x00, 0x20, 0x00}, {0x00, 0x35, 0x2f},
-	{0x30, 0x00, 0x00}, {0x2f, 0x1f, 0x35}, {0x20, 0x15, 0x00}, {0x2f, 0x2f, 0x2f},
-	{0x1f, 0x1f, 0x1f}, {0x00, 0x2f, 0x3f}, {0x00, 0x3a, 0x00}, {0x00, 0x3f, 0x35},
-	{0x3f, 0x25, 0x20}, {0x3f, 0x1f, 0x00}, {0x3a, 0x3a, 0x00}, {0x3f, 0x3f, 0x3f},
-};
-
-constexpr cga_colors_t cga_colors_agi_amiga_v2 = { Rgb666
-	{0x00, 0x00, 0x00}, {0x00, 0x00, 0x3f}, {0x00, 0x20, 0x00}, {0x00, 0x35, 0x2f},
-	{0x30, 0x00, 0x00}, {0x2f, 0x1f, 0x35}, {0x20, 0x15, 0x00}, {0x2f, 0x2f, 0x2f},
-	{0x1f, 0x1f, 0x1f}, {0x00, 0x2f, 0x3f}, {0x00, 0x3a, 0x00}, {0x00, 0x3f, 0x35},
-	{0x3f, 0x25, 0x20}, {0x35, 0x00, 0x3f}, {0x3a, 0x3a, 0x00}, {0x3f, 0x3f, 0x3f},
-};
-
-constexpr cga_colors_t cga_colors_agi_amiga_v3 = { Rgb666
-	{0x00, 0x00, 0x00}, {0x00, 0x00, 0x2f}, {0x00, 0x2f, 0x00}, {0x00, 0x2f, 0x2f},
-	{0x2f, 0x00, 0x00}, {0x2f, 0x00, 0x2f}, {0x30, 0x1f, 0x00}, {0x2f, 0x2f, 0x2f},
-	{0x1f, 0x1f, 0x1f}, {0x00, 0x00, 0x3f}, {0x00, 0x3f, 0x00}, {0x00, 0x3f, 0x3f},
-	{0x3f, 0x00, 0x00}, {0x3f, 0x00, 0x3f}, {0x3f, 0x3f, 0x00}, {0x3f, 0x3f, 0x3f},
-};
-
-constexpr cga_colors_t cga_colors_agi_amigaish = { Rgb666
-	{0x00, 0x00, 0x00}, {0x00, 0x00, 0x3f}, {0x00, 0x2a, 0x00}, {0x00, 0x2a, 0x2a},
-	{0x33, 0x00, 0x00}, {0x2f, 0x1c, 0x37}, {0x23, 0x14, 0x00}, {0x2f, 0x2f, 0x2f},
-	{0x15, 0x15, 0x15}, {0x00, 0x2f, 0x3f}, {0x00, 0x33, 0x15}, {0x15, 0x3f, 0x3f},
-	{0x3f, 0x27, 0x23}, {0x3f, 0x15, 0x3f}, {0x3b, 0x3b, 0x00}, {0x3f, 0x3f, 0x3f},
-};
-
-// C64-like colors based on the Colodore C64 palette by pepto.
-// (brightness=50, contrast=50, saturation=50; custom dark cyan and bright
-// magenta as those colours are missing from the C64 palette)
-// https://www.colodore.com/
-constexpr cga_colors_t cga_colors_colodore_sat50 = { Rgb666
-	{0x00, 0x00, 0x00}, {0x0b, 0x0b, 0x26}, {0x15, 0x2b, 0x13}, {0x0e, 0x22, 0x21},
-	{0x20, 0x0c, 0x0e}, {0x23, 0x0f, 0x26}, {0x23, 0x14, 0x0a}, {0x2c, 0x2c, 0x2c},
-	{0x12, 0x12, 0x12}, {0x1c, 0x1b, 0x3b}, {0x2a, 0x3f, 0x28}, {0x1d, 0x33, 0x32},
-	{0x31, 0x1b, 0x1c}, {0x35, 0x23, 0x38}, {0x3b, 0x3c, 0x1c}, {0x3f, 0x3f, 0x3f},
-};
-
-// A 20% more saturated version of the Colodore palette (saturation=60)
-constexpr cga_colors_t cga_colors_colodore_sat60 = { Rgb666
-	{0x00, 0x00, 0x00}, {0x0b, 0x0a, 0x2c}, {0x13, 0x2d, 0x10}, {0x0c, 0x24, 0x22},
-	{0x23, 0x0b, 0x0d}, {0x26, 0x0d, 0x29}, {0x26, 0x13, 0x08}, {0x2c, 0x2c, 0x2c},
-	{0x12, 0x12, 0x12}, {0x1b, 0x1a, 0x3f}, {0x27, 0x3f, 0x24}, {0x1a, 0x35, 0x33},
-	{0x34, 0x19, 0x1b}, {0x37, 0x22, 0x3a}, {0x3c, 0x3d, 0x17}, {0x3f, 0x3f, 0x3f},
-};
-
-// Emulation of the actual color output of an unknown Tandy monitor.
-constexpr cga_colors_t cga_colors_tandy_warm = { Rgb666
-	{0x03, 0x03, 0x03}, {0x00, 0x03, 0x27}, {0x02, 0x1d, 0x05}, {0x0c, 0x23, 0x27},
-	{0x2a, 0x06, 0x00}, {0x2b, 0x0c, 0x27}, {0x2c, 0x18, 0x09}, {0x2a, 0x2a, 0x2a},
-	{0x14, 0x14, 0x14}, {0x16, 0x1a, 0x3c}, {0x11, 0x2f, 0x14}, {0x10, 0x37, 0x3e},
-	{0x3f, 0x1c, 0x14}, {0x3f, 0x21, 0x3d}, {0x3d, 0x38, 0x12}, {0x3c, 0x3c, 0x3e},
-};
-
-// A modern take on the canonical CGA palette with dialed back contrast.
-// https://lospec.com/palette-list/aap-dga16
-constexpr cga_colors_t cga_colors_dga16 = { Rgb666
-	{0x00, 0x00, 0x00}, {0x00, 0x06, 0x1d}, {0x04, 0x23, 0x00}, {0x05, 0x2e, 0x34},
-	{0x1c, 0x03, 0x02}, {0x1b, 0x07, 0x27}, {0x2c, 0x14, 0x05}, {0x2e, 0x2c, 0x2a},
-	{0x12, 0x12, 0x10}, {0x02, 0x18, 0x31}, {0x26, 0x33, 0x00}, {0x1c, 0x3d, 0x35},
-	{0x3a, 0x27, 0x00}, {0x3f, 0x1e, 0x36}, {0x3f, 0x3c, 0x15}, {0x3f, 0x3f, 0x3f},
 };
 
 // clang-format on
@@ -2356,223 +2288,101 @@ static cga_colors_t handle_cga_colors_prefs_ibm5153(const std::string& cga_color
 	return cga_colors_ibm5153;
 }
 
-// Tokenize the `cga_colors` string into tokens that each correspond to a
-// single color definition. These tokens will be validated and parsed by
-// `parse_color_token`.
-std::vector<std::string> tokenize_cga_colors_pref(const std::string& cga_colors_pref)
+static cga_colors_t load_cga_palette_resources(const std::string& name)
 {
-	std::vector<std::string> tokens;
-	if (cga_colors_pref.size() == 0) {
-		return tokens;
-	}
+	const auto path = get_resource_path("cga-colors", name + ".preset");
+	const cga_colors_t colors = [path, name]() {
+		if (path.empty()) {
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "INT10H",
+			                      "INT10H_CGA_PALETTE_NOT_FOUND",
+			                      name.c_str());
+			return cga_colors_default;
+		}
 
-	enum class TokenType { None, Hex, RgbTriplet };
+		CSimpleIniA ini;
+		ini.SetUnicode();
 
-	auto curr_token   = TokenType::None;
-	auto it           = cga_colors_pref.cbegin();
-	auto start        = it;
-	bool inside_paren = false;
+		if (ini.LoadFile(path.string().c_str()) < 0) {
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "INT10H",
+			                      "INT10H_CGA_PALETTE_LOAD_FAILED",
+			                      name.c_str());
+			return cga_colors_default;
+		}
 
-	auto is_separator = [](const char ch) {
-		return (ch == ' ' || ch == '\t' || ch == ',');
-	};
+		const auto section = ini.GetSection("cga_colors");
+		if (!section) {
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "INT10H",
+			                      "INT10H_CGA_PALETTE_MISSING_SECTION",
+			                      name.c_str());
+			return cga_colors_default;
+		}
 
-	auto store_token = [&]() { tokens.emplace_back(std::string(start, it)); };
+		std::unordered_map<std::string, std::string> color_map = {};
+		for (const auto& [key, value] : *section) {
+			color_map[key.pItem] = value;
+		}
 
-	while (it != cga_colors_pref.cend()) {
-		auto ch = *it;
-		switch (curr_token) {
-		case TokenType::None:
-			if (is_separator(ch)) {
-				; // skip
-			} else if (ch == '#') {
-				curr_token = TokenType::Hex;
-				start      = it;
-			} else if (ch == '(') {
-				curr_token   = TokenType::RgbTriplet;
-				inside_paren = true;
-				start        = it;
+		constexpr std::array<const char*, NumCgaColors> color_names = {
+		        "black",
+		        "blue",
+		        "green",
+		        "cyan",
+		        "red",
+		        "magenta",
+		        "brown",
+		        "light_gray",
+		        "dark_gray",
+		        "bright_blue",
+		        "bright_green",
+		        "bright_cyan",
+		        "bright_red",
+		        "bright_magenta",
+		        "yellow",
+		        "white"};
+
+		const std::unordered_set<std::string_view> valid_names(
+		        color_names.begin(), color_names.end());
+		for (const auto& [key, value] : color_map) {
+			if (valid_names.find(key) == valid_names.end()) {
+				NOTIFY_DisplayWarning(Notification::Source::Console,
+				                      "INT10H",
+				                      "INT10H_CGA_PALETTE_UNKNOWN_COLOR",
+				                      name.c_str(),
+				                      key.c_str());
+				return cga_colors_default;
 			}
-			break;
+		}
 
-		case TokenType::Hex:
-			if (is_separator(ch)) {
-				store_token();
-				curr_token = TokenType::None;
+		cga_colors_t parsed_colors = {};
+		for (auto i = 0; i < NumCgaColors; ++i) {
+			const auto it = color_map.find(color_names[i]);
+			if (it == color_map.end()) {
+				NOTIFY_DisplayWarning(Notification::Source::Console,
+				                      "INT10H",
+				                      "INT10H_CGA_PALETTE_MISSING_COLOR",
+				                      name.c_str(),
+				                      color_names[i]);
+				return cga_colors_default;
 			}
-			break;
-
-		case TokenType::RgbTriplet:
-			if (inside_paren) {
-				if (ch == ')') {
-					inside_paren = false;
-				}
-			} else if (is_separator(ch)) {
-				store_token();
-				curr_token = TokenType::None;
+			const auto rgb = Rgb888::FromHexString(it->second);
+			if (!rgb) {
+				NOTIFY_DisplayWarning(Notification::Source::Console,
+				                      "INT10H",
+				                      "INT10H_CGA_PALETTE_INVALID_COLOR_VALUE",
+				                      name.c_str(),
+				                      it->second.c_str(),
+				                      color_names[i]);
+				return cga_colors_default;
 			}
-			break;
+			parsed_colors[i] = Rgb666::FromRgb888(*rgb);
 		}
-		++it;
-	}
+		return parsed_colors;
+	}();
 
-	if (curr_token != TokenType::None) {
-		store_token();
-	}
-
-	return tokens;
-}
-
-// Input should be a token output by `tokenize_cga_colors_pref`, representing
-// a color definition. Tokens are assumed to have no leading or trailing
-// white-spaces
-std::optional<Rgb888> parse_color_token(const std::string& token,
-                                        const uint8_t color_index)
-{
-	if (token.size() == 0) {
-		return {};
-	}
-
-	auto log_warning = [&](const std::string& message) {
-		LOG_WARNING("INT10H: Error parsing 'cga_colors' color value '%s' at index %u: %s",
-		            token.c_str(),
-		            color_index,
-		            message.c_str());
-	};
-
-	switch (token[0]) {
-	case '#': {
-		const auto is_hex3_token = (token.size() == 3 + 1);
-		const auto is_hex6_token = (token.size() == 6 + 1);
-
-		if (!(is_hex3_token || is_hex6_token)) {
-			log_warning("hex colors must be either 3 or 6 digits long");
-			return {};
-		}
-		// Need to do this check because sscanf is way too lenient and
-		// would parse something like "xyz" as 0
-		if (!is_hex_digits(std::string_view(token).substr(1))) {
-			log_warning("hex colors must contain only digits and the letters A to F");
-			return {};
-		}
-
-		unsigned int value = {};
-		const auto parse_result = sscanf(token.c_str(), "#%x", &value);
-		if (parse_result == 0 || parse_result == EOF) {
-			log_warning("could not parse hex color");
-			return {};
-		}
-
-		if (is_hex3_token) {
-			auto red4   = static_cast<uint8_t>(value >> 8 & 0xf);
-			auto green4 = static_cast<uint8_t>(value >> 4 & 0xf);
-			auto blue4  = static_cast<uint8_t>(value      & 0xf);
-
-			return Rgb888::FromRgb444(red4, green4, blue4);
-
-		} else { // hex6 token
-			const auto red8   = static_cast<uint8_t>(value >> 16 & 0xff);
-			const auto green8 = static_cast<uint8_t>(value >>  8 & 0xff);
-			const auto blue8  = static_cast<uint8_t>(value       & 0xff);
-
-			return Rgb888(red8, green8, blue8);
-		}
-	}
-	case '(': {
-		auto parts = split_with_empties(token, ',');
-		if (parts.size() != 3) {
-			log_warning("RGB-triplets must have 3 comma-separated values");
-			return {};
-		}
-
-		const auto r_string = parts[0].substr(1);
-		const auto g_string = parts[1];
-		const auto b_string = parts[2].substr(0, parts[2].size() - 1);
-
-		auto parse_component =
-		        [&](const std::string& component) -> std::optional<uint8_t> {
-			constexpr char trim_chars[] = " \t,";
-
-			auto c = component;
-			trim(c, trim_chars);
-
-			if (c.empty() || !is_digits(c)) {
-				log_warning("RGB-triplet values must contain only digits");
-				return {};
-			}
-
-			const auto value = parse_int(c);
-			if (!value) {
-				log_warning("could not parse RGB-triplet value");
-				return {};
-			}
-			if (*value < 0 || *value > 255) {
-				log_warning("RGB-triplet values must be between 0 and 255");
-				return {};
-			}
-			return *value;
-		};
-
-		const auto red8   = parse_component(r_string);
-		const auto green8 = parse_component(g_string);
-		const auto blue8  = parse_component(b_string);
-
-		if (red8 && green8 && blue8) {
-			return Rgb888(static_cast<uint8_t>(*red8),
-			              static_cast<uint8_t>(*green8),
-			              static_cast<uint8_t>(*blue8));
-		} else {
-			return {};
-		}
-	}
-	default:
-		log_warning("colors must be specified as 3 or 6 digit hex values "
-		            "(e.g. #f00, #ff0000 for full red) or decimal RGB-triplets "
-		            "(e.g. (255, 0, 255) for magenta)");
-		return {};
-	}
-}
-
-// Parse `cga_colors` using a standard parsing approach:
-// 1. first tokenize the input into individual string tokens, one for each
-// color definition
-// 2. validate and parse the color tokens
-std::optional<cga_colors_t> parse_cga_colors(const std::string& cga_colors_setting)
-{
-	const auto tokens = tokenize_cga_colors_pref(cga_colors_setting);
-
-	if (tokens.size() != NumCgaColors) {
-		LOG_WARNING("INT10H: Invalid 'cga_colors' value: %d colors must be specified "
-		            "(found only %u)",
-		            NumCgaColors,
-		            static_cast<uint32_t>(tokens.size()));
-		return {};
-	}
-
-	cga_colors_t cga_colors = {};
-
-	bool found_errors = false;
-
-	for (size_t i = 0; i < tokens.size(); ++i) {
-		if (auto color = parse_color_token(tokens[i],
-		                                   static_cast<uint8_t>(i));
-		    !color) {
-			found_errors = true;
-		} else {
-			// We only support 18-bit colours (RGB666) when
-			// redefining CGA colors. There's not too much to be
-			// gained from adding full 24-bit support, and it would
-			// complicate the implementation a lot.
-
-			cga_colors[i] = Rgb666::FromRgb888(*color);
-		}
-	}
-
-	if (found_errors) {
-		return {};
-	} else {
-		return cga_colors;
-	}
+	return colors;
 }
 
 static cga_colors_t configure_cga_colors()
@@ -2592,40 +2402,8 @@ static cga_colors_t configure_cga_colors()
 
 	} else if (cga_colors_setting.starts_with("ibm5153")) {
 		return handle_cga_colors_prefs_ibm5153(cga_colors_setting);
-
-	} else if (cga_colors_setting == "tandy-warm") {
-		return cga_colors_tandy_warm;
-
-	} else if (cga_colors_setting == "agi-amiga-v1") {
-		return cga_colors_agi_amiga_v1;
-
-	} else if (cga_colors_setting == "agi-amiga-v2") {
-		return cga_colors_agi_amiga_v2;
-
-	} else if (cga_colors_setting == "agi-amiga-v3") {
-		return cga_colors_agi_amiga_v3;
-
-	} else if (cga_colors_setting == "agi-amigaish") {
-		return cga_colors_agi_amigaish;
-
-	} else if (cga_colors_setting == "scumm-amiga") {
-		return cga_colors_scumm_amiga;
-
-	} else if (cga_colors_setting == "colodore") {
-		return cga_colors_colodore_sat50;
-
-	} else if (cga_colors_setting == "colodore-sat") {
-		return cga_colors_colodore_sat60;
-
-	} else if (cga_colors_setting == "dga16") {
-		return cga_colors_dga16;
-
 	} else {
-		const auto cga_colors = parse_cga_colors(cga_colors_setting);
-		if (!cga_colors) {
-			LOG_WARNING("INT10H: Using default CGA colors");
-		}
-		return cga_colors.value_or(cga_colors_default);
+		return load_cga_palette_resources(cga_colors_setting);
 	}
 }
 

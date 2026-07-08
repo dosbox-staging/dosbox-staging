@@ -1938,18 +1938,9 @@ static void init_render_settings(SectionProp& section)
 	        "  dga16:         A modern take on the canonical CGA palette with dialed back\n"
 	        "                 contrast.\n"
 	        "\n"
-	        "You can also set custom colours by specifying 16 space or comma separated\n"
-	        "sRGB colour values, either as 3 or 6-digit hex codes (e.g., #f00 or #ff0000 for\n"
-	        "full red), or decimal RGB triplets (e.g., (255, 0, 255) for magenta). The 16\n"
-	        "colours are ordered as follows:\n"
-	        "\n"
-	        "  black, blue, green, cyan, red, magenta, brown, light-grey, dark-grey,\n"
-	        "  light-blue, light-green, light-cyan, light-red, light-magenta, yellow, white.\n"
-	        "\n"
-	        "Their default values, shown here in 6-digit hex code format, are:\n"
-	        "\n"
-	        "  #000000 #0000aa #00aa00 #00aaaa #aa0000 #aa00aa #aa5500 #aaaaaa\n"
-	        "  #555555 #5555ff #55ff55 #55ffff #ff5555 #ff55ff #ffff55 #ffffff");
+	        "Note: You can place custom palette configuration files inside the\n"
+	        "      'cga-colors' resource folder and load them by name (without\n"
+	        "      the .preset extension).");
 
 	string_prop = section.AddString("scaler", Deprecated, "none");
 	string_prop->SetHelp(

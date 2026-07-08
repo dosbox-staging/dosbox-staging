@@ -1,0 +1,17 @@
+[cga_colors]
+black          = #000000
+blue           = #0000fc
+green          = #00a800
+cyan           = #00a8a8
+red            = #cc0000
+magenta        = #bc70dc
+brown          = #8c5000
+light_gray     = #bcbcbc
+dark_gray      = #545454
+bright_blue    = #00bcfc
+bright_green   = #00cc54
+bright_cyan    = #54fcfc
+bright_red     = #fc9c8c
+bright_magenta = #fc54fc
+yellow         = #ecec00
+white          = #fcfcfc
