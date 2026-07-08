@@ -345,9 +345,10 @@ bool DOSBOX_IsPauseRequested()
 	return get_pause_state() != PauseState::Running;
 }
 
-// Idempotent subsystem pause hook driven by the FSM. Mapper UI doesn't go
-// through here -- it pauses audio via MIXER_LockMixerThread directly in
-// mapper.cpp, which composes correctly with this path because both agree on
+// Subsystem pause hook driven by the FSM. Called by `set_pause_state_locked()`
+// only on the actually-paused edge, so it never fires redundantly. Mapper UI
+// doesn't go through here -- it pauses audio via MIXER_LockMixerThread directly
+// in mapper.cpp, which composes correctly with this path because both agree on
 // mixer.mutex.
 //
 // !!! PAUSE ORDERING IS CRITICAL; resume ordering is not. !!!
@@ -380,14 +381,6 @@ bool DOSBOX_IsPauseRequested()
 //
 static void set_subsystems_paused(const bool paused)
 {
-	static bool audio_paused = false;
-
-	if (paused == audio_paused) {
-		return;
-	}
-
-	audio_paused = paused;
-
 	if (paused) {
 		// MIDI first so the synth renderer stops before the mixer
 		// stops draining.
@@ -401,11 +394,6 @@ static void set_subsystems_paused(const bool paused)
 		MIDI_Resume();
 		MIXER_Resume();
 	}
-}
-
-static void update_subsystem_pause_state()
-{
-	set_subsystems_paused(DOSBOX_IsPaused());
 }
 
 static void set_pause_state_locked(const PauseState new_state);
@@ -445,13 +433,21 @@ static void set_pause_state_locked(const PauseState new_state)
 	const auto now_pause_requested = (new_state != Running);
 	const auto now_running         = (new_state == Running);
 
+	const auto request_edge = (now_pause_requested != was_pause_requested);
+	const auto actual_edge  = (now_paused_actual != was_paused_actual);
+
 	pause_state.store(new_state);
 
 	if (was_paused_actual && now_running) {
 		rebase_wall_clock_on_resume();
 	}
 
-	update_subsystem_pause_state();
+	// Halt / wake the subsystems only when the actually-paused status
+	// flips; the FSM guarantees this edge fires exactly once per pause
+	// and once per resume.
+	if (actual_edge) {
+		set_subsystems_paused(now_paused_actual);
+	}
 
 	// Refresh the titlebar on both the pause-request edge (so any UI
 	// that reflects "pause pending" updates instantly on user input)
@@ -459,9 +455,6 @@ static void set_pause_state_locked(const PauseState new_state)
 	// indicator -- driven by `DOSBOX_IsPaused()` -- flips). Log only
 	// on the actually-paused edge so it reflects when subsystems
 	// really halted.
-	const auto request_edge = (now_pause_requested != was_pause_requested);
-	const auto actual_edge  = (now_paused_actual != was_paused_actual);
-
 	if (request_edge || actual_edge) {
 		TITLEBAR_RefreshTitle();
 	}
