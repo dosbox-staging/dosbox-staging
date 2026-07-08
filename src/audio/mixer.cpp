@@ -2693,7 +2693,11 @@ static float apply_fade(std::vector<AudioFrame>& buffer, float gain,
 
 static void mixer_thread_loop()
 {
-	auto last_mixed = 0.0;
+	// Seed with the current emulated time so the first iteration's
+	// `actual_time` delta is ~zero. Without this, the `no_sound` catch-up
+	// below would size the very first block from `now - 0`, producing one
+	// oversized block at startup.
+	auto last_mixed = PIC_AtomicIndex();
 
 	// Fade gain owned entirely by this thread. Published to
 	// `mixer.playback_gain` at the end of each iteration so the PausePending
@@ -2727,10 +2731,8 @@ static void mixer_thread_loop()
 				         static_cast<double>(mixer.sample_rate_hz)) *
 				        1000.0;
 
-				std::this_thread::sleep_for(std::chrono::nanoseconds(
-				        static_cast<uint64_t>(
-				                expected_time *
-				                NanosecondsPerMillisecond)));
+				SDL_DelayPrecise(static_cast<uint64_t>(
+				        expected_time * NanosecondsPerMillisecond));
 				continue;
 			}
 
@@ -2756,11 +2758,21 @@ static void mixer_thread_loop()
 		// always request at least a blocksize worth of audio.
 		auto frames_requested = mixer.blocksize;
 
-		if (mixer.fast_forward_mode) {
-			// Flag is set only by the fast-forward hotkey handler.
-			// Usually this means the emulation core is running much
-			// faster than real-time. We must consume more audio to
-			// "catch up" but always request at least a blocksize.
+		if (mixer.fast_forward_mode || mixer.no_sound) {
+			// Two cases size the block from the elapsed emulated
+			// time instead of a fixed blocksize:
+			//
+			//  - Fast-forward: the emulation core runs much faster
+			//    than real-time, so we must consume more audio to
+			//    "catch up".
+			//
+			//  - `no_sound`: there's no SDL device applying
+			//    backpressure to pace us, so we anchor the block's
+			//    frame count to the emulated time that actually
+			//    elapsed. This keeps captures at the correct speed
+			//    regardless of how long the sleep below overshoots.
+			//
+			// Always request at least a blocksize.
 			frames_requested = std::max(
 			        mixer.blocksize,
 			        ifloor(actual_time * get_mixer_frames_per_tick()));
@@ -2783,9 +2795,8 @@ static void mixer_thread_loop()
 			                          std::memory_order_relaxed);
 
 			constexpr double NanosecondsPerMillisecond = 1000000.0;
-			std::this_thread::sleep_for(std::chrono::nanoseconds(
-			        static_cast<uint64_t>(expected_time *
-			                              NanosecondsPerMillisecond)));
+			SDL_DelayPrecise(static_cast<uint64_t>(
+			        expected_time * NanosecondsPerMillisecond));
 			continue;
 		}
 
