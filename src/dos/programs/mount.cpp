@@ -38,13 +38,13 @@ void MOUNT::ListMounts()
 
 	const int console_width = real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS);
 
-	const auto width_drive  = static_cast<int>(header_drive.length());
-	const auto width_type   = 16;
+	const auto width_drive = static_cast<int>(header_drive.length());
+	const auto width_type  = 16;
 
-	const auto width_label  = std::max(minimum_column_length,
-                                          static_cast<int>(header_label.size()));
+	const auto width_label = std::max(minimum_column_length,
+	                                  static_cast<int>(header_label.size()));
 
-	const auto width_path   = console_width - 4 - width_drive - width_type -
+	const auto width_path = console_width - 4 - width_drive - width_type -
 	                        width_label;
 
 	if (width_path < 0) {
@@ -162,8 +162,8 @@ bool MOUNT::AddWildcardPaths(const std::string& path_arg,
                              std::vector<std::string>& paths)
 {
 	// Expand the given path argument
-	constexpr auto OnlyExpandFiles          = true;
-	constexpr auto SkipNativePath           = true;
+	constexpr auto OnlyExpandFiles = true;
+	constexpr auto SkipNativePath  = true;
 
 	std::vector<std::string> expanded_paths = {};
 	if (!get_expanded_files(path_arg, expanded_paths, OnlyExpandFiles, SkipNativePath)) {
@@ -192,10 +192,10 @@ void MOUNT::WriteMountStatus(const std::string& image_type,
 {
 	const size_t term_width = INT10_GetTextColumns();
 
-	constexpr auto Indent   = "  ";
+	constexpr auto Indent  = "  ";
 	const auto indent_size = strlen(Indent);
 
-	std::string images_str  = {};
+	std::string images_str = {};
 
 	if (images.size() == 1) {
 		// If only one image, don't add newlines and just write in one
@@ -903,7 +903,7 @@ bool MOUNT::ProcessPaths(MountParameters& params, bool path_relative_to_last_con
 
 	// Check first path on the host OS
 	struct stat test = {};
-	auto stat_ok = (stat(path_arg_1.c_str(), &test) == 0);
+	auto stat_ok     = (stat(path_arg_1.c_str(), &test) == 0);
 
 	// If not found on the host, check if it is a mounted DOS path
 	if (!stat_ok) {
@@ -915,13 +915,13 @@ bool MOUNT::ProcessPaths(MountParameters& params, bool path_relative_to_last_con
 		}
 	}
 
-	const auto target_is_dir       = stat_ok && S_ISDIR(test.st_mode);
+	const auto target_is_dir = stat_ok && S_ISDIR(test.st_mode);
 
 	const auto explicit_image_type = (params.type == "hdd" ||
 	                                  params.type == "iso" ||
 	                                  params.type == "floppy");
 
-	const auto has_wildcards       = path_arg_1.find_first_of("*?") !=
+	const auto has_wildcards = path_arg_1.find_first_of("*?") !=
 	                           std::string::npos;
 
 	auto is_image_mode = explicit_image_type || params.is_drive_number ||
@@ -940,7 +940,7 @@ bool MOUNT::ProcessPaths(MountParameters& params, bool path_relative_to_last_con
 
 	if (is_image_mode) {
 		// Loop through all remaining arguments
-		auto arg_idx = 2;
+		auto arg_idx        = 2;
 		std::string cur_arg = "";
 
 		while (cmd->FindCommand(arg_idx++, cur_arg)) {
@@ -1110,7 +1110,7 @@ void MOUNT::MountLocal(MountParameters& params, const std::string& local_path)
 
 	std::shared_ptr<DOS_Drive> newdrive = {};
 
-	const uint8_t int8_tize             = (uint8_t)params.sizes[1];
+	const uint8_t int8_tize = (uint8_t)params.sizes[1];
 
 	if (params.type == "overlay") {
 		const auto ldp = std::dynamic_pointer_cast<localDrive>(
@@ -1163,13 +1163,13 @@ void MOUNT::MountLocal(MountParameters& params, const std::string& local_path)
 		// Mount a host directory as a CD-ROM drive.
 		int error = 0;
 		newdrive  = std::make_shared<cdromDrive>(params.drive,
-		                                         final_path.c_str(),
-		                                         params.sizes[0],
-		                                         int8_tize,
-		                                         params.sizes[2],
-		                                         0,
-		                                         params.mediaid,
-		                                         error);
+                                                        final_path.c_str(),
+                                                        params.sizes[0],
+                                                        int8_tize,
+                                                        params.sizes[2],
+                                                        0,
+                                                        params.mediaid,
+                                                        error);
 
 		const char* msg_id = mscdex_error_to_message_id(error, false);
 
