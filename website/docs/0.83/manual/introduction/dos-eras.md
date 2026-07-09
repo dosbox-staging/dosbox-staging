@@ -73,8 +73,8 @@ cpu_cycles = 300
 sbtype = none
 ```
 
-Alternatively, use `machine = hercules` to emulate the Hercules graphics
-adapter.
+Alternatively, use `machine = hercules` to emulate the [Hercules
+graphics](../graphics/adapters.md#hercules-graphics-card).
 
 
 ## EGA and Tandy (1984--1987)
@@ -87,7 +87,7 @@ graphics and sound hardware into the much more successful [Tandy
 1000](../graphics/adapters.md#tandy-1000) line, giving budget-conscious gamers
 16-colour graphics and three-voice sound. The [PC
 speaker](../sound/sound-devices/pc-speaker.md) remained the dominant sound source
-on non-Tandy machines, though the AdLib card appeared in 1987 to change that.
+on non-Tandy machines, though the [AdLib](../sound/sound-devices/adlib.md) card appeared in 1987 to change that.
 
 ### Notable games
 
@@ -287,8 +287,10 @@ mididevice = mt32
 model = cm32l
 ```
 
-Alternatively, use `sbtype = sb16` to emulate the Sound Blaster 16, and
-`mididevice = soundcanvas` to emulate the Roland Sound Canvas SC-55.
+Alternatively, use `sbtype = sb16` to emulate the [Sound Blaster
+16](../sound/sound-devices/sound-blaster.md#sound-blaster-16), and
+`mididevice = soundcanvas` to emulate the [Roland Sound Canvas
+SC-55](../sound/sound-devices/sound-canvas.md).
 
 
 ## The Pentium era (1993--1996)
@@ -384,8 +386,8 @@ the ecosystem was transitioning to Windows.
 
 - [Quake (1996)](https://www.mobygames.com/game/374/quake/) --- true 3D engine revolution
 - [Duke Nukem 3D (1996)](https://www.mobygames.com/game/365/duke-nukem-3d/) --- interactive environments and humour
-- [Heroes of Might and Magic II (1996)](https://www.mobygames.com/game/1513/heroes-of-might-and-magic-ii-the-succession-wars/) --- refined turn-based strategy
-- [Tomb Raider (1996)](https://www.mobygames.com/game/348/tomb-raider/) --- 3D action-adventure landmark
+- [Heroes of Might and Magic II (1996)](https://www.mobygames.com/game/1513/heroes-of-might-and-magic-ii-the-succession-wars/) --- turn-based strategy classic
+- [Tomb Raider (1996)](https://www.mobygames.com/game/348/tomb-raider/) --- landmark 3D action-adventure
 - [Broken Sword (1996)](https://www.mobygames.com/game/499/circle-of-blood/) --- acclaimed point-and-click adventure
 - [Descent II (1996)](https://www.mobygames.com/game/694/descent-ii/) --- six-degrees-of-freedom shooter
 - [Dungeon Keeper (1997)](https://www.mobygames.com/game/156/dungeon-keeper/) --- play the villain strategy classic
