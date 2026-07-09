@@ -42,7 +42,7 @@ see the built-in API documentation.
 
 ### CPU registers
 
-`GET /api/cpu`
+`GET /api/v1/cpu/state`
 
 :   Returns all x86 CPU registers: `eax`, `ebx`, `ecx`, `edx`, `esi`,
     `edi`, `esp`, `ebp`, `eip`, `flags`, `cs`, `ds`, `es`, `ss`, `fs`,
@@ -51,8 +51,8 @@ see the built-in API documentation.
 
 ### Reading memory
 
-`GET /api/memory/:offset/:len`
-`GET /api/memory/:segment/:offset/:len`
+`GET /api/v1/memory/:offset/:len`
+`GET /api/v1/memory/:segment/:offset/:len`
 
 :   Read memory at the given address. The optional segment parameter can be
     the name of a segment register (`CS`, `SS`, `DS`, `ES`, `FS`, `GS`) or a
@@ -67,14 +67,14 @@ see the built-in API documentation.
     Example --- download the entire conventional memory area:
 
     ```
-    GET /api/memory/0/0x100000
+    GET /api/v1/memory/0/0x100000
     ```
 
 
 ### Writing memory
 
-`PUT /api/memory/:offset`
-`PUT /api/memory/:segment/:offset`
+`PUT /api/v1/memory/:offset`
+`PUT /api/v1/memory/:segment/:offset`
 
 :   Write memory to the given address. Path parameters work the same as for
     reading.
@@ -90,7 +90,7 @@ see the built-in API documentation.
 
 ### Memory allocation
 
-`POST /api/memory/allocate`
+`POST /api/v1/memory/allocate`
 
 :   Allocate memory from the emulated machine.
 
@@ -119,7 +119,7 @@ see the built-in API documentation.
     Returns HTTP 503 if allocation fails.
 
 
-`POST /api/memory/free`
+`POST /api/v1/memory/free`
 
 :   Free previously allocated memory.
 
@@ -136,7 +136,7 @@ see the built-in API documentation.
 
 ### DOS information
 
-`GET /api/dos`
+`GET /api/v1/dos/internals`
 
 :   Returns pointers to internal DOS data structures:
 
@@ -148,7 +148,7 @@ see the built-in API documentation.
 
 ### System information
 
-`GET /api/info`
+`GET /api/v1/dosbox/info`
 
 :   Returns DOSBox Staging version and relevant filesystem paths.
 
