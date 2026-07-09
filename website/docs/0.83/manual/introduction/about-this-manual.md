@@ -1,12 +1,5 @@
 # About this manual
 
-!!! warning
-
-    This is the **release candidate version** of the DOSBox Staging 0.83.0
-    user manual. While the majority of content is accurate, not all sections
-    have been fully proofread and polished. An updated version will be
-    published with the final 0.83.0 release.
-
 Welcome to the **DOSBox Staging 0.83 user manual** --- your complete guide
 to getting the most out of the emulator. It covers everything from basic
 concepts to the detailed configuration of every emulated device. You don't
@@ -73,9 +66,6 @@ Practical information about operating the emulator day-to-day.
 - [Capture](../using-dosbox-staging/capture.md) --- Screenshots, audio recording, video recording,
   and MIDI capture.
 
-- [HTTP API](../http-api.md) --- The built-in HTTP API for remote
-  control.
-
 - [Running Windows 3.1](../using-dosbox-staging/windows-31.md) --- Installing and configuring
   Windows 3.1 inside DOSBox Staging, including video, audio, MIDI, and mouse
   driver setup.
@@ -83,13 +73,13 @@ Practical information about operating the emulator day-to-day.
 
 ### System, graphics, sound, input, networking
 
-These sections document the emulated hardware and its configuration in
-detail. Each typically opens with a conversational overview explaining the
-hardware and when you'd want to change the defaults, followed by the
-detailed configuration reference.
+These sections document the emulated hardware and its configuration in detail.
+Each typically opens with a conversational overview explaining the hardware
+and when you'd want to change the defaults, followed by a detailed
+configuration reference.
 
 - **[System](../system/general.md)** --- Core emulator settings: machine type,
-  CPU speed and type, memory, disk speed, and DOS shell options.
+  CPU speed and type, memory, disk speed, DOS shell options, and localisation.
 
 - **[Graphics](../graphics/adapters.md)** --- Video adapters (CGA through SVGA),
   display settings, CRT shaders, composite video, 3dfx Voodoo, and
@@ -103,7 +93,13 @@ detailed configuration reference.
   and the key mapper for remapping controls.
 
 - **[Networking](../networking/serial-ports.md)** --- Serial ports, IPX
-  networking, and Ethernet emulation.
+  networking, Ethernet emulation, and multiplayer.
+
+
+### HTTP API
+
+Description of the HTTP REST API that gives external tools control over DOSBox
+Staging and access to the internal state of the emulated machine.
 
 
 ### Appendices
@@ -112,7 +108,7 @@ detailed configuration reference.
   default hotkeys.
 
 - [Keymapper reference](../appendices/keymapper.md) --- Table of every mappable
-  action and its default binding.
+  action and their default binding.
 
 
 ## Getting help for specific commands
@@ -126,7 +122,7 @@ You can also run `HELP` to see the most common commands, or `HELP /ALL` for
 the complete list.
 
 
-## If you're not sure where to look
+## If not sure where to look
 
 The search bar in the top right corner of this page works well for finding
 specific settings or topics.

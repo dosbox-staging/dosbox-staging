@@ -16,6 +16,10 @@ to be able to run DOS games effectively. While this is enough to get started,
 we encourage you to expand your knowledge on the subject over time in the
 areas you're interested in.
 
+We highly recommend to work through the [Getting Started
+guide](../../getting-started/index.md) after reading this primer.
+
+
 ## Modularity
 
 Unlike game consoles and most home computers of the era, IBM PC compatibles
@@ -29,7 +33,7 @@ This modularity is what makes DOS configuration more complex than simply
 inserting a cartridge: a game needs to know which sound card you have, how
 much memory is available, what video standard your graphics card supports, and
 so on. DOSBox Staging handles most of this automatically, but understanding
-the basic building blocks helps when things need tweaking.
+the basic building blocks of a PC helps when things need tweaking.
 
 
 ## CPU
@@ -49,10 +53,10 @@ per millisecond means a faster emulated computer. The default settings work
 well for the vast majority of games, but some titles require specific speed
 ranges to run correctly.
 
-See [CPU settings](../system/cpu.md) for CPU cycle ranges per DOS-era and how to
-fine-tune speed. The [Getting Started guide](../../getting-started/index.md)
-walks you through a few a practical examples of adjusting the CPU speed for
-specific game.
+See [CPU settings](../system/cpu.md) for CPU cycle ranges per DOS-era and how
+to fine-tune speed. The [Getting Started
+guide](../../getting-started/index.md) walks you through a few a practical
+examples of adjusting the CPU speed for specific game.
 
 <div class="compact" markdown>
 
@@ -66,32 +70,35 @@ specific game.
 ## Video
 
 The original IBM PC supported only two graphics standards: monochrome
-[Hercules](../graphics/adapters.md#hercules-graphics-card) and
-[CGA](../graphics/adapters.md#cga-and-its-descendants) (Color Graphics Adapter)
-with just four colours at 320&times;200. [EGA](../graphics/adapters.md#ega)
-(Enhanced Graphics Adapter) raised this to 16 colours in 1984, and
-[VGA](../graphics/adapters.md#vga-and-svga) (Video Graphics Array) arrived in
-1987 with 256 colours at 320&times;200 --- the resolution most DOS games are
-remembered for. Later [SVGA](../graphics/adapters.md#vga-and-svga) cards pushed
-to higher resolutions and colour depths.
+[Hercules](../graphics/adapters.md#hercules-graphics-card) (only a single
+colour on a black background), and
+[CGA](../graphics/adapters.md#cga-and-its-descendants) (Color Graphics
+Adapter, with just four colours at 320&times;200).
+[EGA](../graphics/adapters.md#ega) (Enhanced Graphics Adapter) raised this to
+16 colours in 1984, and [VGA](../graphics/adapters.md#vga-and-svga) (Video
+Graphics Array) arrived in 1987 with 256 colours at 320&times;200 --- the
+resolution most DOS games are remembered for. Later
+[SVGA](../graphics/adapters.md#vga-and-svga) cards pushed to higher
+resolutions and colour depths.
 
 The [Tandy 1000](dos-eras.md#ega-and-tandy-19841987) line deserves special
 mention: it offered 16-colour graphics and three-voice sound in an affordable
 package, making it the best overall gaming PC until about 1987. Many mid-1980s
-games look and sound noticeably better in Tandy mode.
+games look and sound noticeably better on a Tandy computer than on a standard
+IBM PC equipped with a CGA or EGA adapter.
 
 Because DOS games were designed for CRT monitors, DOSBox Staging includes [CRT
-emulation shaders](../graphics/rendering.md#adaptive-crt-shaders) that reproduce
-the look of the original hardware. This makes a surprisingly large difference
---- pixel art that looks harsh and blocky on a modern flat panel comes alive
-with the subtle blending and scanlines of the CRT emulation.
+emulation shaders](../graphics/rendering.md#adaptive-crt-shaders) that
+reproduce the look of this archaic display technology. This makes a
+surprisingly large difference --- pixel art that looks harsh and blocky on a
+modern flat panel comes alive with the subtle blending and scanlines of the
+CRT emulation.
 
 See [Graphics adapters](../graphics/adapters.md) for details on each emulated
 adapter, and [Rendering](../graphics/rendering.md) for shader and display
-options. The Getting Started guide covers
-[choosing a graphics adapter](../../getting-started/enhancing-prince-of-persia.md#graphics-options)
-and [aspect ratios](../graphics/aspect-ratios.md)
-with practical examples.
+options. The Getting Started guide covers [choosing a graphics
+adapter](../../getting-started/enhancing-prince-of-persia.md#graphics-options)
+and [aspect ratios](../graphics/aspect-ratios.md) with practical examples.
 
 
 ## Audio
@@ -165,7 +172,7 @@ therefore [hard drives](../using-dosbox-staging/storage.md#hard-disks) were stan
 were optional on the first IBM PC models, and starting from the XT released in
 1983, 10 to 20 MB hard drives were included as standard equipment. (Yes, you
 read that right, that's _megabytes_! Such a hard drive could only store a
-couple of MP3 files or high-resolution images...)
+couple of MP3 files or high-resolution photos...)
 
 The cost of hard drives were initially astronomical, so most home users could
 not afford them. This lead to the development of games that could be run from
@@ -194,10 +201,11 @@ and [mounting a CD-ROM image](../../getting-started/beneath-a-steel-sky.md#mount
 
 ## Memory
 
-The first line of IBM PC XT computers only supported up to **640 KB of
-memory**. Later on, various solutions were invented to circumvent this
-limitation and make extra memory available to DOS programs. The maximum amount
-of memory DOS can handle is 64 MB, but games rarely could use more than 32 MB.
+The first line of IBM PC XT computers only supported up to **640 KB
+(kilobytes) of memory**. Later on, various solutions were invented to
+circumvent this limitation and make extra memory available to DOS programs.
+The maximum amount of memory DOS can handle is 64 MB, but games rarely could
+use more than 32 MB.
 
 Frankly, DOS memory management is a complex, confusing, and often frustrating
 topic --- no one enjoyed dealing with this stuff back in the day. The good
@@ -226,17 +234,18 @@ interact with it by typing commands at a prompt (e.g., the famous `C:\>`
 prompt). Basic navigation involves commands like `DIR` to list files, `CD` to
 change directories, and typing a program's name to run it. This is also how
 you launch most games: navigate to the game's directory and run its
-executable.
+executable file.
 
 DOSBox Staging emulates a DOS-compatible environment, so you don't need to
 install MS-DOS separately. The emulated DOS command line works just like the
 real thing.
 
-The [Getting started guide](../../getting-started/setting-up-prince-of-persia.md)
-gives you a gentle introduction to using DOS to configure and launch games.
-See [The DOSBox shell](../using-dosbox-staging/shell.md) for a detailed look at the command-line
-shell, [DOS commands](../using-dosbox-staging/commands.md) for a list of all available commands, and
-[DOS](../system/dos.md) to learn how to customise the emulated DOS environment.
+The [Getting Started guide](../../getting-started/index.md) gives you a gentle
+introduction to using DOS to configure and launch games. See [The DOS
+shell](../using-dosbox-staging/shell.md) for a detailed look at the
+command-line shell, [DOS commands](../using-dosbox-staging/commands.md) for a
+list of all available commands, and [DOS](../system/dos.md) to learn how to
+customise the emulated DOS environment.
 
 
 ## Windows 3.1
