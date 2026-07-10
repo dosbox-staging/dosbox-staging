@@ -9,6 +9,7 @@
 
 #include <cassert>
 #include <cmath>
+#include <cstring>
 
 #include "hardware/memory.h"
 #include "misc/support.h"
@@ -16,8 +17,50 @@
 
 static constexpr auto NumSampleFramesInBuffer = 16 * 1024;
 
-static constexpr auto SampleFrameSize  = 4;
+static constexpr auto SampleFrameSizeBytes = 4;
 static constexpr auto NumAudioChannels = 2;
+
+// The mixer delivers captured audio to us in producer-paced bursts, while
+// `capture_video_add_frame()` runs per emulated video frame; these are two
+// independent clocks. Dumping every sample buffered since the last frame into
+// a single `01wb` chunk therefore can yields wildly uneven per-frame audio.
+//
+// Instead, we meter a fixed per-frame target out of the buffer and hold this
+// many sample frames in reserve, so short-term producer jitter is absorbed by
+// the reserve and the emitted chunks stay uniform. The cost is a constant
+// audio-behind-video interleave offset of roughly this many frames, which
+// demuxers reconcile from the stream's sample/frame counts. Sized well above
+// the mixer blocksize (1024 by default) and well below the 16K buffer
+// capacity so we neither underrun on jitter nor risk the overflow drop in
+// `capture_video_add_audio_data()`.
+static constexpr int AudioPrebufferFrames = 4 * 1024;
+
+// Captured-audio resync (surplus shedding)
+// ========================================
+//
+// A host too slow to emulate in real time makes the mixer (paced by the wall
+// clock, to feed the audio device) produce more audio than the video timeline
+// (paced by emulated time) can hold. The excess piles up in the buffer above
+// the prebuffer set-point. We periodically "shed" that surplus so the
+// captured audio stays locked to the video (this is a "controlled skip
+// forward") and crossfade each cut to avoid audible clicks.
+
+// Minimum spacing between sheds, in video frames. Every shed is a crossfade
+// seam; shedding on every frame (typically up to 50 to 70 times per second)
+// sounds choppy, so we let the surplus accumulate and cut less often. So we
+// do larger but fewer skips which sound better. A minimum spacing of 7 frames
+// gives the best overall results that works well enough for fast-paced music,
+// too (we could use a higher value for slower paces music).
+static constexpr int AudioResyncIntervalVideoFrames = 7;
+
+// Don't shed a surplus smaller than this. Keeps normal producer jitter (which
+// the prebuffer already absorbs) from triggering needless cuts, so captures
+// on a fast-enough host stay pristine. ~21 ms at 48 kHz.
+static constexpr int AudioResyncMinSurplusFrames = 1024;
+
+// Frames blended across each cut to smooth the skip-forward. ~2.7 ms for 48
+// kHz audio in 70 Hz VGA modes.
+static constexpr int AudioResyncCrossfadeFrames = 128;
 
 static constexpr auto AviHeaderSize = 500;
 
@@ -38,11 +81,29 @@ static struct {
 	uint32_t index_used        = 0;
 
 	struct {
+		// Unit model: this buffer and every count derived from it are
+		// measured in audio *sample frames* -- one L+R pair of
+		// `NumAudioChannels` samples. `SampleFrameSizeBytes` converts a
+		// frame count to bytes; names ending in `VideoFrames` count
+		// emulated video frames instead.
 		int16_t buf[NumSampleFramesInBuffer][NumAudioChannels] = {};
 
-		uint32_t sample_rate     = 0;
-		uint32_t buf_frames_used = 0;
-		uint32_t bytes_written   = 0;
+		uint32_t sample_rate         = 0;
+		uint32_t num_buffered_frames = 0;
+		uint32_t bytes_written       = 0;
+
+		// Fractional per-frame emit target; carries the sub-frame
+		// remainder (and any unmet demand from an underrun) between
+		// video frames. See `AudioPrebufferFrames`.
+		double frame_credit = 0.0;
+
+		// False until the reserve has first filled to
+		// `AudioPrebufferFrames`; gates the start of metered output.
+		bool is_primed = false;
+
+		// Video frames since the last surplus shed; gates the resync
+		// cadence. See `AudioResyncIntervalVideoFrames`.
+		int num_video_frames_since_resync = 0;
 	} audio = {};
 } video = {};
 
@@ -119,6 +180,98 @@ static void add_avi_chunk(const char* tag, const uint32_t size,
 	host_writed(index + 12, size);
 }
 
+// Writes the first `num_sample_frames` sample frames from the audio buffer as
+// a single `01wb` AVI chunk, then shifts any remaining frames down to the
+// front of the buffer. A no-op when `num_sample_frames` is zero.
+static void write_audio_chunk(const int num_sample_frames)
+{
+	assert(num_sample_frames <=
+	       static_cast<int>(video.audio.num_buffered_frames));
+
+	if (num_sample_frames == 0) {
+		return;
+	}
+
+	add_avi_chunk("01wb",
+	              num_sample_frames * SampleFrameSizeBytes,
+	              video.audio.buf,
+	              0);
+
+	video.audio.bytes_written += num_sample_frames * SampleFrameSizeBytes;
+
+	// Slide the frames we didn't write down to the front so the next chunk
+	// starts at index 0.
+	const int num_remaining_frames = static_cast<int>(
+	                                         video.audio.num_buffered_frames) -
+	                                 num_sample_frames;
+
+	if (num_remaining_frames > 0) {
+		memmove(video.audio.buf,
+		        video.audio.buf[num_sample_frames],
+		        num_remaining_frames * SampleFrameSizeBytes);
+	}
+	video.audio.num_buffered_frames = num_remaining_frames;
+}
+
+// Sheds `num_frames_to_drop` sample frames from the front of the audio buffer
+// to pull the captured audio back in step with the video timeline (see
+// `AudioResyncIntervalVideoFrames`). Excising a run of frames outright would
+// click, so we instead crossfade the retained head into the audio just past
+// the cut: over `num_crossfade_frames` frames we fade the kept audio out
+// (weight `1 - blend_weight`) while fading in the audio `num_frames_to_drop`
+// frames later (weight `blend_weight`). `blend_weight` runs
+// `(frame + 1) / (num_crossfade_frames + 1)` -- the `+ 1`s keep it strictly
+// between 0 and 1 so neither source is fully cut off at a seam. Then the tail
+// is shifted down. Net effect: a smooth skip-forward of `num_frames_to_drop`
+// frames.
+static void drop_audio_surplus_with_crossfade(const int num_frames_to_drop)
+{
+	if (num_frames_to_drop == 0) {
+		return;
+	}
+
+	// Keep the fade region inside the dropped run so the fade-out and
+	// fade-in sources never overlap.
+	const int num_crossfade_frames = (AudioResyncCrossfadeFrames < num_frames_to_drop)
+	                                       ? AudioResyncCrossfadeFrames
+	                                       : num_frames_to_drop;
+
+	// The dropped run plus the run we blend into must both be present.
+	assert(static_cast<int>(video.audio.num_buffered_frames) >=
+	       num_frames_to_drop + num_crossfade_frames);
+
+	for (int frame = 0; frame < num_crossfade_frames; ++frame) {
+		const auto blend_weight = static_cast<float>(frame + 1) /
+		                          static_cast<float>(num_crossfade_frames + 1);
+
+		for (int channel = 0; channel < NumAudioChannels; ++channel) {
+			const auto fade_out_sample = static_cast<float>(
+			        video.audio.buf[frame][channel]);
+
+			const auto fade_in_sample = static_cast<float>(
+			        video.audio.buf[num_frames_to_drop + frame][channel]);
+
+			video.audio.buf[frame][channel] = clamp_to_int16(
+			        iroundf(fade_out_sample * (1.0f - blend_weight) +
+			                fade_in_sample * blend_weight));
+		}
+	}
+
+	// Slide the untouched tail up so it sits directly behind the blended
+	// head, closing the gap the skipped frames left behind.
+	const int tail_start_frame = num_frames_to_drop + num_crossfade_frames;
+	const int num_tail_frames = static_cast<int>(video.audio.num_buffered_frames) -
+	                            tail_start_frame;
+
+	if (num_tail_frames > 0) {
+		memmove(video.audio.buf[num_crossfade_frames],
+		        video.audio.buf[tail_start_frame],
+		        num_tail_frames * SampleFrameSizeBytes);
+	}
+
+	video.audio.num_buffered_frames -= num_frames_to_drop;
+}
+
 void capture_video_finalise()
 {
 	if (!video.handle) {
@@ -127,6 +280,11 @@ void capture_video_finalise()
 	if (video.codec) {
 		video.codec->FinishVideo();
 	}
+
+	// Flush all audio still held back by the per-frame prebuffer so the
+	// stream contains every produced sample. Must run before the header is
+	// built below, which reads `bytes_written` as the audio stream length.
+	write_audio_chunk(video.audio.num_buffered_frames);
 
 	uint8_t avi_header[AviHeaderSize];
 	uint32_t header_pos = 0;
@@ -229,17 +387,17 @@ void capture_video_finalise()
 	AVIOUTd(4); /* Scale */
 
 	/* Rate, actual rate is scale/rate */
-	AVIOUTd(video.audio.sample_rate * SampleFrameSize);
+	AVIOUTd(video.audio.sample_rate * SampleFrameSizeBytes);
 	AVIOUTd(0); /* Start */
 
 	if (!video.audio.sample_rate) {
 		video.audio.sample_rate = 1;
 	}
 
-	AVIOUTd(video.audio.bytes_written / SampleFrameSize); /* Length */
+	AVIOUTd(video.audio.bytes_written / SampleFrameSizeBytes); /* Length */
 	AVIOUTd(0);               /* SuggestedBufferSize */
 	AVIOUTd(~0);              /* Quality */
-	AVIOUTd(SampleFrameSize); /* SampleSize */
+	AVIOUTd(SampleFrameSizeBytes); /* SampleSize */
 	AVIOUTd(0);               /* Frame */
 	AVIOUTd(0);               /* Frame */
 
@@ -249,7 +407,7 @@ void capture_video_finalise()
 	AVIOUTw(1);                       /* Format, WAVE_ZMBV_FORMAT_PCM */
 	AVIOUTw(2);                       /* Number of channels */
 	AVIOUTd(video.audio.sample_rate); /* SamplesPerSec */
-	AVIOUTd(video.audio.sample_rate * SampleFrameSize); /* AvgBytesPerSec*/
+	AVIOUTd(video.audio.sample_rate * SampleFrameSizeBytes); /* AvgBytesPerSec*/
 	AVIOUTw(4);                                         /* BlockAlign */
 	AVIOUTw(16);                                        /* BitsPerSample */
 
@@ -284,6 +442,11 @@ void capture_video_finalise()
 	video.handle = nullptr;
 }
 
+// Buffers freshly captured audio delivered by the capture pipeline until
+// `capture_video_add_frame()` meters it back out one video frame at a time. The
+// buffer is fixed-size: if it is already full we copy only what fits and drop
+// the remainder -- a last-resort overflow valve that the resync shedding (see
+// the `AudioResync*` constants) is designed to keep us clear of.
 void capture_video_add_audio_data(const uint32_t sample_rate,
                                   const uint32_t num_sample_frames,
                                   const int16_t* sample_frames)
@@ -291,16 +454,19 @@ void capture_video_add_audio_data(const uint32_t sample_rate,
 	if (!video.handle) {
 		return;
 	}
-	auto frames_left = NumSampleFramesInBuffer - video.audio.buf_frames_used;
+
+	// Take the smaller of the buffer's free space and the incoming count;
+	// any excess beyond the free space is dropped.
+	auto frames_left = NumSampleFramesInBuffer - video.audio.num_buffered_frames;
 	if (frames_left > num_sample_frames) {
 		frames_left = num_sample_frames;
 	}
 
-	memcpy(&video.audio.buf[video.audio.buf_frames_used],
+	memcpy(&video.audio.buf[video.audio.num_buffered_frames],
 	       sample_frames,
-	       frames_left * SampleFrameSize);
+	       frames_left * SampleFrameSizeBytes);
 
-	video.audio.buf_frames_used += frames_left;
+	video.audio.num_buffered_frames += frames_left;
 	video.audio.sample_rate = sample_rate;
 }
 
@@ -332,10 +498,14 @@ static void create_avi_file(const uint16_t width, const uint16_t height,
 		fputc(0, video.handle);
 	}
 
-	video.frames                = 0;
-	video.written               = 0;
-	video.audio.buf_frames_used = 0;
-	video.audio.bytes_written   = 0;
+	video.frames  = 0;
+	video.written = 0;
+
+	video.audio.num_buffered_frames           = 0;
+	video.audio.bytes_written                 = 0;
+	video.audio.frame_credit                  = 0.0;
+	video.audio.is_primed                     = false;
+	video.audio.num_video_frames_since_resync = 0;
 }
 
 // Performs some transforms on the passed down rendered image to make sure
@@ -487,16 +657,76 @@ void capture_video_add_frame(const RenderedImage& image, const float frames_per_
 	add_avi_chunk("00dc", written, video.buf.data(), codec_flags & 1 ? 0x10 : 0x0);
 	video.frames++;
 
-	//		LOG_MSG("CAPTURE: Frame %d video %d audio
-	//%d",video.frames, written, video.audio_buf_frames_used *4 );
-	if (video.audio.buf_frames_used) {
-		add_avi_chunk("01wb",
-		              video.audio.buf_frames_used * SampleFrameSize,
-		              video.audio.buf,
-		              0);
+	// Meter audio out evenly across video frames instead of dumping every
+	// sample that arrived since the last frame into one `01wb` chunk. We
+	// hold back a reserve (`AudioPrebufferFrames`) and emit a fixed
+	// per-frame target, so bursty producer output is smoothed into uniform
+	// chunks.
+	if (!video.audio.is_primed) {
+		if (video.audio.num_buffered_frames < AudioPrebufferFrames) {
+			// Still building the reserve; nothing to emit yet.
+			return;
+		}
+		video.audio.is_primed = true;
+	}
 
-		video.audio.bytes_written += video.audio.buf_frames_used *
-		                             SampleFrameSize;
-		video.audio.buf_frames_used = 0;
+	// One video frame spans `1 / frames_per_second` seconds, which at the
+	// capture sample rate is this many audio sample frames. Accumulate it
+	// as a running credit and emit whole frames only, carrying the
+	// fractional remainder forward so the audio rate stays exact over time.
+	video.audio.frame_credit += static_cast<double>(video.audio.sample_rate) /
+	                            video.frames_per_second;
+
+	int num_audio_frames_to_write = ifloor(video.audio.frame_credit);
+
+	// Underrun (reserve exhausted by a long producer stall): emit whatever
+	// is available rather than padding with silence, keeping the captured
+	// stream bit-identical to what was produced. The unmet demand stays in
+	// `frame_credit` and drains once the producer catches up.
+	if (num_audio_frames_to_write >
+	    static_cast<int>(video.audio.num_buffered_frames)) {
+		num_audio_frames_to_write = static_cast<int>(
+		        video.audio.num_buffered_frames);
+	}
+
+	video.audio.frame_credit -= num_audio_frames_to_write;
+	write_audio_chunk(num_audio_frames_to_write);
+
+	// Shed accumulated surplus to keep the captured audio locked to the
+	// (emulated-time) video timeline. See the `AudioResync*` constants.
+	++video.audio.num_video_frames_since_resync;
+
+	// The surplus is whatever sits above the steady-state reserve; only this
+	// excess is eligible to be shed (the reserve itself is never touched).
+	const int num_surplus_frames =
+	        (video.audio.num_buffered_frames > AudioPrebufferFrames)
+	                ? static_cast<int>(video.audio.num_buffered_frames -
+	                                   AudioPrebufferFrames)
+	                : 0;
+
+	// Force an early shed well before the buffer's hard capacity (at around
+	// ~75% capacity) so a very slow host can't overrun it (and hit the drop
+	// in `capture_video_add_audio_data()`) between scheduled sheds.
+	const auto is_buffer_near_full = video.audio.num_buffered_frames >
+	                                 (NumSampleFramesInBuffer * 3) / 4;
+
+	const auto is_resync_due = video.audio.num_video_frames_since_resync >=
+	                           AudioResyncIntervalVideoFrames;
+
+	if (num_surplus_frames >= AudioResyncMinSurplusFrames &&
+	    (is_resync_due || is_buffer_near_full)) {
+
+		[[maybe_unused]] const int num_video_frames_waited =
+		        video.audio.num_video_frames_since_resync;
+
+		drop_audio_surplus_with_crossfade(num_surplus_frames);
+		video.audio.num_video_frames_since_resync = 0;
+
+		LOG_DEBUG("CAPTURE: Audio resync after %d frames%s -- shed %d sample frames, buffer now %u (target %d)",
+		          num_video_frames_waited,
+		          is_buffer_near_full ? " (buffer pressure)" : "",
+		          num_surplus_frames,
+		          video.audio.num_buffered_frames,
+		          AudioPrebufferFrames);
 	}
 }
