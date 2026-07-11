@@ -206,7 +206,7 @@ external MIDI devices.
     (typically between the built-in MT-32 emulation and Roland's Sound Canvas
     VA running in an external MIDI host program), you can use the [layered
     configuration
-    approach](../using-dosbox-staging/configuration.md#config-layering) to
+    approach](../using-dosbox-staging/configuration.md#configuration-layering) to
     your advantage.
 
     As an example, to easily switch between the built-in MT-32 emulation and

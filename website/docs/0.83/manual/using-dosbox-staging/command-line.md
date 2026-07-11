@@ -4,12 +4,18 @@
 
 The simplest way to launch a game is to pass its path directly to DOSBox
 Staging. It's smart enough to figure out what to do: if you pass a directory,
-it's mounted as the C: drive; if you pass an executable, its parent directory
-is mounted and the program runs automatically.
+it's mounted as the [C: drive](storage.md#how-dos-uses-drives); if you pass an
+executable, its parent directory is mounted, and the program runs
+automatically.
 
 ```
 dosbox /path/to/game/
 dosbox /path/to/game/GAME.EXE
+```
+
+You can also boot from floppy images by specifying an image name:
+
+```
 dosbox disk.img
 ```
 
@@ -32,12 +38,14 @@ dosbox "C:\Users\My User\My Game\"
 ## Preferred usage
 
 While this might be alright for some quick testing, a much better way is to
-organise games into subfolders and put a `dosbox.conf` **local configuration**
-into each which contains your game-specific settings and tweaks.
+organise games into subfolders and put a `dosbox.conf` [local
+configuration](configuration.md#local-configuration) into each, which contains
+your game-specific settings and tweaks.
 
-Config files can be layered with [`--conf`](#-conf-config_file); later files
-override earlier ones. This way you can inject extra settings into your
-DOSBox session, overriding values from the local config:
+Configuration files can be [layered](configuration.md#configuration-layering)
+with the [`--conf`](#-conf-config_file) option; later files override earlier
+ones. This way, you can inject extra settings into your DOSBox session,
+overriding values from the local config:
 
 ```
 dosbox --conf extra.conf
@@ -57,23 +65,32 @@ Of course, you can combine these techniques:
 dosbox --conf extra.conf --set cpu_cycles=25000
 ```
 
-See [Config layering](configuration.md#config-layering) for more info.
+See [Config layering](configuration.md#configuration-layering) for more info.
 
 
 ## Discovery
 
-Several [`--list-*` options](#discovery) are handy for discovering what's
+Several [`--list-*` options](#discovery_1) are handy for discovering what's
 available on your system: shaders, keyboard layouts, country codes, and code
 pages.
 
 
 ## Command-line reference
 
+You can optionally pass a `PATH` argument and a list of options to the DOSBox
+Staging executable:
+
+```
+dosbox [OPTIONS...] [PATH]
+```
+
 ##### PATH
 
 :   - If `PATH` is a directory, it's mounted as the C: drive.
-    - If it's a bootable disk image (IMA or IMG file), it's booted.
-    - If it's a CD-ROM image (e.g., an ISO file), it's mounted as the D: drive.
+    - If it's a [bootable disk image](storage.md#booting-from-images) (IMA or
+      IMG file), it's booted.
+    - If it's a [CD-ROM image](storage.md#mounting-cd-rom-images) (e.g., an ISO
+      file), it's mounted as the D: drive.
     - If it's a DOS executable (a file with BAT, COM, or EXE extension), its
       parent directory is mounted as C: and the executable is run. When the
       executable exits, DOSBox Staging quits.
@@ -92,7 +109,7 @@ pages.
 ##### `--set <setting>=<value>`
 
 :   Override a configuration setting. Multiple `--set` options can be
-    specified. These take highest priority over all config files.
+    specified. These take the highest priority over all config files.
 
     Example: `--set mididevice=fluidsynth --set soundfont=gm.sf2`
 
@@ -122,14 +139,15 @@ pages.
 ##### `--nolocalconf`
 
 :   Don't load the local `dosbox.conf` configuration file from the current
-    working directory.
+    working directory if it exists.
 
 
 ##### `--working-dir <path>`
 
-:   Set the working directory for DOSBox Staging. DOSBox will act as if
+:   Set the working directory for DOSBox Staging; the emulator will act as if
     started from this directory. If a local `dosbox.conf` configuration exists
-    in this folder, it will be loaded after the primary config.
+    in this folder, it will be loaded after the primary config (unless
+    [`--nolocalconf`](#-nolocalconf) is specified).
 
 
 ### Startup behaviour
@@ -147,7 +165,8 @@ pages.
 
 ##### `--exit`
 
-:   Exit after running `-c` commands and `[autoexec]` sections.
+:   Exit after running `-c` commands and the commands from the `[autoexec]`
+    sections.
 
 
 ##### `--fullscreen`
@@ -197,8 +216,7 @@ pages.
 
 ##### `--startmapper`
 
-:   Launch the key mapper GUI directly. See
-    [Keyboard shortcuts](../appendices/shortcuts.md).
+:   Launch the key mapper GUI directly. See [Key mapper](../input/keymapper.md#key-mapper).
 
 
 ##### `--erasemapper`

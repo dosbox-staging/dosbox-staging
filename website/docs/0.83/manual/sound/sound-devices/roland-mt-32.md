@@ -171,8 +171,8 @@ model = mt32_old
 !!! tip
 
     Using the layering approach of DOSBox [configuration
-    files](../../using-dosbox-staging/configuration.md#config-layering), you can pick one specific
-    MT-32 model per game.
+    files](../../using-dosbox-staging/configuration.md#configuration-layering),
+    you can pick one specific MT-32 model per game.
 
 
 ## Roland ROM images
