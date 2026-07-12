@@ -84,7 +84,7 @@ in `[dos]`.
 
         The following language files are available: `de`, `en`, `es`, `fr`,
         `it`, `nl`, `pl`, `pt_BR`, and `ru`. English is built-in; the rest
-        is stored in the bundled `resources/translations` directory.
+        is stored in the bundled `resources/translations` folder.
 
 
 ### Regional settings

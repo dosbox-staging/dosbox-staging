@@ -1,6 +1,32 @@
 # Storage
 
-## How DOS uses drives
+DOS programs can only access files that are available on DOS drives (**A:**,
+**C:**, **D:**, etc.). Unlike modern operating systems, DOS has no concept of
+a single unified filesystem, so before a program can access your game files
+they must first be **mounted** as one or more DOS drives. Mounting simply
+means mapping a [host folder](#mounting-folders), [hard disk
+image](#mounting-hard-disk-images), [floppy disk
+image](#mounting-floppy-images), or [CD-ROM image](#mounting-cd-rom-images) to
+a DOS drive letter.
+
+DOSBox Staging offers two ways to do this. For most users, the recommended
+approach is [automounting](#automounting), which automatically creates DOS
+drives from a simple per-game folder structure. Alternatively, you can
+[manually mount drives](#manual-mounting) using the `MOUNT` command for
+maximum flexibility.
+
+The following sections explain how DOS drive letters work, the different types
+of storage media used by DOS PCs, and how to mount folders and disk images
+in DOSBox Staging.
+
+!!! note "Terminology"
+
+    DOS refers to folders as **directories**, while modern operating systems
+    generally use the term **folder**. They refer to the same thing, and
+    throughout this manual we use the two terms interchangeably.
+
+
+## DOS drive letters
 
 DOS identifies storage devices by drive letters, not by names or mount points.
 Each drive letter (A: through Z:) maps to exactly one storage device or
@@ -22,10 +48,10 @@ The letter assignments follow a fixed convention:
   partition, the CD-ROM is usually D:; with two partitions, it becomes E:,
   and so on.
 
-In DOSBox Staging, you assign drive letters yourself when you mount
-directories or disk images, so you have full control over the layout. The
-conventions above are worth following because many games assume them ---
-especially C: for the hard disk and D: for the CD-ROM.
+In DOSBox Staging, you assign drive letters yourself when you mount folders or
+disk images, so you have full control over the layout. The conventions above
+are worth following because many games assume them --- especially C: for the
+hard disk and D: for the CD-ROM.
 
 
 ## DOS storage media
@@ -76,15 +102,15 @@ DOSBox Staging provides two special drives in addition to whatever you mount:
 ## Automounting
 
 The easiest way to set up drives is automounting. Place your game files in a
-`drives/` directory structure, and DOSBox Staging mounts them automatically on
+`drives/` folder structure, and DOSBox Staging mounts them automatically on
 startup. The
 [Getting Started guide](../../getting-started/setting-up-prince-of-persia.md#the-c-drive)
 demonstrates this approach step by step.
 
 
-### Directory structure
+### Folder structure
 
-Create lowercase single-letter subdirectories under `drives/` to mount as DOS
+Create lowercase single-letter subfolders under `drives/` to mount as DOS
 drives:
 
 ```
@@ -93,20 +119,20 @@ drives/
   d/     -> mounted as D:
 ```
 
-The `drives/` folder is looked up relative to the current working directory or
-from the built-in resources directory.
+The `drives/` folder is looked up relative to the current working directory
+(folder) or from the built-in resources folder.
 
 
 ### Floppy and CD-ROM images
 
 Automounting also supports disk images for floppy and CD-ROM drives:
 
-- Place IMG or IMA floppy images in `drives/a/` or `drives/b/` to mount
+- Place **IMG** or **IMA** floppy images in `drives/a/` or `drives/b/` to mount
   them as floppy drives.
-- Place ISO, CUE/BIN, or MDS/MDF CD-ROM images in any drive directory (e.g.,
-  `drives/d/`) to mount them as CD-ROM drives.
+- Place **ISO**, **CUE/BIN**, or **MDS/MDF** CD-ROM images in any drive folder
+  (e.g., `drives/d/`) to mount them as CD-ROM drives.
 
-When multiple images are placed in the same directory, they are all mounted
+When multiple images are placed in the same folder, they are all mounted
 and you can switch between them during gameplay --- see
 [Disk swapping](#disk-swapping) below.
 
@@ -116,8 +142,8 @@ type.
 
 ### Drive configuration files
 
-Each drive directory can have an accompanying configuration file named
-`[letter].conf` (e.g., `c.conf`) placed alongside the directory. Example:
+Each drive folder can have an accompanying configuration file named
+`[letter].conf` (e.g., `c.conf`) placed alongside the folder. Example:
 
 ```ini
 [drive]
@@ -150,8 +176,8 @@ the log after each swap.
 
 ### Swapping with automounting
 
-Place multiple disk images in the same drive directory and DOSBox Staging
-mounts them all automatically. For example, for a three-disk floppy game:
+Place multiple disk images in the same drive folder and DOSBox Staging mounts
+them all automatically. For example, for a three-disk floppy game:
 
 ```
 drives/
@@ -210,13 +236,8 @@ mount F cd3.cue
 mount G cd4.cue
 ```
 
-!!! note
-
-    CD-ROM drive letters must be continuous --- D:, E:, F:, G: works,
-    but D:, F:, H: does not.
-
 This also works with automounting --- place each CD image in its own drive
-directory:
+folder:
 
 ```
 drives/
@@ -231,9 +252,9 @@ drives/
 ```
 
 This approach is needed for games that expect multiple CD drives to be
-available simultaneously, such as
-[Under a Killing Moon (1994)](https://www.mobygames.com/game/850/under-a-killing-moon/)
-which shipped on four CDs and could run with all four drives mounted at once.
+available simultaneously, such as [Under a Killing
+Moon](https://www.mobygames.com/game/850/under-a-killing-moon/) which shipped
+on four CDs and could run with all four drives mounted at once.
 
 !!! tip
 
@@ -270,20 +291,19 @@ DOS prompt for the full reference.
 
 !!! note
 
-    `IMGMOUNT` is deprecated. Use `MOUNT` for both directories and disk
-    images.
+    `IMGMOUNT` is deprecated. Use `MOUNT` for both folders and disk images.
 
 
-### Mounting directories
+### Mounting folders
 
 ```
 mount C /path/to/game/files
 ```
 
-This mounts a host directory as a DOS hard disk drive. This is the most common
+This mounts a host folder as a DOS hard disk drive. This is the most common
 way for making games files accessible to DOS.
 
-Directory-mounted hard disks report approximately 250 MB of free space by
+Folder-mounted hard disks report approximately 250 MB of free space by
 default. This is a made-up number; reporting the actual available space of
 your host drive wouldn't make any sense for DOS. So the emulator needs to
 report a fake but realistic fixed number.
@@ -324,7 +344,7 @@ mount C /path/to/game -freesize 1024
 #### Overlay mounts
 
 An overlay mount adds a write layer on top of an existing drive. Modified
-files are stored in the overlay directory on the host, leaving the original
+files are stored in the overlay folder on the host, leaving the original
 drive data unchanged. This is useful for keeping a clean copy of game files
 while still allowing the game to save data:
 
@@ -538,3 +558,31 @@ Storage-related settings are in the `[dosbox]` section:
 
 For emulated drive sounds (floppy chatter, hard disk clicking), see
 [Disk noise](../sound/disk-noise.md).
+
+
+
+# Storage
+
+DOS programs can only access files that are available on DOS drives (`A:`,
+`C:`, `D:`, etc.). Unlike modern operating systems, DOS has no concept of a
+single unified filesystem, so before a program can access your game files they
+must first be **mounted** as one or more DOS drives.
+
+DOSBox Staging offers two ways to do this. For most users, the recommended
+approach is [automounting](#automounting), which automatically creates DOS
+drives from a simple per-game folder structure. Alternatively, you can
+[manually mount drives](#manual-mounting) using the `MOUNT` command for maximum
+flexibility.
+
+The following sections explain how DOS drives work, the different types of
+storage media used by DOS PCs, and how to mount directories and disk images in
+DOSBox Staging.
+
+## DOS drive letters
+
+DOS identifies storage devices by drive letters, not by names or mount points.
+Each drive letter (A: through Z:) maps to exactly one storage device or
+partition. Unlike modern operating systems, there is no single unified file
+tree --- each drive is its own independent root.
+
+...

@@ -108,7 +108,12 @@ plugins:
           '0.83/manual/index.md':          '0.83/manual/introduction/about-this-manual.md'
           '0.83/getting-started/index.md': '0.83/getting-started/introduction.md'
 
-          # Unversioned getting-started paths -> latest version
+          # Latest manual redirects (only for some key pages)
+#          'latest/manual/introduction/about-this-manual.md':    '0.83/manual/introduction/about-this-manual.md'
+#          'latest/manual/using-dosbox-staging/starting.md':     '0.83/manual/using-dosbox-staging/starting.md'
+#          'latest/manual/using-dosbox-staging/installation.md': '0.83/manual/using-dosbox-staging/installation.md'
+
+          # Unversioned getting-started paths redirect to the latest version
           'getting-started/introduction.md':                '0.83/getting-started/introduction.md'
           'getting-started/setting-up-prince-of-persia.md': '0.83/getting-started/setting-up-prince-of-persia.md'
           'getting-started/enhancing-prince-of-persia.md':  '0.83/getting-started/enhancing-prince-of-persia.md'
@@ -191,6 +196,8 @@ nav:
         - 0.83/manual/introduction/dos-eras.md
 
       - Using DOSBox Staging:
+        - 0.83/manual/using-dosbox-staging/installation.md
+        - 0.83/manual/using-dosbox-staging/starting.md
         - 0.83/manual/using-dosbox-staging/configuration.md
         - 0.83/manual/using-dosbox-staging/command-line.md
         - 0.83/manual/using-dosbox-staging/shell.md

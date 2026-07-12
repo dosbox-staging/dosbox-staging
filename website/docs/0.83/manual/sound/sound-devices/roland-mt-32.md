@@ -18,7 +18,7 @@ standard for high-end audio in DOS gaming in the 1988 to 1992 period until
 
 As the Roland MT-32 was considerably more expensive than other options, such
 as the [AdLib](adlib.md#adlib-music-synthesizer-card), it
-remained out of reach for most computer users. 
+remained out of reach for most computer users.
 
 
 ## MT-32 variants
@@ -109,7 +109,7 @@ early Sierra titles that sound best on "old" hardware, override with
     accordingly.
 
     Some games offer a **Roland MT-32 with Sound Blaster** option which should
-    be generally preferred to the plain Roland MT-32 option as it might enable 
+    be generally preferred to the plain Roland MT-32 option as it might enable
     additional digital music to be played on the Sound Blaster.
 
 
@@ -178,7 +178,7 @@ model = mt32_old
 ## Roland ROM images
 
 The emulation of the Roland MT-32 family of devices requires the ROM data from
-the original hardware to work. 
+the original hardware to work.
 
 !!! important
 
@@ -189,15 +189,15 @@ the original hardware to work.
 ROMs are identified by their checksums, so file names do not matter. Both
 interleaved and non-interleaved ROM dumps are supported. Once you have
 acquired the necessary ROM sets, it's recommended to copy them to the default
-ROM directory:
+ROM folder:
 
 <div class="compact" markdown>
 
-| Platform | Default MT-32 ROM directory                               |
-| -------- | --------------------------------------------------------- |
-| Windows  | `C:\Users\<USERNAME>\AppData\DOSBox\mt32-roms\`           |
-| macOS    | `/Users/<USERNAME>/Library/Preferences/DOSBox/mt32-roms/` |
-| Linux    | `$HOME/.local/share/dosbox/mt32-roms/`                    |
+| Platform | Default MT-32 ROM folder
+| -------- | ---------------------------------------------------------
+| Windows  | `C:\Users\<USERNAME>\AppData\DOSBox\mt32-roms\`
+| macOS    | `/Users/<USERNAME>/Library/Preferences/DOSBox/mt32-roms/`
+| Linux    | `$HOME/.local/share/dosbox/mt32-roms/`
 
 </div>
 
@@ -246,24 +246,24 @@ Run the `MIXER /LISTMIDI` command to see the list of available MT-32 ROMs:
 <!-- TODO(JN) screenshot -->
 
 In the above screenshot, `mt32_107` is the currently active model. The green
-highlighted **'y'** additionally indicates which directory will be used during
+highlighted **'y'** additionally indicates which folder will be used during
 the actual loading. <!-- TODO rewrite this -->
 
 !!! warning
 
-    Both the control and PCM ROMs need to be present for a given
-    model. If some model could not be detected, or you're getting `Failed to find
-    ROMs for model <model_name>` error at startup, make sure that both ROM sets
-    have been copied to your ROM directory for that model.
+    Both the control and PCM ROMs need to be present for a given model. If
+    some model could not be detected, or you're getting `Failed to find ROMs
+    for model <model_name>` error at startup, make sure that both ROM sets
+    have been copied to your ROM folder for that model.
 
 
 
 
 ### ROM lookup paths
 
-If `romdir` is not set, DOSBox Staging searches the following directories for
-MT-32 ROM files (in order). You can also place ROMs in an `mt32-roms` subfolder
-inside the game's working directory.
+If `romdir` is not set, DOSBox Staging searches the following folders for
+MT-32 ROM files (in order). You can also place ROMs in an `mt32-roms`
+subfolder inside the game's working folder.
 
 **Windows**
 
@@ -322,9 +322,9 @@ Roland MT-32 settings are to be configured in the `[mt32]` section.
 
 ##### romdir
 
-:   The directory containing the Roland MT-32/CM-32L ROMs (unset by default).
-    The directory can be absolute or relative, or leave it unset to use the
-    `mt32-roms` directory in your DOSBox configuration directory. Other common
+:   The folder containing the Roland MT-32/CM-32L ROMs (unset by default).
+    The folder can be absolute or relative, or leave it unset to use the
+    `mt32-roms` folder in your DOSBox configuration folder. Other common
     system locations will be checked as well.
 
     !!! note

@@ -48,9 +48,9 @@ the changes and improvements introduced by this release.
     about the changes and improvements introduced in this release.
 
 
-## Hardware requirements
+## System requirements
 
-The latest release is compatible with macOS 10.15 (Catalina) or newer and
+The latest release is compatible with **macOS 11 (Big Sur) or later** and
 supports both 64-bit Intel and Apple silicon Macs.
 
 
@@ -65,40 +65,8 @@ are designed with developers and testers in mind.
 ## Apple Gatekeeper
 
 For releases before 0.81.0 and the [development snapshot
-builds](development-builds.md), you'll need to do the following when launching
-DOSBox Staging for the first time.
-
-You'll need to repeat these steps after upgrading to a more recent development
-build.
-
-### macOS Sequoia 15
-
-- Open the **DOSBox Staging** app, then click **Done** in the appearing dialog.
-- Follow [these instructions](https://support.apple.com/en-us/102445#openanyway) to allow
-  launching DOSBox Staging in the **Privacy & Security** tab in **System Settings**.
-
-### macOS Sonoma 14 or earlier
-
-- ++ctrl++ click (or right-click) on the **DOSBox Staging** app, then click
-  **Open**.
-- Click **OK** to close the appearing dialog.
-- Open the app a second time --- now Gatekeeper will show an
-  **Open** button. Press this to launch DOSBox Staging.
-
-{{ figure(
-    "images/gatekeeper.png", alt="Gatekeeper window", small=False, width="400"
-) }}
-
-
-Apple's Gatekeeper feature only permits the running of notarized software, one
-aspect of which involves developers making yearly payments to Apple.
-
-As DOSBox Staging is a volunteer effort, we were not in a position to make
-such payments prior to version 0.81.0, and therefore asked users to bypass
-Apple's Gatekeeper manually.
-
-Read the first section of [this Apple Support
-article](https://support.apple.com/en-us/102445) for further info.
+builds](development-builds.md), you'll need to do follow [these
+instructions]() when launching DOSBox Staging for the first time.
 
 
 ## Older releases

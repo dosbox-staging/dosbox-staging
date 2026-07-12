@@ -193,9 +193,9 @@ This is in stark contrast with the home computers of the era that used
 magnetic tapes and floppies for storage due to cost considerations well into
 the 1990s.
 
-See [Storage](../using-dosbox-staging/storage.md) for details on drive letters, mounting directories
+See [Storage](../using-dosbox-staging/storage.md) for details on drive letters, mounting folders
 and disk images, and the different media types. The Getting Started guide
-demonstrates [setting up a game directory](../../getting-started/setting-up-prince-of-persia.md#the-c-drive)
+demonstrates [setting up a game folder](../../getting-started/setting-up-prince-of-persia.md#the-c-drive)
 and [mounting a CD-ROM image](../../getting-started/beneath-a-steel-sky.md#mounting-a-cd-rom-image).
 
 

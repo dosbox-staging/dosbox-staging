@@ -36,8 +36,8 @@ the changes and improvements introduced in this release.
 !!! warning "Important"
 
     If Windows Security prevents you from running DOSBox Staging via **Windows
-    Defender SmartScreen** (the built-in Windows antivirus), please follow
-    [these instructions](#windows-defender).
+    Defender** (the built-in Windows antivirus), please follow [these
+    instructions](../0.83/manual/using-dosbox-staging/starting.md#windows-defender).
 
 
 ## 0.83.0 release candidate
@@ -65,16 +65,17 @@ the changes and improvements introduced in this release.
     about the changes and improvements introduced in this release.
 
 
-## Hardware requirements
+## System requirements
 
-An x86 processor with SSSE3 (Supplemental Streaming SIMD Extensions 3) is
-required.
+The latest release is compatible with any Windows laptop or desktop running
+64-bit Windows 8, 10 or 11. A dedicated graphics adapter is recommended for
+laptops.
 
 
 ## Legacy Windows support
 
 If you're still on a legacy Windows version, you can use the following older
-releases. Note these earlier version come with _zero official support_; the
+releases. Note these earlier versions come with _zero official support_; the
 core team won't be able to help you if you run into issues. Our recommendation
 will always be to upgrade your Windows and use the latest stable version.
 
@@ -111,83 +112,6 @@ You can always see what's cooking on the main branch! :sunglasses: :beer:
 
 These [snapshot builds](development-builds.md) might be slow or unstable as they
 are designed with developers and testers in mind.
-
-
-## Windows Defender
-
-Windows Defender (the built-in Windows antivirus starting from Windows 8)
-might prevent you from running DOSBox Staging when you start it for the first
-time.
-
-This is a false positive; DOSBox Staging has no malicious code whatsoever,
-just antivirus software tend to be mistakenly flag emulators as "malware".
-
-If this happens, please follow the below steps to grant Windows permission to
-run DOSBox Staging. You may need to repeat these steps after upgrading
-to a newer version.
-
-### Method 1
-
-Start the application, then click on **More info** in the appearing dialog.
-Click the **Run anyway** button in the second dialog.
-
-<div class="image-grid" markdown>
-
-{{ figure(
-    "images/smartscreen1.png", alt="SmartScreen window 1", small=False
-) }}
-
-{{ figure(
-    "images/smartscreen2.png", alt="SmartScreen window 2", small=False
-) }}
-
-</div>
-
-Consider also performing [Method 3](#method-3) to make DOSBox Staging start up
-faster.
-
-
-### Method 2
-
-In your installation folder, right-click on the `dosbox.exe`, select **Properties**, tick
-**Unblock** in the appearing dialog, then press **Ok**.
-
-{{ figure(
-    "images/properties.png", alt="Properties window", small=False
-) }}
-
-Consider also performing [Method 3](#method-3) to make DOSBox Staging start up
-faster.
-
-
-### Method 3
-
-Add an exclusion to Windows Security to whitelist the DOSBox Staging
-executable or the folder in which it resides. We recommend doing so even if
-you've already performed either of the previous methods, as it can eliminate
-the 3--5 second startup delay caused by the real-time antivirus scan.
-
-See the steps on how to do this [here](https://support.microsoft.com/en-au/windows/add-an-exclusion-to-windows-security-811816c0-4dfd-af4a-47e4-c301afe13b26)
-and [here](https://docs.rackspace.com/docs/set-windows-defender-folder-exclusions).
-
-
-### Explanation
-
-Starting in Windows 8, [Microsoft Defender SmartScreen's](https://docs.microsoft.com/en-us/windows/security/threat-protection/windows-defender-smartscreen/windows-defender-smartscreen-overview
-) pop-up encumbers the execution
-of newly-developed applications.  To prevent this, developers are expected to pay
-Microsoft's [EV certification](https://docs.microsoft.com/en-gb/archive/blogs/ie/microsoft-smartscreen-extended-validation-ev-code-signing-certificates) vendors a yearly fee and put the software on Windows
-Store.
-
-As DOSBox Staging is a volunteer effort, we are not in a position to make such
-payments. We, therefore, ask users to manually unblock DOSBox Staging and be
-patient while Microsoft's Application Reputation Scheme eventually whitelists
-DOSBox Staging.
-
-## Custom install parameters
-
-The installer is built with [Inno Setup](https://jrsoftware.org/isinfo.php). For the available
-command-line install parameters, please see [Inno's documentation page](https://jrsoftware.org/ishelp/index.php?topic=setupcmdline).
 
 
 ## Older releases

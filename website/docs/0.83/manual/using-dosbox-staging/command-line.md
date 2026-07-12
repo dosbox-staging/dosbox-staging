@@ -3,10 +3,9 @@
 ## Simple usage
 
 The simplest way to launch a game is to pass its path directly to DOSBox
-Staging. It's smart enough to figure out what to do: if you pass a directory,
-it's mounted as the [C: drive](storage.md#how-dos-uses-drives); if you pass an
-executable, its parent directory is mounted, and the program runs
-automatically.
+Staging. It's smart enough to figure out what to do: if you pass a folder,
+it's mounted as the [C: drive](storage.md#dos-drive-letters); if you pass an
+executable, its parent folder is mounted, and the program runs automatically.
 
 ```
 dosbox /path/to/game/

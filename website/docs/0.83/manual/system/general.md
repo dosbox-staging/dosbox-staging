@@ -41,15 +41,15 @@ The [`vesa_modes`](#vesa_modes) setting controls which VESA video modes are
 available beyond the standard VGA modes. The default `compatible` setting
 provides the safest set of modes --- it excludes 320x200 high colour modes
 (which weren't properly supported until the late 1990s) and certain 256-colour
-linear framebuffer modes that cause timing problems in Build Engine games
-([Duke Nukem 3D](https://www.mobygames.com/game/365/duke-nukem-3d/),
-[Shadow Warrior](https://www.mobygames.com/game/1779/shadow-warrior/),
+linear framebuffer modes that cause timing problems in **Build Engine** games
+([Duke Nukem 3D](https://www.mobygames.com/game/365/duke-nukem-3d/), [Shadow
+Warrior](https://www.mobygames.com/game/1779/shadow-warrior/),
 [Blood](https://www.mobygames.com/game/793/blood/)). The `all` setting adds
 these extra modes and is sometimes needed by late 1990s demoscene productions.
-Use `halfline` only for
-[Extreme Assault](https://www.mobygames.com/game/1396/extreme-assault/), which
-requires a special halfline VESA mode. See
-[`vesa_modes`](#vesa_modes) for the full resolution table.
+Use `halfline` only for [Extreme
+Assault](https://www.mobygames.com/game/1396/extreme-assault/), which requires
+a special halfline VESA mode. See [`vesa_modes`](#vesa_modes) for the full
+resolution table.
 
 VGA text mode normally uses 9-pixel-wide character cells.
 [`vga_8dot_font`](#vga_8dot_font) forces 8-pixel-wide characters instead. Very
@@ -327,11 +327,11 @@ The settings below are configured in the `[sdl]` section.
 
 ##### automount
 
-:   Mount `drives/[c]` directories as drives on startup, where `[c]` is a
+:   Mount `drives/[c]` folders as drives on startup, where `[c]` is a
     lower-case drive letter from `a` to `y`. The `drives` folder can be
-    provided relative to the current directory or via built-in resources.
-    Mount settings can be optionally provided using a `[c].conf` file
-    alongside the drive's directory.
+    provided relative to the current folder or via built-in resources. Mount
+    settings can be optionally provided using a `[c].conf` file alongside the
+    drive's folder.
 
     Possible values: `on` *default*{ .default }, `off`
 

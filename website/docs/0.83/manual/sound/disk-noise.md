@@ -13,7 +13,7 @@ volume is adjustable via the `DISKNOISE` [mixer
 channel](mixer.md#list-of-mixer-channels).
 
 If desired, the FLAC samples can be replaced with custom sounds in the
-`resources/disk-noises` directory, as long as they are in 22 kHz format.
+`resources/disk-noises` folder, as long as they are in 22 kHz format.
 
 
 ## Configuration settings

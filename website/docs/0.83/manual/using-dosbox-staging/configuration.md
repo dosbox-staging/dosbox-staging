@@ -21,11 +21,11 @@ The primary configuration file is stored in a platform-specific location:
 
 <div class="compact" markdown>
 
-| Platform | Path                                               |
-| ---      | ---                                                |
-| Windows  | `%LOCALAPPDATA%\DOSBox\dosbox-staging.conf`        |
-| macOS    | `~/Library/Preferences/DOSBox/dosbox-staging.conf` |
-| Linux    | `~/.config/dosbox/dosbox-staging.conf`             |
+| Platform | Path
+| ---      | ---
+| Windows  | `%LOCALAPPDATA%\DOSBox\dosbox-staging.conf`
+| macOS    | `~/Library/Preferences/DOSBox/dosbox-staging.conf`
+| Linux    | `~/.config/dosbox/dosbox-staging.conf`
 
 </div>
 
@@ -75,22 +75,22 @@ configurations.
 
 If you start DOSBox Staging from a different folder, you can still set the
 [working directory](command-line.md#-working-dir-path) via command line
-arguments, then the local `dosbox.conf` will be loaded from that directory.
+arguments, then the local `dosbox.conf` will be loaded from that folder.
 
 
 ## Portable setup
 
-If a `dosbox-staging.conf` file is placed in the same directory as the DOSBox
-Staging executable; DOSBox will use that directory as its configuration
-directory instead of the platform-specific location. This is useful for
-running DOSBox from a USB drive or keeping everything self-contained in a
-single folder --- a setup commonly preferred by Windows users.
+If a `dosbox-staging.conf` file is placed in the same folder as the DOSBox
+Staging executable; DOSBox will use that folder as its configuration folder
+instead of the platform-specific location. This is useful for running DOSBox
+from a USB drive or keeping everything self-contained in a single folder --- a
+setup commonly preferred by Windows users.
 
 !!! tip
 
     You can "convert" a non-portable installation into a portable one by
     moving the primary configuration file, `dosbox-staging.conf`, from its
-    platform-specific location into the directory where the DOSBox Staging
+    platform-specific location into the folder where the DOSBox Staging
     executable resides.
 
     Conversely, you can "convert" it back to a non-portable installation by

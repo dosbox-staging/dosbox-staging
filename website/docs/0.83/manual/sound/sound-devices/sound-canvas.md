@@ -26,15 +26,15 @@ mididevice = soundcanvas
 Download the SC-55 ROM files from
 [here](https://archive.org/details/nuked-sc-55-clap-rom-files), unpack the
 ZIP archive, then move the contents of the `Nuked-SC55-Resources/ROMs/` folder
-into the `soundcanvas-roms` directory inside your DOSBox configuration folder:
+into the `soundcanvas-roms` folder inside your DOSBox configuration folder:
 
 <div class="compact" markdown>
 
-| Platform | ROM directory                                           |
-|----------|---------------------------------------------------------|
-| Windows  | `C:\Users\<USERNAME>\AppData\Local\DOSBox\soundcanvas-roms\` |
-| macOS    | `~/Library/Preferences/DOSBox/soundcanvas-roms/`        |
-| Linux    | `~/.config/dosbox/soundcanvas-roms/`               |
+| Platform | ROM folder
+|----------|---------------------------------------------------------
+| Windows  | `C:\Users\<USERNAME>\AppData\Local\DOSBox\soundcanvas-roms\`
+| macOS    | `~/Library/Preferences/DOSBox/soundcanvas-roms/`
+| Linux    | `~/.config/dosbox/soundcanvas-roms/`
 
 </div>
 
@@ -54,7 +54,7 @@ soundcanvas-roms
 ...
 ```
 
-You can also set a custom ROM directory via the
+You can also set a custom ROM folder via the
 [`soundcanvas_rom_dir`](#soundcanvas_rom_dir) setting.
 
 !!! note
@@ -147,7 +147,7 @@ Sound Canvas settings are to be configured in the `[soundcanvas]` section.
 
 :   Roland Sound Canvas model to use. One or more CLAP audio plugins that
     implement the supported Sound Canvas models must be present in the
-    `plugins` directory in your DOSBox installation or configuration directory.
+    `plugins` folder in your DOSBox installation or configuration folder.
 
     Possible values:
 
@@ -163,9 +163,9 @@ Sound Canvas settings are to be configured in the `[soundcanvas]` section.
 
 ##### soundcanvas_rom_dir
 
-:   The directory containing the Roland Sound Canvas ROMs (unset by default).
-    The directory can be absolute or relative, or leave it unset to use the
-    `soundcanvas-roms` directory in your DOSBox configuration directory. Other
+:   The folder containing the Roland Sound Canvas ROMs (unset by default).
+    The folder can be absolute or relative, or leave it unset to use the
+    `soundcanvas-roms` folder in your DOSBox configuration folder. Other
     common system locations will be checked as well.
 
 

@@ -2,15 +2,6 @@
 toc_depth: 3
 ---
 
-# Introduction
-
-!!! warning
-
-    This is the **release candidate version** of the DOSBox Staging 0.83.0
-    Getting Started guide. While the majority of content is accurate, not all
-    sections have been fully proofread and polished. An updated version will
-    be published with the final 0.83.0 release.
-
 ## Foreword
 
 Welcome to the **DOSBox Staging 0.83 Getting Started guide**!
@@ -71,7 +62,7 @@ Download the current stable installer from our [Windows
 releases](../../releases/windows.md) page, then proceed with the installation.
 Just accept the default options; don't change anything.
 
-Make sure to read the section about dealing with [Microsoft Defender SmartScreen](../../releases/windows.md#windows-defender).
+Make sure to read the section about dealing with [Microsoft Defender SmartScreen](../manual/using-dosbox-staging/starting.md#windows-defender).
 
 #### macOS
 
