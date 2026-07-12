@@ -121,8 +121,8 @@ accomplished slightly differently on each platform.
 
     After installing DOSBox Staging, we strongly recommended starting it once
     using the Start Menu shortcut or the desktop icon [as described
-    here](../../releases/windows.md#windows-defender). Otherwise, the
-    instructions below might not work.
+    here](../manual/using-dosbox-staging/starting.md#windows-defender).
+    Otherwise, the instructions below might not work.
 
 If you have used the installer with the default options to set up DOSBox
 Staging (and we recommended doing so while you're still learning the ropes),
@@ -137,10 +137,10 @@ Staging** in the context menu.
 
 ##### Method 1 — document packages
 
-The simplest way on macOS is to use DOSBox Staging document packages. Simply
-add the **.dosbox** extension to the game folder's name in Finder (so **Prince
-of Persia** becomes **Prince of Persia.dosbox**), then double-click it to
-launch DOSBox Staging.
+The easiest way to launch DOSBox Staging on macOS is to use document packages.
+Simply add the **.dosbox** extension to the game folder's name in Finder (so
+**Prince of Persia** becomes **Prince of Persia.dosbox**), then double-click
+it to launch DOSBox Staging.
 
 ##### Method 2 — launch icons
 
@@ -161,7 +161,7 @@ missed that, please download it again, then do the following:
 5. Press the *Open* button.
 
 6. A dialog will open, asking for permission to allow DOSBox Staging access
-   to your Documents folder. Click the *OK* button.
+   to your Documents folder. Click the **OK** button.
 
 
 You only need to perform this procedure the first time you open the **Start

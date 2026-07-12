@@ -647,7 +647,7 @@ You can set the rendering parameters in the `[render]` configuration section.
     - **Scaler**: `advinterp2x`, `advinterp3x`, `advmame2x`, `advmame3x`,
       `xbr-lv2-3d`, `xbr-lv2-noblend`, `xbr-lv3`
 
-    Shaders are located in subdirectories; use the full path (e.g.,
+    Shaders are located in subfolders; use the full path (e.g.,
     `interpolation/catmull-rom` or `scaler/xbr-lv3`). The `.glsl` extension
     can be omitted.
 

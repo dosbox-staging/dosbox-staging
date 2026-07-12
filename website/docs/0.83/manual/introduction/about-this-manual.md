@@ -10,10 +10,11 @@ configure something specific or understand how a feature works.
 ## Start with the Getting Started guide
 
 If you're new to DOSBox Staging --- or even if you've used other DOSBox
-versions before --- the [Getting Started guide](../../getting-started/index.md)
-is the single best place to begin. It walks you through setting up several
-games from scratch, teaching the core concepts you'll use every day: mounting
-drives, configuring sound and graphics, and tweaking settings per game.
+versions before --- the [Getting Started
+guide](../../getting-started/index.md) is the single best place to begin. It
+walks you through setting up several games from scratch, teaching the core
+concepts you'll use every day: mounting drives, configuring sound and
+graphics, and tweaking settings per game.
 
 The guide is hands-on and assumes no prior DOS knowledge. Later chapters build
 on earlier ones, so work through them in order rather than skipping ahead.
@@ -28,7 +29,8 @@ The section you're reading now. It gives you the foundation for everything
 else that follows.
 
 - [What is DOSBox Staging?](what-is-dosbox-staging.md) --- What DOSBox Staging
-  is, how it differs from full PC emulators, and a brief history of the project.
+  is, how it differs from full PC emulators, and a brief history of the
+  project.
 
 - [A short DOS primer](dos-primer.md) --- Key concepts about how DOS works:
   the command prompt, drive letters, configuration files. Read this if you've
@@ -43,32 +45,34 @@ else that follows.
 
 Practical information about operating the emulator day-to-day.
 
-- [Configuration files](../using-dosbox-staging/configuration.md) --- How DOSBox Staging's layered
-  configuration system works: global settings, per-game configs, and the
-  autoexec section.
+- [Configuration files](../using-dosbox-staging/configuration.md) --- How
+  DOSBox Staging's layered configuration system works: global settings,
+  per-game configs, and the autoexec section.
 
-- [Command-line usage](../using-dosbox-staging/command-line.md) --- Flags and options for launching
-  DOSBox Staging from a terminal.
+- [Command-line usage](../using-dosbox-staging/command-line.md) --- Flags and
+  options for launching DOSBox Staging from a terminal.
 
-- [The DOSBox shell](../using-dosbox-staging/shell.md) --- How the DOS command-line shell works:
-  line editing, tab completion, command history, piping, and more.
+- [The DOSBox shell](../using-dosbox-staging/shell.md) --- How the DOS
+  command-line shell works: line editing, tab completion, command history,
+  piping, and more.
 
-- [DOS commands](../using-dosbox-staging/commands.md) --- Every command available at the DOS prompt,
-  from MOUNT and CONFIG to standard DOS commands like DIR and COPY.
+- [DOS commands](../using-dosbox-staging/commands.md) --- Every command
+  available at the DOS prompt, from MOUNT and CONFIG to standard DOS commands
+  like DIR and COPY.
 
-- [Storage](../using-dosbox-staging/storage.md) --- How DOS uses drive letters, mounting directories
-  and disk images, floppy/CD-ROM/hard disk handling.
+- [Storage](../using-dosbox-staging/storage.md) --- How DOS uses drive
+  letters, mounting folders and disk images, floppy/CD-ROM/hard disk handling.
 
-- [Hardware resources](../using-dosbox-staging/hardware-resources.md) --- I/O addresses, IRQs, and
-  DMA channels --- what they are and how to configure them when a game's
-  setup utility asks.
+- [Hardware resources](../using-dosbox-staging/hardware-resources.md) --- I/O
+  addresses, IRQs, and DMA channels --- what they are and how to configure
+  them when a game's setup utility asks.
 
-- [Capture](../using-dosbox-staging/capture.md) --- Screenshots, audio recording, video recording,
-  and MIDI capture.
+- [Capture](../using-dosbox-staging/capture.md) --- Screenshots, audio
+  recording, video recording, and MIDI capture.
 
-- [Running Windows 3.1](../using-dosbox-staging/windows-31.md) --- Installing and configuring
-  Windows 3.1 inside DOSBox Staging, including video, audio, MIDI, and mouse
-  driver setup.
+- [Running Windows 3.1](../using-dosbox-staging/windows-31.md) --- Installing
+  and configuring Windows 3.1 inside DOSBox Staging, including video, audio,
+  MIDI, and mouse driver setup.
 
 
 ### System, graphics, sound, input, networking
@@ -81,16 +85,16 @@ configuration reference.
 - **[System](../system/general.md)** --- Core emulator settings: machine type,
   CPU speed and type, memory, disk speed, DOS shell options, and localisation.
 
-- **[Graphics](../graphics/adapters.md)** --- Video adapters (CGA through SVGA),
-  display settings, CRT shaders, composite video, 3dfx Voodoo, and
+- **[Graphics](../graphics/adapters.md)** --- Video adapters (CGA through
+  SVGA), display settings, CRT shaders, composite video, 3dfx Voodoo, and
   ReelMagic.
 
 - **[Sound](../sound/overview.md)** --- All emulated audio devices from the PC
   speaker to the Roland MT-32 and Sound Canvas, plus the mixer, effects, and
   output filters.
 
-- **[Input](../input/overview.md)** --- Keyboard, mouse, joystick configuration,
-  and the key mapper for remapping controls.
+- **[Input](../input/overview.md)** --- Keyboard, mouse, joystick
+  configuration, and the key mapper for remapping controls.
 
 - **[Networking](../networking/serial-ports.md)** --- Serial ports, IPX
   networking, Ethernet emulation, and multiplayer.
@@ -107,8 +111,8 @@ Staging and access to the internal state of the emulated machine.
 - [Keyboard shortcuts](../appendices/shortcuts.md) --- Quick reference for all
   default hotkeys.
 
-- [Keymapper reference](../appendices/keymapper.md) --- Table of every mappable
-  action and their default binding.
+- [Keymapper reference](../appendices/keymapper.md) --- Table of every
+  mappable action and their default binding.
 
 
 ## Getting help for specific commands

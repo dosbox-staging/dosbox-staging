@@ -103,7 +103,7 @@ mapperfile = my-game.map
 ```
 
 DOSBox Staging ships with preconfigured mapper files for many games in the
-`resources/mapperfiles` directory. These can be loaded by name:
+`resources/mapperfiles` folder. These can be loaded by name:
 
 ``` ini
 [sdl]

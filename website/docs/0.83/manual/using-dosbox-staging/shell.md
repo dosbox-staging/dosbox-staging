@@ -1,9 +1,9 @@
 # The DOS shell
 
-When you start DOSBox Staging, you're greeted by a command prompt --- something
-like `Z:\>` or `C:\>`. This is the **shell**, the DOS command interpreter that
-reads what you type, executes commands, and displays the results. It's the
-primary way you interact with the emulated DOS environment.
+When you start DOSBox Staging, you're greeted by a command prompt ---
+something like `Z:\>` or `C:\>`. This is the **shell**, the DOS command
+interpreter that reads what you type, executes commands, and displays the
+results. It's the primary way you interact with the emulated DOS environment.
 
 On a real PC, this role was filled by `COMMAND.COM`, the default command
 processor shipped with MS-DOS. DOSBox Staging provides its own clean-room
@@ -16,8 +16,8 @@ integration](#clipboard-integration).
 ## How DOS works
 
 DOS is a **single-user, single-tasking** operating system. Only one program
-runs at a time --- there are no background processes, no task switching, and no
-concurrent users. When you launch a game or application, it takes over the
+runs at a time --- there are no background processes, no task switching, and
+no concurrent users. When you launch a game or application, it takes over the
 entire machine. When it exits, you're back at the shell prompt.
 
 DOSBox Staging faithfully emulates this model. The shell prompt is where you
@@ -27,6 +27,12 @@ Once a program is running, the shell is suspended until the program finishes.
 The prompt itself shows your current **drive letter** and **directory**. For
 example, `C:\GAMES>` tells you that you're on the C drive in the `GAMES`
 directory.
+
+!!! note "Terminology"
+
+    DOS refers to folders as **directories**, while modern operating systems
+    generally use the term **folder**. They refer to the same thing, and
+    throughout this manual we use the two terms interchangeably.
 
 
 ## Internal and external commands
@@ -39,9 +45,9 @@ DOS commands come in two varieties:
 
 - **External commands** are separate executable programs (`.COM`, `.EXE`, or
   `.BAT` files) that live on a drive. DOSBox Staging's own utilities ---
-  `MOUNT`, `MIXER`, `IMGMOUNT`, and others --- reside on the
-  [Z: drive](storage.md#dosbox-staging-drives), which is always available regardless of
-  what other drives you have mounted.
+  `MOUNT`, `MIXER`, `IMGMOUNT`, and others --- reside on the [Z:
+  drive](storage.md#dosbox-staging-drives), which is always available
+  regardless of what other drives you have mounted.
 
 See [DOS commands](commands.md) for the complete command reference.
 
@@ -58,17 +64,17 @@ MS-DOS 5.0 in 1991), but are built into DOSBox Staging's DOS shell.
 
 <div class="compact" markdown>
 
-| Key                       | Action                                       |
-| ------------------------- | -------------------------------------------- |
-| ++left++ / ++right++      | Move cursor one character                    |
-| ++home++ / ++end++        | Jump to start / end of line                  |
-| ++backspace++             | Delete character before cursor               |
-| ++delete++                | Delete character at cursor                   |
-| ++escape++                | Clear the current line                       |
-| ++f3++                    | Complete from the last command               |
-| ++up++ / ++down++         | Navigate command history                     |
-| ++tab++ / ++shift+tab++   | Cycle through filename completions           |
-| ++ctrl+v++                | Paste from host clipboard                    |
+| Key                       | Action
+| ------------------------- | --------------------------------------------
+| ++left++ / ++right++      | Move cursor one character
+| ++home++ / ++end++        | Jump to start / end of line
+| ++backspace++             | Delete character before cursor
+| ++delete++                | Delete character at cursor
+| ++escape++                | Clear the current line
+| ++f3++                    | Complete from the last command
+| ++up++ / ++down++         | Navigate command history
+| ++tab++ / ++shift+tab++   | Cycle through filename completions
+| ++ctrl+v++                | Paste from host clipboard
 
 </div>
 
@@ -84,7 +90,8 @@ Tab completion prioritises executable files (`.COM`, `.EXE`, `.BAT`) over
 other file types, so the most likely match appears first. When used with the
 `CD` command, only directories are shown.
 
-The [Getting Started guide](../../getting-started/setting-up-prince-of-persia.md#installing-the-game)
+The [Getting Started
+guide](../../getting-started/setting-up-prince-of-persia.md#installing-the-game)
 walks through tab completion with a practical example.
 
 
@@ -153,12 +160,12 @@ commands together or save output to files:
 
 <div class="compact" markdown>
 
-| Syntax                        | Description                                       |
-| ----------------------------- | -------------------------------------------       |
-| `command > file`              | Redirect command output to a file (overwrite)     |
-| `command >> file`             | Append command output to a file                   |
-| `command < file`              | Read input from a file and pass it to the command |
-| `command1 \                   | command2`                                         | Pipe output of one command into another |
+| Syntax                        | Description
+| ----------------------------- | -------------------------------------------
+| `command > file`              | Redirect command output to a file (overwrite)
+| `command >> file`             | Append command output to a file
+| `command < file`              | Read input from a file and pass it to the command
+| `command1 \| command2`        | Pipe output of one command into another
 
 </div>
 

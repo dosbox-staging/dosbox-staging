@@ -18,16 +18,16 @@ device to use for a particular game, see the [MIDI overview](../midi.md#which-mi
 
 ## SoundFont setup
 
-Download a SoundFont file and place it in the `soundfonts` directory inside
+Download a SoundFont file and place it in the `soundfonts` folder inside
 your DOSBox configuration folder:
 
 <div class="compact" markdown>
 
-| Platform   | SoundFont directory                                      |
-| ---------- | -------------------------------------------------------- |
-| Windows    | `C:\Users\<USERNAME>\AppData\Local\DOSBox\soundfonts\`   |
-| macOS      | `~/Library/Preferences/DOSBox/soundfonts/`               |
-| Linux      | `~/.config/dosbox/soundfonts/`                           |
+| Platform   | SoundFont folder
+| ---------- | --------------------------------------------------------
+| Windows    | `C:\Users\<USERNAME>\AppData\Local\DOSBox\soundfonts\`
+| macOS      | `~/Library/Preferences/DOSBox/soundfonts/`
+| Linux      | `~/.config/dosbox/soundfonts/`
 
 </div>
 
@@ -81,8 +81,8 @@ chapter of the getting started guide.
 ## SoundFont locations
 
 If [`soundfont_dir`](#soundfont_dir) is set, DOSBox Staging searches that
-directory first. Otherwise, it searches the following directories for
-SoundFont files (in order):
+folder first. Otherwise, it searches the following folders for SoundFont files
+(in order):
 
 **Windows**
 
@@ -150,8 +150,8 @@ FluidSynth settings are to be configured in the `[fluidsynth]` section.
 
     <div class="compact" markdown>
 
-    - The user-defined SoundFont directory (see [`soundfont_dir`](#soundfont_dir))
-    - The `soundfonts` directory in your DOSBox configuration directory
+    - The user-defined SoundFont folder (see [`soundfont_dir`](#soundfont_dir))
+    - The `soundfonts` folder in your DOSBox configuration folder
     - Other common system locations
 
     </div>
@@ -166,8 +166,8 @@ FluidSynth settings are to be configured in the `[fluidsynth]` section.
 
 ##### soundfont_dir
 
-:   Extra user-defined SoundFont directory (unset by default). If set,
-    SoundFonts are looked up in this directory first, then in the standard
+:   Extra user-defined SoundFont folder (unset by default). If set,
+    SoundFonts are looked up in this folder first, then in the standard
     system locations.
 
 

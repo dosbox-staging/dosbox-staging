@@ -52,13 +52,14 @@ about the changes and improvements introduced in this release.
     about the changes and improvements introduced in this release.
 
 
-## Hardware requirements
+## System requirements
 
-From the x86 family of processors, a processor with SSSE3 (Supplemental
-Streaming SIMD Extensions 3) is required.
+The latest release is compatible with any laptop or desktop released after
+2010 running a modern x86_64 Linux distribution. A dedicated graphics adapter
+is recommended for laptops.
 
 
-## Non-official repackaged releases
+## Unofficial repackaged releases
 
 DOSBox Staging is also repackaged by external teams as distribution-specific
 repository packages, containerised images, etc. These repackaged releases may
@@ -69,11 +70,11 @@ different library versions than what we have tested out official releases
 with.
 
 The DOSBox Staging team does _not_ track or document these differences.
-For issues specific to these non-official packages, we recommend referring to the
+For issues specific to these unofficial packages, we recommend referring to the
 repository's documentation, and when in doubt, please contact the respective
 repository owners.
 
-!!! warning "Non-official releases and support"
+!!! warning "Unofficial releases and support"
 
     We only provide support for our official releases. Any number of weird
     issues can happen if you start using different library versions, different
@@ -85,7 +86,7 @@ repository owners.
     Therefore, if you believe you've found a bug, and you're not using our
     official Linux release, the first thing to do is to re-test with that.
     **Please only report issues that are reproducible using our official
-    release!** If the problem is only present in the non-official package, you
+    release!** If the problem is only present in the unofficial package, you
     should ask the person or team who did the repackaging for help.
 
 ## Development snapshot builds

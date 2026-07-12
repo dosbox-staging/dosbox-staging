@@ -32,25 +32,25 @@ how we can skip this step:
     to a different folder, you should adjust the path accordingly.
 
 2. Copy this batch file into your individual game folders and rename them to
-   the names of the games, e.g., `Prince of Persia.bat`.
+   the names of the games (e.g., `Prince of Persia.bat`).
 
-3. Right-click on the batch file icon and select *Send to --> Desktop (create
-   shortcut)* in the context menu.
+3. Right-click on the batch file icon and select **Send to --> Desktop (create
+   shortcut)** in the context menu.
 
-4. Now you can double-click on the new *Prince of Persia.bat - Shortcut* icon
-   on your desktop to start the game (of course, you can rename the icon to
-   *Prince of Persia* or whatever you like; this won't change the name of the
-   batch file it references).
+4. Now you can double-click on the new **Prince of Persia.bat - Shortcut**
+   icon on your desktop to start the game (of course, you can rename the icon
+   to **Prince of Persia** or whatever you like; this won't change the name of
+   the batch file it references).
 
 
 #### macOS
 
-You can rename the *Start DOSBox Staging* icons in the individual game folders
+You can rename the **Start DOSBox Staging** icons in the individual game folders
 to the names of the games; then, you can use Spotlight Search to start a game.
 
-For example, rename *Start DOSBox Staging* in the `Prince of Persia` folder to
-*Prince of Persia*. Start Spotlight Search by pressing ++cmd+space++, then
-type in "Prince". The *Prince of Persia* icon will show up in the search
+For example, rename **Start DOSBox Staging** in the `Prince of Persia` folder to
+**Prince of Persia**. Start Spotlight Search by pressing ++cmd+space++, then
+type in "Prince". The **Prince of Persia** icon will show up in the search
 results --- you can simply press ++enter++ on it to launch the game.
 
 
@@ -62,11 +62,11 @@ to your game directory):
 
 ```bash
 #!/bin/bash
-dosbox --working-dir "~/Documents/DOS Games/Prince of Persia"
+dosbox --working-dir "$HOME/Documents/DOS Games/Prince of Persia"
 ```
 
 Then, create an icon on your desktop that launches this script, or start it
-however you like.
+using your desktop environment's preferred launcher.
 
 
 ## Mounting a CD-ROM image

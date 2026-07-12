@@ -241,7 +241,8 @@ and portable ZIP packages.
 
 The Windows executables are not signed, therefore Windows 10 or later might
 prevent the program from starting. See [this
-guide](windows.md#windows-defender) to learn how to deal with this.
+guide](../0.83/manual/using-dosbox-staging/starting.md#windows-defender)
+to learn how to deal with this.
 
 
 ### macOS

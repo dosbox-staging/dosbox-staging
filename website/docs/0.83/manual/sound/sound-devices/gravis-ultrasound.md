@@ -68,7 +68,7 @@ they upload their own instrument samples and use the hardware mixer directly.
 ### GUS MIDI with patch files
 
 These games have a built-in GUS driver that sends MIDI commands and loads
-instrument samples (patch files) from the [`ultradir`](#ultradir) directory to
+instrument samples (patch files) from the [`ultradir`](#ultradir) folder to
 use as wavetable instruments. The GUS acts as a MIDI synthesiser --- the result
 can sound very good, somewhere between FM synthesis and true General MIDI. The
 patch files must be placed in a `MIDI` subdirectory under
