@@ -782,8 +782,9 @@ MidiDeviceMt32::~MidiDeviceMt32()
 	work_fifo.Stop();
 	audio_frame_fifo.Stop();
 
-	// Wake the renderer if it's blocked in the pause condvar so it sees
-	// `work_fifo.IsRunning() == false` and exits cleanly.
+	// Wake the renderer via the pauser's condvar if it's parked (stopping
+	// `work_fifo` alone does not notify it); once unblocked it sees
+	// `work_fifo` has stopped and exits its loop cleanly.
 	Resume();
 
 	// Wait for the rendering thread to finish

@@ -4,7 +4,6 @@
 #ifndef DOSBOX_MIDI_SYNTH_RENDER_PAUSER_H
 #define DOSBOX_MIDI_SYNTH_RENDER_PAUSER_H
 
-#include <atomic>
 #include <condition_variable>
 #include <mutex>
 
@@ -31,7 +30,8 @@ public:
 	// Request the renderer to park at its next loop iteration.
 	void Pause()
 	{
-		is_paused.store(true, std::memory_order_release);
+		const std::lock_guard lock(mutex);
+		is_paused = true;
 	}
 
 	// Wake a parked renderer. Also called during device teardown so a
@@ -40,29 +40,39 @@ public:
 	{
 		{
 			const std::lock_guard lock(mutex);
-			is_paused.store(false, std::memory_order_release);
+			is_paused = false;
 		}
 		cv.notify_all();
 	}
 
 	// Called at the top of the render loop. If a pause is in effect, block
-	// until resumed or until `work_fifo` stops (shutdown), stopping
-	// `audio_frame_fifo` for the duration. Returns true if it parked, in
-	// which case the caller should re-check its loop condition (`continue`).
+	// until resumed, stopping `audio_frame_fifo` for the duration. Returns
+	// true if it parked, in which case the caller should re-check its loop
+	// condition (`continue`).
+	//
+	// The `is_paused` check runs under the lock so it can't race a
+	// concurrent `Resume()`; a stale read would otherwise stop and
+	// immediately restart `audio_frame_fifo`, risking a glitch.
+	//
+	// The wake always comes from `Resume()`'s `notify_all()` -- including
+	// on shutdown, where teardown stops `work_fifo` and then calls
+	// `Resume()`. Stopping `work_fifo` does NOT notify this condvar; the
+	// `!work_fifo.IsRunning()` term is only a safety net so a wake for any
+	// reason falls through once teardown has begun. The outer render loop
+	// then exits because `work_fifo` has stopped.
 	bool ParkIfPaused(RWQueue<AudioFrame>& audio_frame_fifo,
 	                  RWQueue<MidiWork>& work_fifo)
 	{
-		if (!is_paused.load(std::memory_order_acquire)) {
+		std::unique_lock lock(mutex);
+
+		if (!is_paused) {
 			return false;
 		}
-
-		std::unique_lock lock(mutex);
 
 		audio_frame_fifo.Stop();
 
 		cv.wait(lock, [this, &work_fifo] {
-			return !is_paused.load(std::memory_order_acquire) ||
-			       !work_fifo.IsRunning();
+			return !is_paused || !work_fifo.IsRunning();
 		});
 
 		audio_frame_fifo.Start();
@@ -71,9 +81,9 @@ public:
 	}
 
 private:
-	std::atomic<bool> is_paused = false;
-	std::mutex mutex            = {};
-	std::condition_variable cv  = {};
+	bool is_paused             = false;
+	std::mutex mutex           = {};
+	std::condition_variable cv = {};
 };
 
 #endif // DOSBOX_MIDI_SYNTH_RENDER_PAUSER_H
