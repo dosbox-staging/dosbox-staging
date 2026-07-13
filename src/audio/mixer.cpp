@@ -2708,17 +2708,16 @@ static void mixer_thread_loop()
 	const auto fade_step = compute_fade_step();
 
 	while (!mixer.thread_should_quit) {
-		std::unique_lock lock(mixer.mutex);
-
 		// Paused short-circuits BEFORE `mix_samples()` to keep frozen
 		// channel state out of the capture queue (we want bit-identical
 		// captures compared to not pausing at all). At this point the
 		// fade-out has already completed (that's what triggered the
 		// Pending -> Paused transition), so `playback_gain` is already
 		// at 0 and no further ramp is needed here.
+		//
+		// `DOSBOX_IsPaused()` is a lock-free atomic read; we take
+		// `mixer.mutex` (below) only for `mix_samples()`.
 		if (DOSBOX_IsPaused()) {
-			lock.unlock();
-
 			if (mixer.no_sound) {
 				// No SDL device, no consumer for
 				// `final_output`. Just sleep to simulate the
@@ -2742,6 +2741,8 @@ static void mixer_thread_loop()
 			mixer.final_output.BulkEnqueue(mixer.output_buffer);
 			continue;
 		}
+
+		std::unique_lock lock(mixer.mutex);
 
 		// This code is mostly for the fast-forward button (hold Alt + F12)
 		const auto now         = PIC_AtomicIndex();
