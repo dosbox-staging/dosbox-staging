@@ -48,8 +48,9 @@ void DOSBOX_RequestShutdown();
 bool DOSBOX_IsShutdownRequested();
 
 // Pause API. The emulator is either running or paused. Pause requests come
-// from two sources: the user (via hotkeys or the HTTP API), and host-window
-// inactivity (when `pause_when_inactive` conf setting is enabled).
+// from the user (via hotkeys today; an HTTP API pause endpoint is planned
+// but not yet implemented) and from host-window inactivity (when the
+// `pause_when_inactive` conf setting is enabled).
 //
 // We express only *intent* via these API calls; the actual implementation
 // decides the appropriate course of action (e.g., user pause trumps
