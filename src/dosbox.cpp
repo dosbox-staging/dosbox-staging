@@ -318,7 +318,7 @@ std::optional<PauseState> NextPauseState(const PauseState current,
 
 static PauseState get_pause_state()
 {
-	return pause_state.load();
+	return pause_state.load(std::memory_order_relaxed);
 }
 
 bool DOSBOX_IsRunning()
@@ -425,7 +425,7 @@ static void set_pause_state(const PauseState new_state)
 	const auto request_edge = (now_pause_requested != was_pause_requested);
 	const auto actual_edge  = (now_paused_actual != was_paused_actual);
 
-	pause_state.store(new_state);
+	pause_state.store(new_state, std::memory_order_relaxed);
 
 	if (was_paused_actual && now_running) {
 		rebase_wall_clock_on_resume();
