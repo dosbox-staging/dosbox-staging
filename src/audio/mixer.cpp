@@ -2722,8 +2722,10 @@ static void mixer_thread_loop()
 				continue;
 			}
 
-			// Enqueue silence to keep SDL fed. `playback_gain` is
-			// already 0 so no fade to apply.
+			// Keep `final_output` full with silence so the mixer
+			// stays paced by SDL; if it ran dry, the mixer would
+			// sprint on resume and stretch captures (see README.md
+			// gotcha 1). `playback_gain` is already 0, so no fade.
 			mixer.output_buffer.assign(mixer.blocksize, AudioFrame{});
 			mixer.final_output.BulkEnqueue(mixer.output_buffer);
 			continue;
