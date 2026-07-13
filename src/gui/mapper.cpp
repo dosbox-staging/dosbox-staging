@@ -2992,7 +2992,7 @@ void MAPPER_LosingFocus() {
 	}
 }
 
-static std::atomic<bool> mapper_run_pending = false;
+static bool mapper_run_pending = false;
 
 void MAPPER_Run(bool pressed)
 {
@@ -3003,18 +3003,22 @@ void MAPPER_Run(bool pressed)
 		return;
 	}
 
-	// Deferred via an atomic flag rather than `PIC_AddEvent()`. PIC time is
-	// frozen during pause, so a PIC-scheduled event never fires while paused
-	// and the hotkey would be silently dropped. `MAPPER_RunPending()` is
+	// Deferred via a flag rather than `PIC_AddEvent()`. PIC time is frozen
+	// during pause, so a PIC-scheduled event never fires while paused and
+	// the hotkey would be silently dropped. `MAPPER_RunPending()` is
 	// drained from both `normal_loop()`'s idle branch and `paused_tick()`.
-	mapper_run_pending.store(true);
+	// Both this setter and the drain run on the main thread, so the flag
+	// needs no synchronisation.
+	mapper_run_pending = true;
 }
 
 void MAPPER_RunPending()
 {
-	if (!mapper_run_pending.exchange(false)) {
+	if (!mapper_run_pending) {
 		return;
 	}
+	mapper_run_pending = false;
+
 	// Clear buffer
 	KEYBOARD_ClrBuffer();
 
