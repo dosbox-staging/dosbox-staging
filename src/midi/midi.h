@@ -223,9 +223,7 @@ void MIDI_Unmute();
 // Pause hook: silence external MIDI (CC 7 = 0 per channel) so sustained
 // notes on hardware synths don't ring through the pause, and halt the
 // internal software synths' renderer threads so the synth clock doesn't
-// advance while paused. Ordering relative to `MIXER_Pause()` /
-// `MIXER_Resume()` is critical -- see `set_subsystems_paused()` in
-// `dosbox.cpp`.
+// advance while paused.
 void MIDI_Pause();
 void MIDI_Resume();
 

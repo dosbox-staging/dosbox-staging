@@ -54,8 +54,8 @@ using MIXER_Handler = std::function<void(int frames)>;
 //   UserMuted  -> AutoMuted    user-mute survives focus changes
 //   UserMuted  -> any via RequestAutoUnmute
 //
-// Pause is orthogonal -- see `MIXER_Pause()` / `MIXER_Resume()`. The mixer
-// is silent if EITHER `DOSBOX_IsPaused()` OR `mute_state != Audible`. The
+// Pause is orthogonal to mute. The mixer is silent if EITHER
+// `DOSBOX_IsPaused()` OR `mute_state != Audible`. The
 // two axes don't share state, so toggling mute during pause is just a
 // normal mute transition.
 //
@@ -538,26 +538,6 @@ void MIXER_RequestUserUnmute();
 // both -- user-initiated mute trumps focus changes.
 void MIXER_RequestAutoMute();
 void MIXER_RequestAutoUnmute();
-
-// Pause synchronization barrier. The mixer reads `DOSBOX_IsPaused()`
-// directly at the top of its loop, so these don't mutate any mixer-side
-// state -- they just serialize against in-flight `mix_samples()`. By
-// the time `MIXER_Pause()` returns, the mixer thread is at a clean loop
-// boundary.
-//
-// Pause is orthogonal to mute: the mixer output is silent if either is
-// in effect (via the silence-edge fade in `mixer_thread_loop()`). Pause
-// additionally short-circuits `mix_samples()` so the capture queue
-// isn't fed during pause; mute lets `mix_samples()` run and folds mute
-// into the fade target, so captures stay full-volume while SDL output
-// smoothly attenuates to silence.
-//
-// !!! PAUSE ORDER MATTERS relative to MIDI_Pause/Resume (halt the synth
-// renderer first); resume order does not. See `set_subsystems_paused` in
-// dosbox.cpp before reordering callers. !!!
-//
-void MIXER_Pause();
-void MIXER_Resume();
 
 // Current fade-out/-in gain (0.0 = silent, 1.0 = full). Updated by the
 // mixer thread on each iteration. Read by the PausePending FSM in

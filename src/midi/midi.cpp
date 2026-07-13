@@ -597,8 +597,7 @@ void MIDI_Unmute()
 // instead of blocking on the empty-but-running queue. That former block --
 // `mix_samples()` stuck mid-`BulkDequeue()` waiting for a halted renderer
 // while holding `mixer.mutex` -- was the pause/resume deadlock. The fifo stop
-// removes it, so this no longer needs `MIXER_LockMixerThread()` coverage or a
-// strict order relative to `MIXER_Pause()`.
+// removes it, so this no longer needs `MIXER_LockMixerThread()` coverage.
 //
 void MIDI_Pause()
 {
@@ -624,9 +623,8 @@ void MIDI_Pause()
 
 // Resume MIDI output as part of a DOSBox resume.
 //
-// Waking the renderer no longer has to precede `MIXER_Resume()`. The synth's
-// `audio_frame_fifo` is stopped while the renderer is parked, so if the mixer
-// races into `mix_samples()` first (in the window between
+// The synth's `audio_frame_fifo` is stopped while the renderer is parked, so
+// if the mixer races into `mix_samples()` first (in the window between
 // `pause_state.store(Running)` and the renderer waking), its `BulkDequeue()`
 // returns a short read -- silence-padded by the synth's `MixerCallback` --
 // instead of blocking on a still-parked renderer while holding `mixer.mutex`.
