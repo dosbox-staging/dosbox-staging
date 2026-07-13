@@ -400,7 +400,7 @@ static void set_pause_state(const PauseState new_state)
 {
 	using enum PauseState;
 
-	const auto prev_state = pause_state.load();
+	const auto prev_state = get_pause_state();
 
 	if (prev_state == new_state) {
 		return;
@@ -484,7 +484,7 @@ static void pending_pause_tick_handler()
 		return;
 	}
 
-	if (const auto next = NextPauseState(pause_state.load(),
+	if (const auto next = NextPauseState(get_pause_state(),
 	                                     PauseEvent::FadeComplete)) {
 		set_pause_state(*next);
 	}
