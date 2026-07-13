@@ -12,7 +12,6 @@
 #include <cstring>
 #include <limits>
 #include <memory>
-#include <mutex>
 
 #ifdef WIN32
 #ifndef WIN32_LEAN_AND_MEAN
@@ -152,21 +151,20 @@ void Null_Init([[maybe_unused]] Section* sec)
 // applies the result. That policy is the single source of truth for what
 // each event does; it is exhaustively unit tested in isolation.
 //
-// THREADING: every mutator runs on the main (emulation) thread -- hotkeys
-// and window events via the SDL event loop, HTTP commands via the
-// webserver bridge's `ProcessRequests()`, and the pending-transition
-// handler via the PIC ticker. The request helpers read `pause_state`
-// without holding `pause_state_mutex` before transitioning, so the mutex
-// alone would NOT make concurrent requesters correct (racy requests would
-// trip the `is_valid_transition()` guard rather than corrupt state). Keep
-// it that way: other threads may only *read* the state, via the
-// `DOSBOX_Is*()` query functions.
+// THREADING: `pause_state` has a single writer, the main (emulation) thread.
+// Every mutator runs there: hotkeys and window events via the SDL event loop,
+// HTTP commands via the webserver bridge's `ProcessRequests()`, and the
+// pending-transition handler via the PIC ticker. All other threads (the mixer
+// and MIDI renderer threads) only *read* the state, via the `DOSBOX_Is*()`
+// query functions. With a single writer no lock is needed; the atomic exists
+// purely to make those cross-thread reads well-defined.
 //
 // The `PauseState` and `PauseEvent` enums and the pure `NextPauseState()`
 // transition table live in `dosbox_pause_fsm.h`.
 // ---------------------------------------------------------------------------
 
-static std::mutex pause_state_mutex;
+// Single writer (the main thread; see THREADING above).
+// All other threads read only.
 static std::atomic<PauseState> pause_state{PauseState::Running};
 
 static const char* to_string(const PauseState s)
@@ -197,9 +195,8 @@ static bool is_paused_state(const PauseState s)
 
 // Structural guard for the application layer: which edges the FSM permits at
 // all. Every state produced by `NextPauseState()` satisfies this, plus the
-// unconditional force-to-`Running` used on shutdown. `set_pause_state_locked()`
-// asserts on it to catch a bad direct store or a race between an unlocked
-// request read and the locked write.
+// unconditional force-to-`Running` used on shutdown. `set_pause_state()`
+// asserts on it to catch a bad direct store.
 static bool is_valid_transition(const PauseState from, const PauseState to)
 {
 	using enum PauseState;
@@ -345,7 +342,7 @@ bool DOSBOX_IsPauseRequested()
 	return get_pause_state() != PauseState::Running;
 }
 
-// Subsystem pause hook driven by the FSM. Called by `set_pause_state_locked()`
+// Subsystem pause hook driven by the FSM. Called by `set_pause_state()`
 // only on the actually-paused edge, so it never fires redundantly. Mapper UI
 // doesn't go through here -- it pauses audio via MIXER_LockMixerThread directly
 // in mapper.cpp, which composes correctly with this path because both agree on
@@ -396,18 +393,10 @@ static void set_subsystems_paused(const bool paused)
 	}
 }
 
-static void set_pause_state_locked(const PauseState new_state);
-
+// Applies a validated pause-state transition and drives the subsystem hooks.
+// Only ever called on the main thread (see THREADING above), so nothing has
+// to serialise concurrent transitions.
 static void set_pause_state(const PauseState new_state)
-{
-	const std::lock_guard lock(pause_state_mutex);
-	set_pause_state_locked(new_state);
-}
-
-// Common transition body. Must be called with `pause_state_mutex` held --
-// this lets `pending_pause_tick_handler()` re-enter without racing an
-// in-flight user-requested transition.
-static void set_pause_state_locked(const PauseState new_state)
 {
 	using enum PauseState;
 
@@ -495,14 +484,9 @@ static void pending_pause_tick_handler()
 		return;
 	}
 
-	const std::lock_guard lock(pause_state_mutex);
-
-	// Re-check under the lock in case the state moved between the
-	// unlocked fast-path checks and now (e.g. the user resumed during
-	// the fade).
 	if (const auto next = NextPauseState(pause_state.load(),
 	                                     PauseEvent::FadeComplete)) {
-		set_pause_state_locked(*next);
+		set_pause_state(*next);
 	}
 }
 
