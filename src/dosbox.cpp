@@ -342,54 +342,17 @@ bool DOSBOX_IsPauseRequested()
 	return get_pause_state() != PauseState::Running;
 }
 
-// Subsystem pause hook driven by the FSM. Called by `set_pause_state()`
-// only on the actually-paused edge, so it never fires redundantly. Mapper UI
-// doesn't go through here -- it pauses audio via MIXER_LockMixerThread directly
-// in mapper.cpp, which composes correctly with this path because both agree on
-// mixer.mutex.
-//
-// !!! PAUSE ORDERING IS CRITICAL; resume ordering is not. !!!
-//
-// The MIDI software synths (FluidSynth, MT-32, SoundCanvas) each run a
-// renderer thread that fills an `audio_frame_fifo` ahead of the mixer's
-// consumption.
-//
-// On PAUSE: halt the renderer FIRST. If the mixer halted first, the
-// still-running renderer would rush to fill the fifo headroom that
-// opens up, advancing the synth's internal clock by up to one mixer
-// pull (~21 ms) per cycle. Those extra samples reach the capture queue
-// on resume and stretch captured music by N * ~21 ms over N
-// pause/resume cycles.
-//
-// The renderers stop their own `audio_frame_fifo` while parked (see the
-// synth `Render()` loops), so a mixer `BulkDequeue()` that races the
-// halt gets a short read -- silence-padded by the synth's
-// `MixerCallback()` -- instead of blocking on the empty-but-running
-// queue. That block (`mix_samples()` stuck mid-`BulkDequeue()` waiting
-// for a halted renderer while holding `mixer.mutex`) was the
-// pause/resume deadlock; the fifo stop removes it. `MIDI_Pause()` and
-// `MIDI_Resume()` therefore need no `MIXER_LockMixerThread()` coverage.
-//
-// On RESUME: order no longer matters for correctness. Even if the mixer
-// races into `mix_samples()` before the renderer wakes, its
-// `BulkDequeue()` short-reads on the stopped fifo rather than blocking
-// on a still-parked renderer. We wake the renderer first anyway,
-// mirroring the pause path.
-//
+// Subsystem pause hook driven by the FSM. Called by `set_pause_state()` only
+// on the actually-paused edge. The mixer needs no hook here -- it reads
+// `DOSBOX_IsPaused()` at the top of its loop and skips `mix_samples()` while
+// paused. Only the MIDI synth renderers have to be actively halted, so their
+// internal clock doesn't advance while paused (see `MIDI_Pause()`).
 static void set_subsystems_paused(const bool paused)
 {
 	if (paused) {
-		// MIDI first so the synth renderer stops before the mixer
-		// stops draining.
 		MIDI_Pause();
-		MIXER_Pause();
-
 	} else {
-		// Order-independent now: the stopped fifo makes a racing
-		// mixer `BulkDequeue()` short-read instead of deadlocking.
-		// Wake the renderer first anyway, mirroring the pause path.
 		MIDI_Resume();
-		MIXER_Resume();
 	}
 }
 

@@ -3023,46 +3023,6 @@ void MIXER_RequestAutoUnmute()
 	}
 }
 
-// `MIXER_Pause()` / `MIXER_Resume()` don't carry pause state of their own;
-// `DOSBOX_IsPaused()` is the single source of truth and the mixer thread
-// reads it directly at the top of its loop. These functions are just the
-// synchronization barrier: by the time `MIXER_Pause()` returns, the mixer
-// thread has finished any in-flight `mix_samples()` and is at a clean loop
-// boundary.
-//
-// The fade-in ramp doesn't need any queue clear here: the mixer thread
-// itself applies the ramp to `output_buffer` before enqueue, so
-// `final_output` is a continuous stream of appropriately-attenuated
-// samples with no boundary discontinuity for the fade to "miss".
-//
-// Both must go through `MIXER_LockMixerThread()` (NOT raw `mixer.mutex`!) to
-// compose with the queue-stop / queue-start protocol every other mutator
-// uses. The mixer thread can be blocked inside a channel handler's
-// `output_queue.BulkDequeue` (SB, PC Speaker, GUS, etc.) waiting for samples
-// produced on the main thread. A raw lock would deadlock here: the main
-// thread is stuck waiting for `mixer.mutex`, while the mixer thread holds
-// `mixer.mutex` inside `BulkDequeue()` waiting for samples only the main
-// thread can produce. `NotifyLockMixer()`'s `Stop()` unblocks `BulkDequeue()`
-// so the mixer thread can release the mutex.
-//
-// `MIDI_Pause()`/`MIDI_Resume()` do NOT take this lock. The synth
-// renderers stop their own `audio_frame_fifo` while parked, so a mixer
-// `BulkDequeue()` that races the halt short-reads instead of blocking on
-// it -- no cross-lock coordination with the pause path is needed. See
-// `set_subsystems_paused()` in dosbox.cpp.
-//
-void MIXER_Pause()
-{
-	MIXER_LockMixerThread();
-	MIXER_UnlockMixerThread();
-}
-
-void MIXER_Resume()
-{
-	MIXER_LockMixerThread();
-	MIXER_UnlockMixerThread();
-}
-
 void MIXER_ClearCaptureQueue()
 {
 	mixer.capture_queue.Clear();
