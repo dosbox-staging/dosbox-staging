@@ -2544,19 +2544,6 @@ static void mix_samples(const int frames_requested)
 			        static_cast<int16_t>(host_to_le16(right)));
 		}
 
-		if (mixer.capture_queue.Size() + mixer.capture_buffer.size() >
-		    mixer.capture_queue.MaxCapacity()) {
-
-			// We're producing more audio than the capture is
-			// consuming. This usually happens when the main thread
-			// is being slowed down by video encoding (e.g., slow
-			// host CPU or using zlib rather than zlib_ng). Not
-			// ideal as this results in an audible "skip forward".
-			// Without this, it's a complete stuttery mess though so
-			// it's the lesser of two evils.
-			//
-			mixer.capture_queue.Clear();
-		}
 		mixer.capture_queue.NonblockingBulkEnqueue(mixer.capture_buffer);
 	}
 
