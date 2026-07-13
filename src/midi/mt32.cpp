@@ -955,7 +955,7 @@ void MidiDeviceMt32::ProcessWorkFromFifo()
 void MidiDeviceMt32::Render()
 {
 	while (work_fifo.IsRunning()) {
-		if (pauser.ParkIfPaused(audio_frame_fifo, work_fifo)) {
+		if (pauser.ParkIfPaused(audio_frame_fifo)) {
 			continue;
 		}
 

@@ -8,7 +8,6 @@
 #include <mutex>
 
 #include "audio/audio_frame.h"
-#include "midi/midi.h"
 #include "utils/rwqueue.h"
 
 // Parks an internal MIDI synth's renderer thread (FluidSynth, MT-32,
@@ -54,14 +53,11 @@ public:
 	// concurrent `Resume()`; a stale read would otherwise stop and
 	// immediately restart `audio_frame_fifo`, risking a glitch.
 	//
-	// The wake always comes from `Resume()`'s `notify_all()` -- including
-	// on shutdown, where teardown stops `work_fifo` and then calls
-	// `Resume()`. Stopping `work_fifo` does NOT notify this condvar; the
-	// `!work_fifo.IsRunning()` term is only a safety net so a wake for any
-	// reason falls through once teardown has begun. The outer render loop
-	// then exits because `work_fifo` has stopped.
-	bool ParkIfPaused(RWQueue<AudioFrame>& audio_frame_fifo,
-	                  RWQueue<MidiWork>& work_fifo)
+	// The only thing that unparks this wait is `Resume()`'s `notify_all()`.
+	// On shutdown the synth destructors call `Resume()` after stopping
+	// their work fifo (the stopped fifo is what makes the render loop
+	// itself exit), so a parked renderer never hangs teardown.
+	bool ParkIfPaused(RWQueue<AudioFrame>& audio_frame_fifo)
 	{
 		std::unique_lock lock(mutex);
 
@@ -71,9 +67,7 @@ public:
 
 		audio_frame_fifo.Stop();
 
-		cv.wait(lock, [this, &work_fifo] {
-			return !is_paused || !work_fifo.IsRunning();
-		});
+		cv.wait(lock, [this] { return !is_paused; });
 
 		audio_frame_fifo.Start();
 

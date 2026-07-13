@@ -764,7 +764,7 @@ void MidiDeviceSoundCanvas::ProcessWorkFromFifoBacklogged()
 void MidiDeviceSoundCanvas::Render()
 {
 	while (work_fifo.IsRunning()) {
-		if (pauser.ParkIfPaused(audio_frame_fifo, work_fifo)) {
+		if (pauser.ParkIfPaused(audio_frame_fifo)) {
 			continue;
 		}
 
