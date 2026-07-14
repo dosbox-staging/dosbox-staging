@@ -75,6 +75,7 @@
 #include "shell/autoexec.h"
 #include "shell/shell.h"
 #include "utils/math_utils.h"
+#include "utils/string_utils.h"
 #include "webserver/bridge.h"
 #include "webserver/webserver.h"
 
@@ -1137,6 +1138,44 @@ void DOSBOX_Restart(std::vector<std::string>& parameters)
 #endif // WIN32
 }
 
+static std::optional<VesaCustomResolution> parse_vesa_custom_resolution(
+        const std::string& pref)
+{
+	if (pref.empty() || has_false(pref)) {
+		return {};
+	}
+
+	constexpr auto MinWidth  = 320;
+	constexpr auto MinHeight = 200;
+	constexpr auto MaxWidth  = 1920;
+	constexpr auto MaxHeight = 1440;
+
+	if (const auto dimensions = parse_int_dimensions(pref)) {
+		const auto [width, height] = *dimensions;
+
+		const auto is_out_of_bounds = (width < MinWidth || width > MaxWidth ||
+		                               height < MinHeight ||
+		                               height > MaxHeight);
+
+		const auto is_valid_width = ((width % 8) == 0);
+
+		if (!is_out_of_bounds && is_valid_width) {
+			return VesaCustomResolution{width, height};
+		}
+	}
+
+	LOG_WARNING(
+	        "VIDEO: Invalid 'vesa_custom_resolution' setting: '%s'; "
+	        "must be from %dx%d to %dx%d with the width a multiple of 8, "
+	        "using 'none'",
+	        pref.c_str(),
+	        MinWidth,
+	        MinHeight,
+	        MaxWidth,
+	        MaxHeight);
+	return {};
+}
+
 static void dosbox_realinit(SectionProp& section)
 {
 	// Initialize some dosbox internals
@@ -1172,6 +1211,9 @@ static void dosbox_realinit(SectionProp& section)
 	} else {
 		int10.vesa_modes = VesaModes::All;
 	}
+
+	int10.vesa_custom_resolution = parse_vesa_custom_resolution(
+	        section.GetString("vesa_custom_resolution"));
 
 	VGA_SetRefreshRateMode(section.GetString("dos_rate"));
 
@@ -1439,6 +1481,16 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 	        "               'compatible' mode if this happens. The 320x200 high colour\n"
 	        "               modes available in this mode are often required by late '90s\n"
 	        "               demoscene productions.");
+
+	pstring = section->AddString("vesa_custom_resolution", OnlyAtStart, "none");
+	pstring->SetHelp(
+	        "Replace the 1152x864 VESA modes with a custom resolution ('none' by default).\n"
+	        "Specify the resolution in WIDTHxHEIGHT format (e.g., 1920x1080); the valid range\n"
+	        "is from 320x200 to 1920x1440, and WIDTH must be a multiple of 8. Modes that\n"
+	        "don't fit into the configured video memory ('vmemsize') are not available. This\n"
+	        "is useful for games that support custom VESA resolutions (e.g., Duke Nukem 3D),\n"
+	        "and for running Windows 3.1 at modern resolutions with the VBESVGA driver.\n"
+	        "Custom resolutions are always displayed with square pixels.");
 
 	auto pbool = section->AddBool("vga_8dot_font", OnlyAtStart, false);
 	pbool->SetHelp("Use 8-pixel-wide fonts on VGA adapters ('off' by default).");

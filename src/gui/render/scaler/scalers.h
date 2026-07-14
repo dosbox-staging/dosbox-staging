@@ -19,8 +19,10 @@
 // Make sure ScalerMaxWidth remains a multiple of 8
 constexpr int ScalerWidthExtraPadding = 8 * 5;
 
-constexpr int ScalerMaxWidth  = 1600 + ScalerWidthExtraPadding;
-constexpr int ScalerMaxHeight = 1200;
+// Sized to accommodate custom VESA resolutions of up to 1920x1440 (see the
+// 'vesa_custom_resolution' config setting)
+constexpr int ScalerMaxWidth  = 1920 + ScalerWidthExtraPadding;
+constexpr int ScalerMaxHeight = 1440;
 
 extern std::array<int, ScalerMaxHeight> scaler_changed_lines;
 extern int scaler_changed_line_index;

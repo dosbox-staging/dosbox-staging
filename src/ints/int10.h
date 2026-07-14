@@ -272,6 +272,13 @@ enum class VesaModes {
 	All
 };
 
+// Custom resolution that replaces the 1152x864 VESA modes (see the
+// 'vesa_custom_resolution' config setting)
+struct VesaCustomResolution {
+	int width  = 0;
+	int height = 0;
+};
+
 struct Int10Data {
 	struct Int10DataRom {
 		RealPt font_8_first;
@@ -300,6 +307,8 @@ struct Int10Data {
 	uint16_t vesa_setmode = 0;
 
 	VesaModes vesa_modes = VesaModes::Compatible;
+
+	std::optional<VesaCustomResolution> vesa_custom_resolution = {};
 
 	bool vesa_nolfb  = false;
 	bool vesa_oldvbe = false;
