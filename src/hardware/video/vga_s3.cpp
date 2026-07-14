@@ -719,6 +719,7 @@ void replace_1152x864_modes_with_custom_resolution(const VesaCustomResolution& c
 		block.hdispend = check_cast<uint16_t>(is_doubled ? width_chars * 2
 		                                                 : width_chars);
 		block.vdispend = check_cast<uint16_t>(custom.height);
+		block.special |= VESA_CUSTOM_RESOLUTION;
 	}
 }
 
