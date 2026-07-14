@@ -122,6 +122,10 @@ constexpr uint16_t EGA_HALF_CLOCK = 1 << 0;
 constexpr uint16_t EGA_LINE_DOUBLE = 1 << 1;
 constexpr uint16_t VGA_PIXEL_DOUBLE = 1 << 2;
 
+// Tags modes replaced via the 'vesa_custom_resolution' setting, only so we
+// can force square pixels for them
+constexpr uint16_t VESA_CUSTOM_RESOLUTION = 1 << 3;
+
 // Refresh rate constants
 constexpr auto RefreshRateMin        = 24;
 constexpr auto RefreshRateDosDefault = 70;
