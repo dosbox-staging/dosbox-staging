@@ -666,6 +666,62 @@ void replace_mode_120h_with_halfline()
 	}
 }
 
+void replace_1152x864_modes_with_custom_resolution(const VesaCustomResolution& custom)
+{
+	// The custom resolution is enumerated by the VESA BIOS under the
+	// well-established 1152x864 mode numbers, so programs that build
+	// their mode list via VESA BIOS calls pick it up automatically
+	// (e.g., the VBESVGA Windows 3.x driver).
+	constexpr auto _1152x864_4bit  = 0x17a;
+	constexpr auto _1152x864_8bit  = 0x207;
+	constexpr auto _1152x864_15bit = 0x209;
+	constexpr auto _1152x864_16bit = 0x20a;
+	constexpr auto _1152x864_24bit = 0x17b;
+	constexpr auto _1152x864_32bit = 0x20b;
+
+	// The exact blanking margins only affect the pixel clock, which is
+	// derived from the totals to hit the fixed 70 Hz VESA refresh rate.
+	constexpr auto BlankingOverheadPercent = 10;
+
+	constexpr auto CharCellHeightPixels = 16;
+
+	const auto width_chars = custom.width / 8;
+
+	const auto htotal = width_chars * (100 + BlankingOverheadPercent) / 100;
+	const auto vtotal = custom.height * (100 + BlankingOverheadPercent) / 100;
+
+	for (auto& block : ModeList_VGA) {
+		if (!contains(std::vector({_1152x864_4bit,
+		                           _1152x864_8bit,
+		                           _1152x864_15bit,
+		                           _1152x864_16bit,
+		                           _1152x864_24bit,
+		                           _1152x864_32bit}),
+		              block.mode)) {
+			continue;
+		}
+
+		// The horizontal display end of the 15 and 16-bit modes is
+		// doubled (two memory fetches per pixel), but the horizontal
+		// total is not, following the original 1152x864 entries. The
+		// CRTC setup only handles 9-bit horizontal values, which a
+		// doubled total would exceed.
+		const auto is_doubled = (block.type == M_LIN15 ||
+		                         block.type == M_LIN16);
+
+		block.swidth  = check_cast<uint16_t>(custom.width);
+		block.sheight = check_cast<uint16_t>(custom.height);
+		block.twidth  = check_cast<uint8_t>(width_chars);
+		block.theight = check_cast<uint8_t>(custom.height /
+		                                    CharCellHeightPixels);
+		block.htotal  = check_cast<uint16_t>(htotal);
+		block.vtotal  = check_cast<uint16_t>(vtotal);
+		block.hdispend = check_cast<uint16_t>(is_doubled ? width_chars * 2
+		                                                 : width_chars);
+		block.vdispend = check_cast<uint16_t>(custom.height);
+	}
+}
+
 void filter_compatible_s3_vesa_modes()
 {
 	enum dram_size_t {
@@ -891,6 +947,13 @@ void SVGA_Setup_S3()
 		break;
 
 	case VesaModes::All: break;
+	}
+
+	// Must come after the 'vesa_modes' filtering, which matches on the
+	// original 1152x864 dimensions
+	if (int10.vesa_custom_resolution) {
+		replace_1152x864_modes_with_custom_resolution(
+		        *int10.vesa_custom_resolution);
 	}
 
 	if (int10.vesa_nolfb) {
