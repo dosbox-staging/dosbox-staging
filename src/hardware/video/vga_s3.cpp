@@ -727,6 +727,35 @@ void replace_1152x864_modes_with_custom_resolution(const VesaCustomResolution& c
 		                                                 : width_chars);
 		block.vdispend = check_cast<uint16_t>(custom.height);
 		block.special |= VESA_CUSTOM_RESOLUTION;
+
+		const auto required_vmem_bytes = to_required_vmem_bytes(block);
+
+		if (required_vmem_bytes > static_cast<int>(vga.vmemsize)) {
+			auto bits_per_pixel = [&] {
+				switch (block.type) {
+				case M_LIN4: return 4;
+				case M_LIN8: return 8;
+				case M_LIN15: return 15;
+				case M_LIN16: return 16;
+				case M_LIN24: return 24;
+				case M_LIN32: return 32;
+				default:
+					assertm(false, "Invalid VGAModes value");
+					return 0;
+				}
+			};
+
+			LOG_WARNING(
+			        "VIDEO: The %dx%d %d-bit custom VESA mode needs "
+			        "%d KB of video memory but only %u KB is "
+			        "available; increase 'vmemsize' to make the "
+			        "mode available",
+			        custom.width,
+			        custom.height,
+			        bits_per_pixel(),
+			        required_vmem_bytes / 1024,
+			        vga.vmemsize / 1024);
+		}
 	}
 }
 
@@ -927,6 +956,13 @@ void SVGA_Setup_S3()
 
 	description += int10.vesa_oldvbe ? "VESA 1.2" : "VESA 2.0";
 
+	// Must come before the 'vesa_modes' filtering so the custom modes are
+	// filtered by their real dimensions
+	if (int10.vesa_custom_resolution) {
+		replace_1152x864_modes_with_custom_resolution(
+		        *int10.vesa_custom_resolution);
+	}
+
 	switch (int10.vesa_modes) {
 	case VesaModes::Compatible:
 		filter_compatible_s3_vesa_modes();
@@ -939,13 +975,6 @@ void SVGA_Setup_S3()
 		break;
 
 	case VesaModes::All: break;
-	}
-
-	// Must come after the 'vesa_modes' filtering, which matches on the
-	// original 1152x864 dimensions
-	if (int10.vesa_custom_resolution) {
-		replace_1152x864_modes_with_custom_resolution(
-		        *int10.vesa_custom_resolution);
 	}
 
 	if (int10.vesa_nolfb) {
