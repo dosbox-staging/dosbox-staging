@@ -281,23 +281,40 @@ mount C /path/to/game/files
 ```
 
 This mounts a host directory as a DOS hard disk drive. This is the most common
-way to make game files accessible to DOS.
+way for making games files accessible to DOS.
+
+Directory-mounted hard disks report approximately 250 MB of free space by
+default. This is a made-up number; reporting the actual available space of
+your host drive wouldn't make any sense for DOS. So the emulator needs to
+report a fake but realistic fixed number.
+
+You can use the `-freesize` option to adjust the amount of available free space
+per drive (in MB for hard disks, KB for floppies):
+
+```
+mount C /path/to/game -freesize 1024
+```
 
 !!! warning
 
     Some games check for free disk space and refuse to install if there isn't
-    enough. Directory-mounted hard disks report approximately 250 MB of free
-    space by default. Use the `-freesize` flag to adjust it (in MB for hard
-    disks, KB for floppies):
+    enough (e.g., [Fallout](https://www.mobygames.com/game/223/fallout/),
+    [M.A.X](https://www.mobygames.com/game/249397/max-mechanized-assault-exploration/),
+    [KKND](https://www.mobygames.com/game/520/kknd-krush-kill-n-destroy/), and
+    [TekWar](https://www.mobygames.com/game/2420/william-shatners-tekwar/)).
+    Then some earlier games from the era of small hard drives get confused if
+    there is _too much_ space available,  (e.g., [King's Quest
+    IV](https://www.mobygames.com/game/129/kings-quest-iv-the-perils-of-rosella/)
+    complaining about not enough disk space when saving the game if the free
+    space is more than 50 MB). Check out our [Game
+    issues](https://github.com/dosbox-staging/dosbox-staging/wiki/Game-issues)
+    wiki page for more examples.
 
-    ```
-    mount C /path/to/game -freesize 1024
-    ```
-
-!!! warning
+!!! warning "Volume labels"
 
     Some games --- particularly those with copy protection --- check the
-    volume label of the drive. Use the `-label` flag to set it explicitly:
+    volume label of the drive and refuse to install or run if it doesn't match
+    their expectations. Use the `-label` option to set it explicitly:
 
     ```
     mount A /path/to/floppy -t floppy -label DISK1
@@ -427,7 +444,7 @@ FAT12, FAT16, and FAT32 filesystems are supported.
 
 ### Read-only mounts
 
-Use the `-ro` flag to mount a drive as read-only:
+Use the `-ro` option to mount a drive as read-only:
 
 ```
 mount D /path/to/shared -ro
