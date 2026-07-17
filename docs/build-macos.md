@@ -120,7 +120,7 @@ cmake --build --preset=release-macos
 > The first configure step builds all library dependencies from source via
 > vcpkg, which can take a while. Subsequent builds reuse the cached artifacts.
 
-## Troubleshooting tips
+## Troubleshooting
 
 - **No CMAKE_C_COMPILER could be found.** --- Make sure you don't have any
   pending Xcode updates that haven't been completed yet.
@@ -140,92 +140,30 @@ instructions on building these older checkouts.
 ## Offline documentation
 
 Self-contained offline HTML documentation can optionally be built as part of the
-CMake build. The output appears in the build directory at
-`build/<preset>/Resources/docs/` — this is the same documentation bundled with
-the release packages.
+CMake build. See [Building the offline documentation](build-documentation.md)
+for details.
 
-Documentation building is **off by default**. To enable it:
 
-```bash
-cmake --preset=debug-macos -DOPT_DOCUMENTATION=ON
-cmake --build --preset=debug-macos
+## Sanitizer build
+
+There are two (mutually exclusive) sanitizer settings available:
+- `OPT_SANITIZER` — detects memory errors and undefined behaviors
+- `OPT_THREAD_SANITIZER` — data race detector
+
+To use any of these, pass the appropriate option when configuring the project,
+for example:
+
+```shell
+cmake -DOPT_SANITIZER=ON --preset=release-macos
+cmake --build --preset=release-macos
 ```
 
-To rebuild just the documentation after editing content:
+For more information about sanitizers, check the `clang` documentation on the
+`-fsanitize` option.
 
-```bash
-cmake --build --preset debug-macos --target rebuild_documentation
-```
-
-### Prerequisites
-
-Python 3 with the `venv` module is required. Both ship with the Xcode Command
-Line Tools and Homebrew — no extra packages are needed on macOS.
-
-### Best-effort
-
-If Python is not available or is missing required modules (`venv`, `ensurepip`),
-the build proceeds normally without documentation — a warning is shown during
-CMake configuration, but the build is **never aborted**.
-
-### Caching
-
-There are two independent cache layers that make successive builds fast:
-
-1. **Python venv and pip packages** — stored in the build directory at
-   `_mkdocs_venv/`. The virtual environment is created once per build directory.
-   pip only re-runs when `extras/documentation/mkdocs-package-requirements.txt`
-   is modified.
-
-2. **Downloaded external assets** — the mkdocs-material privacy plugin caches
-   downloaded web fonts, images, and scripts in `website/.cache/` in the source
-   tree (this directory is git-ignored). Because it lives outside the build
-   directory, it persists across clean builds and across different build
-   configurations (debug, release, etc.).
-
-> [!IMPORTANT]
-> The privacy plugin only downloads assets from a small set of trusted
-> sources: **Google Fonts** (fonts.googleapis.com, fonts.gstatic.com),
-> **www.dosbox-staging.org** (our GitHub Pages website, completely under our
-> control), and a few well-known CDNs used by the MkDocs Material theme
-> (cdn.jsdelivr.net, unpkg.com, mirrors.creativecommons.org). No content from
-> untrusted origins is ever fetched. The build uses the system CA certificate
-> bundle instead of Python's built-in certifi bundle, so VPNs that perform
-> SSL inspection work without issues. If the build fails with certificate
-> errors, set the `SSL_CERT_FILE` environment variable to your
-> organisation's CA bundle path.
-
-### Rebuilding after documentation changes
-
-Changes to markdown files under `website/docs/` do not automatically trigger a
-rebuild — globbing hundreds of files into CMake's dependency tracking would be
-impractical. To rebuild after editing documentation content:
-
-```bash
-# Option 1: Use the dedicated rebuild target
-cmake --build --preset debug-macos --target rebuild_documentation
-
-# Option 2: Invalidate the build stamp (triggers rebuild on next normal build)
-touch website/mkdocs.yml
-```
-
-### Forcing a full rebuild
-
-To rebuild documentation from scratch, delete the build stamp from the build
-directory:
-
-```bash
-rm build/debug-macos/_mkdocs_build_stamp
-```
-
-### Cleaning all documentation caches
-
-To remove all MkDocs caches from the source tree (`website/.cache`,
-`website/__pycache__`, `website/site`):
-
-```bash
-cmake --build --preset debug-macos --target clean-manual
-```
+As sanitizer availability and performance are highly platform-dependent, you
+might need to manually adapt the `SANITIZER_FLAGS` variable in `CMakeLists.txt`
+to suit your needs.
 
 
 ## Permissions and running
@@ -288,7 +226,7 @@ TODO
 
 ### MacPorts
 
-The instructions are up to date for macOS Sequioa 15.5.
+The instructions are up to date for macOS Sequoia 15.5.
 
 #### mkdocs
 
@@ -374,28 +312,6 @@ PATH="$HOME/bin:$PATH"` in your `.zshrc`):
 sudo port install gsed
 ln -s /opt/local/bin/gsed ~/bin/sed
 ```
-
-### Sanitizer build (CMake)
-
-There are two (mutually exclusive) sanitizer settings available:
-- `OPT_SANITIZER` - detects memory errors and undefined behaviors
-- `OPT_THREAD_SANITIZER` - data race detector
-
-To use any of these, pass the appropriate option when configuring the sources,
-for example:
-
-```bash
-cmake -DOPT_SANITIZER=ON --preset=release-macos
-cmake --build --preset=release-macos
-```
-
-For more information about sanitizers check the `clang` documentation on the
-`-fsanitize` option.
-
-As sanitizer availability and performance are highly dependent on the concrete
-platform (CPU, OS, compiler), you might need to manually adapt the
-`SANITIZER_FLAGS` variable in the `CMakeLists.txt` file to suit your needs.
-
 
 ## Using FluidSynth and Slirp during local development
 
@@ -504,7 +420,7 @@ These instructions are adapted from [here](https://github.com/electron/notarize/
 
 ## Code signing the application bundle
 
-Once the the local dev environment for code signing is set up, you can sign
+Once the local dev environment for code signing is set up, you can sign
 the application bundle built on GitHub CI with the [notarizer
 script](/scripts/packaging/macos/notarize-macos-dmg.sh).
 

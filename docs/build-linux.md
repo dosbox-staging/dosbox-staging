@@ -55,7 +55,7 @@ DOSBox Staging ships with some binary files as a part of its assets:
 
 These are generic, distro-independent building instructions.
 
-### Install the necessary build tools
+### Installing build tools
 
 - GCC or Clang compiler (the compiler has to support C++23)
 - Git
@@ -83,7 +83,7 @@ These are generic, distro-independent building instructions.
 
 ### Clone DOSBox Staging
 
-```bash
+```shell
 git clone https://github.com/dosbox-staging/dosbox-staging.git
 ```
 
@@ -91,7 +91,7 @@ git clone https://github.com/dosbox-staging/dosbox-staging.git
 
 To create the debug build:
 
-```bash
+```shell
 cd dosbox-staging
 cmake --preset=debug-linux
 cmake --build --preset=debug-linux
@@ -99,7 +99,7 @@ cmake --build --preset=debug-linux
 
 To create the optimised release build:
 
-```bash
+```shell
 cd dosbox-staging
 cmake --preset=release-linux
 cmake --build --preset=release-linux
@@ -111,23 +111,23 @@ Once built, you can launch DOSBox Staging with the following commands.
 
 Debug build:
 
-``` bash
+```shell
 ./build/debug-linux/dosbox
 ```
 
 Release build:
 
-``` bash
+```shell
 ./build/release-linux/dosbox
 ```
 
 ## Building using vcpkg
 
-### Install the necessary build tools
+### Installing build tools
 
 - for Ubuntu:
 
-```bash
+```shell
 sudo apt-get install git build-essential pkg-config cmake curl ninja-build \
              autoconf autoconf-archive automake bison libtool libgl1-mesa-dev \
              libsdl3-dev python3-venv
@@ -135,30 +135,34 @@ sudo apt-get install git build-essential pkg-config cmake curl ninja-build \
 
 ### Install the vcpkg tool
 
-- clone the vcpkg tool into your home directory:
+The library dependencies are built and provided by
+[vcpkg](https://github.com/microsoft/vcpkg). The CMake presets expect the
+`VCPKG_ROOT` environment variable to point at your vcpkg checkout.
 
-```bash
-cd ~
-git clone https://github.com/microsoft/vcpkg.git
-```
+1. Clone vcpkg into your home directory:
 
-- bootstrap the vcpkg tool:
+    ```shell
+    cd ~
+    git clone https://github.com/microsoft/vcpkg.git
+    ```
 
-```bash
-cd vcpkg
-./bootstrap-vcpkg.sh -disableMetrics
-```
+2. Bootstrap it:
 
-- set the vcpkg path in your compile shell (it is recommended to add the command
-  to your shell startup script, usually `~/.bashrc`):
+    ```shell
+    cd vcpkg
+    ./bootstrap-vcpkg.sh -disableMetrics
+    ```
 
-```bash
-export VCPKG_ROOT=$HOME/vcpkg
-```
+3. Set `VCPKG_ROOT` in your shell (add it to your shell startup script, usually
+   `~/.bashrc`, so it persists across sessions):
+
+    ```shell
+    export VCPKG_ROOT=$HOME/vcpkg
+    ```
 
 ### Clone DOSBox Staging
 
-```bash
+```shell
 cd ~
 git clone https://github.com/dosbox-staging/dosbox-staging.git
 ```
@@ -167,7 +171,7 @@ git clone https://github.com/dosbox-staging/dosbox-staging.git
 
 To create the debug build:
 
-```bash
+```shell
 cd dosbox-staging
 cmake --preset=debug-linux-vcpkg
 cmake --build --preset=debug-linux-vcpkg
@@ -175,7 +179,7 @@ cmake --build --preset=debug-linux-vcpkg
 
 To create the optimised release build:
 
-```bash
+```shell
 cd dosbox-staging
 cmake --preset=release-linux-vcpkg
 cmake --build --preset=release-linux-vcpkg
@@ -187,13 +191,13 @@ Once built, you can launch DOSBox Staging with the following commands.
 
 Debug build:
 
-``` bash
+```shell
 ./build/debug-linux-vcpkg/dosbox
 ```
 
 Release build:
 
-``` bash
+```shell
 ./build/release-linux-vcpkg/dosbox
 ```
 
@@ -208,15 +212,15 @@ instructions on building these older checkouts.
 Unit tests are built by default. To disable building unit tests, pass the
 `-DOPT_TESTS=OFF` option when configuring the project, for example:
 
-```bash
+```shell
 cmake --preset=release-linux -DOPT_TESTS=OFF
 ```
 
 To run the entire test suite, execute the following (use the same CMake preset
 you used for building):
 
-```bash
-ctest -j 8 --preset debug-linux
+```shell
+ctest -j 8 --preset=debug-linux
 ```
 
 The `-j 8` option runs the tests in parallel on 8 CPU cores. You can adjust
@@ -225,28 +229,28 @@ this to suit your system.
 To run all test cases in a single test suite, pass in the name of the suite
 with the `-R` option:
 
-```bash
-ctest -j 8 --preset debug-linux -R DOS_FilesTest
+```shell
+ctest -j 8 --preset=debug-linux -R DOS_FilesTest
 ```
 
 You can narrow this down to run a single test case only:
 
-```bash
-ctest -j 8 --preset debug-linux -R DOS_FilesTest.DOS_MakeName_Basic_Failures
+```shell
+ctest -j 8 --preset=debug-linux -R DOS_FilesTest.DOS_MakeName_Basic_Failures
 ```
 
 To run a group of tests, you can use wildcards and regexes. E.g. to run all
 test cases in the `DOS_FilesTest` suite with names starting with
 `DOS_MakeName_`:
 
-```bash
-ctest -j 8 --preset debug-linux -R "DOS_FilesTest.DOS_MakeName_*"
+```shell
+ctest -j 8 --preset=debug-linux -R "DOS_FilesTest.DOS_MakeName_*"
 ```
 
 Pass in the `-V` option to see the DOSBox Staging log output:
 
-```bash
-ctest -j 8 --preset debug-linux -R DOS_FilesTest.DOS_MakeName_Basic_Failures -V
+```shell
+ctest -j 8 --preset=debug-linux -R DOS_FilesTest.DOS_MakeName_Basic_Failures -V
 ```
 
 You might want to run the test executable directly to get coloured output, and
@@ -263,101 +267,9 @@ for the full list of available options.
 
 ## Offline documentation
 
-Self-contained offline HTML documentation can optionally be built as part of
-the CMake build. The output appears in the build directory at
-`build/<preset>/resources/docs/` — this is the same documentation bundled
-with the release packages.
-
-Documentation building is **off by default**. To enable it:
-
-```bash
-cmake --preset=debug-linux -DOPT_DOCUMENTATION=ON
-cmake --build --preset=debug-linux
-```
-
-To rebuild just the documentation after editing content:
-
-```bash
-cmake --build --preset debug-linux --target rebuild_documentation
-```
-
-### Prerequisites
-
-Python 3 with the `venv` module is required. On Debian and Ubuntu, the `venv`
-module is shipped in a separate package that may not be installed by default:
-
-```bash
-sudo apt-get install python3-venv
-```
-
-No other manual setup is needed — the build automatically creates a Python
-virtual environment in the build directory and installs all MkDocs dependencies
-into it.
-
-### Best-effort
-
-If Python is not available or is missing required modules (`venv`, `ensurepip`),
-the build proceeds normally without documentation — a warning is shown during
-CMake configuration, but the build is **never aborted**.
-
-### Caching
-
-There are two independent cache layers that make successive builds fast:
-
-1. **Python venv and pip packages** — stored in the build directory at
-   `_mkdocs_venv/`. The virtual environment is created once per build directory.
-   pip only re-runs when `extras/documentation/mkdocs-package-requirements.txt`
-   is modified.
-
-2. **Downloaded external assets** — the mkdocs-material privacy plugin caches
-   downloaded web fonts, images, and scripts in `website/.cache/` in the source
-   tree (this directory is git-ignored). Because it lives outside the build
-   directory, it persists across clean builds and across different build
-   configurations (debug, release, etc.).
-
-> [!IMPORTANT]
-> The privacy plugin only downloads assets from a small set of trusted
-> sources: **Google Fonts** (fonts.googleapis.com, fonts.gstatic.com),
-> **www.dosbox-staging.org** (our GitHub Pages website, completely under our
-> control), and a few well-known CDNs used by the MkDocs Material theme
-> (cdn.jsdelivr.net, unpkg.com, mirrors.creativecommons.org). No content from
-> untrusted origins is ever fetched. The build uses the system CA certificate
-> bundle instead of Python's built-in certifi bundle, so VPNs that perform
-> SSL inspection work without issues. If the build fails with certificate
-> errors, set the `SSL_CERT_FILE` environment variable to your
-> organisation's CA bundle path.
-
-### Rebuilding after documentation changes
-
-Changes to markdown files under `website/docs/` do not automatically trigger a
-rebuild — globbing hundreds of files into CMake's dependency tracking would be
-impractical. To rebuild after editing documentation content:
-
-```bash
-# Option 1: Use the dedicated rebuild target
-cmake --build --preset debug-linux --target rebuild_documentation
-
-# Option 2: Invalidate the build stamp (triggers rebuild on next normal build)
-touch website/mkdocs.yml
-```
-
-### Forcing a full rebuild
-
-To rebuild documentation from scratch, delete the build stamp from the build
-directory:
-
-```bash
-rm build/debug-linux/_mkdocs_build_stamp
-```
-
-### Cleaning all documentation caches
-
-To remove all MkDocs caches from the source tree (`website/.cache`,
-`website/__pycache__`, `website/site`):
-
-```bash
-cmake --build --preset debug-linux --target clean-manual
-```
+Self-contained offline HTML documentation can optionally be built as part of the
+CMake build. See [Building the offline documentation](build-documentation.md)
+for details.
 
 
 ## Sanitizer build
@@ -369,7 +281,7 @@ There are two (mutually exclusive) sanitizer settings available:
 To use any of these, pass the appropriate option when configuring the project,
 for example:
 
-```bash
+```shell
 cmake -DOPT_SANITIZER=ON --preset=release-linux
 cmake --build --preset=release-linux
 ```
@@ -377,6 +289,6 @@ cmake --build --preset=release-linux
 For more information about sanitizers, check the `GCC` or `clang` documentation
 on the `-fsanitize` option.
 
-As sanitizer availability and performance are are highly platform-dependent,
-you might need to manually adapt the `SANITIZER_FLAGS` variable in
-`CMakeLists.txt` file to suit your needs.
+As sanitizer availability and performance are highly platform-dependent, you
+might need to manually adapt the `SANITIZER_FLAGS` variable in `CMakeLists.txt`
+to suit your needs.
