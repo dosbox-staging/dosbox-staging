@@ -122,6 +122,9 @@ Please refer to the platform specific build instructions:
 - [macOS](docs/build-macos.md)
 - [Linux](docs/build-linux.md)
 
+For building versions prior to 0.83.0 (e.g. when bisecting), see the
+[legacy Meson build guide](docs/build-meson.md).
+
 
 ## Imported branches, community patches, old forks
 
