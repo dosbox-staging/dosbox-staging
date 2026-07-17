@@ -13,7 +13,7 @@ also supported for the time being via the dedicated `*-vs2022` presets (e.g.
 `debug-windows-vs2022`, `release-windows-vs2022`).
 
 
-## Installing prerequisites
+## Installing build tools
 
 1. Install Visual Studio Community 2026 (or 2022):
    <https://visualstudio.microsoft.com/vs/community/>
@@ -37,13 +37,13 @@ This matches the toolchain used by our CI.
 
 1. Clone vcpkg (for example into `C:\vcpkg`):
 
-    ``` shell
+    ```shell
     git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
     ```
 
 2. Bootstrap it:
 
-    ``` shell
+    ```shell
     cd C:\vcpkg
     .\bootstrap-vcpkg.bat -disableMetrics
     ```
@@ -52,7 +52,7 @@ This matches the toolchain used by our CI.
    vcpkg. This sets it permanently for your user account; restart your shell or
    Visual Studio afterwards:
 
-    ``` shell
+    ```shell
     setx VCPKG_ROOT C:\vcpkg
     ```
 
@@ -61,7 +61,7 @@ This matches the toolchain used by our CI.
 Recent versions of Visual Studio already include vcpkg, but it needs to be
 initialized. Open a Visual Studio Developer Command Prompt and run:
 
-``` shell
+```shell
 vcpkg integrate install
 ```
 
@@ -79,16 +79,16 @@ has the tooling on its `PATH`).
 
 Visual Studio 2026:
 
-``` shell
-cmake --preset release-windows
-cmake --build --preset release-windows
+```shell
+cmake --preset=release-windows
+cmake --build --preset=release-windows
 ```
 
 Visual Studio 2022:
 
-``` shell
-cmake --preset release-windows-vs2022
-cmake --build --preset release-windows-vs2022
+```shell
+cmake --preset=release-windows-vs2022
+cmake --build --preset=release-windows-vs2022
 ```
 
 Use the `debug-windows` / `debug-windows-vs2022` presets for debug builds.
@@ -124,122 +124,16 @@ Use the `debug-windows` / `debug-windows-vs2022` presets for debug builds.
 
 ## Offline documentation
 
-Self-contained offline HTML documentation can optionally be built as part of
-the CMake build. The output appears in the build directory at
-`build\<preset>\Resources\docs\` — this is the same documentation bundled with
-the release packages.
-
-Documentation building is **off by default**. Use the **manual** CMake presets
-to enable it:
-
-- `debug-windows-manual`
-- `release-windows-manual`
-
-These presets appear in Visual Studio's configuration dropdown after importing
-the CMake project. From the command line:
-
-```shell
-cmake --preset release-windows-manual
-cmake --build --preset release-windows-manual
-```
-
-To rebuild just the documentation after editing content:
-
-```shell
-cmake --build --preset release-windows-manual --target rebuild_documentation
-```
-
-Alternatively, you can enable documentation building with any preset by passing
-`-DOPT_DOCUMENTATION=ON` on the command line:
-
-```shell
-cmake --preset release-windows -DOPT_DOCUMENTATION=ON
-```
-
-### Best-effort
-
-Offline documentation building requires Python 3 with pip to be installed and
-available on the system `PATH`. If Python is not available or is missing
-required modules (`venv`, `ensurepip`), the build proceeds normally without
-documentation — a warning is shown during CMake configuration, but the build is
-**never aborted**.
-
-To install Python, download the installer from <https://www.python.org/downloads/>
-and make sure to check **"Add Python to PATH"** during installation. The
-default installer options include pip; do not uncheck it.
-
-> **Note**
->
-> The Python included with Visual Studio's "Python development" workload may
-> work, but it is not guaranteed to be on the system `PATH`. A standalone
-> Python installation is recommended.
-
-### Caching
-
-There are two independent cache layers that make successive builds fast:
-
-1. **Python venv and pip packages** — stored in the build directory at
-   `_mkdocs_venv\`. The virtual environment is created once per build directory.
-   pip only re-runs when `extras\documentation\mkdocs-package-requirements.txt`
-   is modified.
-
-2. **Downloaded external assets** — the mkdocs-material privacy plugin caches
-   downloaded web fonts, images, and scripts in `website\.cache\` in the source
-   tree (this directory is git-ignored). Because it lives outside the build
-   directory, it persists across clean builds and across different build
-   configurations (debug, release, etc.).
-
-> [!IMPORTANT]
-> The privacy plugin only downloads assets from a small set of trusted
-> sources: **Google Fonts** (fonts.googleapis.com, fonts.gstatic.com),
-> **www.dosbox-staging.org** (our GitHub Pages website, completely under our
-> control), and a few well-known CDNs used by the MkDocs Material theme
-> (cdn.jsdelivr.net, unpkg.com, mirrors.creativecommons.org). No content from
-> untrusted origins is ever fetched. The build uses the system CA certificate
-> bundle instead of Python's built-in certifi bundle, so VPNs that perform
-> SSL inspection work without issues. If the build fails with certificate
-> errors, set the `SSL_CERT_FILE` environment variable to your
-> organisation's CA bundle path.
-
-### Rebuilding after documentation changes
-
-Changes to markdown files under `website\docs\` do not automatically trigger a
-rebuild — globbing hundreds of files into CMake's dependency tracking would be
-impractical. To rebuild after editing documentation content:
-
-```shell
-# Option 1: Use the dedicated rebuild target
-cmake --build --preset release-windows --target rebuild_documentation
-
-# Option 2: Invalidate the build stamp (triggers rebuild on next normal build)
-# (run from the Git Bash shell or WSL)
-touch website/mkdocs.yml
-```
-
-### Forcing a full rebuild
-
-To rebuild documentation from scratch, delete the build stamp from the build
-directory:
-
-```shell
-del build\release-windows\_mkdocs_build_stamp
-```
-
-### Cleaning all documentation caches
-
-To remove all MkDocs caches from the source tree (`website\.cache`,
-`website\__pycache__`, `website\site`):
-
-```shell
-cmake --build --preset release-windows --target clean-manual
-```
+Self-contained offline HTML documentation can optionally be built as part of the
+CMake build. See [Building the offline documentation](build-documentation.md)
+for details.
 
 
 ## Bisecting and building old versions
 
-Versions prior to 0.83.0 used the Meson build system. See the
-[Meson build guide](build-meson.md) for instructions on building older
-checkouts.
+Versions prior to 0.83.0 used the Meson build system, and versions prior to
+0.77.0 used Autotools. See the [Meson build guide](build-meson.md) for
+instructions on building these older checkouts.
 
 
 ## Troubleshooting
