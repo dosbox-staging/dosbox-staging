@@ -199,20 +199,9 @@ Release build:
 
 ## Bisecting and building old versions
 
-Prior to release 0.83.0, the Meson build system was used. The following commands
-can be used to configure and build the project:
-
-```bash
-meson setup -Dbuildtype=release build
-meson compile -C build
-```
-
-Prior to release 0.77.0, the Autotools build system was used. A build script
-available in these old versions can be used (choose one for your compiler):
-
-```bash
-./scripts/build.sh -c clang -t release` or `./scripts/build.sh -c gcc -t release
-```
+Versions prior to 0.83.0 used the Meson build system, and versions prior to
+0.77.0 used Autotools. See the [Meson build guide](build-meson.md) for
+instructions on building these older checkouts.
 
 ## Unit tests
 

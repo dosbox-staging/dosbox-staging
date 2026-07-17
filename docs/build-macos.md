@@ -1,8 +1,9 @@
 # Building on macOS
 
-macOS builds can be created using the CMake build tool, compiled using the
-Clang compiler, and provided with dependencies using the Homebrew or MacPorts
-package managers.
+macOS builds are created with the CMake build tool and the Clang compiler. The
+build tools (CMake, Ccache, etc.) are provided by the Homebrew or MacPorts
+package managers, while the library dependencies are built and provided by
+[vcpkg](https://github.com/microsoft/vcpkg).
 
 We recommend using CMake with presets because they're CI-tested and produce a
 binary using consistent compiler flags. Run `cmake --list-presets` to list the
@@ -10,11 +11,6 @@ presets.
 
 We recommend using Homebrew and Clang because Apple's Core SDKs can be used
 only with Apple's fork of the Clang compiler.
-
-> [!NOTE]
-> CMake support is currently an experimental internal-only, work-in-progress
-> feature; it's not ready for public consumption yet. Please ignore the
-> `CMakeLists.txt` files in the source tree.
 
 
 ## Installing Xcode
@@ -38,13 +34,17 @@ You might need to run `sudo xcodebuild -license` as well to accept the license
 agreements again if the CMake build step fails.
 
 
-## Installing dependencies
+## Installing build tools
+
+The library dependencies are handled by vcpkg (see [Installing
+vcpkg](#installing-vcpkg) below), so you only need the build tools themselves
+from Homebrew or MacPorts.
 
 ### Homebrew
 
 1. Install Homebrew: <https://brew.sh>.
 
-2. Install the minimum set of dependencies and related tools:
+2. Install the build tools:
 
     ```shell
     brew install cmake ccache pkg-config python3
@@ -61,16 +61,42 @@ agreements again if the CMake build step fails.
 
 1. Install MacPorts: <https://www.macports.org/install.php>
 
-2. Install the minimum set of dependencies and related tools:
+2. Install the build tools:
 
     ```shell
     sudo port install cmake ccache pkgconfig python314
     ```
 
+## Installing vcpkg
+
+The library dependencies are built and provided by
+[vcpkg](https://github.com/microsoft/vcpkg). The CMake presets expect the
+`VCPKG_ROOT` environment variable to point at your vcpkg checkout.
+
+1. Clone vcpkg into your home directory:
+
+    ```shell
+    cd ~
+    git clone https://github.com/microsoft/vcpkg.git
+    ```
+
+2. Bootstrap it:
+
+    ```shell
+    cd vcpkg
+    ./bootstrap-vcpkg.sh -disableMetrics
+    ```
+
+3. Set `VCPKG_ROOT` in your shell (add it to your shell startup script, usually
+   `~/.zprofile`, so it persists across sessions):
+
+    ```shell
+    export VCPKG_ROOT=$HOME/vcpkg
+    ```
+
 ## Building
 
-Once you have dependencies installed using either environment, clone the
-repository:
+Once the build tools and vcpkg are installed, clone the repository:
 
 ```shell
 git clone https://github.com/dosbox-staging/dosbox-staging.git
@@ -90,6 +116,10 @@ cmake --preset=release-macos
 cmake --build --preset=release-macos
 ```
 
+> [!NOTE]
+> The first configure step builds all library dependencies from source via
+> vcpkg, which can take a while. Subsequent builds reuse the cached artifacts.
+
 ## Troubleshooting tips
 
 - **No CMAKE_C_COMPILER could be found.** --- Make sure you don't have any
@@ -98,6 +128,13 @@ cmake --build --preset=release-macos
 - **Random CMake errors**. --- You might need to run `sudo xcodebuild
   -license` to accept the license agreements again. This usually happens after
   an Xcode upgrade.
+
+
+## Bisecting and building old versions
+
+Versions prior to 0.83.0 used the Meson build system, and versions prior to
+0.77.0 used Autotools. See the [Meson build guide](build-meson.md) for
+instructions on building these older checkouts.
 
 
 ## Offline documentation
