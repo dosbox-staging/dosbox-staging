@@ -137,6 +137,12 @@ Versions prior to 0.83.0 used the Meson build system, and versions prior to
 instructions on building these older checkouts.
 
 
+## Unit tests
+
+Unit tests are built and run with CMake and `ctest`. See
+[Running the unit tests](build-testing.md) for details.
+
+
 ## Offline documentation
 
 Self-contained offline HTML documentation can optionally be built as part of the
