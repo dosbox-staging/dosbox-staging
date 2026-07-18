@@ -88,6 +88,19 @@ void EventList::AddMidiSysExEvent(const std::vector<uint8_t>& msg,
 {
 	assert(msg.size() > 0);
 
+	// `sysex_data` must never reallocate, otherwise the `buffer` pointers
+	// of previously added SysEx events would dangle. We reserved
+	// `MaxMidiSysExBytes` upfront; drop the message if it wouldn't fit the
+	// remaining space (this should never happen in practice).
+	if (sysex_data.size() + msg.size() > MaxMidiSysExBytes) {
+		LOG_WARNING(
+		        "CLAP: Per-cycle SysEx data limit of %d bytes exceeded; "
+		        "dropping %d-byte SysEx message",
+		        MaxMidiSysExBytes,
+		        check_cast<int>(msg.size()));
+		return;
+	}
+
 	clap_event_midi_sysex ev = {};
 
 	ev.header.space_id = CLAP_CORE_EVENT_SPACE_ID;
@@ -99,9 +112,6 @@ void EventList::AddMidiSysExEvent(const std::vector<uint8_t>& msg,
 	ev.buffer          = sysex_data.data() + sysex_data.size();
 	ev.size            = check_cast<uint32_t>(msg.size());
 
-	// We reserved `MaxMidiSysExBytes` for `sysex_data` to avoid
-	// reallocations, so make sure we never trigger a realloc here.
-	assert(sysex_data.size() + msg.size() <= MaxMidiSysExBytes);
 	sysex_data.insert(sysex_data.end(), msg.begin(), msg.end());
 
 	const auto new_event_offset = event_data.size();
