@@ -8,9 +8,11 @@
 #include <cassert>
 #include <cstdlib>
 #include <cstring>
+#include <deque>
 #include <list>
 #include <memory>
 #include <string>
+#include <vector>
 
 #include "private/fluidsynth.h"
 #include "private/midi_device.h"
@@ -42,6 +44,7 @@
 #include "misc/ansi_code_markup.h"
 #include "misc/cross.h"
 #include "misc/notifications.h"
+#include "utils/checks.h"
 #include "utils/string_utils.h"
 
 // must be included after dosbox_config.h
@@ -128,6 +131,11 @@ struct Midi {
 
 		size_t len = 0;
 		size_t pos = 0;
+
+		// False when the current message reuses the previous status
+		// byte (Running Status), in which case the producer sent one
+		// byte less than the assembled message length.
+		bool explicit_status = false;
 	} message = {};
 
 	MidiMessage realtime_message = {};
@@ -240,6 +248,183 @@ void init_midi_state(Section*)
 	midi_state.Reset();
 }
 
+// ***************************************************************************
+// MIDI wire-rate output scheduler
+// ***************************************************************************
+//
+// Real MIDI devices are fed through a 31250 baud serial wire that transfers
+// at most one byte per 320 us (10 bits per byte: start + 8 data + stop).
+// DOS-era drivers and devices were all engineered against this hard ceiling,
+// but our emulated MPU-401 accepts data as fast as the emulated CPU can
+// write it. Without pacing, bunched messages reach the MIDI device in
+// gapless bursts that are impossible on real hardware, and byte-oriented
+// sinks (the Sound Canvas plugin's emulated firmware, real external modules,
+// softsynths behind virtual MIDI cables) can be overloaded into silently
+// discarding data.
+//
+// The scheduler paces every message dispatched to the active MIDI device at
+// the wire rate, measured in emulated time. When the wire is free, messages
+// are dispatched immediately, so normally spaced MIDI streams gain no
+// latency; only bunches get spread out, exactly like on real hardware.
+
+// 10 bits per byte at 31250 baud
+constexpr auto WireMsPerByte = 0.32;
+
+struct PendingWireMessage {
+	MidiMessage msg = {};
+
+	std::vector<uint8_t> sysex_data = {};
+	bool is_sysex                   = false;
+
+	// Number of bytes the producer actually sent for this message (games
+	// often use Running Status, sending 2-byte channel messages), which
+	// determines the message's wire transfer time.
+	int num_wire_bytes = 0;
+};
+
+static std::deque<PendingWireMessage> wire_queue = {};
+
+static size_t num_pending_wire_bytes = 0;
+
+// Emulated time when the wire finishes transferring everything dispatched
+// so far.
+static double wire_free_time_ms = 0.0;
+
+static bool wire_tick_scheduled = false;
+
+static void dispatch_to_device(PendingWireMessage& pending)
+{
+	if (pending.is_sysex) {
+		midi.device->SendSysExMessage(pending.sysex_data.data(),
+		                              pending.sysex_data.size());
+	} else {
+		midi.device->SendMidiMessage(pending.msg);
+	}
+}
+
+static void wire_tick([[maybe_unused]] uint32_t val)
+{
+	wire_tick_scheduled = false;
+	dispatch_pending_wire_messages();
+}
+
+static void dispatch_pending_wire_messages()
+{
+	const auto now_ms = PIC_FullIndex();
+
+	// Dispatch each message at the start of its wire transfer slot
+	while (!wire_queue.empty() && now_ms >= wire_free_time_ms) {
+		auto& pending = wire_queue.front();
+
+		wire_free_time_ms = std::max(wire_free_time_ms, now_ms) +
+		                    (pending.num_wire_bytes * WireMsPerByte);
+
+		dispatch_to_device(pending);
+
+		num_pending_wire_bytes -= check_cast<size_t>(pending.num_wire_bytes);
+		wire_queue.pop_front();
+	}
+
+	if (!wire_queue.empty() && !wire_tick_scheduled) {
+		PIC_AddEvent(wire_tick, wire_free_time_ms - now_ms);
+		wire_tick_scheduled = true;
+	}
+}
+
+// Returns true if the message was accepted (dispatched or queued); false if
+// it had to be dropped because the queue is full.
+static bool enqueue_wire_message(PendingWireMessage&& pending)
+{
+	// ~20 seconds of MIDI data at full wire rate; only reachable by
+	// pathological floods. Drop whole messages, never individual bytes,
+	// as a partial message would desync the MIDI stream.
+	constexpr size_t MaxPendingWireBytes = 64 * 1024;
+
+	if (num_pending_wire_bytes + check_cast<size_t>(pending.num_wire_bytes) >
+	    MaxPendingWireBytes) {
+
+		static int num_dropped = 0;
+		if (num_dropped++ % 100 == 0) {
+			LOG_WARNING(
+			        "MIDI: Wire-rate output queue full (%d bytes "
+			        "pending); dropping %d-byte message (%d drops "
+			        "so far)",
+			        check_cast<int>(num_pending_wire_bytes),
+			        pending.num_wire_bytes,
+			        num_dropped);
+		}
+		return false;
+	}
+
+	num_pending_wire_bytes += check_cast<size_t>(pending.num_wire_bytes);
+	wire_queue.emplace_back(std::move(pending));
+
+	dispatch_pending_wire_messages();
+	return true;
+}
+
+// Dispatch a channel, System Common, or System Real Time message to the
+// active MIDI device, paced at the wire rate.
+static void send_midi_message_paced(const MidiMessage& msg, const int num_wire_bytes)
+{
+	const auto now_ms = PIC_FullIndex();
+
+	if (wire_queue.empty() && now_ms >= wire_free_time_ms) {
+		wire_free_time_ms = now_ms + (num_wire_bytes * WireMsPerByte);
+		midi.device->SendMidiMessage(msg);
+		return;
+	}
+
+	PendingWireMessage pending = {};
+	pending.msg                = msg;
+	pending.num_wire_bytes     = num_wire_bytes;
+
+	enqueue_wire_message(std::move(pending));
+}
+
+// Dispatch a SysEx message to the active MIDI device, paced at the wire rate.
+static void send_sysex_message_paced(uint8_t* sysex, const size_t len)
+{
+	const auto now_ms         = PIC_FullIndex();
+	const auto num_wire_bytes = check_cast<int>(len);
+
+	if (wire_queue.empty() && now_ms >= wire_free_time_ms) {
+		wire_free_time_ms = now_ms + (num_wire_bytes * WireMsPerByte);
+		midi.device->SendSysExMessage(sysex, len);
+		return;
+	}
+
+	PendingWireMessage pending = {};
+	pending.sysex_data.assign(sysex, sysex + len);
+	pending.is_sysex       = true;
+	pending.num_wire_bytes = num_wire_bytes;
+
+	enqueue_wire_message(std::move(pending));
+}
+
+// Immediately dispatch all pending messages, ignoring wire pacing, and reset
+// the scheduler. Used at device teardown so panic and reset sweeps still
+// reach the outgoing device; dropping them would leave hanging notes on
+// external synths. The one-off burst is harmless in a teardown situation.
+static void drain_wire_queue()
+{
+	if (midi.device) {
+		while (!wire_queue.empty()) {
+			dispatch_to_device(wire_queue.front());
+			wire_queue.pop_front();
+		}
+	}
+
+	wire_queue.clear();
+	num_pending_wire_bytes = 0;
+	wire_free_time_ms      = 0.0;
+
+	if (wire_tick_scheduled) {
+		PIC_RemoveEvents(wire_tick);
+		wire_tick_scheduled = false;
+	}
+}
+
 /* When using a physical Roland MT-32 rev. 0 as MIDI output device,
  * some games may require a delay in order to prevent buffer overflow
  * issues.
@@ -307,7 +492,7 @@ static void output_note_off_for_active_notes(const uint8_t channel)
 				                    NoteOffMsgLen,
 				                    msg.data.data());
 			}
-			midi.device->SendMidiMessage(msg);
+			send_midi_message_paced(msg, NoteOffMsgLen);
 		}
 	}
 }
@@ -374,8 +559,11 @@ void MIDI_RawOutByte(const uint8_t data)
 
 	const auto is_realtime_message = (data >= MidiStatus::TimingClock);
 	if (is_realtime_message) {
+		constexpr auto RealTimeMsgNumWireBytes = 1;
+
 		midi.realtime_message[0] = data;
-		midi.device->SendMidiMessage(midi.realtime_message);
+		send_midi_message_paced(midi.realtime_message,
+		                        RealTimeMsgNumWireBytes);
 		return;
 	}
 
@@ -416,8 +604,8 @@ void MIDI_RawOutByte(const uint8_t data)
 				        midi.sysex.pos,
 				        midi.sysex.delay_ms);
 #endif
-				midi.device->SendSysExMessage(midi.sysex.buf,
-				                              midi.sysex.pos);
+				send_sysex_message_paced(midi.sysex.buf,
+				                         midi.sysex.pos);
 
 				if (midi.sysex.start_ms) {
 					if (midi.sysex.buf[5] == 0x7f) {
@@ -457,6 +645,8 @@ void MIDI_RawOutByte(const uint8_t data)
 		// Start of a new MIDI message
 		midi.status      = data;
 		midi.message.pos = 0;
+
+		midi.message.explicit_status = true;
 
 		// Total length of the MIDI message, including the status byte
 		midi.message.len = MIDI_message_len_by_status[midi.status];
@@ -521,10 +711,19 @@ void MIDI_RawOutByte(const uint8_t data)
 
 			// 5. Send the MIDI message to the device for playback
 			if (play_msg) {
-				midi.device->SendMidiMessage(midi.message.msg);
+				// Running Status messages arrive without their
+				// status byte, so they occupy one byte less on
+				// the wire.
+				const auto num_wire_bytes = check_cast<int>(
+				        midi.message.len -
+				        (midi.message.explicit_status ? 0 : 1));
+
+				send_midi_message_paced(midi.message.msg,
+				                        num_wire_bytes);
 			}
 
-			midi.message.pos = 1; // Use Running Status
+			midi.message.pos             = 1; // Use Running Status
+			midi.message.explicit_status = false;
 		}
 	}
 }
@@ -534,6 +733,11 @@ MidiDevice* MIDI_GetCurrentDevice()
 	return midi.device.get();
 }
 
+// Sends the reset sweep directly to the given device, bypassing the wire
+// scheduler. Only for device teardown paths (the device destructors call
+// this on themselves); the wire scheduler dispatches to the *active* device
+// via deferred events, which must not be used on a device that's being
+// destroyed.
 void MIDI_Reset(MidiDevice* device)
 {
 	MidiMessage msg = {};
@@ -551,8 +755,22 @@ void MIDI_Reset(MidiDevice* device)
 
 void MIDI_Reset()
 {
-	if (MIDI_IsAvailable()) {
-		MIDI_Reset(midi.device.get());
+	if (!MIDI_IsAvailable()) {
+		return;
+	}
+
+	constexpr auto NumWireBytes = 3;
+
+	MidiMessage msg = {};
+
+	for (auto channel = FirstMidiChannel; channel <= LastMidiChannel; ++channel) {
+		msg[0] = MidiStatus::ControlChange | channel;
+
+		msg[1] = MidiChannelMode::AllNotesOff;
+		send_midi_message_paced(msg, NumWireBytes);
+
+		msg[1] = MidiChannelMode::ResetAllControllers;
+		send_midi_message_paced(msg, NumWireBytes);
 	}
 }
 
@@ -569,7 +787,7 @@ void MIDI_Mute()
 		     ++channel) {
 
 			msg[0] = MidiStatus::ControlChange | channel;
-			midi.device->SendMidiMessage(msg);
+			send_midi_message_paced(msg, MaxMidiMessageLen);
 		}
 	}
 
@@ -591,7 +809,7 @@ void MIDI_Unmute()
 			msg[0] = MidiStatus::ControlChange | channel;
 			msg[2] = midi_state.GetChannelVolume(channel);
 
-			midi.device->SendMidiMessage(msg);
+			send_midi_message_paced(msg, MaxMidiMessageLen);
 		}
 	}
 
@@ -806,6 +1024,10 @@ static std::unique_ptr<MIDI> midi_instance = nullptr;
 
 void MIDI_Init()
 {
+	// Flush any wire-paced messages to the outgoing device before it gets
+	// destroyed; dropping them could leave hanging notes on external synths.
+	drain_wire_queue();
+
 	// Retry loop
 	for (;;) {
 		MPU401_Destroy();
