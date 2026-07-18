@@ -68,6 +68,23 @@ union MpuStatusRegister {
 	bit_view<7, 1> dsr_no_data;
 };
 
+// MPU-401 "combination" transport commands (0x00..0x2f) encode a MIDI
+// real-time operation and a sequencer operation in a single command byte
+// (see the command list in the Roland MPU-401 Technical Reference Manual,
+// linked above).
+union MpuTransportCommand {
+	uint8_t data = 0;
+
+	// MIDI real-time operation: 1 = Stop, 2 = Start, 3 = Continue
+	bit_view<0, 2> midi_op;
+
+	// Sequencer operation: 1 = stop, 2 = play
+	bit_view<2, 2> sequencer_op;
+
+	// Recording operation (unhandled by our emulation)
+	bit_view<5, 1> recording;
+};
+
 struct MpuTrack {
 	uint8_t counter  = 0;
 	uint8_t value[8] = {};
@@ -204,34 +221,47 @@ static void MPU401_WriteCommand(io_port_t, const io_val_t value, io_width_t)
 		mpu.state.reset = false;
 	}
 	if (val <= 0x2f) {
-		// MIDI stop, start, continue
-		switch (val & 3) {
+		const MpuTransportCommand command = {val};
+
+		switch (command.midi_op) {
+		// MIDI Stop
 		case 1:
 			MIDI_RawOutByte(MidiStatus::Stop);
 			mpu.clock.cth_savecount = mpu.clock.cth_counter;
 			break;
 
+		// MIDI Start
 		case 2:
 			MIDI_RawOutByte(MidiStatus::Start);
 			mpu.clock.cth_counter = mpu.clock.cth_savecount = 0;
 			break;
+
+		// MIDI Continue
 		case 3:
 			MIDI_RawOutByte(MidiStatus::Continue);
 			mpu.clock.cth_counter = mpu.clock.cth_savecount;
 			break;
 		}
 
-		if (val & 0x20)
-			LOG(LOG_MISC, LOG_ERROR)("MPU-401:Unhandled Recording Command %u", val);
-		switch (val & 0xc) {
-		case 0x4: // Stop
-			if (mpu.state.playing && !mpu.clock.clock_to_host)
+		if (command.recording) {
+			LOG(LOG_MISC,
+			    LOG_ERROR)("MPU-401:Unhandled Recording Command %u", val);
+		}
+
+		switch (command.sequencer_op) {
+		// Stop
+		case 1:
+			if (mpu.state.playing && !mpu.clock.clock_to_host) {
 				PIC_RemoveEvents(MPU401_Event);
+			}
 			mpu.state.playing = false;
 			send_all_notes_off();
 			break;
-		case 0x8: // Play
-			LOG(LOG_MISC, LOG_NORMAL)("MPU-401:Intelligent mode playback started");
+
+		// Play
+		case 2:
+			LOG(LOG_MISC, LOG_NORMAL)(
+			        "MPU-401:Intelligent mode playback started");
 			if (!mpu.state.playing && !mpu.clock.clock_to_host)
 				PIC_AddEvent(MPU401_Event,
 				             MPU401_TIMECONSTANT /
