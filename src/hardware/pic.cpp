@@ -224,6 +224,64 @@ void PIC_Controller::deactivate() {
 	}
 }
 
+// TEMP DIAGNOSTIC (issue #3512): I/O access counters maintained in port.cpp,
+// reported and reset on every timer tick delivery below
+extern uint32_t g_iotrace_read_3da;
+extern uint32_t g_iotrace_read_pit;
+extern uint32_t g_iotrace_read_sb;
+extern uint32_t g_iotrace_read_other;
+extern uint32_t g_iotrace_write_pit;
+extern uint32_t g_iotrace_write_sb;
+extern uint32_t g_iotrace_write_vga;
+extern uint32_t g_iotrace_write_other;
+
+// TEMP DIAGNOSTIC (issue #3512): number of PIC_RunQueue() invocations, a
+// proxy for CPU slice / event boundary density
+uint32_t g_iotrace_num_slices = 0;
+
+// TEMP DIAGNOSTIC (issue #3512): One-shot dump of the code surrounding the
+// game's speed calibration loop (observed at CS:1E2A..1E72 in Ishar 3), taken
+// when a timer tick interrupts it. Disassembling this reveals what the loop
+// measures.
+static void dump_calibration_loop_code()
+{
+	static bool dumped = false;
+	if (dumped) {
+		return;
+	}
+	dumped = true;
+
+	Descriptor desc = {};
+	if (!cpu.gdt.GetDescriptor(SegValue(cs), desc)) {
+		LOG_MSG("CODEDUMP: failed to get CS descriptor for %04X",
+		        SegValue(cs));
+		return;
+	}
+
+	const auto base = desc.GetBase();
+
+	constexpr uint32_t DumpStart = 0x1d80;
+	constexpr uint32_t DumpLen   = 0x200;
+
+	LOG_MSG("CODEDUMP: CS=%04X base=%08X eip=%08X dumping %04X..%04X",
+	        SegValue(cs),
+	        base,
+	        reg_eip,
+	        DumpStart,
+	        DumpStart + DumpLen - 1);
+
+	for (uint32_t row = 0; row < DumpLen; row += 16) {
+		char buf[128] = {};
+		int pos = snprintf(buf, sizeof(buf), "CODEDUMP: %04X: ",
+		                   DumpStart + row);
+		for (uint32_t i = 0; i < 16; ++i) {
+			const auto b = mem_readb(base + DumpStart + row + i);
+			pos += snprintf(buf + pos, sizeof(buf) - pos, "%02X ", b);
+		}
+		LOG_MSG("%s", buf);
+	}
+}
+
 void PIC_Controller::start_irq(uint8_t val) {
 	// TEMP DIAGNOSTIC (issue #3512): log every IRQ delivery to the CPU with
 	// the current vector table entry it will go through
@@ -242,6 +300,35 @@ void PIC_Controller::start_irq(uint8_t val) {
 		        reg_eip,
 		        SegValue(ss),
 		        reg_esp);
+
+		// Per-tick I/O signature & slice density, plus the one-shot
+		// code dump of the interrupted calibration loop
+		if (int_num == 8) {
+			LOG_MSG("IRQTRACE:              IO since last tick: r3DA=%u rPIT=%u rSB=%u rOth=%u | wPIT=%u wSB=%u wVGA=%u wOth=%u | slices=%u",
+			        g_iotrace_read_3da,
+			        g_iotrace_read_pit,
+			        g_iotrace_read_sb,
+			        g_iotrace_read_other,
+			        g_iotrace_write_pit,
+			        g_iotrace_write_sb,
+			        g_iotrace_write_vga,
+			        g_iotrace_write_other,
+			        g_iotrace_num_slices);
+
+			g_iotrace_read_3da    = 0;
+			g_iotrace_read_pit    = 0;
+			g_iotrace_read_sb     = 0;
+			g_iotrace_read_other  = 0;
+			g_iotrace_write_pit   = 0;
+			g_iotrace_write_sb    = 0;
+			g_iotrace_write_vga   = 0;
+			g_iotrace_write_other = 0;
+			g_iotrace_num_slices  = 0;
+
+			if (cpu.pmode && reg_eip >= 0x1d00 && reg_eip <= 0x2000) {
+				dump_calibration_loop_code();
+			}
+		}
 	}
 
 	irr &= ~(1 << val);
@@ -606,6 +693,7 @@ bool PIC_RunQueue(void) {
 	PIC_UpdateAtomicIndex();
 
 	// TEMP DIAGNOSTIC (issue #3512)
+	++g_iotrace_num_slices;
 	if (TraceIrqs()) {
 		trace_ivt_changes();
 	}
