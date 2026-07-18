@@ -11,6 +11,7 @@
 #include "hardware/pic.h"
 #include "hardware/port.h"
 #include "midi/midi.h"
+#include "utils/bit_view.h"
 #include "utils/math_utils.h"
 
 static void MPU401_Event(uint32_t);
@@ -42,6 +43,30 @@ constexpr uint8_t MSG_MPU_END = 0xfc;
 constexpr uint8_t MSG_MPU_CLOCK = 0xfd;
 constexpr uint8_t MSG_MPU_ACK = 0xfe;
 constexpr uint8_t MSG_MPU_RESET = 0xff;
+
+// MPU-401 status port (0x331) read value. The DRR and DSR signals are
+// active-low.
+//
+// References:
+//
+//   Roland MPU-401 Technical Reference Manual
+//   https://archive.org/details/mpu401technicalreferencemanual
+//
+//   Programming the MPU-401 in UART mode
+//   http://midi.teragonaudio.com/tech/mpu.htm
+//
+union MpuStatusRegister {
+	// Bits 0..5 are unused and read as all set
+	uint8_t data = 0b0011'1111;
+
+	// "Data Receive Ready" (DRR); when clear, the MPU is ready to accept
+	// the next data or command byte
+	bit_view<6, 1> drr_busy;
+
+	// "Data Set Ready" (DSR); when clear, the MPU has data waiting to be
+	// read on the data port
+	bit_view<7, 1> dsr_no_data;
+};
 
 struct MpuTrack {
 	uint8_t counter  = 0;
@@ -148,12 +173,12 @@ static void ClrQueue()
 
 static uint8_t MPU401_ReadStatus(io_port_t, io_width_t)
 {
-	uint8_t ret = 0x3f; // Bits 6 and 7 clear
-	if (mpu.state.cmd_pending)
-		ret |= 0x40;
-	if (!mpu.queue_used)
-		ret |= 0x80;
-	return ret;
+	MpuStatusRegister status = {};
+
+	status.drr_busy    = (mpu.state.cmd_pending != 0);
+	status.dsr_no_data = (mpu.queue_used == 0);
+
+	return status.data;
 }
 
 static void send_all_notes_off()
