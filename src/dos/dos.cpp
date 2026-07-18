@@ -425,6 +425,19 @@ static inline void modify_cycles(Bits value)
 	++g_dostrace_num_calls; // TEMP DIAGNOSTIC (issue #3512)
 	g_dostrace_requested += 4 * value;
 
+	// TEMP PROTOTYPE FIX (issue #3512): charge the full DOS I/O cycle tax,
+	// carrying the debt across CPU slices instead of forgiving whatever
+	// doesn't fit into the current slice. This makes DOS I/O cost
+	// independent of PIC event density (and thus of the VGA drawing mode).
+	// Enabled with the DOSBOX_FIX_DOS_TAX environment variable.
+	static const bool fix_enabled = (std::getenv("DOSBOX_FIX_DOS_TAX") != nullptr);
+	if (fix_enabled) {
+		CPU_Cycles         -= 4 * value;
+		CPU_IODelayRemoved += 4 * value;
+		g_dostrace_charged += 4 * value;
+		return;
+	}
+
 	if ((4 * value + 5) < CPU_Cycles) {
 		CPU_Cycles -= 4*value;
 		CPU_IODelayRemoved += 4*value;
