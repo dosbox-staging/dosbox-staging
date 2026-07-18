@@ -122,6 +122,11 @@ Use the `debug-windows` / `debug-windows-vs2022` presets for debug builds.
    You'll need to do this twice for the first time, and probably after changing
    the `CMakeLists.txt` files.
 
+## Unit tests
+
+Unit tests are built and run with CMake and `ctest`. See
+[Running the unit tests](build-testing.md) for details.
+
 ## Offline documentation
 
 Self-contained offline HTML documentation can optionally be built as part of the
