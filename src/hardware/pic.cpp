@@ -239,17 +239,73 @@ extern uint32_t g_iotrace_write_other;
 // proxy for CPU slice / event boundary density
 uint32_t g_iotrace_num_slices = 0;
 
+// TEMP DIAGNOSTIC (issue #3512): per-vector CPU exception counters (cpu.cpp)
+extern uint32_t g_extrace_counts[32];
+
+// TEMP DIAGNOSTIC (issue #3512): histogram of CPU slice start positions and
+// granted cycles while executing inside the game's calibration burn loop
+// (CS:1E40..1E90), maintained in PIC_RunQueue()
+constexpr uint32_t SliceHistBase = 0x1e40;
+constexpr uint32_t SliceHistLen  = 0x50;
+
+static uint32_t slice_hist_count[SliceHistLen]  = {};
+static uint64_t slice_hist_cycles[SliceHistLen] = {};
+
+static void dump_and_reset_per_tick_stats()
+{
+	// CPU exceptions since the last tick
+	char buf[192] = {};
+	int pos       = 0;
+	for (auto i = 0; i < 32; ++i) {
+		if (g_extrace_counts[i] && pos < 150) {
+			pos += snprintf(buf + pos,
+			                sizeof(buf) - pos,
+			                " %02X=%u",
+			                i,
+			                g_extrace_counts[i]);
+			g_extrace_counts[i] = 0;
+		}
+	}
+	LOG_MSG("IRQTRACE:              exceptions since last tick:%s",
+	        pos ? buf : " none");
+
+	// I/O delay cycles removed since the last tick
+	static int64_t last_iodelay = 0;
+	LOG_MSG("IRQTRACE:              iodelay cycles since last tick: %lld",
+	        static_cast<long long>(CPU_IODelayRemoved - last_iodelay));
+	last_iodelay = CPU_IODelayRemoved;
+
+	// Burn loop slice histogram
+	for (uint32_t i = 0; i < SliceHistLen; ++i) {
+		if (slice_hist_count[i]) {
+			LOG_MSG("SLICEHIST: eip=%04X n=%-6u cycles=%llu avg=%llu",
+			        SliceHistBase + i,
+			        slice_hist_count[i],
+			        static_cast<unsigned long long>(slice_hist_cycles[i]),
+			        static_cast<unsigned long long>(
+			                slice_hist_cycles[i] / slice_hist_count[i]));
+			slice_hist_count[i]  = 0;
+			slice_hist_cycles[i] = 0;
+		}
+	}
+}
+
 // TEMP DIAGNOSTIC (issue #3512): One-shot dump of the code surrounding the
 // game's speed calibration loop (observed at CS:1E2A..1E72 in Ishar 3), taken
 // when a timer tick interrupts it. Disassembling this reveals what the loop
 // measures.
+// Set once the calibration code has been located, which also tells us the
+// game's segment mapping is in place so its variables can be read safely
+static bool calib_seen = false;
+
 static void dump_calibration_loop_code()
 {
 	static bool dumped = false;
 	if (dumped) {
 		return;
 	}
-	dumped = true;
+	dumped     = true;
+	calib_seen = true;
 
 	Descriptor desc = {};
 	if (!cpu.gdt.GetDescriptor(SegValue(cs), desc)) {
@@ -289,7 +345,7 @@ void PIC_Controller::start_irq(uint8_t val) {
 		const uint8_t int_num = vector_base + val;
 		const auto vec        = phys_readd(static_cast<PhysPt>(int_num * 4));
 
-		LOG_MSG("IRQTRACE: %10.4f  INT %02Xh (IRQ %u) delivered  vec=%04X:%04X  pmode=%u  CS:IP=%04X:%08X  SS:SP=%04X:%08X",
+		LOG_MSG("IRQTRACE: %10.4f  INT %02Xh (IRQ %u) delivered  vec=%04X:%04X  pmode=%u  CS:IP=%04X:%08X  SS:SP=%04X:%08X  EAX=%08X ECX=%08X",
 		        PIC_FullIndex(),
 		        int_num,
 		        (this == &primary_controller) ? val : val + 8,
@@ -299,7 +355,9 @@ void PIC_Controller::start_irq(uint8_t val) {
 		        SegValue(cs),
 		        reg_eip,
 		        SegValue(ss),
-		        reg_esp);
+		        reg_esp,
+		        reg_eax,
+		        reg_ecx);
 
 		// Per-tick I/O signature & slice density, plus the one-shot
 		// code dump of the interrupted calibration loop
@@ -325,8 +383,24 @@ void PIC_Controller::start_irq(uint8_t val) {
 			g_iotrace_write_other = 0;
 			g_iotrace_num_slices  = 0;
 
+			dump_and_reset_per_tick_stats();
+
 			if (cpu.pmode && reg_eip >= 0x1d00 && reg_eip <= 0x2000) {
 				dump_calibration_loop_code();
+			}
+
+			// Dump the game's own calibration variables
+			// (identified from the round-2 code dump; the game's
+			// data segment base is 0x10000000)
+			if (calib_seen && cpu.pmode) {
+				constexpr PhysPt base = 0x10000000;
+				LOG_MSG("VARDUMP: FF69=%02X FF6E=%04X 12D29=%04X 12D2B=%04X 129A2=%04X 129A4=%08X",
+				        mem_readb(base + 0xff69),
+				        mem_readw(base + 0xff6e),
+				        mem_readw(base + 0x12d29),
+				        mem_readw(base + 0x12d2b),
+				        mem_readw(base + 0x129a2),
+				        mem_readd(base + 0x129a4));
 			}
 		}
 	}
@@ -738,6 +812,16 @@ bool PIC_RunQueue(void) {
 		}
 	} else CPU_Cycles=CPU_CycleLeft;
 	CPU_CycleLeft-=CPU_Cycles;
+
+	// TEMP DIAGNOSTIC (issue #3512): record where CPU slices start and how
+	// many cycles they're granted while inside the calibration burn loop
+	if (TraceIrqs() && cpu.pmode && reg_eip >= SliceHistBase &&
+	    reg_eip < SliceHistBase + SliceHistLen) {
+		const auto idx = reg_eip - SliceHistBase;
+		++slice_hist_count[idx];
+		slice_hist_cycles[idx] += static_cast<uint64_t>(CPU_Cycles);
+	}
+
 	PIC_runIRQs();
 	return true;
 }
