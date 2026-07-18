@@ -192,7 +192,13 @@ static uint8_t MPU401_ReadStatus(io_port_t, io_width_t)
 {
 	MpuStatusRegister status = {};
 
-	status.drr_busy    = (mpu.state.cmd_pending != 0);
+	// In UART mode, the DRR bit also reflects the MIDI wire state: on
+	// real hardware the MPU-401 can't accept the next data byte while its
+	// serial transmitter is still busy sending at 31250 baud, and drivers
+	// poll this bit to pace themselves to the wire rate.
+	status.drr_busy = (mpu.state.cmd_pending != 0) ||
+	                  (mpu.mode == M_UART && MIDI_IsWireBusy());
+
 	status.dsr_no_data = (mpu.queue_used == 0);
 
 	return status.data;

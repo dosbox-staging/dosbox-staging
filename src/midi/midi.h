@@ -214,6 +214,10 @@ void MIDI_Init();
 bool MIDI_IsAvailable();
 void MIDI_Reset();
 
+// Returns true while the emulated MIDI wire is still transferring previously
+// sent data (see the wire-rate output scheduler in midi.cpp).
+bool MIDI_IsWireBusy();
+
 void MIDI_ListDevices(MoreOutputStrings& output);
 void MIDI_RawOutByte(const uint8_t data);
 

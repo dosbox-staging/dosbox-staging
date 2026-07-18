@@ -882,6 +882,11 @@ bool MIDI_IsAvailable()
 	return (midi.device != nullptr);
 }
 
+bool MIDI_IsWireBusy()
+{
+	return !wire_queue.empty() || (PIC_FullIndex() < wire_free_time_ms);
+}
+
 static SectionProp* get_midi_section()
 {
 	auto section = get_section("midi");
