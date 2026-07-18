@@ -4,10 +4,14 @@
 
 #include "pic.h"
 
+#include <array>
+#include <cstdlib>
 #include <memory>
 
 #include "cpu/callback.h"
 #include "cpu/cpu.h"
+#include "cpu/registers.h"
+#include "hardware/memory.h"
 #include "hardware/pic.h"
 #include "hardware/port.h"
 #include "hardware/timer.h"
@@ -122,6 +126,46 @@ struct PIC_Controller {
 static PIC_Controller pics[2];
 static PIC_Controller &primary_controller = pics[0];
 static PIC_Controller &secondary_controller = pics[1];
+
+// TEMP DIAGNOSTIC (issue #3512): IRQ delivery, interrupt vector, and PIC mask
+// tracing; enabled with the DOSBOX_TRACE_IRQS environment variable.
+static bool TraceIrqs()
+{
+	static const bool enabled = (std::getenv("DOSBOX_TRACE_IRQS") != nullptr);
+	return enabled;
+}
+
+// TEMP DIAGNOSTIC (issue #3512): Detect any change to the real-mode interrupt
+// vector table, at 0.5 ms granularity. Logs both legitimate vector
+// hooking/unhooking by DOS, drivers & the game, and the suspected "IVT gets
+// trashed" event before the crash.
+static void trace_ivt_changes()
+{
+	static std::array<uint32_t, 256> shadow = {};
+	static bool initialised   = false;
+	static double last_scan_ms = 0.0;
+
+	const auto now = PIC_FullIndex();
+	if (now - last_scan_ms < 0.5) {
+		return;
+	}
+	last_scan_ms = now;
+
+	for (auto i = 0; i < 256; ++i) {
+		const auto vec = phys_readd(static_cast<PhysPt>(i * 4));
+		if (initialised && vec != shadow[i]) {
+			LOG_MSG("IRQTRACE: %10.4f  IVT %02Xh changed %04X:%04X -> %04X:%04X",
+			        now,
+			        i,
+			        shadow[i] >> 16,
+			        shadow[i] & 0xffff,
+			        vec >> 16,
+			        vec & 0xffff);
+		}
+		shadow[i] = vec;
+	}
+	initialised = true;
+}
 uint32_t PIC_Ticks = 0;
 uint32_t PIC_IRQCheck = 0; // x86 dynamic core expects a 32 bit variable size
 std::atomic<double> atomic_pic_index = 0.0;
@@ -134,6 +178,18 @@ void PIC_Controller::set_imr(uint8_t val)
 			val &= ~(1 << 6);
 	}
 	uint8_t change = imr ^ val; //Bits that have changed become 1.
+
+	// TEMP DIAGNOSTIC (issue #3512): log PIC mask changes
+	if (TraceIrqs() && change) {
+		LOG_MSG("IRQTRACE: %10.4f  IMR %s %02X -> %02X  CS:IP=%04X:%08X",
+		        PIC_FullIndex(),
+		        (this == &pics[0]) ? "primary  " : "secondary",
+		        imr,
+		        val,
+		        SegValue(cs),
+		        reg_eip);
+	}
+
 	imr  =  val;
 	imrr = ~val;
 
@@ -169,6 +225,25 @@ void PIC_Controller::deactivate() {
 }
 
 void PIC_Controller::start_irq(uint8_t val) {
+	// TEMP DIAGNOSTIC (issue #3512): log every IRQ delivery to the CPU with
+	// the current vector table entry it will go through
+	if (TraceIrqs()) {
+		const uint8_t int_num = vector_base + val;
+		const auto vec        = phys_readd(static_cast<PhysPt>(int_num * 4));
+
+		LOG_MSG("IRQTRACE: %10.4f  INT %02Xh (IRQ %u) delivered  vec=%04X:%04X  pmode=%u  CS:IP=%04X:%08X  SS:SP=%04X:%08X",
+		        PIC_FullIndex(),
+		        int_num,
+		        (this == &primary_controller) ? val : val + 8,
+		        vec >> 16,
+		        vec & 0xffff,
+		        cpu.pmode ? 1u : 0u,
+		        SegValue(cs),
+		        reg_eip,
+		        SegValue(ss),
+		        reg_esp);
+	}
+
 	irr &= ~(1 << val);
 	if (!auto_eoi) {
 		active_irq = val;
@@ -529,6 +604,11 @@ void PIC_RemoveEvents(PIC_EventHandler handler) {
 
 bool PIC_RunQueue(void) {
 	PIC_UpdateAtomicIndex();
+
+	// TEMP DIAGNOSTIC (issue #3512)
+	if (TraceIrqs()) {
+		trace_ivt_changes();
+	}
 
 	/* Check to see if a new millisecond needs to be started */
 	CPU_CycleLeft+=CPU_Cycles;
