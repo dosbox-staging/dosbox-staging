@@ -138,6 +138,8 @@ struct Midi {
 		size_t pos       = 0;
 		int64_t delay_ms = 0;
 		int64_t start_ms = 0;
+
+		bool truncation_warned = false;
 	} sysex = {};
 
 	bool is_muted = false;
@@ -381,6 +383,15 @@ void MIDI_RawOutByte(const uint8_t data)
 		if (is_midi_data_byte(data)) {
 			if (midi.sysex.pos < (MaxMidiSysExBytes - 1)) {
 				midi.sysex.buf[midi.sysex.pos++] = data;
+
+			} else if (!midi.sysex.truncation_warned) {
+				LOG_WARNING(
+				        "MIDI: SysEx message longer than %d bytes; "
+				        "dropping excess data (the truncated message "
+				        "is likely corrupt)",
+				        MaxMidiSysExBytes);
+
+				midi.sysex.truncation_warned = true;
 			}
 			return;
 		} else {
@@ -453,6 +464,8 @@ void MIDI_RawOutByte(const uint8_t data)
 		if (midi.status == MidiStatus::SystemExclusive) {
 			midi.sysex.buf[0] = MidiStatus::SystemExclusive;
 			midi.sysex.pos    = 1;
+
+			midi.sysex.truncation_warned = false;
 		}
 	}
 

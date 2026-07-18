@@ -114,6 +114,8 @@ private:
 
 	bool had_underruns           = false;
 	bool is_work_fifo_backlogged = false;
+
+	int num_dropped_backlogged_notes = 0;
 };
 
 void SOUNDCANVAS_ListDevices(MidiDeviceSoundCanvas* device, MoreOutputStrings& output);

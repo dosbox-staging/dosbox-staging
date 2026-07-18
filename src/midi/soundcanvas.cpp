@@ -714,6 +714,15 @@ void MidiDeviceSoundCanvas::RenderBacklogged()
 	if (!MIXER_FastForwardModeEnabled()) {
 		is_work_fifo_backlogged = false;
 
+		if (num_dropped_backlogged_notes > 0) {
+			LOG_WARNING(
+			        "SOUNDCANVAS: Dropped %d note messages while the "
+			        "MIDI work queue was backlogged",
+			        num_dropped_backlogged_notes);
+
+			num_dropped_backlogged_notes = 0;
+		}
+
 		// Send "All Notes Off" message to all MIDI channels when
 		// exiting from fast-forward mode. This is the best we can do as
 		// we've skipped processing any "Note On" or "Note Off" messages
@@ -753,6 +762,7 @@ void MidiDeviceSoundCanvas::ProcessWorkFromFifoBacklogged()
 
 		if (status == MidiStatus::NoteOn || status == MidiStatus::NoteOff) {
 			// Drop all MIDI note messages as we won't render any audio
+			++num_dropped_backlogged_notes;
 			return;
 		}
 	}
