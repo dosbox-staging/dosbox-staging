@@ -414,12 +414,23 @@ void DOS_PerformCdRomIoDelay(uint16_t data_transferred_bytes)
 	} while (PIC_FullIndex() < endtime);
 }
 
+// TEMP DIAGNOSTIC (issue #3512): DOS file I/O cycle tax accounting, reported
+// and reset per timer tick in pic.cpp when DOSBOX_TRACE_IRQS is set
+uint32_t g_dostrace_num_calls = 0;
+uint64_t g_dostrace_requested = 0;
+uint64_t g_dostrace_charged   = 0;
+
 static inline void modify_cycles(Bits value)
 {
+	++g_dostrace_num_calls; // TEMP DIAGNOSTIC (issue #3512)
+	g_dostrace_requested += 4 * value;
+
 	if ((4 * value + 5) < CPU_Cycles) {
 		CPU_Cycles -= 4*value;
 		CPU_IODelayRemoved += 4*value;
+		g_dostrace_charged += 4 * value; // TEMP DIAGNOSTIC (issue #3512)
 	} else {
+		g_dostrace_charged += (CPU_Cycles > 0 ? CPU_Cycles : 0); // TEMP DIAGNOSTIC (issue #3512)
 		CPU_IODelayRemoved += CPU_Cycles/*-5*/; //don't want to mess with negative
 		CPU_Cycles = 5;
 	}

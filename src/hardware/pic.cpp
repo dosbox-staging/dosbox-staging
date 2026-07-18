@@ -242,6 +242,11 @@ uint32_t g_iotrace_num_slices = 0;
 // TEMP DIAGNOSTIC (issue #3512): per-vector CPU exception counters (cpu.cpp)
 extern uint32_t g_extrace_counts[32];
 
+// TEMP DIAGNOSTIC (issue #3512): DOS file I/O cycle tax accounting (dos.cpp)
+extern uint32_t g_dostrace_num_calls;
+extern uint64_t g_dostrace_requested;
+extern uint64_t g_dostrace_charged;
+
 // TEMP DIAGNOSTIC (issue #3512): histogram of CPU slice start positions and
 // granted cycles while executing inside the game's calibration burn loop
 // (CS:1E40..1E90), maintained in PIC_RunQueue()
@@ -274,6 +279,17 @@ static void dump_and_reset_per_tick_stats()
 	LOG_MSG("IRQTRACE:              iodelay cycles since last tick: %lld",
 	        static_cast<long long>(CPU_IODelayRemoved - last_iodelay));
 	last_iodelay = CPU_IODelayRemoved;
+
+	// DOS file I/O cycle tax since the last tick: how many cycles the
+	// modify_cycles() tax wanted to charge vs how many it actually did
+	// (the difference is forgiven by its clamp-to-remaining-slice branch)
+	LOG_MSG("IRQTRACE:              dos tax since last tick: calls=%u requested=%llu charged=%llu",
+	        g_dostrace_num_calls,
+	        static_cast<unsigned long long>(g_dostrace_requested),
+	        static_cast<unsigned long long>(g_dostrace_charged));
+	g_dostrace_num_calls = 0;
+	g_dostrace_requested = 0;
+	g_dostrace_charged   = 0;
 
 	// Burn loop slice histogram
 	for (uint32_t i = 0; i < SliceHistLen; ++i) {
@@ -316,8 +332,8 @@ static void dump_calibration_loop_code()
 
 	const auto base = desc.GetBase();
 
-	constexpr uint32_t DumpStart = 0x1d80;
-	constexpr uint32_t DumpLen   = 0x200;
+	constexpr uint32_t DumpStart = 0x1c80;
+	constexpr uint32_t DumpLen   = 0x300;
 
 	LOG_MSG("CODEDUMP: CS=%04X base=%08X eip=%08X dumping %04X..%04X",
 	        SegValue(cs),
