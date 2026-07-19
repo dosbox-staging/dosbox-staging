@@ -1795,9 +1795,8 @@ static void init_render_settings(SectionProp& section)
 	        "  dga16:         A modern take on the canonical CGA palette with dialed back\n"
 	        "                 contrast.\n"
 	        "\n"
-	        "Note: You can place custom palette configuration files inside the\n"
-	        "      'cga-colors' resource folder and load them by name (without\n"
-	        "      the .preset extension).");
+	        "Note: You can place custom palette configuration files inside the 'cga-colors'\n"
+	        "      resource folder and load them by name (without .preset extension).");
 
 	string_prop = section.AddString("scaler", Deprecated, "none");
 	string_prop->SetHelp(
