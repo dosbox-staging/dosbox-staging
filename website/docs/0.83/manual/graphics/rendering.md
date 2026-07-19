@@ -916,10 +916,11 @@ You can set the rendering parameters in the `[render]` configuration section.
 
     </div>
 
-    You can also set custom colours by specifying 16 space or comma separated
-    sRGB colour values, either as 3 or 6-digit hex codes (e.g., `#f00` or
-    `#ff0000` for full red), or decimal RGB triplets (e.g., `(255, 0, 255)`
-    for magenta).
+    !!! note
+    
+        You can place custom palette configuration files inside the
+        `cga-colors` resource folder and load them by name (without
+        the .preset extension).
 
     !!! note
 
