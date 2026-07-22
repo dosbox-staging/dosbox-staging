@@ -15,10 +15,11 @@ integration](#clipboard-integration).
 
 ## How DOS works
 
-DOS is a **single-user, single-tasking** operating system. Only one program
-runs at a time --- there are no background processes, no task switching, and
-no concurrent users. When you launch a game or application, it takes over the
-entire machine. When it exits, you're back at the shell prompt.
+DOS was designed as a **single-user, single-tasking** operating system.
+Generally, only one program runs at a time --- there are no background
+processes, no task switching, and no concurrent users. When you launch a game
+or application, it takes over the entire machine. When it exits, you're back
+at the shell prompt.
 
 DOSBox Staging faithfully emulates this model. The shell prompt is where you
 mount drives, configure settings, navigate directories, and launch programs.
@@ -33,6 +34,20 @@ directory.
     DOS refers to folders as **directories**, while modern operating systems
     generally use the term **folder**. They refer to the same thing, and
     throughout this manual we use the two terms interchangeably.
+
+!!! info "Breaking the single-tasking paradigm"
+
+    The "single-tasking" nature of DOS is actually not completely true. It was
+    possible to install "background processes" via [TSR
+    (Terminate-and-Stay-Resident)](TODO) utilities even in early MS-DOS
+    versions that could change the behaviour of the programs running in the
+    "foreground" or play music in the background. Various clever solutions
+    existed to bring primitive multi-tasking capabilities into the DOS
+    environment (e.g, [Sidekick](), TODO more examples). These solutions
+    enjoyed limited degrees of success --- the real breakthrough and switch to
+    multi-tasking happened with the mass adoption of Windows 95. Many of these
+    solutions work in DOSBox Staging, but you won't need them for running
+    games.
 
 
 ## Internal and external commands

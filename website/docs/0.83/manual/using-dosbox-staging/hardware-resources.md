@@ -158,6 +158,7 @@ the reason, and the defaults should work.
 
 ## Further reading
 
+<div class="compact" markdown>
 - [Sound overview](../sound/overview.md) --- general guide to DOS game audio
 - [AdLib](../sound/sound-devices/adlib.md) --- AdLib configuration
 - [Sound Blaster](../sound/sound-devices/sound-blaster.md) and --- Sound Blaster configuration
@@ -168,3 +169,4 @@ the reason, and the defaults should work.
 - [MIDI](../sound/midi.md) --- MPU-401 MIDI interface
 - [Serial ports](../networking/serial-ports.md) --- COM port configuration
 - [Ethernet](../networking/ethernet.md) --- NE2000 network card configuration
+</div>
