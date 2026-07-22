@@ -397,7 +397,13 @@ void INT10_PerformGrayScaleSumming(uint16_t start_reg,uint16_t count);
 // VESA functions
 uint8_t VESA_GetSVGAInformation(const uint16_t segment, const uint16_t offset);
 bool VESA_IsVesaMode(const uint16_t bios_mode_number);
-uint8_t VESA_GetSVGAModeInformation(uint16_t mode,uint16_t seg,uint16_t off);
+
+// Size of a single display page in bytes, rounded up to the 64 KB
+// granularity many applications assume. For planar modes this is the size
+// of a single plane.
+int VESA_GetModePageSize(const VideoModeBlock& mode_block);
+
+uint8_t VESA_GetSVGAModeInformation(uint16_t mode, uint16_t seg, uint16_t off);
 uint8_t VESA_SetSVGAMode(uint16_t mode);
 uint8_t VESA_GetSVGAMode(uint16_t & mode);
 uint8_t VESA_SetCPUWindow(uint8_t window,uint8_t address);
