@@ -24,6 +24,8 @@ bool DEBUG_ExitLoop(void);
 bool DEBUG_IsDebugging();
 void DEBUG_RefreshPage(int scroll);
 Bitu DEBUG_EnableDebugger();
+bool DEBUG_ShouldPauseImmediately();
+void DEBUG_SignalPauseLoopExit();
 
 void LOG_StartUp();
 void LOG_Init();
