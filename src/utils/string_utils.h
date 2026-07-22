@@ -12,6 +12,7 @@
 #include <cstring>
 #include <optional>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "misc/support.h"
@@ -347,6 +348,16 @@ std::optional<float> parse_float(const std::string& s);
 //  - parse_value("txt")  returns empty
 //
 std::optional<int> parse_int(const std::string& s, const int base = 10);
+
+// Parse a 'WIDTHxHEIGHT' string (e.g. "1024x768") into a (width, height)
+// integer pair.
+//
+// For example:
+//  - parse_int_dimensions("1024x768") returns {1024, 768}
+//  - parse_int_dimensions("1024x")    returns empty
+//  - parse_int_dimensions("txt")      returns empty
+//
+std::optional<std::pair<int, int>> parse_int_dimensions(const std::string_view s);
 
 // Returned percentage values are unscaled.
 std::optional<float> parse_percentage_with_percent_sign(const std::string_view s);

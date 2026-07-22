@@ -1094,21 +1094,6 @@ static void log_invalid_viewport_setting_warning(
 	}
 }
 
-std::optional<std::pair<int, int>> parse_int_dimensions(const std::string_view s)
-{
-	const auto parts = split(s, "x");
-	if (parts.size() == 2) {
-		const auto w = parse_int(parts[0]);
-		const auto h = parse_int(parts[1]);
-		if (w && h) {
-			return {
-			        {*w, *h}
-                        };
-		}
-	}
-	return {};
-}
-
 static std::optional<ViewportSettings> parse_fit_viewport_modes(const std::string& pref)
 {
 	if (pref == "fit") {
