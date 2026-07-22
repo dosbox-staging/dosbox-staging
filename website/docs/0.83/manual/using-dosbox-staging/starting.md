@@ -63,7 +63,7 @@ further details.
 If you have used the installer with the default options to set up DOSBox
 Staging, simply right-click on a folder in Windows Explorer and select **Open
 with DOSBox Staging** in the context menu to launch DOSBox Staging with that
-folder as the working directory.
+folder as the [working directory](#the-working-directory).
 
 Alternatively, navigate to the folder in Windows Explorer, right-click any
 empty area inside the folder, and then select **Open with DOSBox Staging** in

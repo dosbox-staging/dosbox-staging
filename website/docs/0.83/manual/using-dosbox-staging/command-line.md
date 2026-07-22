@@ -1,82 +1,105 @@
 # Command-line usage
 
-## Simple usage
+DOSBox Staging can be invoked from your host operating system's command line
+with a path, disk image, or set of options. This provides a convenient way to
+launch DOS software quickly, control startup behaviour, apply temporary
+configuration overrides, and discover available resources.
 
-The simplest way to launch a game is to pass its path directly to DOSBox
-Staging. It's smart enough to figure out what to do: if you pass a folder,
-it's mounted as the [C: drive](storage.md#dos-drive-letters); if you pass an
-executable, its parent folder is mounted, and the program runs automatically.
+For most users, the recommended approach is to organise each game in its own
+folder and start DOSBox Staging from that folder. This allows the emulator to
+automatically use the appropriate [working
+directory](starting.md#the-working-directory), [local
+configuration](configuration.md#local-configuration), and
+[automounting](storage.md#automounting) features. See [Starting the
+emulator](starting.md) for the recommended workflow.
+
+The sections below cover common ways of invoking DOSBox Staging first,
+followed by temporary overrides, resource discovery, and finally the complete
+command-line reference.
+
+
+## Quick launch
+
+The simplest way to start DOSBox Staging with a game is to pass the game's
+path directly to the executable. This is useful for quickly testing software
+or launching a game without setting up a full per-game configuration.
+
+- If you pass a folder, it is made available as the [C: drive](storage.md#dos-drive-letters).
+
+- If you pass a DOS executable, its parent folder is made available as the
+  **C:** drive and the program starts automatically.
+
+- If you pass a bootable disk image, DOSBox Staging boots from it.
+
+Examples:
 
 ```
 dosbox /path/to/game/
 dosbox /path/to/game/GAME.EXE
-```
-
-You can also boot from floppy images by specifying an image name:
-
-```
 dosbox disk.img
 ```
 
-### Windows users
 
-When specifying a path using quotation marks, you must omit the trailing `\`
-or use double backslashes before the final quotation mark. For example:
+### Specifying paths on Windows
+
+When specifying a path using quotation marks on Windows, you must omit the
+trailing `\` or use double backslashes before the final quotation mark. For
+example:
 
 ```
 dosbox "C:\Users\My User\My Game"
 dosbox "C:\Users\My User\My Game\\"
 ```
 
-The following will **not** work as the final `\"` will translate to a literal quotation mark.
+The following will **not** work as the final `\"` will translate to a literal
+quotation mark.
 
 ```
 dosbox "C:\Users\My User\My Game\"
 ```
 
-## Preferred usage
+## Temporary overrides
 
-While this might be alright for some quick testing, a much better way is to
-organise games into subfolders and put a `dosbox.conf` [local
-configuration](configuration.md#local-configuration) into each, which contains
-your game-specific settings and tweaks.
+Command-line options can be used to temporarily change how DOSBox Staging
+starts without modifying configuration files.
 
 Configuration files can be [layered](configuration.md#configuration-layering)
-with the [`--conf`](#-conf-config_file) option; later files override earlier
-ones. This way, you can inject extra settings into your DOSBox session,
-overriding values from the local config:
+with the [`--conf <config__file>`](#-conf-config_file) option; later files
+override earlier ones. This is useful for applying additional settings on top
+of an existing configuration:
 
 ```
 dosbox --conf extra.conf
 ```
 
-For quick one-off tweaks without editing any files, use
-[`--set`](#-set-settingvalue). If you want to set multiple settings, no
-problem --- just provide multiple `--set` arguments:
+For quick one-off changes, use [`--set
+<setting>=<value>`](#-set-settingvalue). Multiple settings can be supplied by
+using multiple `--set` options:
 
 ```
 dosbox --set machine=ega --set cpu_cycles=5000
 ```
 
-Of course, you can combine these techniques:
+These approaches can also be combined:
 
 ```
 dosbox --conf extra.conf --set cpu_cycles=25000
 ```
 
-See [Config layering](configuration.md#configuration-layering) for more info.
+See [Configuration layering](configuration.md#configuration-layering) for
+details on how settings from different sources are combined.
 
 
 ## Discovery
 
-Several [`--list-*` options](#discovery_1) are handy for discovering what's
-available on your system: shaders, keyboard layouts, country codes, and code
-pages.
+DOSBox Staging includes several [`--list-*` options](#discovery_1) that help
+discover what is available on your system, including shaders, keyboard
+layouts, country codes, and code pages.
 
 
 ## Command-line reference
 
-You can optionally pass a `PATH` argument and a list of options to the DOSBox
+You can optionally pass a `PATH` parameter and a list of options to the DOSBox
 Staging executable:
 
 ```
@@ -138,15 +161,19 @@ dosbox [OPTIONS...] [PATH]
 ##### `--nolocalconf`
 
 :   Don't load the local `dosbox.conf` configuration file from the current
-    working directory if it exists.
+    [working directory](starting.md#the-working-directory) if it exists.
 
 
 ##### `--working-dir <path>`
 
-:   Set the working directory for DOSBox Staging; the emulator will act as if
-    started from this directory. If a local `dosbox.conf` configuration exists
-    in this folder, it will be loaded after the primary config (unless
-    [`--nolocalconf`](#-nolocalconf) is specified).
+:   Set the [working directory](starting.md#the-working-directory) for DOSBox
+    Staging; the emulator will act as if started from this directory. If a
+    local `dosbox.conf` configuration exists in this folder, it will be loaded
+    after the primary config (unless [`--nolocalconf`](#-nolocalconf) is
+    specified).
+
+    See the [Specifying paths on Windows](#specifying-paths-on-windows) if
+    you're on Windows.
 
 
 ### Startup behaviour
@@ -215,7 +242,8 @@ dosbox [OPTIONS...] [PATH]
 
 ##### `--startmapper`
 
-:   Launch the key mapper GUI directly. See [Key mapper](../input/keymapper.md#key-mapper).
+:   Launch the key mapper GUI directly (see [Key
+    mapper](../input/keymapper.md#key-mapper)).
 
 
 ##### `--erasemapper`
