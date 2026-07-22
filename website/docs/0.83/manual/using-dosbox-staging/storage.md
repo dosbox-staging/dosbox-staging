@@ -119,8 +119,9 @@ drives/
   d/     -> mounted as D:
 ```
 
-The `drives/` folder is looked up relative to the current working directory
-(folder) or from the built-in resources folder.
+The `drives/` folder is looked up relative to the current [working
+directory](starting.md#the-working-directory) (folder) or from the built-in
+resources folder.
 
 
 ### Floppy and CD-ROM images
