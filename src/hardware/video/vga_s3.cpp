@@ -7,7 +7,6 @@
 #include <algorithm>
 #include <cassert>
 #include <string>
-#include <map>
 
 #include "vga.h"
 
@@ -666,79 +665,157 @@ void replace_mode_120h_with_halfline()
 	}
 }
 
+// Planar 4-bit modes store four planes, so they take up four times the
+// page size.
+static int to_required_vmem_bytes(const VideoModeBlock& mode_block)
+{
+	const auto num_planes = (mode_block.type == M_LIN4) ? 4 : 1;
+	return VESA_GetModePageSize(mode_block) * num_planes;
+}
+
+void replace_1152x864_modes_with_custom_resolution(const VesaCustomResolution& custom)
+{
+	// The custom resolution is enumerated by the VESA BIOS under the
+	// well-established 1152x864 mode numbers, so programs that build
+	// their mode list via VESA BIOS calls pick it up automatically
+	// (e.g., the VBESVGA Windows 3.x driver).
+	constexpr auto _1152x864_4bit  = 0x17a;
+	constexpr auto _1152x864_8bit  = 0x207;
+	constexpr auto _1152x864_15bit = 0x209;
+	constexpr auto _1152x864_16bit = 0x20a;
+	constexpr auto _1152x864_24bit = 0x17b;
+	constexpr auto _1152x864_32bit = 0x20b;
+
+	// The exact blanking margins only affect the pixel clock, which is
+	// derived from the totals to hit the fixed 70 Hz VESA refresh rate.
+	constexpr auto BlankingOverheadPercent = 10;
+
+	constexpr auto CharCellHeightPixels = 16;
+
+	const auto width_chars = custom.width / 8;
+
+	const auto htotal = width_chars * (100 + BlankingOverheadPercent) / 100;
+	const auto vtotal = custom.height * (100 + BlankingOverheadPercent) / 100;
+
+	for (auto& block : ModeList_VGA) {
+		if (!contains(std::vector({_1152x864_4bit,
+		                           _1152x864_8bit,
+		                           _1152x864_15bit,
+		                           _1152x864_16bit,
+		                           _1152x864_24bit,
+		                           _1152x864_32bit}),
+		              block.mode)) {
+			continue;
+		}
+
+		// The horizontal display end of the 15 and 16-bit modes is
+		// doubled (two memory fetches per pixel), but the horizontal
+		// total is not, following the original 1152x864 entries. The
+		// CRTC setup only handles 9-bit horizontal values, which a
+		// doubled total would exceed.
+		const auto is_doubled = (block.type == M_LIN15 ||
+		                         block.type == M_LIN16);
+
+		block.swidth  = check_cast<uint16_t>(custom.width);
+		block.sheight = check_cast<uint16_t>(custom.height);
+		block.twidth  = check_cast<uint8_t>(width_chars);
+		block.theight = check_cast<uint8_t>(custom.height /
+		                                    CharCellHeightPixels);
+		block.htotal  = check_cast<uint16_t>(htotal);
+		block.vtotal  = check_cast<uint16_t>(vtotal);
+		block.hdispend = check_cast<uint16_t>(is_doubled ? width_chars * 2
+		                                                 : width_chars);
+		block.vdispend = check_cast<uint16_t>(custom.height);
+		block.special |= VESA_CUSTOM_RESOLUTION;
+
+		const auto required_vmem_bytes = to_required_vmem_bytes(block);
+
+		if (required_vmem_bytes > static_cast<int>(vga.vmemsize)) {
+			auto bits_per_pixel = [&] {
+				switch (block.type) {
+				case M_LIN4: return 4;
+				case M_LIN8: return 8;
+				case M_LIN15: return 15;
+				case M_LIN16: return 16;
+				case M_LIN24: return 24;
+				case M_LIN32: return 32;
+				default:
+					assertm(false, "Invalid VGAModes value");
+					return 0;
+				}
+			};
+
+			LOG_WARNING(
+			        "VIDEO: The %dx%d %d-bit custom VESA mode needs "
+			        "%d KB of video memory but only %u KB is "
+			        "available; increase 'vmemsize' to make the "
+			        "mode available",
+			        custom.width,
+			        custom.height,
+			        bits_per_pixel(),
+			        required_vmem_bytes / 1024,
+			        vga.vmemsize / 1024);
+		}
+	}
+}
+
 void filter_compatible_s3_vesa_modes()
 {
-	enum dram_size_t {
-		kb_512 = 1 << 0,
-		mb_1   = 1 << 1,
-		mb_2   = 1 << 2,
-		mb_4   = 1 << 3,
-		mb_8   = 1 << 4,
+	// S3-specific VESA modes allowed in compatible mode, provided there is
+	// enough video memory for them (that is checked dynamically in
+	// mode_allowed() below).
+	//
+	// These are the exact modes that were reachable through the old S3 OEM
+	// mode table: the modes listed in the table itself, plus the modes only
+	// reachable through its accidental hash collisions (e.g., 320x240
+	// 8-bit hashed to the 640x480 4-bit entry). This keeps the effective
+	// mode availability unchanged at 4 MB vmemsize and above.
+	static const std::vector<uint16_t> compatible_s3_modes = {
+	        0x151, //  320x240  8-bit
+	        0x155, //  320x240  15-bit
+	        0x160, //  320x240  15-bit
+	        0x156, //  320x240  16-bit
+	        0x170, //  320x240  16-bit
+	        0x157, //  320x240  24-bit
+	        0x158, //  320x240  32-bit
+	        0x190, //  320x240  32-bit
+
+	        0x166, //  400x300  8-bit
+	        0x167, //  400x300  15-bit
+	        0x168, //  400x300  16-bit
+	        0x169, //  400x300  24-bit
+	        0x16a, //  400x300  32-bit
+
+	        0x215, //  512x384  8-bit
+	        0x216, //  512x384  15-bit
+	        0x16c, //  512x384  24-bit
+
+	        0x213, //  640x400  32-bit
+
+	        0x177, //  640x480  4-bit
+	        0x212, //  640x480  24-bit
+
+	        0x178, //  800x600  24-bit
+
+	        0x207, // 1152x864  8-bit
+	        0x209, // 1152x864  15-bit
+	        0x20a, // 1152x864  16-bit
+	        0x17b, // 1152x864  24-bit
+	        0x20b, // 1152x864  32-bit
+
+	        0x17c, // 1280x960  4-bit
+	        0x17d, // 1280x960  8-bit
+	        0x17e, // 1280x960  15-bit
+	        0x17f, // 1280x960  16-bit
+	        0x180, // 1280x960  24-bit
+	        0x181, // 1280x960  32-bit
+
+	        0x182, // 1280x1024 24-bit
+
+	        0x183, // 1600x1200 4-bit
+	        0x184, // 1600x1200 24-bit
+	        0x185, // 1600x1200 32-bit
 	};
-
-	auto hash = [](const uint16_t w, const uint16_t h, const int d) {
-		return check_cast<uint32_t>((w + h) * d);
-	};
-
-	const std::map<uint32_t, uint8_t> oem_modes = {
-	        { hash(640,  400, M_LIN32),          mb_1 | mb_2 | mb_4 | mb_8},
-
-	        { hash(640,  480,  M_LIN4), kb_512 | mb_1 | mb_2 | mb_4 | mb_8},
-	        { hash(640,  480,  M_LIN8), kb_512 | mb_1 | mb_2 | mb_4 | mb_8},
-	        { hash(640,  480, M_LIN15),          mb_1 | mb_2 | mb_4 | mb_8},
-	        { hash(640,  480, M_LIN16),          mb_1 | mb_2 | mb_4 | mb_8},
-	        { hash(640,  480, M_LIN24),          mb_1 | mb_2 | mb_4 | mb_8},
-	        { hash(640,  480, M_LIN32),                 mb_2 | mb_4 | mb_8},
-
-	        { hash(800,  600,  M_LIN4), kb_512 | mb_1 | mb_2 | mb_4 | mb_8},
-	        { hash(800,  600,  M_LIN8), kb_512 | mb_1 | mb_2 | mb_4 | mb_8},
-	        { hash(800,  600, M_LIN16),          mb_1 | mb_2 | mb_4 | mb_8},
-	        { hash(800,  600, M_LIN32),                 mb_2 | mb_4 | mb_8},
-
-	        {hash(1024,  768,  M_LIN4), kb_512 | mb_1 | mb_2 | mb_4 | mb_8},
-	        {hash(1024,  768,  M_LIN8),          mb_1 | mb_2 | mb_4 | mb_8},
-	        {hash(1024,  768, M_LIN16),                 mb_2 | mb_4 | mb_8},
-	        {hash(1024,  768, M_LIN32),                        mb_4 | mb_8},
-
-	        {hash(1152,  864,  M_LIN8),          mb_1 | mb_2 | mb_4 | mb_8},
-	        {hash(1152,  864, M_LIN15),                 mb_2 | mb_4 | mb_8},
-	        {hash(1152,  864, M_LIN16),                 mb_2 | mb_4 | mb_8},
-	        {hash(1152,  864, M_LIN24),                        mb_4 | mb_8},
-	        {hash(1152,  864, M_LIN32),                        mb_4 | mb_8},
-
-	        {hash(1280,  960,  M_LIN4),          mb_1 | mb_2 | mb_4 | mb_8},
-	        {hash(1280,  960,  M_LIN8),                 mb_2 | mb_4 | mb_8},
-	        {hash(1280,  960, M_LIN16),                        mb_4 | mb_8},
-	        {hash(1280,  960, M_LIN24),                        mb_4 | mb_8},
-	        {hash(1280,  960, M_LIN32),                               mb_8},
-
-	        {hash(1280, 1024,  M_LIN4),          mb_1 | mb_2 | mb_4 | mb_8},
-	        {hash(1280, 1024,  M_LIN8),                 mb_2 | mb_4 | mb_8},
-	        {hash(1280, 1024, M_LIN16),                        mb_4 | mb_8},
-	        {hash(1280, 1024, M_LIN24),                        mb_4 | mb_8},
-	        {hash(1280, 1024, M_LIN32),                               mb_8},
-
-	        {hash(1600, 1200,  M_LIN4),          mb_1 | mb_2 | mb_4 | mb_8},
-	        {hash(1600, 1200,  M_LIN8),                 mb_2 | mb_4 | mb_8},
-	        {hash(1600, 1200, M_LIN16),                        mb_4 | mb_8},
-	        {hash(1600, 1200, M_LIN24),                               mb_8},
-	        {hash(1600, 1200, M_LIN32),                               mb_8},
-	};
-
-	const auto dram_size = [&]() -> dram_size_t {
-		switch (vga.vmemsize) {
-		case 512 * 1024: return kb_512;
-		case 1024 * 1024: return mb_1;
-		case 2048 * 1024: return mb_2;
-		case 4096 * 1024: return mb_4;
-		case 8192 * 1024: return mb_8;
-		default:
-			assertm(false,
-			        format_str("Unexpected vga.memsize size: %d",
-			                   vga.vmemsize));
-			return {};
-		};
-	}();
 
 	auto mode_allowed = [&](const VideoModeBlock& m) {
 		// Only allow standard text modes
@@ -784,13 +861,13 @@ void filter_compatible_s3_vesa_modes()
 		}
 
 		// Selectively allow S3-specific VESA modes.
+		if (!contains(compatible_s3_modes, m.mode)) {
+			return false;
+		}
 
-		// Does the S3 OEM list have this mode for the given DRAM size?
-		const auto it = oem_modes.find(
-		        hash(m.swidth, m.sheight, enum_val(m.type)));
-
-		const bool is_oem_mode = (it != oem_modes.end()) &&
-		                         (it->second & dram_size);
+		// Does the mode fit into the video memory?
+		const bool is_oem_mode = (to_required_vmem_bytes(m) <=
+		                          static_cast<int>(vga.vmemsize));
 #if 0
 		auto mode_info = format_str("S3: mode %Xh: %4u x %4u - m.type: %3d",
 		                            m.mode,
@@ -878,6 +955,13 @@ void SVGA_Setup_S3()
 	std::string description = "S3 Trio64 ";
 
 	description += int10.vesa_oldvbe ? "VESA 1.2" : "VESA 2.0";
+
+	// Must come before the 'vesa_modes' filtering so the custom modes are
+	// filtered by their real dimensions
+	if (int10.vesa_custom_resolution) {
+		replace_1152x864_modes_with_custom_resolution(
+		        *int10.vesa_custom_resolution);
+	}
 
 	switch (int10.vesa_modes) {
 	case VesaModes::Compatible:

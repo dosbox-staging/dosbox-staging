@@ -189,6 +189,50 @@ static bool can_triple_buffer_8bit(const VideoModeBlock& m)
 	return vga.vmemsize >= needed_bytes;
 }
 
+int VESA_GetModePageSize(const VideoModeBlock& mode_block)
+{
+	int page_size = 0;
+
+	switch (mode_block.type) {
+	case M_LIN4:
+		// Size of a single plane; planar modes store four planes
+		page_size = mode_block.sheight * mode_block.swidth / 8;
+		break;
+
+	case M_LIN8: page_size = mode_block.sheight * mode_block.swidth; break;
+
+	case M_LIN15:
+	case M_LIN16:
+		page_size = mode_block.sheight * mode_block.swidth * 2;
+		break;
+
+	case M_LIN24:
+		// Mode 0x212 has 128 extra bytes per scan line for
+		// compatibility with Windows 640x480 24-bit S3 Trio drivers
+		if (mode_block.mode == 0x212) {
+			page_size = mode_block.sheight *
+			            (mode_block.swidth * 3 + 128);
+		} else {
+			page_size = mode_block.sheight * (mode_block.swidth * 3);
+		}
+		break;
+
+	case M_LIN32:
+		page_size = mode_block.sheight * mode_block.swidth * 4;
+		break;
+
+	default: break;
+	}
+
+	if (page_size & 0xFFFF) {
+		// It is documented that many applications assume 64k-aligned
+		// page sizes VBETEST is one of them
+		page_size += 0x10000;
+		page_size &= ~0xFFFF;
+	}
+
+	return page_size;
+}
 
 uint8_t VESA_GetSVGAModeInformation(uint16_t mode, uint16_t seg, uint16_t off)
 {
@@ -197,7 +241,6 @@ uint8_t VESA_GetSVGAModeInformation(uint16_t mode, uint16_t seg, uint16_t off)
 
 	PhysPt buf = PhysicalMake(seg, off);
 
-	int modePageSize = 0;
 	uint8_t modeAttributes;
 
 	mode &= 0x3fff; // vbe2 compatible, ignore lfb and keep screen content bits
@@ -222,9 +265,10 @@ uint8_t VESA_GetSVGAModeInformation(uint16_t mode, uint16_t seg, uint16_t off)
 		return VESA_FAIL;
 	}
 
+	const int modePageSize = VESA_GetModePageSize(mblock);
+
 	switch (mblock.type) {
 	case M_LIN4:
-		modePageSize           = mblock.sheight * mblock.swidth / 8;
 		minfo.BytesPerScanLine = host_to_le16(mblock.swidth / 8);
 		minfo.NumberOfPlanes   = 0x4;
 		minfo.BitsPerPixel     = 4u;
@@ -235,7 +279,6 @@ uint8_t VESA_GetSVGAModeInformation(uint16_t mode, uint16_t seg, uint16_t off)
 		break;
 
 	case M_LIN8: {
-		modePageSize           = mblock.sheight * mblock.swidth;
 		minfo.BytesPerScanLine = host_to_le16(mblock.swidth);
 		minfo.NumberOfPlanes   = 0x1;
 		minfo.BitsPerPixel     = 8u;
@@ -262,7 +305,6 @@ uint8_t VESA_GetSVGAModeInformation(uint16_t mode, uint16_t seg, uint16_t off)
 	} break;
 
 	case M_LIN15:
-		modePageSize           = mblock.sheight * mblock.swidth * 2;
 		minfo.BytesPerScanLine = host_to_le16(mblock.swidth * 2);
 		minfo.NumberOfPlanes   = 0x1;
 		minfo.BitsPerPixel     = 15u;
@@ -285,7 +327,6 @@ uint8_t VESA_GetSVGAModeInformation(uint16_t mode, uint16_t seg, uint16_t off)
 		break;
 
 	case M_LIN16:
-		modePageSize           = mblock.sheight * mblock.swidth * 2;
 		minfo.BytesPerScanLine = host_to_le16(mblock.swidth * 2);
 		minfo.NumberOfPlanes   = 0x1;
 		minfo.BitsPerPixel     = 16u;
@@ -309,10 +350,8 @@ uint8_t VESA_GetSVGAModeInformation(uint16_t mode, uint16_t seg, uint16_t off)
 		// Mode 0x212 has 128 extra bytes per scan line for
 		// compatibility with Windows 640x480 24-bit S3 Trio drivers
 		if (mode == 0x212) {
-			modePageSize = mblock.sheight * (mblock.swidth * 3 + 128);
 			minfo.BytesPerScanLine = host_to_le16(mblock.swidth * 3 + 128);
 		} else {
-			modePageSize = mblock.sheight * (mblock.swidth * 3);
 			minfo.BytesPerScanLine = host_to_le16(mblock.swidth * 3);
 		}
 		minfo.NumberOfPlanes = 0x1u;
@@ -334,7 +373,6 @@ uint8_t VESA_GetSVGAModeInformation(uint16_t mode, uint16_t seg, uint16_t off)
 		break;
 
 	case M_LIN32:
-		modePageSize           = mblock.sheight * mblock.swidth * 4;
 		minfo.BytesPerScanLine = host_to_le16(mblock.swidth * 4);
 		minfo.NumberOfPlanes   = 0x1u;
 		minfo.BitsPerPixel     = 32u;
@@ -357,7 +395,6 @@ uint8_t VESA_GetSVGAModeInformation(uint16_t mode, uint16_t seg, uint16_t off)
 		break;
 
 	case M_TEXT:
-		modePageSize           = 0;
 		minfo.BytesPerScanLine = host_to_le16(mblock.twidth * 2);
 		minfo.NumberOfPlanes   = 0x4;
 		minfo.BitsPerPixel     = 4u;
@@ -368,13 +405,6 @@ uint8_t VESA_GetSVGAModeInformation(uint16_t mode, uint16_t seg, uint16_t off)
 		break;
 
 	default: return VESA_FAIL;
-	}
-
-	if (modePageSize & 0xFFFF) {
-		// It is documented that many applications assume 64k-aligned
-		// page sizes VBETEST is one of them
-		modePageSize += 0x10000;
-		modePageSize &= ~0xFFFF;
 	}
 
 	int modePages = 0;

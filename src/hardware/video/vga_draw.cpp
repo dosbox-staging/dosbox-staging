@@ -2484,8 +2484,15 @@ ImageInfo setup_drawing()
 		const auto is_1280x1024_mode = (CurMode->swidth == 1280 &&
 		                                CurMode->sheight == 1024);
 
+		const auto is_custom_resolution_mode = (CurMode->special &
+		                                        VESA_CUSTOM_RESOLUTION);
+
 		if (is_1280x1024_mode) {
 			render_pixel_aspect_ratio = pixel_aspect_1280x1024;
+		} else if (is_custom_resolution_mode) {
+			// Custom VESA resolutions target modern square-pixel
+			// flat-screen displays, not 4:3 CRT monitors
+			render_pixel_aspect_ratio = {1};
 		} else {
 			render_pixel_aspect_ratio = calc_pixel_aspect_from_dimensions(
 			        render_width, render_height, double_width, double_height);

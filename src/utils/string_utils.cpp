@@ -423,6 +423,21 @@ std::optional<int> parse_int(const std::string& s, const int base)
 	return {};
 }
 
+std::optional<std::pair<int, int>> parse_int_dimensions(const std::string_view s)
+{
+	const auto parts = split(s, "x");
+	if (parts.size() == 2) {
+		const auto w = parse_int(parts[0]);
+		const auto h = parse_int(parts[1]);
+		if (w && h) {
+			return {
+			        {*w, *h}
+                        };
+		}
+	}
+	return {};
+}
+
 std::optional<float> parse_percentage(const std::string_view s,
                                       const bool is_percent_sign_optional)
 {
