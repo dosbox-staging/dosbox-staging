@@ -416,13 +416,13 @@ void DOS_PerformCdRomIoDelay(uint16_t data_transferred_bytes)
 
 static inline void modify_cycles(Bits value)
 {
-	if ((4 * value + 5) < CPU_Cycles) {
-		CPU_Cycles -= 4*value;
-		CPU_IODelayRemoved += 4*value;
-	} else {
-		CPU_IODelayRemoved += CPU_Cycles/*-5*/; //don't want to mess with negative
-		CPU_Cycles = 5;
-	}
+	// The delay is applied in full, unconditionally; `CPU_Cycles` may go
+	// negative, which the tick accounting absorbs (the remainder carries
+	// over into the subsequent CPU slices). Capping the delay at the
+	// remaining cycles of the current slice would make DOS I/O speed
+	// dependent on PIC event density (e.g., on the VGA drawing mode).
+	CPU_Cycles -= 4 * value;
+	CPU_IODelayRemoved += 4 * value;
 }
 #else
 static inline void modify_cycles(Bits /* value */) {
