@@ -235,17 +235,6 @@ adapters below are fully backward-compatible with VGA (and by extension
 [CGA](#cga) and [EGA](#ega)), so any of them will work for VGA games. The
 default `svga_s3` is the best general-purpose choice.
 
-!!! note
-
-    A small number of games and demos rely on per-scanline VGA timing tricks
-    that change graphics settings mid-frame (e.g.,
-    [Lemmings](https://www.mobygames.com/game/683/lemmings/),
-    [Pinball Fantasies](https://www.mobygames.com/game/571/pinball-fantasies/),
-    [Alien Carnage](https://www.mobygames.com/game/522/alien-carnage/)). These
-    may need the `svga_paradise` machine type, which is the closest to IBM's
-    original VGA implementation. See also
-    [`vga_render_per_scanline`](../system/general.md#vga_render_per_scanline).
-
 **SVGA (Super VGA)** is a loose term for any VGA superset offering higher
 resolutions and colour depths. Because each manufacturer implemented their own
 extensions, the VESA BIOS Extensions (VBE) standard was created to provide a
