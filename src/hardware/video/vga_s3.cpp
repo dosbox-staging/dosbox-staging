@@ -7,7 +7,6 @@
 #include <algorithm>
 #include <cassert>
 #include <string>
-#include <map>
 
 #include "vga.h"
 
@@ -666,6 +665,14 @@ void replace_mode_120h_with_halfline()
 	}
 }
 
+// Planar 4-bit modes store four planes, so they take up four times the
+// page size.
+static int to_required_vmem_bytes(const VideoModeBlock& mode_block)
+{
+	const auto num_planes = (mode_block.type == M_LIN4) ? 4 : 1;
+	return VESA_GetModePageSize(mode_block) * num_planes;
+}
+
 void replace_1152x864_modes_with_custom_resolution(const VesaCustomResolution& custom)
 {
 	// The custom resolution is enumerated by the VESA BIOS under the
@@ -723,144 +730,126 @@ void replace_1152x864_modes_with_custom_resolution(const VesaCustomResolution& c
 	}
 }
 
-void filter_compatible_s3_vesa_modes()
+void filter_compatible_vesa_modes()
 {
-	enum dram_size_t {
-		kb_512 = 1 << 0,
-		mb_1   = 1 << 1,
-		mb_2   = 1 << 2,
-		mb_4   = 1 << 3,
-		mb_8   = 1 << 4,
+	// VESA modes allowed in compatible mode, provided there is enough video
+	// memory for them (that is checked dynamically in mode_allowed() below).
+	//
+	static const std::vector<uint16_t> compatible_modes = {
+	        0x151, //  320x240  8-bit
+	        0x155, //  320x240  15-bit
+	        0x160, //  320x240  15-bit
+	        0x156, //  320x240  16-bit
+	        0x170, //  320x240  16-bit
+	        0x157, //  320x240  24-bit
+	        0x158, //  320x240  32-bit
+	        0x190, //  320x240  32-bit
+
+	        0x166, //  400x300  8-bit
+	        0x167, //  400x300  15-bit
+	        0x168, //  400x300  16-bit
+	        0x169, //  400x300  24-bit
+	        0x16a, //  400x300  32-bit
+
+	        0x215, //  512x384  8-bit
+	        0x216, //  512x384  15-bit
+	        0x16c, //  512x384  24-bit
+
+	        0x213, //  640x400  32-bit
+
+	        0x177, //  640x480  4-bit
+	        0x212, //  640x480  24-bit
+
+	        0x178, //  800x600  24-bit
+
+	        0x207, // 1152x864  8-bit
+	        0x209, // 1152x864  15-bit
+	        0x20a, // 1152x864  16-bit
+	        0x17b, // 1152x864  24-bit
+	        0x20b, // 1152x864  32-bit
+
+	        0x17c, // 1280x960  4-bit
+	        0x17d, // 1280x960  8-bit
+	        0x17e, // 1280x960  15-bit
+	        0x17f, // 1280x960  16-bit
+	        0x180, // 1280x960  24-bit
+	        0x181, // 1280x960  32-bit
+
+	        0x182, // 1280x1024 24-bit
+
+	        0x183, // 1600x1200 4-bit
+	        0x184, // 1600x1200 24-bit
+	        0x185, // 1600x1200 32-bit
 	};
-
-	auto hash = [](const uint16_t w, const uint16_t h, const int d) {
-		return check_cast<uint32_t>((w + h) * d);
-	};
-
-	const std::map<uint32_t, uint8_t> oem_modes = {
-	        { hash(640,  400, M_LIN32),          mb_1 | mb_2 | mb_4 | mb_8},
-
-	        { hash(640,  480,  M_LIN4), kb_512 | mb_1 | mb_2 | mb_4 | mb_8},
-	        { hash(640,  480,  M_LIN8), kb_512 | mb_1 | mb_2 | mb_4 | mb_8},
-	        { hash(640,  480, M_LIN15),          mb_1 | mb_2 | mb_4 | mb_8},
-	        { hash(640,  480, M_LIN16),          mb_1 | mb_2 | mb_4 | mb_8},
-	        { hash(640,  480, M_LIN24),          mb_1 | mb_2 | mb_4 | mb_8},
-	        { hash(640,  480, M_LIN32),                 mb_2 | mb_4 | mb_8},
-
-	        { hash(800,  600,  M_LIN4), kb_512 | mb_1 | mb_2 | mb_4 | mb_8},
-	        { hash(800,  600,  M_LIN8), kb_512 | mb_1 | mb_2 | mb_4 | mb_8},
-	        { hash(800,  600, M_LIN16),          mb_1 | mb_2 | mb_4 | mb_8},
-	        { hash(800,  600, M_LIN32),                 mb_2 | mb_4 | mb_8},
-
-	        {hash(1024,  768,  M_LIN4), kb_512 | mb_1 | mb_2 | mb_4 | mb_8},
-	        {hash(1024,  768,  M_LIN8),          mb_1 | mb_2 | mb_4 | mb_8},
-	        {hash(1024,  768, M_LIN16),                 mb_2 | mb_4 | mb_8},
-	        {hash(1024,  768, M_LIN32),                        mb_4 | mb_8},
-
-	        {hash(1152,  864,  M_LIN8),          mb_1 | mb_2 | mb_4 | mb_8},
-	        {hash(1152,  864, M_LIN15),                 mb_2 | mb_4 | mb_8},
-	        {hash(1152,  864, M_LIN16),                 mb_2 | mb_4 | mb_8},
-	        {hash(1152,  864, M_LIN24),                        mb_4 | mb_8},
-	        {hash(1152,  864, M_LIN32),                        mb_4 | mb_8},
-
-	        {hash(1280,  960,  M_LIN4),          mb_1 | mb_2 | mb_4 | mb_8},
-	        {hash(1280,  960,  M_LIN8),                 mb_2 | mb_4 | mb_8},
-	        {hash(1280,  960, M_LIN16),                        mb_4 | mb_8},
-	        {hash(1280,  960, M_LIN24),                        mb_4 | mb_8},
-	        {hash(1280,  960, M_LIN32),                               mb_8},
-
-	        {hash(1280, 1024,  M_LIN4),          mb_1 | mb_2 | mb_4 | mb_8},
-	        {hash(1280, 1024,  M_LIN8),                 mb_2 | mb_4 | mb_8},
-	        {hash(1280, 1024, M_LIN16),                        mb_4 | mb_8},
-	        {hash(1280, 1024, M_LIN24),                        mb_4 | mb_8},
-	        {hash(1280, 1024, M_LIN32),                               mb_8},
-
-	        {hash(1600, 1200,  M_LIN4),          mb_1 | mb_2 | mb_4 | mb_8},
-	        {hash(1600, 1200,  M_LIN8),                 mb_2 | mb_4 | mb_8},
-	        {hash(1600, 1200, M_LIN16),                        mb_4 | mb_8},
-	        {hash(1600, 1200, M_LIN24),                               mb_8},
-	        {hash(1600, 1200, M_LIN32),                               mb_8},
-	};
-
-	const auto dram_size = [&]() -> dram_size_t {
-		switch (vga.vmemsize) {
-		case 512 * 1024: return kb_512;
-		case 1024 * 1024: return mb_1;
-		case 2048 * 1024: return mb_2;
-		case 4096 * 1024: return mb_4;
-		case 8192 * 1024: return mb_8;
-		default:
-			assertm(false,
-			        format_str("Unexpected vga.memsize size: %d",
-			                   vga.vmemsize));
-			return {};
-		};
-	}();
 
 	auto mode_allowed = [&](const VideoModeBlock& m) {
-		// Only allow standard text modes
-		if (m.type == M_TEXT) {
-			constexpr auto _132x28 = 0x230;
-			constexpr auto _132x30 = 0x231;
-			constexpr auto _132x34 = 0x232;
+		const auto is_allowed = [&] {
+			// Only allow standard text modes
+			if (m.type == M_TEXT) {
+				constexpr auto _132x28 = 0x230;
+				constexpr auto _132x30 = 0x231;
+				constexpr auto _132x34 = 0x232;
 
-			return !contains(std::vector({_132x28, _132x30, _132x34}),
-			                 m.mode);
-		}
+				return !contains(std::vector({_132x28, _132x30, _132x34}),
+				                 m.mode);
+			}
 
-		// Allow all non-VESA modes (standard VGA modes, and CGA and EGA
-		// as emulated by VGA adapters)
-		if (!VESA_IsVesaMode(m.mode)) {
-			return true;
-		}
+			// Allow all non-VESA modes (standard VGA modes, and CGA
+			// and EGA as emulated by VGA adapters)
+			if (!VESA_IsVesaMode(m.mode)) {
+				return true;
+			}
 
-		// Allow common standard VESA modes, except 320x200 hi-color
-		// modes that were rarely properly supported until the late 90s,
-		// and the DOSBox-specific widescreen modes.
-		constexpr auto s3_vesa_modes_start = 0x150;
+			// Allow all common VBA 1.2 modes, regardless of whether
+			// they fit into video memory, except 320x200 hi-color
+			// modes that were rarely properly supported until the
+			// late 90s.
+			//
+			// VESA_GetSVGAModeInformation() in int_vesa.cpp will
+			// set the "Mode supported by hardware configuration"
+			// (bit 0 of ModeAttributes) to 0 in the returned mode
+			// info block.
+			//
+			if (m.mode < Vesa20ModesStart) {
+				constexpr auto _320x200_15bit = 0x10d;
+				constexpr auto _320x200_16bit = 0x10e;
+				constexpr auto _320x200_32bit = 0x10f;
 
-		if (m.mode < s3_vesa_modes_start) {
-			constexpr auto _320x200_15bit = 0x10d;
-			constexpr auto _320x200_16bit = 0x10e;
-			constexpr auto _320x200_32bit = 0x10f;
+				return !contains(std::vector({_320x200_15bit,
+				                              _320x200_16bit,
+				                              _320x200_32bit}),
+				                 m.mode);
+			}
 
-			// Additional DOSBox-specific widescreen modes
-			constexpr auto _848x480_8bit  = 0x222;
-			constexpr auto _848x480_15bit = 0x223;
-			constexpr auto _848x480_16bit = 0x224;
-			constexpr auto _848x480_32bit = 0x225;
+			// Selectively allow specific VBE 2.0 modes. This means
+			// VESA_GetSVGAModeInformation() won't even return them
+			// when a program queries the list of available VESA
+			// modes. We do this culling of VBE 2.0 modes to protect
+			// programs that crash or misbehave (due to buffer
+			// overflow errors) if then encounter "too many" VESA
+			// modes.
+			if (!contains(compatible_modes, m.mode)) {
+				return false;
+			}
 
-			return !contains(std::vector({_320x200_15bit,
-			                              _320x200_16bit,
-			                              _320x200_32bit,
-			                              _848x480_8bit,
-			                              _848x480_15bit,
-			                              _848x480_16bit,
-			                              _848x480_32bit}),
-			                 m.mode);
-		}
-
-		// Selectively allow S3-specific VESA modes.
-
-		// Does the S3 OEM list have this mode for the given DRAM size?
-		const auto it = oem_modes.find(
-		        hash(m.swidth, m.sheight, enum_val(m.type)));
-
-		const bool is_oem_mode = (it != oem_modes.end()) &&
-		                         (it->second & dram_size);
+			// Allow only VBE 2.0 that fit into the video memory.
+			const bool fits_vmem = (to_required_vmem_bytes(m) <=
+			                        static_cast<int>(vga.vmemsize));
+			return fits_vmem;
+		}();
 #if 0
-		auto mode_info = format_str("S3: mode %Xh: %4u x %4u - m.type: %3d",
+		auto mode_info = format_str("VGA:S3: mode %04Xh: %4u x %4u - %s",
 		                            m.mode,
 		                            m.swidth,
 		                            m.sheight,
-		                            m.type);
-		if (is_oem_mode) {
-			LOG_DEBUG(mode_info.c_str());
+		                            to_string(m.type));
+		if (is_allowed) {
+			LOG_DEBUG("%s", mode_info.c_str());
 		} else {
-			LOG_ERR(mode_info.c_str());
+			LOG_ERR("%s", mode_info.c_str());
 		}
 #endif
-		return is_oem_mode;
+		return is_allowed;
 	};
 
 	auto mode_not_allowed = [&](const VideoModeBlock& m) {
@@ -938,7 +927,7 @@ void SVGA_Setup_S3()
 
 	switch (int10.vesa_modes) {
 	case VesaModes::Compatible:
-		filter_compatible_s3_vesa_modes();
+		filter_compatible_vesa_modes();
 		description += " compatible";
 		break;
 
