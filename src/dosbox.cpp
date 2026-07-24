@@ -1443,11 +1443,10 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 	auto pbool = section->AddBool("vga_8dot_font", OnlyAtStart, false);
 	pbool->SetHelp("Use 8-pixel-wide fonts on VGA adapters ('off' by default).");
 
-	pbool = section->AddBool("vga_render_per_scanline", OnlyAtStart, true);
-	pbool->SetHelp(
-	        "Emulate accurate per-scanline VGA rendering ('on' by default). Currently, you\n"
-	        "need to disable this for a few games, otherwise they will crash at startup\n"
-	        "(e.g., Deus, Ishar 3, Robinson's Requiem, Time Warriors).");
+	pstring = section->AddString("vga_render_per_scanline", Deprecated, "");
+	pstring->SetHelp(
+	        "The [color=light-green]'vga_render_per_scanline'[reset] setting has been removed;\n"
+	        "it's no longer necessary.");
 
 	pstring = section->AddString("autoexec_section", OnlyAtStart, "join");
 	pstring->SetValues({"join", "overwrite"});

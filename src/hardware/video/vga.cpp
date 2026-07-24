@@ -9,7 +9,6 @@
 #include <string>
 #include <utility>
 
-#include "config/setup.h"
 #include "gui/common.h"
 #include "hardware/pic.h"
 #include "ints/int10.h"
@@ -301,10 +300,6 @@ void VGA_AllowPixelDoubling(const bool allow)
 void VGA_Init()
 {
 	vga.draw.resizing = false;
-
-	const auto section = get_section("dosbox");
-	assert(section);
-	vga.draw.vga_render_per_scanline = section->GetBool("vga_render_per_scanline");
 
 	// For first init
 	vga.mode = M_ERROR;
