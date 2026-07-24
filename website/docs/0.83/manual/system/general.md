@@ -55,11 +55,6 @@ VGA text mode normally uses 9-pixel-wide character cells.
 [`vga_8dot_font`](#vga_8dot_font) forces 8-pixel-wide characters instead. Very
 few programs need this.
 
-[`vga_render_per_scanline`](#vga_render_per_scanline) is enabled by default and
-emulates accurate per-scanline VGA rendering. A few games crash at startup with
-it enabled (Deus, Ishar 3, Robinson's Requiem, Time Warriors) --- disable it on
-a per-game basis for those titles.
-
 
 ## Video memory delay
 
@@ -230,18 +225,6 @@ The settings below are configured in the `[sdl]` section.
 :   Use 8-pixel-wide fonts on VGA adapters.
 
     Possible values: `on`, `off` *default*{ .default }
-
-
-##### vga_render_per_scanline
-
-:   Emulate accurate per-scanline VGA rendering. Currently, you need to
-    disable this for a few games, otherwise they will crash at startup
-    (e.g., [Deus](https://www.mobygames.com/game/5001/deus/),
-    [Ishar 3](https://www.mobygames.com/game/7702/ishar-3-the-seven-gates-of-infinity/),
-    [Robinson's Requiem](https://www.mobygames.com/game/4797/robinsons-requiem/),
-    [Time Warriors](https://www.mobygames.com/game/22845/time-warriors/)).
-
-    Possible values: `on` *default*{ .default }, `off`
 
 
 ##### vmem_delay
