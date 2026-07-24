@@ -1486,11 +1486,13 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 	pstring->SetHelp(
 	        "Replace the 1152x864 VESA modes with a custom resolution ('none' by default).\n"
 	        "Specify the resolution in WIDTHxHEIGHT format (e.g., 1920x1080); the valid range\n"
-	        "is from 320x200 to 1920x1440, and WIDTH must be a multiple of 8. Modes that\n"
-	        "don't fit into the configured video memory ('vmemsize') are not available. This\n"
-	        "is useful for games that support custom VESA resolutions (e.g., Duke Nukem 3D),\n"
-	        "and for running Windows 3.1 at modern resolutions with the VBESVGA driver.\n"
-	        "Custom resolutions are always displayed with square pixels.");
+	        "is from 320x200 to 1920x1440, and WIDTH must be a multiple of 8. Colour depth\n"
+	        "variants of the custom resolution that don't fit into the video memory are\n"
+	        "unavailable and log a warning at startup; increase 'vmemsize' to make them\n"
+	        "available (e.g., 1920x1080 32-bit needs 8 MB). This is useful for games that\n"
+	        "support custom VESA resolutions (e.g., Duke Nukem 3D), and for running\n"
+	        "Windows 3.1 at modern resolutions with the VBESVGA driver. Custom resolutions\n"
+	        "are always displayed with square pixels.");
 
 	auto pbool = section->AddBool("vga_8dot_font", OnlyAtStart, false);
 	pbool->SetHelp("Use 8-pixel-wide fonts on VGA adapters ('off' by default).");
