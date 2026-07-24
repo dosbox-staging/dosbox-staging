@@ -261,7 +261,7 @@ uint8_t VESA_GetSVGAModeInformation(uint16_t mode, uint16_t seg, uint16_t off)
 	const auto mblock = *maybe_mode_block;
 
 	// Was the found mode VESA 2.0 but the user requested VESA 1.2?
-	if (mblock.mode >= vesa_2_0_modes_start && int10.vesa_oldvbe) {
+	if (mblock.mode >= Vesa20ModesStart && int10.vesa_oldvbe) {
 		return VESA_FAIL;
 	}
 

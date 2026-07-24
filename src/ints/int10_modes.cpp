@@ -124,19 +124,34 @@ std::vector<VideoModeBlock> ModeList_VGA = {
 	{ 0x11A, M_LIN16, 1280, 1024, 160, 64, 8, 16, 1, 0xA0000, 0x10000, 212, 1066, 320, 1024,                                  0},
 	{ 0x11B, M_LIN32, 1280, 1024, 160, 64, 8, 16, 1, 0xA0000, 0x10000, 212, 1066, 160, 1024,                                  0},
 
-	// S3 specific 1600x1200 VESA modes
-	// TODO Are these VESA 2.0 modes or non-standard VESA 1.2 additions?
+	// The highest mode specified by VBE 1.2 is 1280x1024 at 24 bits per pixel
+	// (mode 0x11B). Modes 0x120 to 0x122 are non-standard S3-specific
+	// 1600x1200 VESA modes.
+	//
+	// The old Trio64 (86C764X) only had 0x120 and its BIOS identified itself
+	// as VBE 1.2. Later models such as the ViRGE/GX2 (86C357) added the
+	// remaining 0x122 and 0x122 modes and identified themselves as VBE 2.0.
+	//
+	// We treat all three modes as VBE 1.2 for simplicity. The 1600x1200 modes
+	// are duplicated in the VESA 2.0 range below, so these modes numbers
+	// effectively act as aliases for VBE 1.2 programs that hardcode them.
+	//
 	{ 0x120,  M_LIN8, 1600, 1200, 200, 75, 8, 16, 1, 0xA0000, 0x10000, 264, 1250, 200, 1200,                                  0},
 	{ 0x121, M_LIN15, 1600, 1200, 200, 75, 8, 16, 1, 0xA0000, 0x10000, 264, 1250, 400, 1200,                                  0},
 	{ 0x122, M_LIN16, 1600, 1200, 200, 75, 8, 16, 1, 0xA0000, 0x10000, 264, 1250, 400, 1200,                                  0},
 
-	// S3 specific VESA 2.0 modes
-	// --------------------------
-	// The VESA 2.0 defines no more mode numbers, and treats old VBE 1.2 modes
-	// number as deprecated.
+	// VESA 2.0 modes
+	// --------------
+	// Starting with VBE 2.0, VESA stopped defining new fixed mode ID numbers,
+	// and treats old VBE 1.2 modes number as deprecated.
 	//
 	// Software should not rely on any hardcoded mode numbers but discover
-	// available video modes via standard VESA 2.0 BIOS calls.
+	// available video modes via standard VBE 2.0 BIOS calls.
+	//
+	// These modes numbers are not S3 specific; we could technically use any
+	// mode number we want.
+	//
+	// Ref: https://pcdosretro.gitlab.io/VBE20.pdf
 	//
 	{ 0x150,  M_LIN8,  320,  200,  40, 25, 8,  8, 1, 0xA0000, 0x10000, 100,  449,  80,  400, VGA_PIXEL_DOUBLE | EGA_LINE_DOUBLE},
 	{ 0x151,  M_LIN8,  320,  240,  40, 30, 8,  8, 1, 0xA0000, 0x10000, 100,  525,  80,  480, VGA_PIXEL_DOUBLE | EGA_LINE_DOUBLE},
@@ -666,7 +681,7 @@ static bool set_cur_mode(const std::vector<VideoModeBlock>& modeblock, uint16_t 
 			++i;
 		} else {
 			if (!int10.vesa_oldvbe ||
-			    ModeList_VGA[i].mode < vesa_2_0_modes_start) {
+			    ModeList_VGA[i].mode < Vesa20ModesStart) {
 				CurMode = modeblock.begin() + i;
 #if 0
 				if (!video_mode_change_in_progress) {
