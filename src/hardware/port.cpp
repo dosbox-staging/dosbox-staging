@@ -87,6 +87,43 @@ inline void IO_USEC_write_delay() {
 	CPU_IODelayRemoved += delaycyc;
 }
 
+// TEMP DIAGNOSTIC (issue #3512): I/O access counters, reported and reset per
+// timer tick in pic.cpp when DOSBOX_TRACE_IRQS is set
+uint32_t g_iotrace_read_3da    = 0;
+uint32_t g_iotrace_read_pit    = 0;
+uint32_t g_iotrace_read_sb     = 0;
+uint32_t g_iotrace_read_other  = 0;
+uint32_t g_iotrace_write_pit   = 0;
+uint32_t g_iotrace_write_sb    = 0;
+uint32_t g_iotrace_write_vga   = 0;
+uint32_t g_iotrace_write_other = 0;
+
+static void iotrace_count_read(const io_port_t port)
+{
+	if (port == 0x3da || port == 0x3ba) {
+		++g_iotrace_read_3da;
+	} else if (port >= 0x40 && port <= 0x43) {
+		++g_iotrace_read_pit;
+	} else if (port >= 0x220 && port <= 0x22f) {
+		++g_iotrace_read_sb;
+	} else {
+		++g_iotrace_read_other;
+	}
+}
+
+static void iotrace_count_write(const io_port_t port)
+{
+	if (port >= 0x40 && port <= 0x43) {
+		++g_iotrace_write_pit;
+	} else if (port >= 0x220 && port <= 0x22f) {
+		++g_iotrace_write_sb;
+	} else if (port >= 0x3c0 && port <= 0x3df) {
+		++g_iotrace_write_vga;
+	} else {
+		++g_iotrace_write_other;
+	}
+}
+
 #ifdef ENABLE_PORTLOG
 static uint8_t crtc_index = 0;
 
@@ -152,6 +189,7 @@ void log_io(io_width_t width, bool write, io_port_t port, io_val_t val)
 void IO_WriteB(io_port_t port, uint8_t val)
 {
 	log_io(io_width_t::byte, true, port, val);
+	iotrace_count_write(port); // TEMP DIAGNOSTIC (issue #3512)
 	if (GETFLAG(VM) && (CPU_IO_Exception(port, 1))) {
 		const auto old_lflags = lflags;
 		const auto old_cpudecoder=cpudecoder;
@@ -186,6 +224,7 @@ void IO_WriteB(io_port_t port, uint8_t val)
 void IO_WriteW(io_port_t port, uint16_t val)
 {
 	log_io(io_width_t::word, true, port, val);
+	iotrace_count_write(port); // TEMP DIAGNOSTIC (issue #3512)
 	if (GETFLAG(VM) && (CPU_IO_Exception(port, 2))) {
 		const auto old_lflags = lflags;
 		const auto old_cpudecoder=cpudecoder;
@@ -220,6 +259,7 @@ void IO_WriteW(io_port_t port, uint16_t val)
 void IO_WriteD(io_port_t port, uint32_t val)
 {
 	log_io(io_width_t::dword, true, port, val);
+	iotrace_count_write(port); // TEMP DIAGNOSTIC (issue #3512)
 	if (GETFLAG(VM) && (CPU_IO_Exception(port, 4))) {
 		const auto old_lflags = lflags;
 		const auto old_cpudecoder=cpudecoder;
@@ -252,6 +292,7 @@ void IO_WriteD(io_port_t port, uint32_t val)
 
 uint8_t IO_ReadB(io_port_t port)
 {
+	iotrace_count_read(port); // TEMP DIAGNOSTIC (issue #3512)
 	uint8_t retval;
 	if (GETFLAG(VM) && (CPU_IO_Exception(port, 1))) {
 		const auto old_lflags = lflags;
@@ -289,6 +330,7 @@ uint8_t IO_ReadB(io_port_t port)
 
 uint16_t IO_ReadW(io_port_t port)
 {
+	iotrace_count_read(port); // TEMP DIAGNOSTIC (issue #3512)
 	uint16_t retval;
 	if (GETFLAG(VM) && (CPU_IO_Exception(port, 2))) {
 		const auto old_lflags = lflags;
@@ -325,6 +367,7 @@ uint16_t IO_ReadW(io_port_t port)
 
 uint32_t IO_ReadD(io_port_t port)
 {
+	iotrace_count_read(port); // TEMP DIAGNOSTIC (issue #3512)
 	uint32_t retval;
 	if (GETFLAG(VM) && (CPU_IO_Exception(port, 4))) {
 		const auto old_lflags = lflags;

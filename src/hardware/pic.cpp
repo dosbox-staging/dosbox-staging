@@ -4,10 +4,14 @@
 
 #include "pic.h"
 
+#include <array>
+#include <cstdlib>
 #include <memory>
 
 #include "cpu/callback.h"
 #include "cpu/cpu.h"
+#include "cpu/registers.h"
+#include "hardware/memory.h"
 #include "hardware/pic.h"
 #include "hardware/port.h"
 #include "hardware/timer.h"
@@ -122,6 +126,46 @@ struct PIC_Controller {
 static PIC_Controller pics[2];
 static PIC_Controller &primary_controller = pics[0];
 static PIC_Controller &secondary_controller = pics[1];
+
+// TEMP DIAGNOSTIC (issue #3512): IRQ delivery, interrupt vector, and PIC mask
+// tracing; enabled with the DOSBOX_TRACE_IRQS environment variable.
+static bool TraceIrqs()
+{
+	static const bool enabled = (std::getenv("DOSBOX_TRACE_IRQS") != nullptr);
+	return enabled;
+}
+
+// TEMP DIAGNOSTIC (issue #3512): Detect any change to the real-mode interrupt
+// vector table, at 0.5 ms granularity. Logs both legitimate vector
+// hooking/unhooking by DOS, drivers & the game, and the suspected "IVT gets
+// trashed" event before the crash.
+static void trace_ivt_changes()
+{
+	static std::array<uint32_t, 256> shadow = {};
+	static bool initialised   = false;
+	static double last_scan_ms = 0.0;
+
+	const auto now = PIC_FullIndex();
+	if (now - last_scan_ms < 0.5) {
+		return;
+	}
+	last_scan_ms = now;
+
+	for (auto i = 0; i < 256; ++i) {
+		const auto vec = phys_readd(static_cast<PhysPt>(i * 4));
+		if (initialised && vec != shadow[i]) {
+			LOG_MSG("IRQTRACE: %10.4f  IVT %02Xh changed %04X:%04X -> %04X:%04X",
+			        now,
+			        i,
+			        shadow[i] >> 16,
+			        shadow[i] & 0xffff,
+			        vec >> 16,
+			        vec & 0xffff);
+		}
+		shadow[i] = vec;
+	}
+	initialised = true;
+}
 uint32_t PIC_Ticks = 0;
 uint32_t PIC_IRQCheck = 0; // x86 dynamic core expects a 32 bit variable size
 std::atomic<double> atomic_pic_index = 0.0;
@@ -134,6 +178,18 @@ void PIC_Controller::set_imr(uint8_t val)
 			val &= ~(1 << 6);
 	}
 	uint8_t change = imr ^ val; //Bits that have changed become 1.
+
+	// TEMP DIAGNOSTIC (issue #3512): log PIC mask changes
+	if (TraceIrqs() && change) {
+		LOG_MSG("IRQTRACE: %10.4f  IMR %s %02X -> %02X  CS:IP=%04X:%08X",
+		        PIC_FullIndex(),
+		        (this == &pics[0]) ? "primary  " : "secondary",
+		        imr,
+		        val,
+		        SegValue(cs),
+		        reg_eip);
+	}
+
 	imr  =  val;
 	imrr = ~val;
 
@@ -168,7 +224,203 @@ void PIC_Controller::deactivate() {
 	}
 }
 
+// TEMP DIAGNOSTIC (issue #3512): I/O access counters maintained in port.cpp,
+// reported and reset on every timer tick delivery below
+extern uint32_t g_iotrace_read_3da;
+extern uint32_t g_iotrace_read_pit;
+extern uint32_t g_iotrace_read_sb;
+extern uint32_t g_iotrace_read_other;
+extern uint32_t g_iotrace_write_pit;
+extern uint32_t g_iotrace_write_sb;
+extern uint32_t g_iotrace_write_vga;
+extern uint32_t g_iotrace_write_other;
+
+// TEMP DIAGNOSTIC (issue #3512): number of PIC_RunQueue() invocations, a
+// proxy for CPU slice / event boundary density
+uint32_t g_iotrace_num_slices = 0;
+
+// TEMP DIAGNOSTIC (issue #3512): per-vector CPU exception counters (cpu.cpp)
+extern uint32_t g_extrace_counts[32];
+
+// TEMP DIAGNOSTIC (issue #3512): DOS file I/O cycle tax accounting (dos.cpp)
+extern uint32_t g_dostrace_num_calls;
+extern uint64_t g_dostrace_requested;
+extern uint64_t g_dostrace_charged;
+
+// TEMP DIAGNOSTIC (issue #3512): histogram of CPU slice start positions and
+// granted cycles while executing inside the game's calibration burn loop
+// (CS:1E40..1E90), maintained in PIC_RunQueue()
+constexpr uint32_t SliceHistBase = 0x1e40;
+constexpr uint32_t SliceHistLen  = 0x50;
+
+static uint32_t slice_hist_count[SliceHistLen]  = {};
+static uint64_t slice_hist_cycles[SliceHistLen] = {};
+
+static void dump_and_reset_per_tick_stats()
+{
+	// CPU exceptions since the last tick
+	char buf[192] = {};
+	int pos       = 0;
+	for (auto i = 0; i < 32; ++i) {
+		if (g_extrace_counts[i] && pos < 150) {
+			pos += snprintf(buf + pos,
+			                sizeof(buf) - pos,
+			                " %02X=%u",
+			                i,
+			                g_extrace_counts[i]);
+			g_extrace_counts[i] = 0;
+		}
+	}
+	LOG_MSG("IRQTRACE:              exceptions since last tick:%s",
+	        pos ? buf : " none");
+
+	// I/O delay cycles removed since the last tick
+	static int64_t last_iodelay = 0;
+	LOG_MSG("IRQTRACE:              iodelay cycles since last tick: %lld",
+	        static_cast<long long>(CPU_IODelayRemoved - last_iodelay));
+	last_iodelay = CPU_IODelayRemoved;
+
+	// DOS file I/O cycle tax since the last tick: how many cycles the
+	// modify_cycles() tax wanted to charge vs how many it actually did
+	// (the difference is forgiven by its clamp-to-remaining-slice branch)
+	LOG_MSG("IRQTRACE:              dos tax since last tick: calls=%u requested=%llu charged=%llu",
+	        g_dostrace_num_calls,
+	        static_cast<unsigned long long>(g_dostrace_requested),
+	        static_cast<unsigned long long>(g_dostrace_charged));
+	g_dostrace_num_calls = 0;
+	g_dostrace_requested = 0;
+	g_dostrace_charged   = 0;
+
+	// Burn loop slice histogram
+	for (uint32_t i = 0; i < SliceHistLen; ++i) {
+		if (slice_hist_count[i]) {
+			LOG_MSG("SLICEHIST: eip=%04X n=%-6u cycles=%llu avg=%llu",
+			        SliceHistBase + i,
+			        slice_hist_count[i],
+			        static_cast<unsigned long long>(slice_hist_cycles[i]),
+			        static_cast<unsigned long long>(
+			                slice_hist_cycles[i] / slice_hist_count[i]));
+			slice_hist_count[i]  = 0;
+			slice_hist_cycles[i] = 0;
+		}
+	}
+}
+
+// TEMP DIAGNOSTIC (issue #3512): One-shot dump of the code surrounding the
+// game's speed calibration loop (observed at CS:1E2A..1E72 in Ishar 3), taken
+// when a timer tick interrupts it. Disassembling this reveals what the loop
+// measures.
+// Set once the calibration code has been located, which also tells us the
+// game's segment mapping is in place so its variables can be read safely
+static bool calib_seen = false;
+
+static void dump_calibration_loop_code()
+{
+	static bool dumped = false;
+	if (dumped) {
+		return;
+	}
+	dumped     = true;
+	calib_seen = true;
+
+	Descriptor desc = {};
+	if (!cpu.gdt.GetDescriptor(SegValue(cs), desc)) {
+		LOG_MSG("CODEDUMP: failed to get CS descriptor for %04X",
+		        SegValue(cs));
+		return;
+	}
+
+	const auto base = desc.GetBase();
+
+	constexpr uint32_t DumpStart = 0x1c80;
+	constexpr uint32_t DumpLen   = 0x300;
+
+	LOG_MSG("CODEDUMP: CS=%04X base=%08X eip=%08X dumping %04X..%04X",
+	        SegValue(cs),
+	        base,
+	        reg_eip,
+	        DumpStart,
+	        DumpStart + DumpLen - 1);
+
+	for (uint32_t row = 0; row < DumpLen; row += 16) {
+		char buf[128] = {};
+		int pos = snprintf(buf, sizeof(buf), "CODEDUMP: %04X: ",
+		                   DumpStart + row);
+		for (uint32_t i = 0; i < 16; ++i) {
+			const auto b = mem_readb(base + DumpStart + row + i);
+			pos += snprintf(buf + pos, sizeof(buf) - pos, "%02X ", b);
+		}
+		LOG_MSG("%s", buf);
+	}
+}
+
 void PIC_Controller::start_irq(uint8_t val) {
+	// TEMP DIAGNOSTIC (issue #3512): log every IRQ delivery to the CPU with
+	// the current vector table entry it will go through
+	if (TraceIrqs()) {
+		const uint8_t int_num = vector_base + val;
+		const auto vec        = phys_readd(static_cast<PhysPt>(int_num * 4));
+
+		LOG_MSG("IRQTRACE: %10.4f  INT %02Xh (IRQ %u) delivered  vec=%04X:%04X  pmode=%u  CS:IP=%04X:%08X  SS:SP=%04X:%08X  EAX=%08X ECX=%08X",
+		        PIC_FullIndex(),
+		        int_num,
+		        (this == &primary_controller) ? val : val + 8,
+		        vec >> 16,
+		        vec & 0xffff,
+		        cpu.pmode ? 1u : 0u,
+		        SegValue(cs),
+		        reg_eip,
+		        SegValue(ss),
+		        reg_esp,
+		        reg_eax,
+		        reg_ecx);
+
+		// Per-tick I/O signature & slice density, plus the one-shot
+		// code dump of the interrupted calibration loop
+		if (int_num == 8) {
+			LOG_MSG("IRQTRACE:              IO since last tick: r3DA=%u rPIT=%u rSB=%u rOth=%u | wPIT=%u wSB=%u wVGA=%u wOth=%u | slices=%u",
+			        g_iotrace_read_3da,
+			        g_iotrace_read_pit,
+			        g_iotrace_read_sb,
+			        g_iotrace_read_other,
+			        g_iotrace_write_pit,
+			        g_iotrace_write_sb,
+			        g_iotrace_write_vga,
+			        g_iotrace_write_other,
+			        g_iotrace_num_slices);
+
+			g_iotrace_read_3da    = 0;
+			g_iotrace_read_pit    = 0;
+			g_iotrace_read_sb     = 0;
+			g_iotrace_read_other  = 0;
+			g_iotrace_write_pit   = 0;
+			g_iotrace_write_sb    = 0;
+			g_iotrace_write_vga   = 0;
+			g_iotrace_write_other = 0;
+			g_iotrace_num_slices  = 0;
+
+			dump_and_reset_per_tick_stats();
+
+			if (cpu.pmode && reg_eip >= 0x1d00 && reg_eip <= 0x2000) {
+				dump_calibration_loop_code();
+			}
+
+			// Dump the game's own calibration variables
+			// (identified from the round-2 code dump; the game's
+			// data segment base is 0x10000000)
+			if (calib_seen && cpu.pmode) {
+				constexpr PhysPt base = 0x10000000;
+				LOG_MSG("VARDUMP: FF69=%02X FF6E=%04X 12D29=%04X 12D2B=%04X 129A2=%04X 129A4=%08X",
+				        mem_readb(base + 0xff69),
+				        mem_readw(base + 0xff6e),
+				        mem_readw(base + 0x12d29),
+				        mem_readw(base + 0x12d2b),
+				        mem_readw(base + 0x129a2),
+				        mem_readd(base + 0x129a4));
+			}
+		}
+	}
+
 	irr &= ~(1 << val);
 	if (!auto_eoi) {
 		active_irq = val;
@@ -530,6 +782,12 @@ void PIC_RemoveEvents(PIC_EventHandler handler) {
 bool PIC_RunQueue(void) {
 	PIC_UpdateAtomicIndex();
 
+	// TEMP DIAGNOSTIC (issue #3512)
+	++g_iotrace_num_slices;
+	if (TraceIrqs()) {
+		trace_ivt_changes();
+	}
+
 	/* Check to see if a new millisecond needs to be started */
 	CPU_CycleLeft+=CPU_Cycles;
 	CPU_Cycles=0;
@@ -570,6 +828,16 @@ bool PIC_RunQueue(void) {
 		}
 	} else CPU_Cycles=CPU_CycleLeft;
 	CPU_CycleLeft-=CPU_Cycles;
+
+	// TEMP DIAGNOSTIC (issue #3512): record where CPU slices start and how
+	// many cycles they're granted while inside the calibration burn loop
+	if (TraceIrqs() && cpu.pmode && reg_eip >= SliceHistBase &&
+	    reg_eip < SliceHistBase + SliceHistLen) {
+		const auto idx = reg_eip - SliceHistBase;
+		++slice_hist_count[idx];
+		slice_hist_cycles[idx] += static_cast<uint64_t>(CPU_Cycles);
+	}
+
 	PIC_runIRQs();
 	return true;
 }

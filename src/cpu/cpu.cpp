@@ -853,9 +853,16 @@ void CPU_DebugException(uint32_t triggers, Bitu oldeip)
 	CPU_Interrupt(EXCEPTION_DB, CPU_INT_EXCEPTION, oldeip);
 }
 
+// TEMP DIAGNOSTIC (issue #3512): per-vector CPU exception counters, reported
+// and reset per timer tick in pic.cpp when DOSBOX_TRACE_IRQS is set
+uint32_t g_extrace_counts[32] = {};
+
 void CPU_Exception(Bitu which, Bitu error)
 {
 	//	LOG_MSG("Exception %d error %x",which,error);
+	if (which < 32) {
+		++g_extrace_counts[which]; // TEMP DIAGNOSTIC (issue #3512)
+	}
 	cpu.exception.error = error;
 	CPU_Interrupt(which,
 	              CPU_INT_EXCEPTION | ((which >= 8) ? CPU_INT_HAS_ERROR : 0),
