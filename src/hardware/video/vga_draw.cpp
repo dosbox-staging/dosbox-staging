@@ -2227,18 +2227,11 @@ ImageInfo setup_drawing()
 			vga.draw.mode = DrawMode::Part;
 
 		} else {
-			// Render the screen in 4 parts if the default legacy
-			// DOSBox VGA drawing behaviour is forced by setting
-			// `vga_render_per_scanline = off` in the config.
-			//
-			// A handful of games need this (e.g., Deus, Ishar 3,
-			// Robinson's Requiem, Time Travelers) and would crash
-			// at startup with per-scanline rendering enabled. This
-			// is most likely due to some VGA emulation deficiency.
-			//
-			vga.draw.mode = vga.draw.vga_render_per_scanline
-			                      ? DrawMode::Scanline
-			                      : DrawMode::Part;
+			// Lower resolution modes are drawn per scanline so that
+			// mid-frame VGA register changes (e.g., raster effects
+			// in demos, changing the palette in some games like
+			// Lemmings and Pinball Dreams) are emulated accurately.
+			vga.draw.mode = DrawMode::Scanline;
 		}
 		break;
 
