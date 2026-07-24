@@ -228,12 +228,6 @@ std::vector<VideoModeBlock> ModeList_VGA = {
 
 	// Additional DOSBox specific VESA 2.0 modes
 	// -----------------------------------------
-	// A nice 16:9 mode
-	{ 0x222,  M_LIN8,  848,  480,  80, 30, 8, 16, 1, 0xA0000, 0x10000, 132,  525, 106,  480,                                  0},
-	{ 0x223, M_LIN15,  848,  480,  80, 30, 8, 16, 1, 0xA0000, 0x10000, 264,  525, 212,  480,                                  0},
-	{ 0x224, M_LIN16,  848,  480,  80, 30, 8, 16, 1, 0xA0000, 0x10000, 264,  525, 212,  480,                                  0},
-	{ 0x225, M_LIN32,  848,  480,  80, 30, 8, 16, 1, 0xA0000, 0x10000, 132,  525, 106,  480,                                  0},
-
 	// The MODE command uses these extra 132-column text modes
 	//
 	// The timings of these modes have been tweaked for exact 3:2 aspect ratio.
