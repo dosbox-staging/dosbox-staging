@@ -7,7 +7,6 @@
 #include <algorithm>
 #include <array>
 #include <cmath>
-#include <cstdlib>
 #include <cstring>
 #include <utility>
 
@@ -1332,30 +1331,6 @@ static void VGA_DrawPart(uint32_t lines)
 	}
 }
 
-// TEMP DIAGNOSTIC (issue #3512): When the DOSBOX_DUMMY_LINE_EVENTS
-// environment variable is set and we're in chunked (4-part) drawing mode,
-// schedule no-op PIC events at scanline rate. This replicates the *event
-// density* of per-scanline rendering without any of its rendering side
-// effects, to determine whether event density alone triggers the
-// crash-at-startup in the affected games (Deus, Ishar 3, etc.).
-static bool UseDummyLineEvents()
-{
-	static const bool enabled = (std::getenv("DOSBOX_DUMMY_LINE_EVENTS") !=
-	                             nullptr);
-	return enabled;
-}
-
-static uint32_t dummy_lines_done = 0;
-
-static void VGA_DummyLineEvent(uint32_t /*val*/)
-{
-	++dummy_lines_done;
-	if (dummy_lines_done < vga.draw.lines_total) {
-		PIC_AddEvent(VGA_DummyLineEvent,
-		             vga.draw.delay.vdend / vga.draw.lines_total);
-	}
-}
-
 void VGA_SetBlinking(const uint8_t enabled)
 {
 	LOG(LOG_VGA, LOG_NORMAL)("Blinking %u", enabled);
@@ -1608,20 +1583,6 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 		PIC_AddEvent(VGA_DrawPart,
 		             vga.draw.delay.parts + draw_skip,
 		             vga.draw.parts_lines);
-
-		// TEMP DIAGNOSTIC (issue #3512)
-		if (UseDummyLineEvents()) {
-			static bool logged = false;
-			if (!logged) {
-				LOG_MSG("VGA: TEMP DIAGNOSTIC: dummy line events enabled");
-				logged = true;
-			}
-			PIC_RemoveEvents(VGA_DummyLineEvent);
-			dummy_lines_done = 0;
-			PIC_AddEvent(VGA_DummyLineEvent,
-			             vga.draw.delay.vdend / vga.draw.lines_total +
-			                     draw_skip);
-		}
 		break;
 
 	case DrawMode::Scanline:
