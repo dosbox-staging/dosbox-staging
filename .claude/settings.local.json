@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(wsl sudo *)",
+      "PowerShell(& \"C:\\\\Program Files \\(x86\\)\\\\Microsoft Visual Studio\\\\2022\\\\BuildTools\\\\MSBuild\\\\Current\\\\Bin\\\\MSBuild.exe\" \"C:\\\\Users\\\\base5\\\\dosbox-staging\\\\build\\\\release-windows-vs2022\\\\dosbox-staging.sln\" /p:Configuration=Release /m)"
+    ]
+  }
+}

@@ -12,6 +12,12 @@
 #include <cstring>
 #include <limits>
 #include <memory>
+#include <filesystem>
+#include <iostream>
+#include <algorithm>
+#include <string>
+#include <format> 
+
 
 #ifdef WIN32
 #ifndef WIN32_LEAN_AND_MEAN
@@ -1137,6 +1143,65 @@ void DOSBOX_Restart(std::vector<std::string>& parameters)
 #endif // WIN32
 }
 
+constexpr int32_t MAX_LOG_FILES = 5;
+using LogFileMap = std::map<int32_t, std::filesystem::path>;
+
+static std::optional<LogFileMap> collect_log_files(const std::string& dir_path)
+{
+	namespace fs = std::filesystem;
+	const std::string prefix = "dosbox-staging-";
+	const std::string suffix = ".log"; 
+
+	LogFileMap logfiles;
+
+	std::error_code ec;
+	for(const auto& file : fs::directory_iterator(dir_path, ec)){
+		const auto filename = file.path().filename().string();
+		if (!filename.starts_with(prefix) || !filename.ends_with(suffix)){
+			continue;
+		}
+
+		const auto file_index = filename.substr(
+			prefix.size(), 
+			filename.size()-prefix.size()-suffix.size()
+		);
+
+		try{
+			int32_t int_file_index = std::stoi(file_index);
+			logfiles[int_file_index] = file.path();
+		} catch(std::exception&){
+			continue;
+		}
+
+	}
+	if (ec) return std::nullopt;
+	return logfiles;
+}
+
+static void prune_old_logs(LogFileMap& log_files){
+	std::error_code ec;
+	while (log_files.size() >= MAX_LOG_FILES){
+		std::filesystem::remove(log_files.begin()->second, ec);
+		log_files.erase(log_files.begin());
+	}
+}
+
+static std::optional<std::string> next_log_path(const std::string& dir_path){
+	auto log_files = collect_log_files(dir_path);
+	if (!log_files) return std::nullopt;
+
+	prune_old_logs(*log_files);
+
+	int32_t next_index = 1;
+	if (!(*log_files).empty()){
+		next_index = (*log_files).rbegin()->first + 1;
+	}
+
+	const auto log_filename = std::format("dosbox-staging-{:03d}.log", next_index);
+	
+	return (std::filesystem::path(dir_path)/log_filename).string(); 
+}
+
 static void dosbox_realinit(SectionProp& section)
 {
 	// Initialize some dosbox internals
@@ -1198,7 +1263,38 @@ static void dosbox_realinit(SectionProp& section)
 	} else {
 		DOS_SetDiskSpeed(DiskSpeed::Maximum, DiskType::Floppy);
 	}
+
+	// set log type and log path
+	const auto user_log_destination = section.GetString("log_destination");
+	if (user_log_destination == "console") {
+		// set console on
+		loguru::g_stderr_verbosity = loguru::Verbosity_WARNING; 
+	} else if (user_log_destination == "file" || 
+				user_log_destination == "console-and-file") {
+		const auto user_log_loc = section.GetString("log_path");
+		const auto log_path = next_log_path(user_log_loc);
+
+		if (!log_path) {
+			// directory inaccessible — fall back to console-only
+			loguru::g_stderr_verbosity = loguru::Verbosity_WARNING;
+			return;
+		}
+
+		loguru::add_file(log_path->c_str(),
+					loguru::FileMode::Truncate,
+					loguru::Verbosity_MAX);
+
+		if (user_log_destination == "file") {
+			loguru::g_stderr_verbosity = loguru::Verbosity_OFF;
+		}
+
+	} else { // don't display logs
+		// set console off
+		loguru::g_stderr_verbosity = loguru::Verbosity_OFF; 
+	}
 }
+
+
 
 void DOSBOX_Init()
 {
@@ -1271,6 +1367,24 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 	        "\n"
 	        "  - English is built-in, the rest is stored in the bundled\n"
 	        "    'resources/translations' directory.");
+
+	// option for logging to file
+	pstring = section->AddString("log_destination", OnlyAtStart, "console-and-file");
+	pstring->SetValues({"console", "file", "console-and-file", "off"});
+	pstring->SetHelp(
+			"Set the logging destination. ('console-and-file' by default).\n"
+			"Possible values:\n"
+			"console:  Log messages to the command line interface.\n"
+			"file:  Log messages to a file on disk.\n"
+			"console-and-file:  Log messages to both a file and the command line interface. (default)\n"
+			"off:  Disable all logging.\n");
+	
+	const auto log_path = get_config_dir() / "logs";
+	const auto log_path_str = log_path.string();
+	pstring = section->AddPath("log_path", OnlyAtStart, log_path_str.c_str());
+	pstring->SetHelp(
+	        "Path to the directory where log files are stored.\n"
+        	"Defaults to a 'logs' folder in the DOSBox configuration directory.");
 
 	pstring = section->AddString("machine", OnlyAtStart, "svga_s3");
 	pstring->SetValues({"hercules",
