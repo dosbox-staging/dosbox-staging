@@ -44,8 +44,6 @@ static void NE2000_TX_Event(uint32_t val);
 // #define BX_DEBUG
 // #define BX_INFO
 #define BX_NULL_TIMER_HANDLE 0
-#define BX_ERROR             LOG_WARNING
-#define BX_PANIC             LOG_WARNING
 #define BX_RESET_HARDWARE    0
 #define BX_RESET_SOFTWARE    1
 
@@ -239,11 +237,11 @@ void bx_ne2k_c::write_cr(io_val_t data)
 	} else if (value & 0x04) {
 		// start-tx and no loopback
 		if (BX_NE2K_THIS s.CR.stop || !BX_NE2K_THIS s.CR.start) {
-			BX_PANIC(("CR write - tx start, dev in reset"));
+			LOG_WARNING("NE2000: CR write - tx start, dev in reset");
 		}
 
 		if (BX_NE2K_THIS s.tx_bytes == 0) {
-			BX_PANIC(("CR write - tx start, tx bytes == 0"));
+			LOG_WARNING("NE2000: CR write - tx start, tx bytes == 0");
 		}
 
 #ifdef notdef
@@ -318,7 +316,7 @@ io_val_t bx_ne2k_c::chipmem_read(io_port_t address, io_width_t io_len)
 	uint32_t retval = 0;
 
 	if ((io_len == io_width_t::word) && (address & 0x1)) {
-		BX_PANIC(("unaligned chipmem word read"));
+		LOG_WARNING("NE2000: Unaligned chipmem word read");
 	}
 
 	// ROM'd MAC address
@@ -383,7 +381,7 @@ void bx_ne2k_c::chipmem_write(io_port_t address, io_val_t data, io_width_t io_le
 	const auto value = check_cast<uint16_t>(data);
 
 	if ((io_len == io_width_t::word) && (address & 0x1)) {
-		BX_PANIC(("unaligned chipmem word write"));
+		LOG_WARNING("NE2000: Unaligned chipmem word write");
 	}
 
 	if ((address >= BX_NE2K_MEMSTART) && (address < BX_NE2K_MEMEND)) {
@@ -484,12 +482,12 @@ void bx_ne2k_c::asic_write(io_port_t offset, io_val_t value, io_width_t io_len)
 	case 0x0: // Data register - see asic_read for a description
 
 		if ((io_len == io_width_t::word) && (BX_NE2K_THIS s.DCR.wdsize == 0)) {
-			BX_PANIC(("dma write length 2 on byte mode operation"));
+			LOG_WARNING("NE2000: DMA write length 2 on byte mode operation");
 			break;
 		}
 
 		if (BX_NE2K_THIS s.remote_bytes == 0) {
-			BX_PANIC(("ne2K: dma write, byte count 0"));
+			LOG_WARNING("NE2000: DMA write, byte count 0");
 		}
 
 		chipmem_write(BX_NE2K_THIS s.remote_dma, value, io_len);
@@ -534,15 +532,15 @@ void bx_ne2k_c::asic_write(io_port_t offset, io_val_t value, io_width_t io_len)
 //
 uint32_t bx_ne2k_c::page0_read(io_port_t offset, io_width_t io_len)
 {
-	BX_DEBUG("NE2000: page 0 read from port %04x, len=%u",
+	BX_DEBUG("NE2000: Page 0 read from port %04x, len=%u",
 	         (unsigned)offset,
 	         (unsigned)io_len);
 
 	if (enum_val(io_len) > 1) {
 		// encountered with win98 hardware probe
-		BX_ERROR("NE2000: bad length! page 0 read from port %04x, len=%u",
-		         (unsigned)offset,
-		         (unsigned)io_len);
+		LOG_WARNING("NE2000: Bad length; page 0 read from port %04x, len=%u",
+		            (unsigned)offset,
+		            (unsigned)io_len);
 		return 0;
 	}
 
@@ -575,7 +573,7 @@ uint32_t bx_ne2k_c::page0_read(io_port_t offset, io_width_t io_len)
 
 	case 0x6: // FIFO
 		// reading FIFO is only valid in loopback mode
-		BX_ERROR(("reading FIFO not supported yet"));
+		LOG_WARNING("NE2000: Reading FIFO not supported yet");
 		return (BX_NE2K_THIS s.fifo);
 		break;
 
@@ -631,7 +629,9 @@ uint32_t bx_ne2k_c::page0_read(io_port_t offset, io_width_t io_len)
 		return (BX_NE2K_THIS s.tallycnt_2);
 		break;
 
-	default: BX_PANIC("page 0 offset %04x out of range", (unsigned)offset);
+	default:
+		LOG_WARNING("NE2000: Page 0 offset %04x out of range",
+		            (unsigned)offset);
 	}
 
 	return (0);
@@ -659,8 +659,8 @@ void bx_ne2k_c::page0_write(io_port_t offset, io_val_t data, io_width_t io_len)
 	switch (offset) {
 	case 0x1: // PSTART
 		if (!ne2k_page_in_range(value)) {
-			BX_ERROR("NE2000: PSTART write out of range (0x%02x), ignoring",
-			         value);
+			LOG_WARNING("NE2000: PSTART write out of range (0x%02x), ignoring",
+			            value);
 			break;
 		}
 		BX_NE2K_THIS s.page_start = value;
@@ -669,8 +669,8 @@ void bx_ne2k_c::page0_write(io_port_t offset, io_val_t data, io_width_t io_len)
 	case 0x2: // PSTOP
 	          // BX_INFO(("Writing to PSTOP: %02x", value));
 		if (!ne2k_page_in_range(value)) {
-			BX_ERROR("NE2000: PSTOP write out of range (0x%02x), ignoring",
-			         value);
+			LOG_WARNING("NE2000: PSTOP write out of range (0x%02x), ignoring",
+			            value);
 			break;
 		}
 		BX_NE2K_THIS s.page_stop = value;
@@ -678,8 +678,8 @@ void bx_ne2k_c::page0_write(io_port_t offset, io_val_t data, io_width_t io_len)
 
 	case 0x3: // BNRY
 		if (!ne2k_page_in_range(value)) {
-			BX_ERROR("NE2000: BNRY write out of range (0x%02x), ignoring",
-			         value);
+			LOG_WARNING("NE2000: BNRY write out of range (0x%02x), ignoring",
+			            value);
 			break;
 		}
 		BX_NE2K_THIS s.bound_ptr = value;
@@ -687,8 +687,8 @@ void bx_ne2k_c::page0_write(io_port_t offset, io_val_t data, io_width_t io_len)
 
 	case 0x4: // TPSR
 		if (!ne2k_page_in_range(value)) {
-			BX_ERROR("NE2000: TPSR write out of range (0x%02x), ignoring",
-			         value);
+			LOG_WARNING("NE2000: TPSR write out of range (0x%02x), ignoring",
+			            value);
 			break;
 		}
 		BX_NE2K_THIS s.tx_page_start = value;
@@ -790,7 +790,7 @@ void bx_ne2k_c::page0_write(io_port_t offset, io_val_t data, io_width_t io_len)
 	case 0xd: // TCR
 		// Check reserved bits
 		if (value & 0xe0) {
-			BX_ERROR(("NE2000: TCR write, reserved bits set"));
+			LOG_WARNING("NE2000: TCR write, reserved bits set");
 		}
 
 		// Test loop mode (not supported)
@@ -804,12 +804,12 @@ void bx_ne2k_c::page0_write(io_port_t offset, io_val_t data, io_width_t io_len)
 
 		// Inhibit-CRC not supported.
 		if (value & 0x01) {
-			BX_PANIC(("TCR write, inhibit-CRC not supported"));
+			LOG_WARNING("NE2000: TCR write, inhibit-CRC not supported");
 		}
 
 		// Auto-transmit disable very suspicious
 		if (value & 0x08) {
-			BX_PANIC(("TCR write, auto transmit disable not supported"));
+			LOG_WARNING("NE2000: TCR write, auto transmit disable not supported");
 		}
 
 		// Allow collision-offset to be set, although not used
@@ -819,7 +819,7 @@ void bx_ne2k_c::page0_write(io_port_t offset, io_val_t data, io_width_t io_len)
 	case 0xe: // DCR
 		// the loopback mode is not suppported yet
 		if (!(value & 0x08)) {
-			BX_ERROR(("NE2000: DCR write, loopback mode selected"));
+			LOG_WARNING("NE2000: DCR write, loopback mode selected");
 		}
 		// It is questionable to set longaddr and auto_rx, since they
 		// aren't supported on the ne2000. Print a warning and continue
@@ -846,7 +846,7 @@ void bx_ne2k_c::page0_write(io_port_t offset, io_val_t data, io_width_t io_len)
 	case 0xf: // IMR
 	          // Check for reserved bit
 		if (value & 0x80) {
-			BX_PANIC(("IMR write, reserved bit set"));
+			LOG_WARNING("NE2000: IMR write, reserved bit set");
 		}
 
 		// Set other values
@@ -863,7 +863,7 @@ void bx_ne2k_c::page0_write(io_port_t offset, io_val_t data, io_width_t io_len)
 		}
 		break;
 
-	default: BX_PANIC("page 0 write, bad offset %0x", offset);
+	default: LOG_WARNING("NE2000: Page 0 write, bad offset %0x", offset);
 	}
 }
 
@@ -878,9 +878,9 @@ uint32_t bx_ne2k_c::page1_read(io_port_t offset, io_width_t io_len)
 	         (unsigned)io_len);
 
 	if (enum_val(io_len) > 1) {
-		BX_PANIC("bad length! page 1 read from port %04x, len=%u",
-		         (unsigned)offset,
-		         (unsigned)io_len);
+		LOG_WARNING("NE2000: Bad length; page 1 read from port %04x, len=%u",
+		            (unsigned)offset,
+		            (unsigned)io_len);
 	}
 
 	switch (offset) {
@@ -892,7 +892,8 @@ uint32_t bx_ne2k_c::page1_read(io_port_t offset, io_width_t io_len)
 	case 0x6: return (BX_NE2K_THIS s.physaddr[offset - 1]); break;
 
 	case 0x7: // CURR
-		BX_DEBUG("returning current page: %02x", (BX_NE2K_THIS s.curr_page));
+		BX_DEBUG("NE2000: returning current page: %02x",
+		         (BX_NE2K_THIS s.curr_page));
 		return (BX_NE2K_THIS s.curr_page);
 
 	case 0x8: // MAR0-7
@@ -905,7 +906,8 @@ uint32_t bx_ne2k_c::page1_read(io_port_t offset, io_width_t io_len)
 	case 0xf: return (BX_NE2K_THIS s.mchash[offset - 8]); break;
 
 	default:
-		BX_PANIC("page 1 r offset %04x out of range", (unsigned)offset);
+		LOG_WARNING("NE2000: Page 1 read offset %04x out of range",
+		            (unsigned)offset);
 	}
 
 	return (0);
@@ -929,8 +931,8 @@ void bx_ne2k_c::page1_write(io_port_t offset, io_val_t data, io_width_t io_len)
 
 	case 0x7: // CURR
 		if (!ne2k_page_in_range(value)) {
-			BX_ERROR("NE2000: CURR write out of range (0x%02x), ignoring",
-			         value);
+			LOG_WARNING("NE2000: CURR write out of range (0x%02x), ignoring",
+			            value);
 			break;
 		}
 		BX_NE2K_THIS s.curr_page = value;
@@ -946,7 +948,8 @@ void bx_ne2k_c::page1_write(io_port_t offset, io_val_t data, io_width_t io_len)
 	case 0xf: BX_NE2K_THIS s.mchash[offset - 8] = value; break;
 
 	default:
-		BX_PANIC("page 1 w offset %04x out of range", (unsigned)offset);
+		LOG_WARNING("NE2000: Page 1 w offset %04x out of range",
+		            (unsigned)offset);
 	}
 }
 
@@ -961,9 +964,9 @@ uint32_t bx_ne2k_c::page2_read(io_port_t offset, io_width_t io_len)
 	         (unsigned)io_len);
 
 	if (enum_val(io_len) > 1) {
-		BX_PANIC("bad length!  page 2 read from port %04x, len=%u",
-		         (unsigned)offset,
-		         (unsigned)io_len);
+		LOG_WARNING("NE2000: Bad length; page 2 read from port %04x, len=%u",
+		            (unsigned)offset,
+		            (unsigned)io_len);
 	}
 
 	switch (offset) {
@@ -999,7 +1002,8 @@ uint32_t bx_ne2k_c::page2_read(io_port_t offset, io_width_t io_len)
 	case 0x9:
 	case 0xa:
 	case 0xb:
-		BX_ERROR("NE2000: reserved read - page 2, 0x%02x", (unsigned)offset);
+		LOG_WARNING("NE2000: Reserved read - page 2, 0x%02x",
+		            (unsigned)offset);
 		return (0xff);
 		break;
 
@@ -1038,7 +1042,9 @@ uint32_t bx_ne2k_c::page2_read(io_port_t offset, io_width_t io_len)
 		        (unsigned int)(BX_NE2K_THIS s.IMR.rx_inte));
 		break;
 
-	default: BX_PANIC("page 2 offset %04x out of range", (unsigned)offset);
+	default:
+		LOG_WARNING("NE2000: Page 2 offset %04x out of range",
+		            (unsigned)offset);
 	}
 
 	return (0);
@@ -1050,11 +1056,11 @@ void bx_ne2k_c::page2_write(io_port_t offset, io_val_t data, io_width_t io_len)
 
 	const auto value = check_cast<uint8_t>(data);
 
-	// Maybe all writes here should be BX_PANIC()'d, since they
+	// Maybe all writes here should be LOG_WARNING()'d, since they
 	// affect internal operation, but let them through for now
 	// and print a warning.
 	if (offset != 0) {
-		BX_ERROR(("NE2000: page 2 write ?"));
+		LOG_WARNING("NE2000: page 2 write ?");
 	}
 
 	switch (offset) {
@@ -1074,7 +1080,9 @@ void bx_ne2k_c::page2_write(io_port_t offset, io_val_t data, io_width_t io_len)
 		BX_NE2K_THIS s.rempkt_ptr = value;
 		break;
 
-	case 0x4: BX_PANIC(("page 2 write to reserved offset 4")); break;
+	case 0x4:
+		LOG_WARNING("NE2000: Page 2 write to reserved offset 4");
+		break;
 
 	case 0x5: // Local Next-packet pointer
 		BX_NE2K_THIS s.localpkt_ptr = value;
@@ -1100,10 +1108,12 @@ void bx_ne2k_c::page2_write(io_port_t offset, io_val_t data, io_width_t io_len)
 	case 0xd:
 	case 0xe:
 	case 0xf:
-		BX_PANIC("page 2 write to reserved offset %0x", offset);
+		LOG_WARNING("NE2000: Page 2 write to reserved offset %0x", offset);
 		break;
 
-	default: BX_PANIC("page 2 write, illegal offset %0x", offset); break;
+	default:
+		LOG_WARNING("NE2000: Page 2 write, illegal offset %0x", offset);
+		break;
 	}
 }
 
@@ -1111,13 +1121,13 @@ void bx_ne2k_c::page2_write(io_port_t offset, io_val_t data, io_width_t io_len)
 //
 uint32_t bx_ne2k_c::page3_read(io_port_t, io_width_t)
 {
-	BX_PANIC(("page 3 read attempted"));
+	LOG_WARNING("NE2000: Page 3 read attempted");
 	return (0);
 }
 
 void bx_ne2k_c::page3_write(io_port_t, io_val_t, io_width_t)
 {
-	BX_PANIC(("page 3 write attempted"));
+	LOG_WARNING("NE2000: Page 3 write attempted");
 }
 
 //
@@ -1184,8 +1194,8 @@ io_val_t bx_ne2k_c::read(io_port_t address, io_width_t io_len)
 		case 0x03: retval = page3_read(offset, io_len); break;
 
 		default:
-			BX_PANIC("ne2K: unknown value of pgsel in read - %d",
-			         BX_NE2K_THIS s.CR.pgsel);
+			LOG_WARNING("NE2000: Unknown value of pgsel in read - %d",
+			            BX_NE2K_THIS s.CR.pgsel);
 		}
 	}
 
@@ -1233,8 +1243,8 @@ void bx_ne2k_c::write(io_port_t address, io_val_t value, io_width_t io_len)
 		case 0x03: page3_write(offset, value, io_len); break;
 
 		default:
-			BX_PANIC("ne2K: unknown value of pgsel in write - %d",
-			         BX_NE2K_THIS s.CR.pgsel);
+			LOG_WARNING("NE2000: Unknown value of pgsel in write - %d",
+			            BX_NE2K_THIS s.CR.pgsel);
 		}
 	}
 }
@@ -1388,7 +1398,7 @@ int bx_ne2k_c::rx_frame(const void* buf, unsigned io_len)
 	    !ne2k_page_in_range(BX_NE2K_THIS s.page_start) ||
 	    !ne2k_page_in_range(BX_NE2K_THIS s.page_stop)) {
 
-		BX_ERROR("NE2000: rx_frame page value out of range, dropping packet");
+		LOG_WARNING("NE2000: rx_frame page value out of range, dropping packet");
 		return -1;
 	}
 
