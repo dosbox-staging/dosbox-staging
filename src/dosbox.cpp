@@ -1484,15 +1484,22 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 
 	pstring = section->AddString("vesa_custom_resolution", OnlyAtStart, "none");
 	pstring->SetHelp(
-	        "Replace the 1152x864 VESA modes with a custom resolution ('none' by default).\n"
-	        "Specify the resolution in WIDTHxHEIGHT format (e.g., 1920x1080); the valid range\n"
-	        "is from 320x200 to 1920x1440, and WIDTH must be a multiple of 8. Colour depth\n"
-	        "variants of the custom resolution that don't fit into the video memory are\n"
-	        "unavailable and log a warning at startup; increase 'vmemsize' to make them\n"
-	        "available (e.g., 1920x1080 32-bit needs 8 MB). This is useful for games that\n"
-	        "support custom VESA resolutions (e.g., Duke Nukem 3D), and for running\n"
-	        "Windows 3.1 at modern resolutions with the VBESVGA driver. Custom resolutions\n"
-	        "are always displayed with square pixels.");
+	        "Replace the 1152x864 VESA resolution with a custom one ('none' by default).\n"
+	        "Useful for playing games in widescreen that support custom VESA resolutions\n"
+	        "(e.g., Quake and Build Engine games such as Duke Nukem 3D and Blood), or for\n"
+	        "running Windows 3.1 in widescreen with the VBESVGA driver. Custom resolutions\n"
+	        "always use square pixels. Possible values:\n"
+	        "\n"
+	        "  none:  Don't replace the 1152x864 VESA resolution.\n"
+	        "\n"
+	        "  WxH:   Replacement resolution in WxH format (e.g., 1920x1080, 960x540,\n"
+	        "         480x270). Valid range is 320x200 to 1920x1440; width must be a multiple\n"
+	        "         of 8. Colour depth variants that don't fit into the video memory are\n"
+	        "         skipped with a warning in the logs; increase 'vmemsize' to fit them\n"
+	        "         (e.g., 1920x1080 32-bit needs 8 MB).\n"
+	        "\n"
+	        "Note: The feature only works with the `svga_s3` machine type; any other `svga_*`\n"
+	        "      and `vesa_*` machine types are not supported.");
 
 	auto pbool = section->AddBool("vga_8dot_font", OnlyAtStart, false);
 	pbool->SetHelp("Use 8-pixel-wide fonts on VGA adapters ('off' by default).");
