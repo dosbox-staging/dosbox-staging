@@ -69,6 +69,20 @@ static inline void BX_DEBUG(const char *msg, ...)
 
 bx_ne2k_c* theNE2kDevice = nullptr;
 
+// Valid NE2000 page-register range, derived from the chip-memory bounds
+// (BX_NE2K_MEMSTART/BX_NE2K_MEMEND) rather than a hardcoded literal. Page
+// registers (PSTART, PSTOP, BNRY, TPSR, CURR, ...) are multiplied by 256 and
+// used as an offset into s.mem[] in rx_frame(); an out-of-range value here
+// becomes an out-of-bounds heap access there.
+static constexpr uint8_t BX_NE2K_PAGE_FIRST = static_cast<uint8_t>(
+        BX_NE2K_MEMSTART / 256);
+static constexpr uint8_t BX_NE2K_PAGE_LAST = static_cast<uint8_t>(
+        (BX_NE2K_MEMEND / 256) - 1);
+
+static inline bool ne2k_page_in_range(uint8_t page)
+{
+	return page >= BX_NE2K_PAGE_FIRST && page <= BX_NE2K_PAGE_LAST;
+}
 
 bx_ne2k_c::bx_ne2k_c(void)
 	: s()
@@ -598,21 +612,41 @@ bx_ne2k_c::page0_write(io_port_t offset, io_val_t data, io_width_t io_len)
 
   switch (offset) {
   case 0x1:  // PSTART
-    BX_NE2K_THIS s.page_start = value;
-    break;
+	  if (!ne2k_page_in_range(value)) {
+		  BX_ERROR("NE2000: PSTART write out of range (0x%02x), ignoring",
+			   value);
+		  break;
+	  }
+	  BX_NE2K_THIS s.page_start = value;
+	  break;
 
   case 0x2:  // PSTOP
 	// BX_INFO(("Writing to PSTOP: %02x", value));
-    BX_NE2K_THIS s.page_stop = value;
-    break;
+	  if (!ne2k_page_in_range(value)) {
+		  BX_ERROR("NE2000: PSTOP write out of range (0x%02x), ignoring",
+			   value);
+		  break;
+	  }
+	  BX_NE2K_THIS s.page_stop = value;
+	  break;
 
   case 0x3:  // BNRY
-    BX_NE2K_THIS s.bound_ptr = value;
-    break;
+	  if (!ne2k_page_in_range(value)) {
+		  BX_ERROR("NE2000: BNRY write out of range (0x%02x), ignoring",
+			   value);
+		  break;
+	  }
+	  BX_NE2K_THIS s.bound_ptr = value;
+	  break;
 
   case 0x4:  // TPSR
-    BX_NE2K_THIS s.tx_page_start = value;
-    break;
+	  if (!ne2k_page_in_range(value)) {
+		  BX_ERROR("NE2000: TPSR write out of range (0x%02x), ignoring",
+			   value);
+		  break;
+	  }
+	  BX_NE2K_THIS s.tx_page_start = value;
+	  break;
 
   case 0x5:  // TBCR0
     // Clear out low byte and re-insert
@@ -831,8 +865,13 @@ bx_ne2k_c::page1_write(io_port_t offset, io_val_t data, io_width_t io_len)
     break;
 
   case 0x7:  // CURR
-    BX_NE2K_THIS s.curr_page = value;
-    break;
+	  if (!ne2k_page_in_range(value)) {
+		  BX_ERROR("NE2000: CURR write out of range (0x%02x), ignoring",
+			   value);
+		  break;
+	  }
+	  BX_NE2K_THIS s.curr_page = value;
+	  break;
 
   case 0x8:  // MAR0-7
   case 0x9:
@@ -1302,6 +1341,18 @@ int bx_ne2k_c::rx_frame(const void *buf, unsigned io_len)
   nextpage = check_cast<uint8_t>(BX_NE2K_THIS s.curr_page + pages);
   if (nextpage >= BX_NE2K_THIS s.page_stop) {
     nextpage -= check_cast<uint8_t>(BX_NE2K_THIS s.page_stop - BX_NE2K_THIS s.page_start);
+  }
+
+  // Defense in depth: even though the page registers are validated on
+  // write, refuse to touch s.mem[] unless every page value used in this
+  // copy is inside the real chip-memory range. This guards against any
+  // path (current or future) that sets these fields without going through
+  // the validated page0/page1 write handlers.
+  if (!ne2k_page_in_range(BX_NE2K_THIS s.curr_page) || !ne2k_page_in_range(nextpage) ||
+      !ne2k_page_in_range(BX_NE2K_THIS s.page_start) ||
+      !ne2k_page_in_range(BX_NE2K_THIS s.page_stop)) {
+	  BX_ERROR("NE2000: rx_frame page value out of range, dropping packet");
+	  return -1;
   }
 
   // Setup packet header
