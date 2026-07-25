@@ -51,6 +51,35 @@ Use `halfline` only for
 requires a special halfline VESA mode. See
 [`vesa_modes`](#vesa_modes) for the full resolution table.
 
+### Custom VESA resolutions
+
+The [`vesa_custom_resolution`](#vesa_custom_resolution) setting replaces the
+1152x864 VESA resolution with a custom one of your choosing, from 320x200 up
+to 1920x1440. Custom resolutions always use square pixels.
+
+This is useful for games that build their video mode list by asking the VESA
+BIOS what resolutions are available, rather than using a fixed internal list.
+For example, you can play [Quake](https://www.mobygames.com/game/374/quake/)
+and Build Engine games such as
+[Duke Nukem 3D](https://www.mobygames.com/game/365/duke-nukem-3d/),
+[Shadow Warrior](https://www.mobygames.com/game/1779/shadow-warrior/), and
+[Blood](https://www.mobygames.com/game/793/blood/) in widescreen by setting
+`vesa_custom_resolution = 1920x1080` --- the custom resolution simply shows up
+in the game's own video mode selector. Low resolutions work too: 960x540 or
+480x270 give you chunky-pixel 16:9 widescreen.
+
+You can also run Windows 3.1 in widescreen or at modern high resolutions with
+the [VBESVGA driver](https://github.com/PluMGMK/vbesvga.drv), which picks up
+any resolution the VESA BIOS reports.
+
+Colour depth variants of the custom resolution that don't fit into the video
+memory are skipped with a warning in the logs; increase
+[`vmemsize`](#vmemsize) to make them available (e.g., 1920x1080 in 32-bit
+colour needs 8 MB of video memory).
+
+The feature only works with the default `svga_s3` [`machine`](#machine) type;
+the other `svga_*` and `vesa_*` machine types are not supported.
+
 VGA text mode normally uses 9-pixel-wide character cells.
 [`vga_8dot_font`](#vga_8dot_font) forces 8-pixel-wide characters instead. Very
 few programs need this.
@@ -201,9 +230,12 @@ The settings below are configured in the `[sdl]` section.
 
     | Resolution      | 4-bit | 8-bit | 16-bit | 24-bit | 32-bit |
     |-----------------|-------|-------|--------|--------|--------|
+    | 320&times;240   | ---   | any   | any    | any    | any    |
+    | 400&times;300   | ---   | any   | any    | any    | any    |
+    | 512&times;384   | ---   | any   | any    | 1 MB   | ---    |
     | 640&times;400   | ---   | any   | ---    | ---    | 1 MB   |
     | 640&times;480   | any   | any   | 1 MB   | 1 MB   | 2 MB   |
-    | 800&times;600   | any   | any   | 1 MB   | ---    | 2 MB   |
+    | 800&times;600   | any   | any   | 1 MB   | 2 MB   | 2 MB   |
     | 1024&times;768  | any   | 1 MB  | 2 MB   | ---    | 4 MB   |
     | 1152&times;864  | ---   | 1 MB  | 2 MB   | 4 MB   | 4 MB   |
     | 1280&times;960  | 1 MB  | 2 MB  | 4 MB   | 4 MB   | 8 MB   |
@@ -212,17 +244,52 @@ The settings below are configured in the `[sdl]` section.
 
     </div>
 
+    The 16-bit column includes the 15-bit high colour modes; 512&times;384
+    high colour is 15-bit only.
+
+    In `compatible` mode, the 256-colour 320&times;240, 400&times;300, and
+    512&times;384 modes are not visible to games that require a linear
+    framebuffer (e.g., Quake); use `vesa_modes = all` for those.
+
     The `all` mode adds the following on top of `compatible`:
 
     <div class="compact" markdown>
 
-    - 320&times;200 and 320&times;240 high colour modes (15/16/24/32-bit)
-    - 320&times;400 and 320&times;480 modes in various depths
-    - 400&times;300 modes (8/15/16/24-bit)
-    - 512&times;384 modes (8/15/16/32-bit)
-    - 848&times;480 widescreen modes (8/15/16/32-bit)
+    - 320&times;200 modes (8/15/16/32-bit)
+    - 320&times;400 and 320&times;480 modes in all colour depths
+    - 512&times;384 modes (4/16/32-bit)
+    - 640&times;350 modes (4/8/15-bit)
+    - 640&times;400 modes (4/15/16/24-bit)
+    - 1024&times;768 24-bit and 1152&times;864 4-bit modes
 
     </div>
+
+
+##### vesa_custom_resolution
+
+:   Replace the 1152x864 VESA resolution with a custom one. Useful for playing
+    games in widescreen that support custom VESA resolutions (e.g., Quake and
+    Build Engine games such as Duke Nukem 3D and Blood), or for running
+    Windows 3.1 in widescreen with the VBESVGA driver. Custom resolutions
+    always use square pixels.
+
+    Possible values:
+
+    - `none` *default*{ .default } -- Don't replace the 1152x864 VESA
+      resolution.
+
+    - `WxH` -- Replacement resolution in WxH format (e.g., `1920x1080`,
+      `960x540`, `480x270`). Valid range is 320x200 to 1920x1440; width must
+      be a multiple of 8. Colour depth variants that don't fit into the video
+      memory are skipped with a warning in the logs; increase
+      [`vmemsize`](#vmemsize) to fit them (e.g., 1920x1080 32-bit needs 8 MB).
+
+    See [Custom VESA resolutions](#custom-vesa-resolutions) for more details.
+
+    !!! note
+
+        The feature only works with the `svga_s3` machine type; any other
+        `svga_*` and `vesa_*` machine types are not supported.
 
 
 ##### vga_8dot_font
