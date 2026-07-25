@@ -1,9 +1,17 @@
 // SPDX-FileCopyrightText:  2021-2026 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2008-2010  Ralf Grillenberger
-// <h-a-l-9000@users.sourceforge.net> SPDX-FileCopyrightText:  2004-2008  Dean
-// Beeler <canadacow@users.sourceforge.net> SPDX-FileCopyrightText:  2001-2004
-// Peter Grehan <grehan@iprg.nokia.com> SPDX-FileCopyrightText:  2001-2004
-// MandrakeSoft S.A. SPDX-License-Identifier: LGPL-2.1-or-later
+//
+// <h-a-l-9000@users.sourceforge.net>
+// SPDX-FileCopyrightText:  2004-2008  Dean
+//
+// Beeler <canadacow@users.sourceforge.net>
+// SPDX-FileCopyrightText:  2001-2004
+//
+// Peter Grehan <grehan@iprg.nokia.com>
+// SPDX-FileCopyrightText:  2001-2004
+//
+// MandrakeSoft S.A.
+// SPDX-License-Identifier: LGPL-2.1-or-later
 
 #include "hardware/network/ne2000.h"
 
@@ -22,8 +30,8 @@
 #include "network/ethernet.h"
 #include "utils/string_utils.h"
 
-/* Couldn't find a real spec for the NE2000 out there, hence this is adapted
- * heavily from Bochs */
+// Couldn't find a real spec for the NE2000 out there, hence this is adapted
+// heavily from Bochs
 
 EthernetConnection* ethernet = nullptr;
 static void NE2000_TX_Event(uint32_t val);
@@ -76,6 +84,7 @@ bx_ne2k_c* theNE2kDevice = nullptr;
 // becomes an out-of-bounds heap access there.
 static constexpr uint8_t BX_NE2K_PAGE_FIRST = static_cast<uint8_t>(
         BX_NE2K_MEMSTART / 256);
+
 static constexpr uint8_t BX_NE2K_PAGE_LAST = static_cast<uint8_t>(
         (BX_NE2K_MEMEND / 256) - 1);
 
@@ -95,7 +104,9 @@ bx_ne2k_c::bx_ne2k_c(void) : s()
 void bx_ne2k_c::reset(unsigned type)
 {
 	(void)type; // UNUSED
+	            //
 	BX_DEBUG("reset");
+
 	// Assign register and memory states with initial values
 	s.CR  = bx_ne2k_t::CR_t{};
 	s.ISR = bx_ne2k_t::ISR_t{};
@@ -103,6 +114,7 @@ void bx_ne2k_c::reset(unsigned type)
 	s.DCR = bx_ne2k_t::DCR_t{};
 	s.TCR = bx_ne2k_t::TCR_t{};
 	s.TSR = bx_ne2k_t::TSR_t{};
+
 	// s.RCR = bx_ne2k_t::RCR_t{};
 	s.RSR = bx_ne2k_t::RSR_t{};
 
@@ -138,11 +150,11 @@ void bx_ne2k_c::reset(unsigned type)
 	BX_NE2K_THIS s.CR.rdma_cmd  = 4;
 	BX_NE2K_THIS s.ISR.reset    = 1;
 	BX_NE2K_THIS s.DCR.longaddr = 1;
+
 	PIC_DeActivateIRQ(s.base_irq);
 	// DEV_pic_lower_irq(BX_NE2K_THIS s.base_irq);
 }
 
-//
 // read_cr/write_cr - utility routines for handling reads/writes to
 // the Command Register
 //
@@ -153,6 +165,7 @@ uint32_t bx_ne2k_c::read_cr(void)
 	                      (unsigned int)(BX_NE2K_THIS s.CR.tx_packet << 2u) |
 	                      (unsigned int)(BX_NE2K_THIS s.CR.start << 1u) |
 	                      (unsigned int)(BX_NE2K_THIS s.CR.stop));
+
 	BX_DEBUG("read CR returns 0x%08x", val);
 	return val;
 }
@@ -191,11 +204,14 @@ void bx_ne2k_c::write_cr(io_val_t data)
 
 	// Check for send-packet command
 	if (BX_NE2K_THIS s.CR.rdma_cmd == 3) {
+
 		// Set up DMA read from receive ring
 		BX_NE2K_THIS s.remote_start = BX_NE2K_THIS s.remote_dma =
 		        BX_NE2K_THIS s.bound_ptr * 256;
+
 		BX_NE2K_THIS s.remote_bytes = *reinterpret_cast<uint16_t*>(
 		        &BX_NE2K_THIS s.mem[BX_NE2K_THIS s.bound_ptr * 256 + 2 - BX_NE2K_MEMSTART]);
+
 		BX_INFO("Sending buffer #x%x length %d",
 		        BX_NE2K_THIS s.remote_start,
 		        BX_NE2K_THIS s.remote_bytes);
@@ -233,10 +249,12 @@ void bx_ne2k_c::write_cr(io_val_t data)
 #ifdef notdef
 		// XXX debug stuff
 		printf("packet tx (%d bytes):\t", BX_NE2K_THIS s.tx_bytes);
+
 		for (int i = 0; i < BX_NE2K_THIS s.tx_bytes; i++) {
 			printf("%02x ",
 			       BX_NE2K_THIS s.mem[BX_NE2K_THIS s.tx_page_start * 256 -
 			                          BX_NE2K_MEMSTART + i]);
+
 			if (i && (((i + 1) % 16) == 0)) {
 				printf("\t");
 			}
@@ -258,6 +276,7 @@ void bx_ne2k_c::write_cr(io_val_t data)
 		// BX_NE2K_THIS s.tx_bytes);
 		ethernet->SendPacket(&s.mem[s.tx_page_start * 256 - BX_NE2K_MEMSTART],
 		                     s.tx_bytes);
+
 		// s.tx_timer_index = (64 + 96 + 4*8 + BX_NE2K_THIS
 		// s.tx_bytes*8)/10;
 		s.tx_timer_active = 1;
@@ -279,6 +298,7 @@ void bx_ne2k_c::write_cr(io_val_t data)
 	if (BX_NE2K_THIS s.CR.rdma_cmd == 0x01 && BX_NE2K_THIS s.CR.start &&
 	    BX_NE2K_THIS s.remote_bytes == 0) {
 		BX_NE2K_THIS s.ISR.rdma_done = 1;
+
 		if (BX_NE2K_THIS s.IMR.rdma_inte) {
 			PIC_ActivateIRQ(s.base_irq);
 			// DEV_pic_raise_irq(BX_NE2K_THIS s.base_irq);
@@ -286,7 +306,6 @@ void bx_ne2k_c::write_cr(io_val_t data)
 	}
 }
 
-//
 // chipmem_read/chipmem_write - access the 64K private RAM.
 // The ne2000 memory is accessed through the data port of
 // the asic (offset 0) after setting up a remote-DMA transfer.
@@ -305,11 +324,13 @@ io_val_t bx_ne2k_c::chipmem_read(io_port_t address, io_width_t io_len)
 	// ROM'd MAC address
 	if (/*(address >=0) && */ address <= 31) {
 		retval = BX_NE2K_THIS s.macaddr[address];
+
 		if ((io_len == io_width_t::word) || (io_len == io_width_t::dword)) {
 			if (address + 1u <= 31) {
 				retval |= static_cast<unsigned int>(
 				        BX_NE2K_THIS s.macaddr[address + 1u] << 8u);
 			}
+
 			if (io_len == io_width_t::dword) {
 				if (address + 2u <= 31) {
 					retval |= static_cast<unsigned int>(
@@ -328,6 +349,7 @@ io_val_t bx_ne2k_c::chipmem_read(io_port_t address, io_width_t io_len)
 
 	if ((address >= BX_NE2K_MEMSTART) && (address < BX_NE2K_MEMEND)) {
 		retval = BX_NE2K_THIS s.mem[address - BX_NE2K_MEMSTART];
+
 		if ((io_len == io_width_t::word) || (io_len == io_width_t::dword)) {
 			if (address + 1 < BX_NE2K_MEMEND) {
 				retval |= static_cast<unsigned int>(
@@ -335,6 +357,7 @@ io_val_t bx_ne2k_c::chipmem_read(io_port_t address, io_width_t io_len)
 				        << 8u);
 			}
 		}
+
 		if (io_len == io_width_t::dword) {
 			if (address + 2 < BX_NE2K_MEMEND) {
 				retval |= static_cast<unsigned int>(
@@ -358,12 +381,14 @@ io_val_t bx_ne2k_c::chipmem_read(io_port_t address, io_width_t io_len)
 void bx_ne2k_c::chipmem_write(io_port_t address, io_val_t data, io_width_t io_len)
 {
 	const auto value = check_cast<uint16_t>(data);
+
 	if ((io_len == io_width_t::word) && (address & 0x1)) {
 		BX_PANIC(("unaligned chipmem word write"));
 	}
 
 	if ((address >= BX_NE2K_MEMSTART) && (address < BX_NE2K_MEMEND)) {
 		BX_NE2K_THIS s.mem[address - BX_NE2K_MEMSTART] = value & 0xff;
+
 		if ((io_len == io_width_t::word) && (address + 1 < BX_NE2K_MEMEND)) {
 			BX_NE2K_THIS s.mem[address - BX_NE2K_MEMSTART + 1] = value >> 8;
 		}
@@ -372,7 +397,6 @@ void bx_ne2k_c::chipmem_write(io_port_t address, io_val_t data, io_width_t io_le
 	}
 }
 
-//
 // asic_read/asic_write - This is the high 16 bytes of i/o space
 // (the lower 16 bytes is for the DS8390). Only two locations
 // are used: offset 0, which is used for data transfer, and
@@ -401,22 +425,26 @@ uint32_t bx_ne2k_c::asic_read(io_port_t offset, io_width_t io_len)
 			break;
 		}
 
-		// BX_INFO(("ne2k read DMA: addr=%4x remote_bytes=%d",BX_NE2K_THIS
-		// s.remote_dma,BX_NE2K_THIS s.remote_bytes));
+		// BX_INFO(("ne2k read DMA: addr=%4x
+		// remote_bytes=%d",BX_NE2K_THIS s.remote_dma,BX_NE2K_THIS
+		// s.remote_bytes));
 		if (s.remote_bytes == 1) {
 			io_len = io_width_t::byte;
 		}
+
 		retval = chipmem_read(BX_NE2K_THIS s.remote_dma, io_len);
-		//
+
 		// The 8390 bumps the address and decreases the byte count
 		// by the selected word size after every access, not by
 		// the amount of data requested by the host (io_len).
 		//
 		BX_NE2K_THIS s.remote_dma += (BX_NE2K_THIS s.DCR.wdsize + 1);
+
 		if (BX_NE2K_THIS s.remote_dma == BX_NE2K_THIS s.page_stop << 8) {
 			BX_NE2K_THIS s.remote_dma = check_cast<uint16_t>(
 			        BX_NE2K_THIS s.page_start << 8);
 		}
+
 		// keep s.remote_bytes from underflowing
 		if (BX_NE2K_THIS s.remote_bytes > 1) {
 			BX_NE2K_THIS s.remote_bytes -= (BX_NE2K_THIS s.DCR.wdsize + 1);
@@ -427,6 +455,7 @@ uint32_t bx_ne2k_c::asic_read(io_port_t offset, io_width_t io_len)
 		// If all bytes have been written, signal remote-DMA complete
 		if (BX_NE2K_THIS s.remote_bytes == 0) {
 			BX_NE2K_THIS s.ISR.rdma_done = 1;
+
 			if (BX_NE2K_THIS s.IMR.rdma_inte) {
 				PIC_ActivateIRQ(s.base_irq);
 				// DEV_pic_raise_irq(BX_NE2K_THIS s.base_irq);
@@ -450,6 +479,7 @@ uint32_t bx_ne2k_c::asic_read(io_port_t offset, io_width_t io_len)
 void bx_ne2k_c::asic_write(io_port_t offset, io_val_t value, io_width_t io_len)
 {
 	BX_DEBUG("asic write addr=0x%02x, value=0x%04x", offset, value);
+
 	switch (offset) {
 	case 0x0: // Data register - see asic_read for a description
 
@@ -463,14 +493,17 @@ void bx_ne2k_c::asic_write(io_port_t offset, io_val_t value, io_width_t io_len)
 		}
 
 		chipmem_write(BX_NE2K_THIS s.remote_dma, value, io_len);
+
 		// is this right ??? asic_read uses DCR.wordsize
 		BX_NE2K_THIS s.remote_dma += enum_val(io_len);
+
 		if (BX_NE2K_THIS s.remote_dma == BX_NE2K_THIS s.page_stop << 8) {
 			BX_NE2K_THIS s.remote_dma = check_cast<uint16_t>(
 			        BX_NE2K_THIS s.page_start << 8);
 		}
 
 		BX_NE2K_THIS s.remote_bytes -= enum_val(io_len);
+
 		if (BX_NE2K_THIS s.remote_bytes > BX_NE2K_MEMSIZ) {
 			BX_NE2K_THIS s.remote_bytes = 0;
 		}
@@ -478,6 +511,7 @@ void bx_ne2k_c::asic_write(io_port_t offset, io_val_t value, io_width_t io_len)
 		// If all bytes have been written, signal remote-DMA complete
 		if (BX_NE2K_THIS s.remote_bytes == 0) {
 			BX_NE2K_THIS s.ISR.rdma_done = 1;
+
 			if (BX_NE2K_THIS s.IMR.rdma_inte) {
 				PIC_ActivateIRQ(s.base_irq);
 				// DEV_pic_raise_irq(BX_NE2K_THIS s.base_irq);
@@ -495,7 +529,6 @@ void bx_ne2k_c::asic_write(io_port_t offset, io_val_t value, io_width_t io_len)
 	}
 }
 
-//
 // page0_read/page0_write - These routines handle reads/writes to
 // the 'zeroth' page of the DS8390 register file
 //
@@ -504,12 +537,12 @@ uint32_t bx_ne2k_c::page0_read(io_port_t offset, io_width_t io_len)
 	BX_DEBUG("NE2000: page 0 read from port %04x, len=%u",
 	         (unsigned)offset,
 	         (unsigned)io_len);
+
 	if (enum_val(io_len) > 1) {
+		// encountered with win98 hardware probe
 		BX_ERROR("NE2000: bad length! page 0 read from port %04x, len=%u",
 		         (unsigned)offset,
-		         (unsigned)io_len); /* encountered
-		                               with win98
-		                               hardware probe */
+		         (unsigned)io_len);
 		return 0;
 	}
 
@@ -613,12 +646,14 @@ void bx_ne2k_c::page0_write(io_port_t offset, io_val_t data, io_width_t io_len)
 	// break up outw into two outb's
 	if (io_len == io_width_t::word) {
 		const auto value = check_cast<uint16_t>(data);
+
 		page0_write(offset, (value & 0xff), io_width_t::byte);
 		page0_write(offset + 1, ((value >> 8) & 0xff), io_width_t::byte);
 		return;
 	}
 
-	auto value             = check_cast<uint8_t>(data);
+	auto value = check_cast<uint8_t>(data);
+
 	unsigned int new_value = 0;
 
 	switch (offset) {
@@ -681,6 +716,7 @@ void bx_ne2k_c::page0_write(io_port_t offset, io_val_t data, io_width_t io_len)
 		BX_NE2K_THIS s.ISR.overwrite &= ~((bx_bool)((value & 0x10) == 0x10));
 		BX_NE2K_THIS s.ISR.cnt_oflow &= ~((bx_bool)((value & 0x20) == 0x20));
 		BX_NE2K_THIS s.ISR.rdma_done &= ~((bx_bool)((value & 0x40) == 0x40));
+
 		new_value = ((unsigned int)(BX_NE2K_THIS s.ISR.rdma_done << 6u) |
 		             (unsigned int)(BX_NE2K_THIS s.ISR.cnt_oflow << 5u) |
 		             (unsigned int)(BX_NE2K_THIS s.ISR.overwrite << 4u) |
@@ -688,6 +724,7 @@ void bx_ne2k_c::page0_write(io_port_t offset, io_val_t data, io_width_t io_len)
 		             (unsigned int)(BX_NE2K_THIS s.ISR.rx_err << 2u) |
 		             (unsigned int)(BX_NE2K_THIS s.ISR.pkt_tx << 1u) |
 		             (unsigned int)(BX_NE2K_THIS s.ISR.pkt_rx));
+
 		new_value &= ((unsigned int)(BX_NE2K_THIS s.IMR.rdma_inte << 6u) |
 		              (unsigned int)(BX_NE2K_THIS s.IMR.cofl_inte << 5u) |
 		              (unsigned int)(BX_NE2K_THIS s.IMR.overw_inte << 4u) |
@@ -695,9 +732,11 @@ void bx_ne2k_c::page0_write(io_port_t offset, io_val_t data, io_width_t io_len)
 		              (unsigned int)(BX_NE2K_THIS s.IMR.rxerr_inte << 2u) |
 		              (unsigned int)(BX_NE2K_THIS s.IMR.tx_inte << 1u) |
 		              (unsigned int)(BX_NE2K_THIS s.IMR.rx_inte));
+
 		if (new_value == 0) {
 			PIC_DeActivateIRQ(s.base_irq);
 		}
+
 		// DEV_pic_lower_irq(BX_NE2K_THIS s.base_irq);
 		value = check_cast<uint8_t>(new_value);
 		break;
@@ -791,14 +830,16 @@ void bx_ne2k_c::page0_write(io_port_t offset, io_val_t data, io_width_t io_len)
 			BX_INFO(("DCR write - AR set ???"));
 		}
 
-		// Set other values.
+		// Set other values
 		BX_NE2K_THIS s.DCR.wdsize = ((value & 0x01) == 0x01);
 		BX_NE2K_THIS s.DCR.endian = ((value & 0x02) == 0x02);
-		BX_NE2K_THIS s.DCR.longaddr = ((value & 0x04) == 0x04); // illegal
-		                                                        // ?
-		BX_NE2K_THIS s.DCR.loop    = ((value & 0x08) == 0x08);
-		BX_NE2K_THIS s.DCR.auto_rx = ((value & 0x10) == 0x10); // also
-		                                                       // illegal ?
+		// illegal ?
+		BX_NE2K_THIS s.DCR.longaddr = ((value & 0x04) == 0x04);
+
+		BX_NE2K_THIS s.DCR.loop = ((value & 0x08) == 0x08);
+		// also illegal ?
+		BX_NE2K_THIS s.DCR.auto_rx = ((value & 0x10) == 0x10);
+
 		BX_NE2K_THIS s.DCR.fifo_size = (value & 0x50) >> 5;
 		break;
 
@@ -816,10 +857,12 @@ void bx_ne2k_c::page0_write(io_port_t offset, io_val_t data, io_width_t io_len)
 		BX_NE2K_THIS s.IMR.overw_inte = ((value & 0x10) == 0x10);
 		BX_NE2K_THIS s.IMR.cofl_inte  = ((value & 0x20) == 0x20);
 		BX_NE2K_THIS s.IMR.rdma_inte  = ((value & 0x40) == 0x40);
+
 		if (BX_NE2K_THIS s.ISR.pkt_tx && BX_NE2K_THIS s.IMR.tx_inte) {
 			PIC_ActivateIRQ(s.base_irq);
 		}
 		break;
+
 	default: BX_PANIC("page 0 write, bad offset %0x", offset);
 	}
 }
@@ -833,6 +876,7 @@ uint32_t bx_ne2k_c::page1_read(io_port_t offset, io_width_t io_len)
 	BX_DEBUG("page 1 read from port %04x, len=%u",
 	         (unsigned)offset,
 	         (unsigned)io_len);
+
 	if (enum_val(io_len) > 1) {
 		BX_PANIC("bad length! page 1 read from port %04x, len=%u",
 		         (unsigned)offset,
@@ -870,8 +914,11 @@ uint32_t bx_ne2k_c::page1_read(io_port_t offset, io_width_t io_len)
 void bx_ne2k_c::page1_write(io_port_t offset, io_val_t data, io_width_t io_len)
 {
 	const auto value = check_cast<uint8_t>(data);
+
 	(void)io_len; // UNUSED
+
 	BX_DEBUG("page 1 w offset %04x", (unsigned)offset);
+
 	switch (offset) {
 	case 0x1: // PAR0-5
 	case 0x2:
@@ -1002,6 +1049,7 @@ void bx_ne2k_c::page2_write(io_port_t offset, io_val_t data, io_width_t io_len)
 	(void)io_len; // UNUSED
 
 	const auto value = check_cast<uint8_t>(data);
+
 	// Maybe all writes here should be BX_PANIC()'d, since they
 	// affect internal operation, but let them through for now
 	// and print a warning.
@@ -1059,7 +1107,6 @@ void bx_ne2k_c::page2_write(io_port_t offset, io_val_t data, io_width_t io_len)
 	}
 }
 
-//
 // page3_read/page3_write - writes to this page are illegal
 //
 uint32_t bx_ne2k_c::page3_read(io_port_t, io_width_t)
@@ -1087,17 +1134,19 @@ void bx_ne2k_c::tx_timer(void)
 {
 	BX_DEBUG(("tx_timer"));
 	BX_NE2K_THIS s.TSR.tx_ok = 1;
+
 	// Generate an interrupt if not masked and not one in progress
 	if (BX_NE2K_THIS s.IMR.tx_inte && !BX_NE2K_THIS s.ISR.pkt_tx) {
 		// LOG_MSG("tx complete interrupt");
 		PIC_ActivateIRQ(s.base_irq);
+
 		// DEV_pic_raise_irq(BX_NE2K_THIS s.base_irq);
 	} // else 	  LOG_MSG("no tx complete interrupt");
+
 	BX_NE2K_THIS s.ISR.pkt_tx      = 1;
 	BX_NE2K_THIS s.tx_timer_active = 0;
 }
 
-//
 // read_handler/read - i/o 'catcher' function called from BOCHS
 // mainline when the CPU attempts a read in the i/o space registered
 // by this ne2000 instance
@@ -1116,21 +1165,22 @@ io_val_t bx_ne2k_c::read(io_port_t address, io_width_t io_len)
 	UNUSED(this_ptr);
 #endif // !BX_USE_NE2K_SMF
 	BX_DEBUG("read addr %x, len %d", address, io_len);
-	uint32_t retval        = 0;
+
+	uint32_t retval = 0;
+
 	const io_port_t offset = address - (BX_NE2K_THIS s.base_address);
 
 	if (offset >= 0x10) {
 		retval = asic_read(offset - 0x10, io_len);
+
 	} else if (offset == 0x00) {
 		retval = read_cr();
+
 	} else {
 		switch (BX_NE2K_THIS s.CR.pgsel) {
 		case 0x00: retval = page0_read(offset, io_len); break;
-
 		case 0x01: retval = page1_read(offset, io_len); break;
-
 		case 0x02: retval = page2_read(offset, io_len); break;
-
 		case 0x03: retval = page3_read(offset, io_len); break;
 
 		default:
@@ -1142,7 +1192,6 @@ io_val_t bx_ne2k_c::read(io_port_t address, io_width_t io_len)
 	return (retval);
 }
 
-//
 // write_handler/write - i/o 'catcher' function called from BOCHS
 // mainline when the CPU attempts a write in the i/o space registered
 // by this ne2000 instance
@@ -1172,16 +1221,15 @@ void bx_ne2k_c::write(io_port_t address, io_val_t value, io_width_t io_len)
 	//
 	if (offset >= 0x10) {
 		asic_write(offset - 0x10, value, io_len);
+
 	} else if (offset == 0x00) {
 		write_cr(value);
+
 	} else {
 		switch (BX_NE2K_THIS s.CR.pgsel) {
 		case 0x00: page0_write(offset, value, io_len); break;
-
 		case 0x01: page1_write(offset, value, io_len); break;
-
 		case 0x02: page2_write(offset, value, io_len); break;
-
 		case 0x03: page3_write(offset, value, io_len); break;
 
 		default:
@@ -1191,10 +1239,9 @@ void bx_ne2k_c::write(io_port_t address, io_val_t value, io_width_t io_len)
 	}
 }
 
-/*
- * mcast_index() - return the 6-bit index into the multicast
- * table. Stolen unashamedly from FreeBSD's if_ed.c
- */
+// mcast_index() - return the 6-bit index into the multicast
+// table. Stolen unashamedly from FreeBSD's if_ed.c
+//
 unsigned bx_ne2k_c::mcast_index(const void* dst)
 {
 #define POLYNOMIAL 0x04c11db6
@@ -1215,34 +1262,18 @@ unsigned bx_ne2k_c::mcast_index(const void* dst)
 		}
 	}
 
-	return (uint32_t)((crc & 0xfffffffful) >> 26ul); /* WARNING: Caller
-	                                                    directly uses our 6-bit
-	                                                    return as index. If
-	                                                    not truncated, will
-	                                                    cause a segfault */
+	// WARNING: Caller directly uses our 6-bit return as index. If not
+	// truncated, will cause a segfault
+	return (uint32_t)((crc & 0xfffffffful) >> 26ul);
 #undef POLYNOMIAL
 }
 
-/*
- * Callback from the eth system driver when a frame has arrived
- */
-/*
-void
-bx_ne2k_c::rx_handler(void *arg, const void *buf, unsigned len)
-{
-    // BX_DEBUG(("rx_handler with length %d", len));
-  bx_ne2k_c *class_ptr = (bx_ne2k_c *) arg;
-  if(
-  class_ptr->rx_frame(buf, len);
-}
-*/
-/*
- * rx_frame() - called by the platform-specific code when an
- * ethernet frame has been received. The destination address
- * is tested to see if it should be accepted, and if the
- * rx ring has enough room, it is copied into it and
- * the receive process is updated
- */
+// rx_frame() - called by the platform-specific code when an
+// ethernet frame has been received. The destination address
+// is tested to see if it should be accepted, and if the
+// rx ring has enough room, it is copied into it and
+// the receive process is updated
+//
 int bx_ne2k_c::rx_frame(const void* buf, unsigned io_len)
 {
 	int pages;
@@ -1251,8 +1282,11 @@ int bx_ne2k_c::rx_frame(const void* buf, unsigned io_len)
 	//  int wrapped;
 	uint8_t nextpage;
 	uint8_t pkthdr[4];
+
 	const auto* pktbuf = (const uint8_t*)buf;
+
 	uint8_t* startptr;
+
 	static uint8_t bcast_addr[6] = {0xff, 0xff, 0xff, 0xff, 0xff, 0xff};
 
 	if (io_len != 60) {
@@ -1353,6 +1387,7 @@ int bx_ne2k_c::rx_frame(const void* buf, unsigned io_len)
 	    !ne2k_page_in_range(nextpage) ||
 	    !ne2k_page_in_range(BX_NE2K_THIS s.page_start) ||
 	    !ne2k_page_in_range(BX_NE2K_THIS s.page_stop)) {
+
 		BX_ERROR("NE2000: rx_frame page value out of range, dropping packet");
 		return -1;
 	}
@@ -1370,21 +1405,28 @@ int bx_ne2k_c::rx_frame(const void* buf, unsigned io_len)
 
 	// copy into buffer, update curpage, and signal interrupt if config'd
 	startptr = &BX_NE2K_THIS s.mem[BX_NE2K_THIS s.curr_page * 256 - BX_NE2K_MEMSTART];
+
 	if ((nextpage > BX_NE2K_THIS s.curr_page) ||
 	    ((BX_NE2K_THIS s.curr_page + pages) == BX_NE2K_THIS s.page_stop)) {
+
 		memcpy(startptr, pkthdr, 4);
 		memcpy(startptr + 4, buf, io_len);
 		BX_NE2K_THIS s.curr_page = nextpage;
+
 	} else {
 		unsigned int endbytes = (unsigned int)(BX_NE2K_THIS s.page_stop -
 		                                       BX_NE2K_THIS s.curr_page) *
 		                        256u;
+
 		memcpy(startptr, pkthdr, 4);
 		memcpy(startptr + 4, buf, (size_t)(endbytes - 4u));
+
 		startptr = &BX_NE2K_THIS s.mem[BX_NE2K_THIS s.page_start * 256u - BX_NE2K_MEMSTART];
+
 		memcpy(startptr,
 		       (const void*)(pktbuf + endbytes - 4u),
 		       io_len - endbytes + 8u);
+
 		BX_NE2K_THIS s.curr_page = nextpage;
 	}
 
@@ -1400,6 +1442,7 @@ int bx_ne2k_c::rx_frame(const void* buf, unsigned io_len)
 		PIC_ActivateIRQ(s.base_irq);
 		// DEV_pic_raise_irq(BX_NE2K_THIS s.base_irq);
 	} // else LOG_MSG("no packet rx interrupt");
+
 	return static_cast<int>(io_len);
 }
 
@@ -1503,6 +1546,7 @@ private:
 
 public:
 	bool load_success;
+
 	NE2K(SectionProp& section) : load_success(true)
 	{
 		if (!section.GetBool("ne2000")) {
@@ -1528,6 +1572,7 @@ public:
 		      irq == 12 || irq == 14 || irq == 15)) {
 			irq = 3;
 		}
+
 		auto base = static_cast<io_port_t>(section.GetHex("nicbase"));
 		if (!(base == 0x260 || base == 0x280 || base == 0x300 ||
 		      base == 0x320 || base == 0x340 || base == 0x380)) {
@@ -1540,6 +1585,7 @@ public:
 		std::string macstring = section.GetString("macaddr");
 		unsigned int macint[6];
 		uint8_t mac[6];
+
 		if (sscanf(macstring.c_str(),
 		           "%02x:%02x:%02x:%02x:%02x:%02x",
 		           &macint[0],
@@ -1576,7 +1622,9 @@ public:
 		for (io_port_t i = 0; i < 0x20; ++i) {
 			const auto port_num = static_cast<io_port_t>(
 			        i + theNE2kDevice->s.base_address);
+
 			ReadHandler8[i].Install(port_num, dosbox_read, io_width_t::word);
+
 			WriteHandler8[i].Install(port_num,
 			                         dosbox_write,
 			                         io_width_t::word);
@@ -1588,8 +1636,10 @@ public:
 	{
 		delete ethernet;
 		ethernet = nullptr;
+
 		delete theNE2kDevice;
 		theNE2kDevice = nullptr;
+
 		TIMER_DelTickHandler(NE2000_Poller);
 		PIC_RemoveEvents(NE2000_TX_Event);
 	}
