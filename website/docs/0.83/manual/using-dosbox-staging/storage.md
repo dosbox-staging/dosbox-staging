@@ -559,31 +559,3 @@ Storage-related settings are in the `[dosbox]` section:
 
 For emulated drive sounds (floppy chatter, hard disk clicking), see
 [Disk noise](../sound/disk-noise.md).
-
-
-
-# Storage
-
-DOS programs can only access files that are available on DOS drives (`A:`,
-`C:`, `D:`, etc.). Unlike modern operating systems, DOS has no concept of a
-single unified filesystem, so before a program can access your game files they
-must first be **mounted** as one or more DOS drives.
-
-DOSBox Staging offers two ways to do this. For most users, the recommended
-approach is [automounting](#automounting), which automatically creates DOS
-drives from a simple per-game folder structure. Alternatively, you can
-[manually mount drives](#manual-mounting) using the `MOUNT` command for maximum
-flexibility.
-
-The following sections explain how DOS drives work, the different types of
-storage media used by DOS PCs, and how to mount directories and disk images in
-DOSBox Staging.
-
-## DOS drive letters
-
-DOS identifies storage devices by drive letters, not by names or mount points.
-Each drive letter (A: through Z:) maps to exactly one storage device or
-partition. Unlike modern operating systems, there is no single unified file
-tree --- each drive is its own independent root.
-
-...
