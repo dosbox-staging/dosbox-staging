@@ -2,7 +2,7 @@
 toc_depth: 3
 ---
 
-## Foreword
+# Foreword
 
 Welcome to the **DOSBox Staging 0.83 Getting Started guide**!
 
