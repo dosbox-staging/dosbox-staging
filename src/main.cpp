@@ -516,9 +516,6 @@ static void maybe_create_resource_directories()
 	const auto plugins_dir = get_config_dir() / PluginsDir;
 	try_create_resource_dir(plugins_dir);
 
-	//create log subfolder in config dir on startup
-	const auto log_dir = get_config_dir() / "logs";
-	try_create_resource_dir(log_dir);
 
 #if C_OPENGL
 	const auto shaders_dir = get_config_dir() / ShadersDir;
