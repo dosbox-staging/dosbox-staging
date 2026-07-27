@@ -22,6 +22,7 @@ public:
 
 protected:
 	void Render();
+	void Shutdown();
 
 	MixerChannelPtr mixer_channel        = nullptr;
 	RWQueue<AudioFrame> audio_frame_fifo = {1};
@@ -44,6 +45,8 @@ private:
 
 	virtual void ProcessWorkItem(const MidiWork& work)         = 0;
 	virtual void RenderAudioFramesToFifo(const int num_frames) = 0;
+
+	virtual void CloseSynth() = 0;
 
 	// Used to track the balance of time between the last mixer
 	// callback versus the current MIDI SysEx or Msg event.

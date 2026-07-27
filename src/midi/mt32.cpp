@@ -621,6 +621,7 @@ static mt32emu_report_handler_i get_report_handler_interface()
 static std::unique_ptr<MT32Emu::Service> create_mt32_service()
 {
 	auto service = std::make_unique<MT32Emu::Service>();
+
 	// Has libmt32emu already created a context?
 	if (!service->getContext()) {
 		service->createContext(get_report_handler_interface(), nullptr);
@@ -650,7 +651,8 @@ static std::set<const LASynthModel*> find_available_models(MT32Emu::Service& ser
 
 MidiDeviceMt32::MidiDeviceMt32()
 {
-	auto mt32_service     = create_mt32_service();
+	auto mt32_service = create_mt32_service();
+
 	const auto model_name = get_model_setting();
 	const auto rom_dirs   = get_rom_dirs();
 
@@ -667,6 +669,8 @@ MidiDeviceMt32::MidiDeviceMt32()
 		}
 		throw std::runtime_error(msg);
 	}
+
+	const std::lock_guard<std::mutex> lock(service_mutex);
 
 	mt32emu_rom_info rom_info;
 	mt32_service->getROMInfo(&rom_info);
@@ -761,45 +765,14 @@ MidiDeviceMt32::MidiDeviceMt32()
 	MIXER_UnlockMixerThread();
 }
 
-MidiDeviceMt32::~MidiDeviceMt32()
+void MidiDeviceMt32::CloseSynth()
 {
-	LOG_MSG("MT32: Shutting down");
+	const std::lock_guard<std::mutex> lock(service_mutex);
 
-	if (had_underruns) {
-		LOG_WARNING(
-		        "MT32: Fix underruns by lowering the CPU load or increasing "
-		        "the 'prebuffer' or 'blocksize' settings");
-	}
-
-	MIXER_LockMixerThread();
-
-	// Stop playback
-	if (mixer_channel) {
-		mixer_channel->Enable(false);
-	}
-
-	// Stop queueing new MIDI work and audio frames
-	work_fifo.Stop();
-	audio_frame_fifo.Stop();
-
-	// Wait for the rendering thread to finish
-	if (renderer.joinable()) {
-		renderer.join();
-	}
-
-	// Stop the synthesizer
 	if (service) {
-		const std::lock_guard<std::mutex> lock(service_mutex);
 		service->closeSynth();
 		service->freeContext();
 	}
-
-	// Deregister the mixer channel and remove it
-	assert(mixer_channel);
-	MIXER_DeregisterChannel(mixer_channel);
-	mixer_channel.reset();
-
-	MIXER_UnlockMixerThread();
 }
 
 void MidiDeviceMt32::RenderAudioFramesToFifo(const int num_frames)
@@ -813,14 +786,12 @@ void MidiDeviceMt32::RenderAudioFramesToFifo(const int num_frames)
 
 	std::unique_lock<std::mutex> lock(service_mutex);
 	service->renderFloat(&audio_frames[0][0], num_frames);
-	lock.unlock();
 
 	audio_frame_fifo.BulkEnqueue(audio_frames, num_frames);
 }
 
 void MidiDeviceMt32::ProcessWorkItem(const MidiWork& work)
 {
-	// Request exclusive access prior to applying messages
 	const std::lock_guard<std::mutex> lock(service_mutex);
 
 	if (work.message_type == MessageType::Channel) {
