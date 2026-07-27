@@ -83,14 +83,15 @@ public:
 	// (e.g., the requested SoundFont cannot be loaded).
 	MidiDeviceFluidSynth();
 
-	~MidiDeviceFluidSynth() override;
+	~MidiDeviceFluidSynth()
+	{
+		Shutdown();
+	}
 
 	// prevent copying
 	MidiDeviceFluidSynth(const MidiDeviceFluidSynth&) = delete;
 	// prevent assignment
 	MidiDeviceFluidSynth& operator=(const MidiDeviceFluidSynth&) = delete;
-
-	void PrintStats();
 
 	std::string GetName() const override
 	{
@@ -101,6 +102,8 @@ public:
 	{
 		return MidiDevice::Type::Internal;
 	}
+
+	void PrintStats();
 
 	std_fs::path GetSoundFontPath();
 
@@ -121,6 +124,8 @@ private:
 
 	void ProcessWorkItem(const MidiWork& work) override;
 	void RenderAudioFramesToFifo(const int num_audio_frames) override;
+
+	void CloseSynth() override {}
 
 	using FluidSynthSettingsPtr =
 	        std::unique_ptr<fluid_settings_t, decltype(&delete_fluid_settings)>;

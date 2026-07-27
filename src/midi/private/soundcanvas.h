@@ -51,7 +51,10 @@ public:
 	// initialiased (e.g., the requested SoundFont cannot be loaded).
 	MidiDeviceSoundCanvas();
 
-	~MidiDeviceSoundCanvas() override;
+	~MidiDeviceSoundCanvas()
+	{
+		Shutdown();
+	}
 
 	// prevent copying
 	MidiDeviceSoundCanvas(const MidiDeviceSoundCanvas&) = delete;
@@ -75,6 +78,8 @@ private:
 
 	void ProcessWorkItem(const MidiWork& work) override;
 	void RenderAudioFramesToFifo(const int num_frames) override;
+
+	void CloseSynth() override {}
 
 	struct {
 		std::unique_ptr<Clap::Plugin> plugin = nullptr;
