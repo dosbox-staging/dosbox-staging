@@ -489,46 +489,6 @@ MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 	MIXER_UnlockMixerThread();
 }
 
-MidiDeviceSoundCanvas::~MidiDeviceSoundCanvas()
-{
-	LOG_MSG("SOUNDCANVAS: Shutting down");
-
-	if (had_underruns) {
-		LOG_WARNING(
-		        "SOUNDCANVAS: Fix underruns by lowering the CPU load "
-		        "or increasing the 'prebuffer' or 'blocksize' setting");
-		had_underruns = false;
-	}
-
-	MIXER_LockMixerThread();
-
-	// Stop playback
-	if (mixer_channel) {
-		mixer_channel->Enable(false);
-	}
-
-	// Stop queueing new MIDI work and audio frames
-	work_fifo.Stop();
-	audio_frame_fifo.Stop();
-
-	// Wake the renderer via the pauser's condvar if it's parked (stopping
-	// `work_fifo` alone does not notify it); once unblocked it sees
-	// `work_fifo` has stopped and exits its loop cleanly.
-	Resume();
-
-	// Wait for the rendering thread to finish
-	if (renderer.joinable()) {
-		renderer.join();
-	}
-
-	// Deregister the mixer channel and remove it
-	assert(mixer_channel);
-	MIXER_DeregisterChannel(mixer_channel);
-	mixer_channel.reset();
-
-	MIXER_UnlockMixerThread();
-}
-
 void MidiDeviceSoundCanvas::RenderAudioFramesToFifo(const int num_audio_frames)
 {
 	assert(num_audio_frames > 0);

@@ -9,7 +9,6 @@
 #if C_MT32EMU
 
 #include <memory>
-#include <mutex>
 #include <string>
 
 #define MT32EMU_API_TYPE 3
@@ -34,7 +33,10 @@ public:
 	// (e.g., the requested MT-32 ROM cannot be loaded).
 	MidiDeviceMt32();
 
-	~MidiDeviceMt32() override;
+	~MidiDeviceMt32()
+	{
+		Shutdown();
+	}
 
 	// prevent copying
 	MidiDeviceMt32(const MidiDeviceMt32&) = delete;
@@ -51,6 +53,10 @@ public:
 		return MidiDevice::Type::Internal;
 	}
 
+	std::mutex service_mutex = {};
+
+	using Mt32SynthPtr = std::unique_ptr<MT32Emu::Service>;
+
 	void PrintStats();
 
 	ModelAndDir GetModelAndDir();
@@ -62,8 +68,9 @@ private:
 	void ProcessWorkItem(const MidiWork& work) override;
 	void RenderAudioFramesToFifo(const int num_frames) override;
 
-	std::mutex service_mutex                  = {};
-	std::unique_ptr<MT32Emu::Service> service = {};
+	void CloseSynth() override;
+
+	Mt32SynthPtr service = {};
 
 	ModelAndDir model_and_dir = {};
 };

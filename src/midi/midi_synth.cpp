@@ -27,6 +27,48 @@ void MidiSynth::Render()
 	}
 }
 
+void MidiSynth::Shutdown()
+{
+	LOG_MSG("%s: Shutting down", upcase(GetName()).c_str());
+
+	if (had_underruns) {
+		LOG_WARNING(
+		        "%s: Fix underruns by lowering the CPU load or increasing "
+		        "the 'prebuffer' or 'blocksize' settings",
+		        upcase(GetName()).c_str());
+	}
+
+	MIXER_LockMixerThread();
+
+	// Stop playback
+	if (mixer_channel) {
+		mixer_channel->Enable(false);
+	}
+
+	// Stop queueing new MIDI work and audio frames
+	work_fifo.Stop();
+	audio_frame_fifo.Stop();
+
+	// Wake the renderer via the pauser's condvar if it's parked (stopping
+	// `work_fifo` alone does not notify it); once unblocked it sees
+	// `work_fifo` has stopped and exits its loop cleanly.
+	Resume();
+
+	// Wait for the rendering thread to finish
+	if (renderer.joinable()) {
+		renderer.join();
+	}
+
+	CloseSynth();
+
+	// Deregister the mixer channel and remove it
+	assert(mixer_channel);
+	MIXER_DeregisterChannel(mixer_channel);
+	mixer_channel.reset();
+
+	MIXER_UnlockMixerThread();
+}
+
 // The next MIDI work task is processed, which includes rendering audio frames
 // prior to applying channel and sysex messages to the service
 void MidiSynth::ProcessWorkFromFifo()
