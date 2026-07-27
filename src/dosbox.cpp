@@ -685,7 +685,7 @@ void DOSBOX_Restart(std::vector<std::string>& parameters)
 #endif // WIN32
 }
 
-constexpr int32_t MAX_LOG_FILES = 5;
+constexpr int MaxLogFiles = 5;
 using LogFileMap = std::map<int32_t, std_fs::path>;
 
 static std::optional<LogFileMap> collect_log_files(const std::string& dir_path)
@@ -721,7 +721,7 @@ static std::optional<LogFileMap> collect_log_files(const std::string& dir_path)
 
 static void prune_old_logs(LogFileMap& log_files){
 	std::error_code ec;
-	while (log_files.size() >= MAX_LOG_FILES){
+	while (log_files.size() >= MaxLogFiles){
 		// std::map is sorted by key, so we're deleting the
 		// "surplus" above 5 file log files with the lowest indices.
 		const auto path = log_files.begin()->second;
@@ -922,7 +922,7 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 	pstring = section->AddString("log_mode", OnlyAtStart, "console-and-file");
 	pstring->SetValues({"console", "file", "console-and-file", "off"});
 	pstring->SetHelp(
-			"Set the logging destination. ('console-and-file' by default).\n"
+			"Set the logging mode ('console-and-file' by default).\n"
 			"Possible values:\n"
 			"console:  Log messages to the command line interface.\n"
 			"file:  Log messages to a file on disk.\n"
@@ -934,8 +934,9 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 
 	pstring = section->AddString("log_dir", OnlyAtStart, "");
 	pstring->SetHelp(
-	        "Path to the directory where log files are stored.\n"
-        	"Defaults to a 'logs' folder in the DOSBox configuration directory.");
+	         "Directory where the log files are written (unset by default). If this is\n"
+	        "unset, the logs are written to the 'logs' folder in your configuration\n"
+	        "directory.");
 
 	pstring = section->AddString("machine", OnlyAtStart, "svga_s3");
 	pstring->SetValues({"hercules",
