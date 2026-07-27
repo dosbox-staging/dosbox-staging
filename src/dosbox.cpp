@@ -14,7 +14,8 @@
 #include <iostream>
 #include <algorithm>
 #include <string>
-#include <format> 
+
+
 
 
 #ifdef WIN32
@@ -70,6 +71,7 @@
 #include "ints/bios.h"
 #include "ints/int10.h"
 #include "midi/midi.h"
+#include "misc/std_filesystem.h"
 #include "misc/cross.h"
 #include "misc/support.h"
 #include "misc/video.h"
@@ -77,6 +79,7 @@
 #include "shell/autoexec.h"
 #include "shell/shell.h"
 #include "utils/math_utils.h"
+#include "utils/string_utils.h"
 #include "webserver/bridge.h"
 #include "webserver/webserver.h"
 
@@ -683,33 +686,32 @@ void DOSBOX_Restart(std::vector<std::string>& parameters)
 }
 
 constexpr int32_t MAX_LOG_FILES = 5;
-using LogFileMap = std::map<int32_t, std::filesystem::path>;
+using LogFileMap = std::map<int32_t, std_fs::path>;
 
 static std::optional<LogFileMap> collect_log_files(const std::string& dir_path)
 {
-	namespace fs = std::filesystem;
-	const std::string prefix = "dosbox-staging-";
-	const std::string suffix = ".log"; 
+	const std::string prefix = "log";
+	const std::string suffix = ".txt"; 
 
 	LogFileMap logfiles;
 
 	std::error_code ec;
-	for(const auto& file : fs::directory_iterator(dir_path, ec)){
-		const auto filename = file.path().filename().string();
-		if (!filename.starts_with(prefix) || !filename.ends_with(suffix)){
+	for(const auto& file : std_fs::directory_iterator(dir_path, ec)){
+		const auto stem = file.path().stem().string();
+		const auto extension = file.path().extension().string();
+		
+		if (extension != suffix){
 			continue;
 		}
 
-		const auto file_index = filename.substr(
-			prefix.size(), 
-			filename.size()-prefix.size()-suffix.size()
-		);
-
-		try{
-			int32_t int_file_index = std::stoi(file_index);
-			logfiles[int_file_index] = file.path();
-		} catch(std::exception&){
+		const auto index_str = strip_prefix(stem, prefix);
+		if (index_str.empty()) {
 			continue;
+		}
+
+		const auto index = parse_int(index_str);
+		if (index) {
+			logfiles[*index] = file.path();
 		}
 
 	}
@@ -720,25 +722,64 @@ static std::optional<LogFileMap> collect_log_files(const std::string& dir_path)
 static void prune_old_logs(LogFileMap& log_files){
 	std::error_code ec;
 	while (log_files.size() >= MAX_LOG_FILES){
-		std::filesystem::remove(log_files.begin()->second, ec);
+		// std::map is sorted by key, so we're deleting the
+		// "surplus" above 5 file log files with the lowest indices.
+		const auto path = log_files.begin()->second;
+		std_fs::remove(path, ec);
 		log_files.erase(log_files.begin());
 	}
 }
 
-static std::optional<std::string> next_log_path(const std::string& dir_path){
-	auto log_files = collect_log_files(dir_path);
-	if (!log_files) return std::nullopt;
-
-	prune_old_logs(*log_files);
-
+static std::string get_next_logfile_name(const LogFileMap& log_files){
 	int32_t next_index = 1;
-	if (!(*log_files).empty()){
-		next_index = (*log_files).rbegin()->first + 1;
+	if (!log_files.empty()) {
+		next_index = log_files.rbegin()->first + 1;
 	}
+ 
+	return format_str("log%04d.txt", next_index); 
+}
 
-	const auto log_filename = std::format("dosbox-staging-{:03d}.log", next_index);
-	
-	return (std::filesystem::path(dir_path)/log_filename).string(); 
+static void setup_logging(const SectionProp& section)
+{
+	const auto log_mode_pref = section.GetString("log_mode");
+ 
+	if (log_mode_pref == "console") {
+		// set console on
+		loguru::g_stderr_verbosity = loguru::Verbosity_WARNING;
+	} else if (log_mode_pref == "file" || log_mode_pref == "console-and-file") {
+		std_fs::path log_dir = section.GetString("log_dir");
+		if (log_dir.empty()) {
+			log_dir = get_config_dir() / "logs";
+		}
+ 
+		const auto log_files = collect_log_files(log_dir.string());
+		if (!log_files) {
+			LOG_WARNING("LOG: Unable to access log directory '%s', falling back to "
+			            "console-only logging",
+			            log_dir.string().c_str());
+			loguru::g_stderr_verbosity = loguru::Verbosity_WARNING;
+			set_section_property_value("dosbox", "log_mode", "console");
+			return;
+		}
+ 
+		auto pruned_files = *log_files;
+		prune_old_logs(pruned_files);
+ 
+		const auto log_filename = get_next_logfile_name(pruned_files);
+		const auto log_path = log_dir / log_filename;
+ 
+		loguru::add_file(log_path.string().c_str(),
+		                 loguru::FileMode::Truncate,
+		                 loguru::Verbosity_MAX);
+ 
+		if (log_mode_pref == "file") {
+			loguru::g_stderr_verbosity = loguru::Verbosity_OFF;
+		}
+ 
+	} else { // don't display logs
+		// set console off
+		loguru::g_stderr_verbosity = loguru::Verbosity_OFF;
+	}
 }
 
 static void dosbox_realinit(SectionProp& section)
@@ -803,34 +844,8 @@ static void dosbox_realinit(SectionProp& section)
 		DOS_SetDiskSpeed(DiskSpeed::Maximum, DiskType::Floppy);
 	}
 
-	// set log type and log path
-	const auto user_log_destination = section.GetString("log_destination");
-	if (user_log_destination == "console") {
-		// set console on
-		loguru::g_stderr_verbosity = loguru::Verbosity_WARNING; 
-	} else if (user_log_destination == "file" || 
-				user_log_destination == "console-and-file") {
-		const auto user_log_loc = section.GetString("log_path");
-		const auto log_path = next_log_path(user_log_loc);
-
-		if (!log_path) {
-			// directory inaccessible — fall back to console-only
-			loguru::g_stderr_verbosity = loguru::Verbosity_WARNING;
-			return;
-		}
-
-		loguru::add_file(log_path->c_str(),
-					loguru::FileMode::Truncate,
-					loguru::Verbosity_MAX);
-
-		if (user_log_destination == "file") {
-			loguru::g_stderr_verbosity = loguru::Verbosity_OFF;
-		}
-
-	} else { // don't display logs
-		// set console off
-		loguru::g_stderr_verbosity = loguru::Verbosity_OFF; 
-	}
+	// set logging
+	setup_logging(section);
 }
 
 
@@ -904,7 +919,7 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 	        "    'resources/translations' directory.");
 
 	// option for logging to file
-	pstring = section->AddString("log_destination", OnlyAtStart, "console-and-file");
+	pstring = section->AddString("log_mode", OnlyAtStart, "console-and-file");
 	pstring->SetValues({"console", "file", "console-and-file", "off"});
 	pstring->SetHelp(
 			"Set the logging destination. ('console-and-file' by default).\n"
@@ -912,11 +927,12 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 			"console:  Log messages to the command line interface.\n"
 			"file:  Log messages to a file on disk.\n"
 			"console-and-file:  Log messages to both a file and the command line interface. (default)\n"
-			"off:  Disable all logging.\n");
-	
-	const auto log_path = get_config_dir() / "logs";
-	const auto log_path_str = log_path.string();
-	pstring = section->AddPath("log_path", OnlyAtStart, log_path_str.c_str());
+			"off:  Disable all logging.\n"
+			"\n"
+	        "Log files are written to the directory specified by 'log_dir' and are\n"
+	        "named log0001.txt, log0002.txt, etc. Only the last 5 log files are kept.");
+
+	pstring = section->AddString("log_dir", OnlyAtStart, "");
 	pstring->SetHelp(
 	        "Path to the directory where log files are stored.\n"
         	"Defaults to a 'logs' folder in the DOSBox configuration directory.");
