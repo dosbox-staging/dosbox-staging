@@ -632,6 +632,7 @@ void MidiDeviceFluidSynth::SetVolume(const int volume_percent)
 
 MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 {
+
 	fluid_set_log_function(FLUID_DBG, NULL, NULL);
 
 #ifdef NDEBUG
@@ -772,40 +773,6 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	set_thread_name(renderer, "dosbox:fsynth");
 
 	// Start playback
-	MIXER_UnlockMixerThread();
-}
-
-MidiDeviceFluidSynth::~MidiDeviceFluidSynth()
-{
-	LOG_MSG("FSYNTH: Shutting down");
-
-	if (had_underruns) {
-		LOG_WARNING(
-		        "FSYNTH: Fix underruns by lowering the CPU load, increasing "
-		        "the 'prebuffer' or 'blocksize' settings, or using a simpler SoundFont");
-	}
-
-	MIXER_LockMixerThread();
-
-	// Stop playback
-	if (mixer_channel) {
-		mixer_channel->Enable(false);
-	}
-
-	// Stop queueing new MIDI work and audio frames
-	work_fifo.Stop();
-	audio_frame_fifo.Stop();
-
-	// Wait for the rendering thread to finish
-	if (renderer.joinable()) {
-		renderer.join();
-	}
-
-	// Deregister the mixer channel and remove it
-	assert(mixer_channel);
-	MIXER_DeregisterChannel(mixer_channel);
-	mixer_channel.reset();
-
 	MIXER_UnlockMixerThread();
 }
 
