@@ -86,9 +86,49 @@ static constexpr uint8_t BX_NE2K_PAGE_FIRST = static_cast<uint8_t>(
 static constexpr uint8_t BX_NE2K_PAGE_LAST = static_cast<uint8_t>(
         (BX_NE2K_MEMEND / 256) - 1);
 
+// PSTOP is an exclusive bound -- the page one past the end of the receive
+// ring -- so unlike the other page registers it may legitimately name the
+// page just past chip memory. A driver that uses the whole buffer writes
+// MEMEND/256, which is one more than any valid page index.
+static constexpr uint8_t BX_NE2K_PAGE_STOP_LAST = static_cast<uint8_t>(
+        BX_NE2K_MEMEND / 256);
+
 static inline bool ne2k_page_in_range(uint8_t page)
 {
 	return page >= BX_NE2K_PAGE_FIRST && page <= BX_NE2K_PAGE_LAST;
+}
+
+static inline bool ne2k_page_stop_in_range(uint8_t page)
+{
+	return page >= BX_NE2K_PAGE_FIRST && page <= BX_NE2K_PAGE_STOP_LAST;
+}
+
+// Bounding the page registers individually is not enough for rx_frame(): the
+// wrap-around copy also needs the ring itself to be well-formed. With PSTOP
+// programmed at or below CURR, (page_stop - curr_page) is negative and the
+// unsigned endbytes computation underflows into a multi-gigabyte memcpy, even
+// though every register on its own is inside chip memory.
+static inline bool ne2k_rx_ring_is_valid(uint8_t page_start, uint8_t page_stop,
+                                         uint8_t curr_page)
+{
+	if (!ne2k_page_in_range(page_start) ||
+	    !ne2k_page_stop_in_range(page_stop) || page_start >= page_stop) {
+		return false;
+	}
+	return curr_page >= page_start && curr_page < page_stop;
+}
+
+// The transmit path reads tx_bytes -- a guest-programmed 16-bit count -- from
+// the TPSR page onwards, so validating the page alone leaves the read
+// unbounded.
+static inline bool ne2k_tx_buffer_in_range(uint8_t tx_page_start, uint16_t tx_bytes)
+{
+	if (!ne2k_page_in_range(tx_page_start)) {
+		return false;
+	}
+	const size_t offset = static_cast<size_t>(tx_page_start) * 256 -
+	                      BX_NE2K_MEMSTART;
+	return offset + tx_bytes <= BX_NE2K_MEMSIZ;
 }
 
 bx_ne2k_c::bx_ne2k_c(void) : s()
@@ -221,6 +261,12 @@ void bx_ne2k_c::write_cr(io_val_t data)
 		if (BX_NE2K_THIS s.TCR.loop_cntl != 1) {
 			BX_INFO("Loop mode %d not supported.",
 			        BX_NE2K_THIS s.TCR.loop_cntl);
+
+		} else if (!ne2k_tx_buffer_in_range(BX_NE2K_THIS s.tx_page_start,
+		                                    BX_NE2K_THIS s.tx_bytes)) {
+			LOG_WARNING("NE2000: Loopback transmit buffer out of range (TPSR 0x%02x, %u bytes), ignoring",
+			            BX_NE2K_THIS s.tx_page_start,
+			            (unsigned)BX_NE2K_THIS s.tx_bytes);
 		} else {
 			rx_frame(&BX_NE2K_THIS s.mem[BX_NE2K_THIS s.tx_page_start * 256 - BX_NE2K_MEMSTART],
 			         BX_NE2K_THIS s.tx_bytes);
@@ -272,8 +318,14 @@ void bx_ne2k_c::write_cr(io_val_t data)
 		// BX_NE2K_THIS ethdev->sendpkt(& BX_NE2K_THIS
 		// s.mem[BX_NE2K_THIS s.tx_page_start*256 - BX_NE2K_MEMSTART],
 		// BX_NE2K_THIS s.tx_bytes);
-		ethernet->SendPacket(&s.mem[s.tx_page_start * 256 - BX_NE2K_MEMSTART],
-		                     s.tx_bytes);
+		if (ne2k_tx_buffer_in_range(s.tx_page_start, s.tx_bytes)) {
+			ethernet->SendPacket(&s.mem[s.tx_page_start * 256 - BX_NE2K_MEMSTART],
+			                     s.tx_bytes);
+		} else {
+			LOG_WARNING("NE2000: Transmit buffer out of range (TPSR 0x%02x, %u bytes), dropping packet",
+			            s.tx_page_start,
+			            (unsigned)s.tx_bytes);
+		}
 
 		// s.tx_timer_index = (64 + 96 + 4*8 + BX_NE2K_THIS
 		// s.tx_bytes*8)/10;
@@ -668,7 +720,7 @@ void bx_ne2k_c::page0_write(io_port_t offset, io_val_t data, io_width_t io_len)
 
 	case 0x2: // PSTOP
 	          // BX_INFO(("Writing to PSTOP: %02x", value));
-		if (!ne2k_page_in_range(value)) {
+		if (!ne2k_page_stop_in_range(value)) {
 			LOG_WARNING("NE2000: PSTOP write out of range (0x%02x), ignoring",
 			            value);
 			break;
@@ -1313,6 +1365,21 @@ int bx_ne2k_c::rx_frame(const void* buf, unsigned io_len)
 		return -1;
 	}
 
+	// Validate the ring before doing any arithmetic with it. The page
+	// registers are bounded on write, but nothing there constrains them
+	// relative to each other, and the wrap-around copy below is only
+	// well-defined for page_start < page_stop with CURR inside the ring.
+	if (!ne2k_rx_ring_is_valid(BX_NE2K_THIS s.page_start,
+	                           BX_NE2K_THIS s.page_stop,
+	                           BX_NE2K_THIS s.curr_page)) {
+
+		LOG_WARNING("NE2000: Inconsistent rx ring (PSTART 0x%02x, PSTOP 0x%02x, CURR 0x%02x), dropping packet",
+		            BX_NE2K_THIS s.page_start,
+		            BX_NE2K_THIS s.page_stop,
+		            BX_NE2K_THIS s.curr_page);
+		return -1;
+	}
+
 	// Add the pkt header + CRC to the length, and work
 	// out how many 256-byte pages the frame would occupy
 	pages = (int)((io_len + 4u + 4u + 255u) / 256u);
@@ -1382,23 +1449,23 @@ int bx_ne2k_c::rx_frame(const void* buf, unsigned io_len)
 	        pktbuf[10],
 	        pktbuf[11]);
 
-	nextpage = check_cast<uint8_t>(BX_NE2K_THIS s.curr_page + pages);
+	// curr_page + pages can exceed 255 for an oversized frame. The register
+	// is 8-bit and wrapping is the intended behaviour, so truncate rather
+	// than check_cast, whose assert would abort a debug build.
+	nextpage = static_cast<uint8_t>(BX_NE2K_THIS s.curr_page + pages);
 	if (nextpage >= BX_NE2K_THIS s.page_stop) {
 		nextpage -= check_cast<uint8_t>(BX_NE2K_THIS s.page_stop -
 		                                BX_NE2K_THIS s.page_start);
 	}
 
-	// Defense in depth: even though the page registers are validated on
-	// write, refuse to touch s.mem[] unless every page value used in this
-	// copy is inside the real chip-memory range. This guards against any
-	// path (current or future) that sets these fields without going through
-	// the validated page0/page1 write handlers.
-	if (!ne2k_page_in_range(BX_NE2K_THIS s.curr_page) ||
-	    !ne2k_page_in_range(nextpage) ||
-	    !ne2k_page_in_range(BX_NE2K_THIS s.page_start) ||
-	    !ne2k_page_in_range(BX_NE2K_THIS s.page_stop)) {
+	// The ring itself is valid, but a frame larger than the ring can still
+	// leave nextpage outside it, and the wrap-around copy below derives its
+	// length from that. Drop rather than underflow.
+	if (nextpage < BX_NE2K_THIS s.page_start ||
+	    nextpage >= BX_NE2K_THIS s.page_stop) {
 
-		LOG_WARNING("NE2000: rx_frame page value out of range, dropping packet");
+		LOG_WARNING("NE2000: Next rx page 0x%02x outside the ring, dropping packet",
+		            nextpage);
 		return -1;
 	}
 
