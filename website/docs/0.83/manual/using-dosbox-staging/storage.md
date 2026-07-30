@@ -88,15 +88,19 @@ to the hard disk.
 
 ## DOSBox Staging drives
 
-DOSBox Staging provides two special drives in addition to whatever you mount:
+DOSBox Staging provides two special
+[automounted](../system/general.md#automount) drives in addition to whatever
+you mount:
 
-- **Z:** contains the built-in programs and commands (MOUNT, CONFIG, MIXER,
-  etc.). It is always present and always in the PATH. See
-  [DOS commands & programs](commands.md) for the full list.
+- **Z:** contains the built-in programs and commands (`MOUNT`, `BOOT`,
+  `MIXER`, `IMGMOUNT`, `MOUSECTL`, `SHOWPIC`, etc.). It is always present
+  and always in the PATH. See [DOS commands & programs](commands.md) for the
+  full list.
 
-- **Y:** contains a small set of bundled third-party utilities (DEBUG,
-  DELTREE, XCOPY). It is [automounted](../system/general.md#automount) by
-  default with its `Y:\DOS` directory added to the PATH.
+- **Y:** contains a small set of [bundled third-party
+  utilities](commands.md#bundled-third-party-programs) in its `Y:\DOS`
+  directory which is added automatically to the PATH (e.g. `DEBUG`, `DELTREE`
+  and `XCOPY`).
 
 
 ## Automounting
