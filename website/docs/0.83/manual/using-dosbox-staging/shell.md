@@ -1,33 +1,35 @@
 # The DOS shell
 
-When you start DOSBox Staging, you're greeted by a command prompt ---
-something like `Z:\>` or `C:\>`. This is the **shell**, the DOS command
-interpreter that reads what you type, executes commands, and displays the
-results. It's the primary way you interact with the emulated DOS environment.
+When DOSBox Staging starts, you'll usually spend a few moments at the DOS
+command prompt before launching a game or application. This is the **shell**,
+the command interpreter that lets you navigate drives and directories, mount
+storage, configure the environment, and start programs. Most interactions with
+DOS begin here, so it's worth becoming familiar with a few shell basics.
 
 On a real PC, this role was filled by `COMMAND.COM`, the default command
-processor shipped with MS-DOS. DOSBox Staging provides its own clean-room
-reimplementation that is compatible with the original but includes several
-modern quality-of-life enhancements such as [command
-history](#command-history), [tab completion](#tab-completion), and [clipboard
-integration](#clipboard-integration).
+processor shipped with MS-DOS. DOSBox Staging provides its own shell that is
+largely compatible with the original while adding modern conveniences such as
+[command history](#command-history), [tab completion](#tab-completion), and
+[clipboard integration](#clipboard-integration).
 
 
 ## How DOS works
 
 DOS was designed as a **single-user, single-tasking** operating system.
-Generally, only one program runs at a time --- there are no background
+Normally only one program runs at a time --- there are no background
 processes, no task switching, and no concurrent users. When you launch a game
 or application, it takes over the entire machine. When it exits, you're back
 at the shell prompt.
 
 DOSBox Staging faithfully emulates this model. The shell prompt is where you
 mount drives, configure settings, navigate directories, and launch programs.
-Once a program is running, the shell is suspended until the program finishes.
+Once a program starts, the shell waits until it exits before accepting more
+commands.
 
 The prompt itself shows your current **drive letter** and **directory**. For
-example, `C:\GAMES>` tells you that you're on the C drive in the `GAMES`
-directory.
+example, `C:\GAMES>` tells you that you're on the **C: drive** in the `GAMES`
+directory. The trailing `>` character indicates the shell is waiting for
+input.
 
 !!! note "Terminology"
 
@@ -39,15 +41,27 @@ directory.
 
     The "single-tasking" nature of DOS is actually not completely true. It was
     possible to install "background processes" via [TSR
-    (Terminate-and-Stay-Resident)](TODO) utilities even in early MS-DOS
-    versions that could change the behaviour of the programs running in the
-    "foreground" or play music in the background. Various clever solutions
-    existed to bring primitive multi-tasking capabilities into the DOS
-    environment (e.g, [Sidekick](), TODO more examples). These solutions
-    enjoyed limited degrees of success --- the real breakthrough and switch to
-    multi-tasking happened with the mass adoption of Windows 95. Many of these
-    solutions work in DOSBox Staging, but you won't need them for running
-    games.
+    (Terminate-and-Stay-Resident)](https://en.wikipedia.org/wiki/Terminate-and-stay-resident_program)
+    utilities even in early MS-DOS versions that could change the behaviour of
+    the programs running in the "foreground" or play music in the background.
+    Various clever programs existed to bring primitive multi-tasking
+    capabilities into the DOS environment (e.g, Borland Sidekick, Quarterdeck
+    DESQView, and DoubleDOS). These solutions enjoyed limited degrees of
+    success --- the real breakthrough and switch to multi-tasking happened
+    with the mass adoption of Windows 95.
+
+
+## DOS filenames
+
+DOS filenames traditionally follow the **8.3** convention: a maximum of 8
+characters for the name and 3 for the extension (e.g., `DIR.EXE`). Filenames
+are case-insensitive, so `DIR`, `dir`, and `Dir` all refer to the same file.
+Names cannot contain spaces, and only a limited set of special characters is
+allowed.
+
+While DOSBox Staging supports long filenames on mounted host drives, many DOS
+programs still expect or create traditional 8.3 names, so you'll encounter
+them frequently.
 
 
 ## Internal and external commands
@@ -60,11 +74,31 @@ DOS commands come in two varieties:
 
 - **External commands** are separate executable programs (`.COM`, `.EXE`, or
   `.BAT` files) that live on a drive. DOSBox Staging's own utilities ---
-  `MOUNT`, `MIXER`, `IMGMOUNT`, and others --- reside on the [Z:
-  drive](storage.md#dosbox-staging-drives), which is always available
+  `MOUNT`, `BOOT`, `MIXER`, `MOUSECTL`, `SHOWPIC` and many
+  others --- reside on the [Y: and Z:
+  drives](storage.md#dosbox-staging-drives), which are always available
   regardless of what other drives you have mounted.
 
-See [DOS commands](commands.md) for the complete command reference.
+This distinction explains why commands like `DIR` are always available, while
+others depend on what software is installed or which drives are mounted.
+
+When running a program, you normally omit its filename extension. For example,
+typing `DOOM` is equivalent to typing `DOOM.EXE`, provided that `DOOM.EXE` is
+the program DOS finds. If no extension is given, DOS searches for executable
+files in the standard order: `.COM`, then `.EXE`, then `.BAT`, running the
+first matching file it finds.
+
+Most DOS commands provide built-in help. Appending the `/?` option displays a
+brief usage summary:
+
+```text
+DIR /?
+COPY /?
+MOUNT /?
+```
+
+For a description of every command supported by DOSBox Staging, see [DOS
+commands](commands.md).
 
 
 ## Getting around
@@ -72,10 +106,10 @@ See [DOS commands](commands.md) for the complete command reference.
 
 ### Editing the command line
 
-The shell supports full command-line editing. You can move the cursor, insert
-and delete characters, and recall previous commands --- all features that
-required a separate `DOSKEY` utility on real MS-DOS systems (shipped with
-MS-DOS 5.0 in 1991), but are built into DOSBox Staging's DOS shell.
+The DOS shell supports full command-line editing. You can move the cursor, insert
+and delete characters, and recall previous commands. On real MS-DOS, these
+editing features were typically provided by the separate `DOSKEY` utility, but
+are built into DOSBox Staging's DOS shell.
 
 <div class="compact" markdown>
 
@@ -85,8 +119,6 @@ MS-DOS 5.0 in 1991), but are built into DOSBox Staging's DOS shell.
 | ++home++ / ++end++        | Jump to start / end of line
 | ++backspace++             | Delete character before cursor
 | ++delete++                | Delete character at cursor
-| ++escape++                | Clear the current line
-| ++f3++                    | Complete from the last command
 | ++up++ / ++down++         | Navigate command history
 | ++tab++ / ++shift+tab++   | Cycle through filename completions
 | ++ctrl+v++                | Paste from host clipboard
@@ -102,8 +134,9 @@ forward through them; ++shift+tab++ cycles backward. Typing any other key
 accepts the current completion and resumes normal editing.
 
 Tab completion prioritises executable files (`.COM`, `.EXE`, `.BAT`) over
-other file types, so the most likely match appears first. When used with the
-`CD` command, only directories are shown.
+non-executable file types, so the most likely match appears first. When used
+with the `CD` command (pressing ++tab++ after typing `CD` and a space
+character), only directories are shown.
 
 The [Getting Started
 guide](../../getting-started/setting-up-prince-of-persia.md#installing-the-game)
@@ -138,23 +171,23 @@ DOSBox Staging can exchange text with your host operating system's clipboard:
   into DOSBox Staging instead of retyping them.
 
 - Use the `CLIP` command to **copy** text to the clipboard, or to retrieve
-    its contents. Combined with [piping](#piping-and-redirection), you can
-    send command output straight to the host clipboard (for example, `DIR |
-    CLIP`).
+  its contents. Combined with [piping](#piping-and-redirection), you can
+  send command output straight to the host clipboard (for example, `DIR |
+  CLIP`).
 
 
 ## Working with the shell
 
-
 ### Environment variables
 
 DOS programs can read **environment variables** which are named values stored
-in the DOS environment. You can view all current variables with the `SET`
-command, or set one with `SET NAME=VALUE`.
+in the DOS environment. Many DOS games and utilities use environment variables
+to locate resources or configure their behaviour.
 
-When environment variable expansion is enabled, you can reference variables
-in commands using the `%VARIABLE%` syntax. For example, if `PATH` is set,
-typing `ECHO %PATH%` prints its value.
+You can view all current variables with the `SET` command, or set one with
+`SET NAME=VALUE`. When environment variable expansion is enabled, you can
+reference variables in commands using the `%VARIABLE%` syntax. For example, if
+`PATH` is set, typing `ECHO %PATH%` prints its value.
 
 By default, variable expansion is enabled when the emulated DOS version is
 7.0 or above (matching the behaviour of FreeDOS and MS-DOS 7.0's
@@ -169,6 +202,7 @@ By default, variable expansion is enabled when the emulated DOS version is
 
 
 ### Piping and redirection
+
 
 The shell supports standard I/O redirection and piping, letting you chain
 commands together or save output to files:
@@ -190,12 +224,25 @@ Some practical examples:
 
 | Command                  | Explanation
 | ----                     | ----
+| `ECHO Y | CHOICE`        | Pass the `Y` option to the `CHOICE` command
 | `DIR /B > FILELIST.TXT`  | Create `FILELIST.TXT` that contains the list of files in the current directory
 | `DIR | MORE`             | Show the current directory's contents and paginate the output
 | `TYPE README.TXT | CLIP` | Copy the contents of `README.TXT` to the clipboard
 
-The [Getting Started guide](../../getting-started/passport-to-adventure.md#installing-the-game)
+Chained piping is also supported, such as `DIR | SORT | MORE` for displaying
+sorted directory output one screen at a time (provided that you have the
+`SORT` command from MS-DOS or FreeDOS in your path).
+
+The [Getting Started
+guide](../../getting-started/passport-to-adventure.md#installing-the-game)
 demonstrates piping with a practical example.
+
+!!! note
+
+    If the current directory and C: are both read-only, or no C: drive is
+    mounted at all, the environment variable `%TEMP%` (or `%TMP%`) needs to be
+    set within DOS pointing to a writable directory so that piping will work
+    properly (e.g. `SET TEMP=C:\TEMP`).
 
 
 ### Text modes
@@ -214,8 +261,8 @@ SVGA adapter, all 80-column and 132-column modes are available (e.g.,
 `80x25`, `80x43`, `80x50`, `132x25`, `132x43`, `132x50`, `132x60`).
 Earlier adapters like CGA and EGA support fewer modes.
 
-Run `MODE /?` the full list of supported modes and additional options such as
-setting the keyboard repeat rate.
+Run `MODE /?` for the full list of supported modes and additional options such
+as setting the keyboard repeat rate.
 
 !!! warning
 
@@ -241,11 +288,11 @@ characters many DOS applications use for their text-mode interfaces. Localised
 DOS installations used different code pages (e.g., **850** for Western
 European languages or **866** for Cyrillic).
 
-DOS localisation is a complex topic; keyboard layouts, display fonts, and file
-name handling all depend on code page settings and can interact in surprising
-ways. The [`KEYB`](commands.md) command can be used to switch keyboard
-layouts; see the [Localisation](../system/localisation.md) chapter for details
-on keyboard layouts, code pages, and regional settings.
+Supporting multiple languages in DOS involves keyboard layouts, code pages,
+display fonts, and regional settings, all of which interact with each other.
+The `KEYB` command can be used to switch keyboard layouts; see the
+[Localisation](../system/localisation.md) chapter for details on keyboard
+layouts, code pages, and regional settings.
 
 
 ## Batch files & automation
