@@ -91,7 +91,7 @@ first matching file it finds.
 Most DOS commands provide built-in help. Appending the `/?` option displays a
 brief usage summary:
 
-```text
+``` { . .dos-prompt }
 DIR /?
 COPY /?
 MOUNT /?
@@ -201,8 +201,47 @@ By default, variable expansion is enabled when the emulated DOS version is
     available regardless of this setting.
 
 
-### Piping and redirection
+### The `PATH` variable
 
+When you type the name of a command or program, DOS first looks in the current
+directory. If it doesn't find a matching executable there, it searches each
+directory listed in the `PATH` environment variable until it finds one.
+
+Display the current search path with:
+
+``` { . .dos-prompt }
+SET PATH
+```
+
+Set a new search path with:
+
+``` { . .dos-prompt }
+SET PATH=C:\DOS;C:\UTILS
+```
+
+In this example, DOS searches the current directory first, then `C:\DOS`
+and `C:\UTILS`.
+
+The `PATH` variable lets you run commonly used programs from any directory
+without typing their full path. For example, if `EDIT.EXE` resides in
+`C:\DOS` and that directory is listed in `PATH`, you can simply type:
+
+``` { . .dos-prompt }
+EDIT README.TXT
+```
+
+instead of:
+
+``` { . .dos-prompt }
+C:\DOS\EDIT README.TXT
+```
+
+DOSBox Staging's own commands, such as `MOUNT` and `SHOWPIC`, are available
+regardless of the `PATH` setting because they are built into the DOSBox
+Staging shell.
+
+
+### Piping and redirection
 
 The shell supports standard I/O redirection and piping, letting you chain
 commands together or save output to files:
@@ -231,7 +270,7 @@ Some practical examples:
 
 Chained piping is also supported, such as `DIR | SORT | MORE` for displaying
 sorted directory output one screen at a time (provided that you have the
-`SORT` command from MS-DOS or FreeDOS in your path).
+`SORT` command from MS-DOS or FreeDOS in your [path](#the-path-variable)).
 
 The [Getting Started
 guide](../../getting-started/passport-to-adventure.md#installing-the-game)
@@ -250,7 +289,7 @@ demonstrates piping with a practical example.
 The `MODE` command lets you switch the shell's text mode to display more (or
 fewer) columns and lines. For example:
 
-```
+``` { . .dos-prompt }
 MODE 80,43
 MODE 132x50
 MODE CON COLS=80 LINES=25
