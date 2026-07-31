@@ -371,3 +371,142 @@ video adapter:
 
 These are independent of the [`machine`](../system/general.md#machine) setting
 and can be used with any adapter.
+
+<!-- TODO: general.md's config-settings block for machine/vmemsize/
+     vesa_modes/vga_8dot_font/vmem_delay is appended below as a new
+     "Configuration settings" section. This duplicates some info already
+     stated in prose above (e.g. default vmemsize per adapter, VESA mode
+     exclusions) — worth deciding whether to trim the prose or the
+     reference tables so we're not maintaining the same facts twice. -->
+
+## Configuration settings
+
+You can set these in the `[dosbox]` configuration section.
+
+##### machine
+
+:   Set the video adapter or machine to emulate.
+
+    Possible values:
+
+    <div class="compact" markdown>
+
+    - `hercules` -- Hercules Graphics Card (HGC) (see
+      [`monochrome_palette`](rendering.md#monochrome_palette)).
+    - `cga_mono` -- CGA adapter connected to a monochrome monitor (see
+      [`monochrome_palette`](rendering.md#monochrome_palette)).
+    - `cga` -- IBM Color Graphics Adapter (CGA). Also enables composite
+      video emulation (see [Composite video](composite-video.md)).
+    - `pcjr` -- An IBM PCjr machine. Also enables PCjr sound and composite
+      video emulation. See [Machine types](../system/machine-types.md).
+    - `tandy` -- A Tandy 1000 machine with TGA graphics. Also enables Tandy
+      sound and composite video emulation. See
+      [Machine types](../system/machine-types.md).
+    - `ega` -- IBM Enhanced Graphics Adapter (EGA).
+    - `svga_paradise` -- Paradise PVGA1A SVGA card (no VESA VBE; 512K vmem
+      by default, can be set to 256K or 1MB with [`vmemsize`](#vmemsize)).
+      This is the closest to IBM's original VGA adapter.
+    - `svga_et3000` -- Tseng Labs ET3000 SVGA card (no VESA VBE; fixed 512K
+      vmem).
+    - `svga_et4000` -- Tseng Labs ET4000 SVGA card (no VESA VBE; 1MB vmem
+      by default, can be set to 256K or 512K with [`vmemsize`](#vmemsize)).
+    - `svga_s3` *default*{ .default } -- S3 Trio64 (VESA VBE 2.0; 4MB vmem
+      by default, can be set to 512K, 1MB, 2MB, or 8MB with
+      [`vmemsize`](#vmemsize)).
+    - `vesa_oldvbe` -- Same as `svga_s3` but limited to VESA VBE 1.2.
+    - `vesa_nolfb` -- Same as `svga_s3` (VESA VBE 2.0), plus the "no linear
+      framebuffer" hack (needed only by a few games).
+
+    </div>
+
+##### vmemsize
+
+:   Video memory in MB (1--8) or KB (256 to 8192). See the [`machine`](#machine)
+    setting for the list of valid options and defaults per adapter.
+
+    Possible values: `auto` *default*{ .default } (uses the default for the
+    selected video adapter), or a specific size in MB or KB.
+
+
+##### vesa_modes
+
+:   Controls which VESA video modes are available.
+
+    Possible values:
+
+    - `compatible` *default*{ .default } -- Only the most compatible VESA
+      modes for the configured video memory size. Recommended with 4 or 8 MB
+      of video memory ([`vmemsize`](#vmemsize)) for the widest compatibility
+      with games. 320x200 high colour modes are excluded as they were not
+      properly supported until the late '90s. The 256-colour linear
+      framebuffer 320x240, 400x300, and 512x384 modes are also excluded as
+      they cause timing problems in Build Engine games.
+
+    - `halfline` -- Same as `compatible`, but the 120h VESA mode is replaced
+      with a special halfline mode used by [Extreme Assault](https://www.mobygames.com/game/1396/extreme-assault/). Use only if
+      needed.
+
+    - `all` -- All modes are available, including extra DOSBox-specific VESA
+      modes. Use 8 MB of video memory for the best results. Some games
+      misbehave in the presence of certain VESA modes; try `compatible` mode
+      if this happens. The 320x200 high colour modes available in this mode
+      are often required by late '90s demoscene productions.
+
+    The following table shows the available resolutions in `compatible` mode
+    and the minimum video memory required for each colour depth. Standard VGA
+    modes (320&times;200, 640&times;480, etc.) are always available regardless
+    of the `vesa_modes` setting.
+
+    <div class="compact" markdown>
+
+    | Resolution      | 4-bit | 8-bit | 16-bit | 24-bit | 32-bit |
+    |-----------------|-------|-------|--------|--------|--------|
+    | 640&times;400   | ---   | any   | ---    | ---    | 1 MB   |
+    | 640&times;480   | any   | any   | 1 MB   | 1 MB   | 2 MB   |
+    | 800&times;600   | any   | any   | 1 MB   | ---    | 2 MB   |
+    | 1024&times;768  | any   | 1 MB  | 2 MB   | ---    | 4 MB   |
+    | 1152&times;864  | ---   | 1 MB  | 2 MB   | 4 MB   | 4 MB   |
+    | 1280&times;960  | 1 MB  | 2 MB  | 4 MB   | 4 MB   | 8 MB   |
+    | 1280&times;1024 | 1 MB  | 2 MB  | 4 MB   | 4 MB   | 8 MB   |
+    | 1600&times;1200 | 1 MB  | 2 MB  | 4 MB   | 8 MB   | 8 MB   |
+
+    </div>
+
+    The `all` mode adds the following on top of `compatible`:
+
+    <div class="compact" markdown>
+
+    - 320&times;200 and 320&times;240 high colour modes (15/16/24/32-bit)
+    - 320&times;400 and 320&times;480 modes in various depths
+    - 400&times;300 modes (8/15/16/24-bit)
+    - 512&times;384 modes (8/15/16/32-bit)
+    - 848&times;480 widescreen modes (8/15/16/32-bit)
+
+    </div>
+
+
+##### vga_8dot_font
+
+:   Use 8-pixel-wide fonts on VGA adapters.
+
+    Possible values: `on`, `off` *default*{ .default }
+
+
+##### vmem_delay
+
+:   Set video memory access delay emulation.
+
+    Possible values:
+
+    - `off` *default*{ .default } -- Disable video memory access delay
+      emulation. This is preferable for most games to avoid slowdowns.
+    - `on` -- Enable video memory access delay emulation (3000 ns). This can
+      help reduce or eliminate flicker in Hercules, CGA, EGA, and early VGA
+      games.
+    - `<number>` -- Set access delay in nanoseconds. Valid range is 0 to
+      20000 ns; 500 to 5000 ns is the most useful range.
+
+    !!! note
+
+        Only set this on a per-game basis when necessary as it slows down
+        the whole emulator.
