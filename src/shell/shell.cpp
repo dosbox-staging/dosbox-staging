@@ -1216,6 +1216,48 @@ void SHELL_InitAndRun()
 	        " Volume Serial Number is %04X-%04X\n"
 	        "\n");
 
+	MSG_Add("SHELL_CMD_CHCP_HELP",
+	        "Display or change the active character set (code page).\n");
+
+	MSG_Add("SHELL_CMD_CHCP_HELP_LONG",
+	        "Usage:\n"
+	        "  [color=light-green]chcp[reset]\n"
+	        "  [color=light-green]chcp[reset] [color=white]CODEPAGE[reset]\n"
+	        "\n"
+	        "Parameters:\n"
+	        "  [color=white]CODEPAGE[reset]  code page number, e.g. [color=white]437[reset] or [color=white]850[reset]\n"
+	        "\n"
+	        "Notes:\n"
+	        "  - Running [color=light-green]chcp[reset] without an argument shows the currently active code page.\n"
+	        "  - Changing the code page keeps the currently loaded keyboard layout; use the\n"
+	        "    [color=light-green]keyb[reset] command to also change the keyboard layout.\n"
+	        "  - The code page cannot be changed if no keyboard layout is loaded yet.\n"
+	        "\n"
+	        "Examples:\n"
+	        "  [color=light-green]chcp[reset]\n"
+	        "  [color=light-green]chcp[reset] [color=white]437[reset]\n");
+
+	MSG_Add("SHELL_CMD_CHCP_ACTIVE", "Active code page: %d\n");
+	MSG_Add("SHELL_CMD_CHCP_INVALID_CODE_PAGE", "Invalid code page.\n");
+
+	MSG_Add("SHELL_CMD_CHCP_NO_LAYOUT_LOADED",
+	        "No keyboard layout loaded, can't change the code page.\n");
+
+	MSG_Add("SHELL_CMD_CHCP_SCREEN_FONT_UNUSABLE",
+	        "Code page %d found, but the screen font could not be used.\n");
+
+	MSG_Add("SHELL_CMD_CHCP_NO_BUNDLED_CPI_FILE",
+	        "No bundled code page information file for code page %d.\n");
+
+	MSG_Add("SHELL_CMD_CHCP_NO_CODE_PAGE_IN_FILE",
+	        "No code page %d in the code page information file.\n");
+
+	MSG_Add("SHELL_CMD_CHCP_INCOMPATIBLE_MACHINE",
+	        "Can't change the screen font; EGA machine or better is required.\n");
+
+	MSG_Add("SHELL_CMD_CHCP_NO_LAYOUT_FOR_CODE_PAGE",
+	        "No keyboard layout '%s' for code page %d.\n");
+
 	MSG_Add("SHELL_CMD_MOVE_HELP",
 	        "Move files and rename files and directories.\n");
 	MSG_Add("SHELL_CMD_MOVE_HELP_LONG",
