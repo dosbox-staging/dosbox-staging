@@ -213,6 +213,14 @@ nav:
         - 0.83/manual/system/dos.md
         - 0.83/manual/system/localisation.md
 
+      - System2:
+        - 0.83/manual/system2/overview.md
+        - 0.83/manual/system2/cpu.md
+        - 0.83/manual/system2/memory.md
+        - 0.83/manual/system2/dos.md
+        - 0.83/manual/system2/localisation.md
+        - 0.83/manual/system2/machine-types.md
+
       - Graphics:
         - 0.83/manual/graphics/adapters.md
         - 0.83/manual/graphics/display-and-window.md
