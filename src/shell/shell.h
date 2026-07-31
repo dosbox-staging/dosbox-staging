@@ -141,6 +141,7 @@ public:
 
 	/* Commands */
 	void CMD_HELP(char* args);
+	void CMD_CHCP(char* args);
 	void CMD_CLS(char* args);
 	void CMD_COPY(char* args);
 	void CMD_DATE(char* args);

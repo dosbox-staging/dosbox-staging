@@ -23,6 +23,7 @@
 #include "cpu/paging.h"
 #include "cpu/registers.h"
 #include "dos/dos.h"
+#include "dos/dos_keyboard_layout.h"
 #include "dos/drives.h"
 #include "dos/programs/more_output.h"
 #include "hardware/pic.h"
@@ -39,6 +40,7 @@
 static const std::map<std::string, SHELL_Cmd> shell_cmds = {
 	{ "CALL",     {&DOS_Shell::CMD_CALL,     "CALL",     HELP_Filter::All,    HELP_Category::Batch } },
 	{ "CD",       {&DOS_Shell::CMD_CHDIR,    "CHDIR",    HELP_Filter::Common, HELP_Category::File } },
+	{ "CHCP",     {&DOS_Shell::CMD_CHCP,     "CHCP",     HELP_Filter::All,    HELP_Category::Misc } },
 	{ "CHDIR",    {&DOS_Shell::CMD_CHDIR,    "CHDIR",    HELP_Filter::All,    HELP_Category::File } },
 	{ "CLS",      {&DOS_Shell::CMD_CLS,      "CLS",      HELP_Filter::Common, HELP_Category::Misc} },
 	{ "COPY",     {&DOS_Shell::CMD_COPY,     "COPY",     HELP_Filter::Common, HELP_Category::File} },
@@ -2122,7 +2124,75 @@ void DOS_Shell::CMD_PATH(char *args){
 	}
 }
 
-void DOS_Shell::CMD_VER(char *args)
+void DOS_Shell::CMD_CHCP(char* args)
+{
+	HELP("CHCP");
+
+	if (args) {
+		StripSpaces(args);
+	}
+
+	if (!args || !*args) {
+		WriteOut(MSG_Get("SHELL_CMD_CHCP_ACTIVE"), dos.loaded_codepage);
+		return;
+	}
+
+	const auto keyboard_layout = DOS_GetLoadedLayout();
+	if (keyboard_layout.empty()) {
+		WriteOut(MSG_Get("SHELL_CMD_CHCP_NO_LAYOUT_LOADED"));
+		return;
+	}
+
+	const auto value = parse_int(args);
+	if (!value || (*value < 1) || (*value > UINT16_MAX)) {
+		WriteOut(MSG_Get("SHELL_CMD_CHCP_INVALID_CODE_PAGE"));
+		return;
+	}
+
+	auto tried_code_page = static_cast<uint16_t>(*value);
+
+	const auto result = DOS_LoadKeyboardLayout(keyboard_layout, tried_code_page);
+	if (result != KeyboardLayoutResult::OK) {
+		using enum KeyboardLayoutResult;
+		switch (result) {
+		case ScreenFontUnusable:
+			WriteOut(MSG_Get("SHELL_CMD_CHCP_SCREEN_FONT_UNUSABLE"),
+			         tried_code_page);
+			break;
+
+		case NoBundledCpiFileForCodePage:
+			WriteOut(MSG_Get("SHELL_CMD_CHCP_NO_BUNDLED_CPI_FILE"),
+			         tried_code_page);
+			break;
+
+		case NoCodePageInCpiFile:
+			WriteOut(MSG_Get("SHELL_CMD_CHCP_NO_CODE_PAGE_IN_FILE"),
+			         tried_code_page);
+			break;
+
+		case IncompatibleMachine:
+			WriteOut(MSG_Get("SHELL_CMD_CHCP_INCOMPATIBLE_MACHINE"));
+			break;
+
+		case NoLayoutForCodePage:
+			WriteOut(MSG_Get("SHELL_CMD_CHCP_NO_LAYOUT_FOR_CODE_PAGE"),
+			         keyboard_layout.c_str(),
+			         tried_code_page);
+			break;
+
+		default:
+			LOG_WARNING("SHELL:CHCP: Invalid return code %x",
+			            enum_val(result));
+			assert(false);
+			break;
+		}
+		return;
+	}
+
+	WriteOut(MSG_Get("SHELL_CMD_CHCP_ACTIVE"), dos.loaded_codepage);
+}
+
+void DOS_Shell::CMD_VER(char* args)
 {
 	HELP("VER");
 	if (args && strlen(args)) {
