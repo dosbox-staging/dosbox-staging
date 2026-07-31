@@ -368,6 +368,8 @@ void KEYB::AddMessages()
 	        "    CGA, or Hercules always use the ROM screen font.\n"
 	        "  - You can use the 'us' keyboard layout with any code page; all the other\n"
 	        "    layouts work with selected code pages only.\n"
+	        "  - Use the [color=light-green]chcp[reset] command to change the code page while keeping the\n"
+	        "    current keyboard layout.\n"
 	        "\n"
 	        "Examples:\n"
 	        "  [color=light-green]KEYB[reset]\n"
