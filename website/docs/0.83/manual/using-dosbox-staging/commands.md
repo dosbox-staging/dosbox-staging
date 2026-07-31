@@ -94,6 +94,7 @@ These commands are specific to DOSBox Staging and have no MS-DOS equivalent.
 
 | Command    | Aliases    | Description |
 |------------|------------|-------------|
+| `CHCP`     |            | Display or change the active character set (code page) |
 | `CLS`      |            | Clear the DOS screen |
 | `DATE`     |            | Display or change the internal date |
 | `EXIT`     |            | Exit from the DOS shell |

@@ -47,7 +47,8 @@ Code pages control which character set is available on screen. DOSBox Staging
 bundles the FreeDOS ISO, KOI, MAC, and WIN code page packages, providing
 broad coverage of Latin, Cyrillic, and Greek scripts. After startup, use the
 `KEYB` command to manage keyboard layouts and code pages at runtime (run
-`HELP KEYB` for details).
+`KEYB /?` for details), or the `CHCP` command to switch just the code page
+while keeping the current keyboard layout (run `CHCP /?` for details).
 
 To see what's available, start DOSBox Staging with the following command line
 arguments:
@@ -108,7 +109,7 @@ in `[dos]`.
     values from the host OS settings. The layout can be followed by the code
     page number, e.g., `uk 850` selects a Western European screen font. After
     startup, use the `KEYB` command to manage keyboard layouts and code pages
-    (run `HELP KEYB` for details).
+    (run `KEYB /?` for details).
 
     !!! note
 
