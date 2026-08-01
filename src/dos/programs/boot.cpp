@@ -543,7 +543,7 @@ void BOOT::AddMessages()
 	        "  [color=light-cyan]IMAGEFILE[reset]  one or more floppy images, separated by spaces\n"
 	        "\n"
 	        "Notes:\n"
-	        "  A DOS drive letter must have been mounted previously with [color=light-green]imgmount[reset] command.\n"
+	        "  A DOS drive letter must have been mounted previously with [color=light-green]mount[reset] command.\n"
 	        "  The DOS drive or disk image must be bootable, containing DOS system files.\n"
 	        "  If more than one disk images are specified, you can swap them with a hotkey.\n"
 	        "\n"
