@@ -80,7 +80,7 @@ private:
 	void MountLocal(MountParameters& params, const std::string& local_path);
 
 	bool MountImageFat(MountParameters& params);
-	bool MountImageIso(MountParameters& params);
+	bool MountImageIso(const MountParameters& params);
 	bool MountImageRaw(MountParameters& params);
 
 	void WriteMountStatus(const std::string& image_type,
