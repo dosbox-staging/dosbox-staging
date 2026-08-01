@@ -85,7 +85,7 @@ private:
 	bool MountImage(MountParameters& params);
 
 	bool MountImageFat(MountParameters& params);
-	bool MountImageIso(MountParameters& params);
+	bool MountImageIso(const MountParameters& params);
 	bool MountImageRaw(MountParameters& params);
 
 	void WriteMountStatus(const std::string& image_type,
