@@ -596,7 +596,7 @@ static void run_binary_executable(const std::string_view fullname,
 	               std::string(fullname).c_str(),
 	               fullname.size() + 1);
 
-	/* HACK: Store full commandline for mount and imgmount */
+	/* HACK: Store full commandline for MOUNT */
 	full_arguments.assign(args);
 
 	/* Fill the command line */
