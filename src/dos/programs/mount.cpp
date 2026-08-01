@@ -865,8 +865,10 @@ std::string MOUNT::GetDosMappedHostPath(const std::string& dos_path) const
 }
 
 // Process paths and prepare (mutate) the passed `MountParameters` for
-// mounting. This includes resolving host paths, auto-detecting mount types,
-// etc.
+// mounting. This includes resolving host paths, wildcard path arguments,
+// auto-detecting mount types, and determining whether we're dealing with
+// image or directory/overlay mounts.
+//
 void MOUNT::ProcessPaths(const std::string first_path, MountParameters& params,
                          bool path_relative_to_last_config)
 {
@@ -1253,6 +1255,18 @@ std::optional<MountParameters> MOUNT::ProcessArguments(CommandLine* cmd)
 		return {};
 	}
 
+	// Get the first path argument
+	std::string first_path = {};
+	if (!cmd->FindCommand(2, first_path) || first_path.empty()) {
+		ShowUsage();
+		return {};
+	}
+
+	// Resolve host paths, wildcard path arguments, auto-detect mount types,
+	// and determine whether we're dealing with image or directory/overlay
+	// mounts.
+	ProcessPaths(first_path, params, path_relative_to_last_config);
+
 	// Check drive geometry and types, abort if not valid
 	if (!ParseGeometry(params)) {
 		return {};
@@ -1262,17 +1276,6 @@ std::optional<MountParameters> MOUNT::ProcessArguments(CommandLine* cmd)
 	if (!ParseDrive(params, explicit_fs)) {
 		return {};
 	}
-
-	// Parse paths and execute (MountImage or MountLocal)
-	std::string first_path = {};
-
-	// Get the first path argument
-	if (!cmd->FindCommand(2, first_path) || first_path.empty()) {
-		ShowUsage();
-		return {};
-	}
-
-	ProcessPaths(first_path, params, path_relative_to_last_config);
 
 	if (!MountPaths(params)) {
 		return {};
