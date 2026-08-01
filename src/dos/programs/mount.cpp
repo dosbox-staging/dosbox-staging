@@ -215,7 +215,7 @@ void MOUNT::WriteMountStatus(const std::string& image_type,
 bool MOUNT::MountImageFat(MountParameters& params)
 {
 	// Autosize detection
-	bool detect_image_size = (params.type == "hdd") &&
+	bool detect_image_size = (params.type == MountType::HardDiskImage) &&
 	                         (params.sizes[0] == 0 && params.sizes[1] == 0 &&
 	                          params.sizes[2] == 0 && params.sizes[3] == 0);
 
@@ -514,16 +514,17 @@ bool MOUNT::MountImageRaw(MountParameters& params)
 bool MOUNT::MountImage(MountParameters& params)
 {
 	// Determine Media ID if not already set strictly
-	params.mediaid = (params.type == "floppy") ? MediaId::Floppy1_44MB
-	                                           : MediaId::HardDisk;
+	params.mediaid = (params.type == MountType::FloppyImage)
+	                       ? MediaId::Floppy1_44MB
+	                       : MediaId::HardDisk;
 
-	if (params.fstype == "fat") {
+	if (params.fstype == MountFileSystemType::Fat16) {
 		return MountImageFat(params);
 
-	} else if (params.fstype == "iso") {
+	} else if (params.fstype == MountFileSystemType::Iso) {
 		return MountImageIso(params);
 
-	} else if (params.fstype == "none") {
+	} else if (params.fstype == MountFileSystemType::None) {
 		return MountImageRaw(params);
 	}
 	return true;
@@ -552,6 +553,44 @@ bool MOUNT::HandleUnmount()
 	return false;
 }
 
+static std::optional<MountType> parse_mount_type(const std::string s)
+{
+	if (s == "floppy" || s == "fdd") {
+		return MountType::FloppyImage;
+
+	} else if (s == "hdd") {
+		return MountType::HardDiskImage;
+
+	} else if (s == "iso" || s == "cdrom") {
+		return MountType::CdRomImage;
+
+	} else if (s == "dir") {
+		return MountType::Directory;
+
+	} else if (s == "overlay") {
+		return MountType::Overlay;
+
+	} else {
+		return {};
+	}
+}
+
+static std::optional<MountFileSystemType> parse_file_system_type(const std::string s)
+{
+	if (s == "fat") {
+		return MountFileSystemType::Fat16;
+
+	} else if (s == "iso") {
+		return MountFileSystemType::Iso;
+
+	} else if (s == "none") {
+		return MountFileSystemType::None;
+
+	} else {
+		return {};
+	}
+}
+
 // Sets:
 //   params.type   (from the -t option)
 //   params.roflag (from the -ro option)
@@ -570,42 +609,51 @@ bool MOUNT::ParseArguments(MountParameters& params, bool& explicit_fs,
 		path_relative_to_last_config = true;
 	}
 
-	cmd->FindString("-t", params.type, true);
+	// Default is "dir" if the -t option is not provided
+	std::string type_str = "dir";
+	cmd->FindString("-t", type_str, true);
 
-	// Allow aliases or standard image types to pass through
-	if (params.type == "cdrom") {
-		params.type = "iso";
-	}
-	if (params.type == "fdd") {
-		params.type = "floppy";
-	}
-
-	// Validate the requested mount type
-	if (params.type != "floppy" && params.type != "dir" &&
-	    params.type != "overlay" && params.type != "iso" &&
-	    params.type != "hdd") {
-
+	const auto maybe_mount_type = parse_mount_type(type_str);
+	if (!maybe_mount_type) {
 		NOTIFY_DisplayWarning(Notification::Source::Console,
 		                      "MOUNT",
 		                      "PROGRAM_MOUNT_ILL_TYPE",
-		                      params.type.c_str());
+		                      type_str.c_str());
 		return false;
 	}
+	params.type = *maybe_mount_type;
 
 	params.roflag = cmd->FindExist("-ro", true);
 
 	// Parse -fs (filesystem type)
-	if (params.type == "iso") {
-		params.fstype = "iso";
+	// Default is "fat" if the -fs option is not provided
+	std::string fstype_str = "fat";
+
+	explicit_fs = cmd->FindString("-fs", fstype_str, true);
+
+	const auto maybe_fs_type = parse_file_system_type(fstype_str);
+	if (!maybe_fs_type) {
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "MOUNT",
+		                      "PROGRAM_MOUNT_ILL_TYPE",
+		                      fstype_str.c_str());
+		return false;
 	}
-	explicit_fs = cmd->FindString("-fs", params.fstype, true);
+	if (explicit_fs) {
+		params.fstype = *maybe_fs_type;
+	} else {
+		if (params.type == MountType::CdRomImage) {
+			params.fstype = MountFileSystemType::Iso;
+		}
+	}
 
 	// Parse -ide
 	std::string ide_value = {};
 
 	params.is_ide = cmd->FindString("-ide", ide_value, true) ||
 	                cmd->FindExist("-ide", true);
-	if (params.is_ide && (params.type == "iso")) {
+
+	if (params.is_ide && (params.type == MountType::CdRomImage)) {
 		IDE_Get_Next_Cable_Slot(params.ide_index, params.is_second_cable_slot);
 	}
 
@@ -625,12 +673,15 @@ bool MOUNT::ParseGeometry(MountParameters& params)
 	std::string str_chs  = "";
 
 	// Default sizing logic based on type
-	if (params.type == "floppy") {
+	switch (params.type) {
+	case MountType::FloppyImage:
 		str_size = "512,1,2880,2880";
 
 		params.mediaid = MediaId::Floppy1_44MB;
+		break;
 
-	} else if (params.type == "dir" || params.type == "overlay") {
+	case MountType::Directory:
+	case MountType::Overlay: {
 		// 512*32*32765==~500MB total size
 		// 512*32*16000==~250MB total free size
 		str_size = "512,32,32765,16000";
@@ -647,18 +698,20 @@ bool MOUNT::ParseGeometry(MountParameters& params)
 				params.mediaid = MediaId::Floppy1_44MB;
 			}
 		}
+	} break;
 
-	} else if (params.type == "iso") {
+	case MountType::CdRomImage:
 		str_size = "2048,1,65535,0";
 
 		// mediaid is used in staging to differentiate between floppy
 		// and non-floppy for cache rescan, disk noise and I/O timing.
 		// The same value was used in the original dosbox code
 		params.mediaid = MediaId::HardDisk;
+		break;
 
-	} else {
-		// Type parameter validation should prevent this from happening
-		assert(params.type == "hdd");
+	case MountType::HardDiskImage: break;
+
+	default: assertm(false, "Invalid MountType");
 	}
 
 	// Parse the free space in mb (kb for floppies)
@@ -669,7 +722,7 @@ bool MOUNT::ParseGeometry(MountParameters& params)
 		char teststr[1024];
 		uint16_t freesize = static_cast<uint16_t>(atoi(mb_size.c_str()));
 
-		if (params.type == "floppy") {
+		if (params.type == MountType::FloppyImage) {
 			// freesize in kb
 			safe_sprintf(teststr,
 			             "512,1,2880,%d",
@@ -779,7 +832,7 @@ bool MOUNT::ParseDrive(MountParameters& params, bool explicit_fs)
 			// If user did not explicit specify filesystem, assume
 			// 'none' for raw bootable access
 			if (!explicit_fs) {
-				params.fstype = "none";
+				params.fstype = MountFileSystemType::None;
 			}
 		} else {
 			NOTIFY_DisplayWarning(Notification::Source::Console,
@@ -791,7 +844,7 @@ bool MOUNT::ParseDrive(MountParameters& params, bool explicit_fs)
 		params.drive = first_char;
 
 		// Allow A:, B:, C: and D: to be mounted as raw bootable images
-		if (explicit_fs && params.fstype == "none") {
+		if (explicit_fs && params.fstype == MountFileSystemType::None) {
 			switch (params.drive) {
 			case 'A':
 				params.drive           = '0';
@@ -824,7 +877,7 @@ bool MOUNT::ParseDrive(MountParameters& params, bool explicit_fs)
 
 	// Check overlaps
 	if (!params.is_drive_number) {
-		if (params.type == "overlay") {
+		if (params.type == MountType::Overlay) {
 			// Ensure that the base drive exists:
 			if (!Drives.at(drive_index(params.drive))) {
 				NOTIFY_DisplayWarning(Notification::Source::Console,
@@ -931,9 +984,9 @@ void MOUNT::ProcessPaths(const std::string first_path, MountParameters& params,
 
 	const auto target_is_dir = stat_ok && S_ISDIR(test.st_mode);
 
-	const auto explicit_image_type = (params.type == "hdd" ||
-	                                  params.type == "iso" ||
-	                                  params.type == "floppy");
+	const auto explicit_image_type = (params.type == MountType::HardDiskImage ||
+	                                  params.type == MountType::CdRomImage ||
+	                                  params.type == MountType::FloppyImage);
 
 	const auto has_wildcards = path_arg_1.find_first_of("*?") !=
 	                           std::string::npos;
@@ -1006,7 +1059,8 @@ void MOUNT::ProcessPaths(const std::string first_path, MountParameters& params,
 			}
 
 			// Auto-detect type from FIRST valid file if generic "dir"
-			if (params.paths.empty() && params.type == "dir") {
+			if (params.paths.empty() &&
+			    params.type == MountType::Directory) {
 				struct stat t2 = {};
 
 				if (stat(loop_final_path.c_str(), &t2) == 0 &&
@@ -1024,13 +1078,13 @@ void MOUNT::ProcessPaths(const std::string first_path, MountParameters& params,
 					    ext == "bin" || ext == "mds" ||
 					    ext == "ccd") {
 
-						params.type   = "iso";
-						params.fstype = "iso";
+						params.type = MountType::CdRomImage;
+						params.fstype = MountFileSystemType::Iso;
 
 					} else if (ext == "img" ||
 					           ext == "ima" || ext == "vhd") {
 
-						params.type = "hdd";
+						params.type = MountType::HardDiskImage;
 					}
 				}
 			}
@@ -1042,7 +1096,9 @@ void MOUNT::ProcessPaths(const std::string first_path, MountParameters& params,
 
 		// Ensure consistency between type and fstype if user didn't
 		// override -fs
-		if (params.type == "floppy" && params.fstype == "fat") {
+		if (params.type == MountType::FloppyImage &&
+		    params.fstype == MountFileSystemType::Fat16) {
+
 			params.mediaid = MediaId::Floppy1_44MB;
 		}
 
@@ -1058,14 +1114,14 @@ bool MOUNT::MountPaths(MountParameters& params)
 {
 	if (params.paths.empty()) {
 		NOTIFY_DisplayWarning(Notification::Source::Console,
-							  "MOUNT",
-							  "PROGRAM_IMGMOUNT_FILE_NOT_FOUND");
+		                      "MOUNT",
+		                      "PROGRAM_IMGMOUNT_FILE_NOT_FOUND");
 		return false;
 	}
 
 	if (params.is_image_mode) {
 		const auto success = MountImage(params);
-		if (success && params.type == "floppy") {
+		if (success && params.type == MountType::FloppyImage) {
 			incrementFDD();
 		}
 
@@ -1103,11 +1159,13 @@ void MOUNT::MountLocal(MountParameters& params, const std::string& local_path)
 	std::shared_ptr<DOS_Drive> newdrive = {};
 	const uint8_t int8_tize             = (uint8_t)params.sizes[1];
 
-	if (params.type == "overlay") {
+	if (params.type == MountType::Overlay) {
 		const auto ldp = std::dynamic_pointer_cast<localDrive>(
 		        Drives[drive_index(params.drive)]);
+
 		const auto cdp = std::dynamic_pointer_cast<cdromDrive>(
 		        Drives[drive_index(params.drive)]);
+
 		if (!ldp || cdp) {
 			NOTIFY_DisplayWarning(Notification::Source::Console,
 			                      "MOUNT",
@@ -1146,7 +1204,8 @@ void MOUNT::MountLocal(MountParameters& params, const std::string& local_path)
 			safe_strcpy(newdrive->curdir, ldp->curdir);
 		}
 		Drives.at(drive_index(params.drive)) = nullptr;
-	} else if (params.type == "iso") {
+
+	} else if (params.type == MountType::CdRomImage) {
 		// Mount a host directory as a CD-ROM drive.
 		int error = 0;
 		newdrive  = std::make_shared<cdromDrive>(params.drive,
@@ -1196,10 +1255,11 @@ void MOUNT::MountLocal(MountParameters& params, const std::string& local_path)
 	                   (drive_index(params.drive)) * 9,
 	           newdrive->GetMediaByte());
 
-	if (params.type != "overlay") {
+	if (params.type != MountType::Overlay) {
 		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),
 		         newdrive->GetInfoString().c_str(),
 		         params.drive);
+
 		if (params.roflag) {
 			WriteOut(MSG_Get("PROGRAM_MOUNT_READONLY"));
 		}
@@ -1212,28 +1272,31 @@ void MOUNT::MountLocal(MountParameters& params, const std::string& local_path)
 	// check if volume label is given and don't allow it to updated in the
 	// future
 	if (!params.label.empty()) {
-		const auto is_cdrom = (params.type == "iso");
+		const auto is_cdrom = (params.type == MountType::CdRomImage);
 		newdrive->dirCache.SetLabel(params.label.c_str(), is_cdrom, false);
 
-	} else if (params.type == "dir" || params.type == "overlay") {
+	} else if (params.type == MountType::Directory ||
+	           params.type == MountType::Overlay) {
 		// For hard drives set the label to DRIVELETTER_Drive.
 		// For floppy drives set the label to DRIVELETTER_Floppy.
 		// This way every drive except cdroms should get a label.
 		params.label = params.drive;
 		params.label += "_DRIVE";
+
 		newdrive->dirCache.SetLabel(params.label.c_str(), false, false);
 
-	} else if (params.type == "floppy") {
+	} else if (params.type == MountType::FloppyImage) {
 		// Floppy labels handled in IMGMOUNT logic usually, but if
 		// mounted as dir:
 		params.label = params.drive;
 		params.label += "_FLOPPY";
+
 		newdrive->dirCache.SetLabel(params.label.c_str(), false, true);
 	}
 
 	// We incrementFDD here only if it was a directory mount pretending to
 	// be floppy Image mounts return early.
-	if (params.type == "floppy") {
+	if (params.type == MountType::FloppyImage) {
 		incrementFDD();
 	}
 }
