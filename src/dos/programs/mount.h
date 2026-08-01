@@ -75,4 +75,6 @@ private:
 	                      char drive_letter, bool readonly);
 };
 
+void AddMountTypeMessages();
+
 #endif // DOSBOX_PROGRAM_MOUNT_H

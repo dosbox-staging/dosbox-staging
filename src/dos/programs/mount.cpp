@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "mount.h"
-#include "mount_common.h"
 
 #include "dosbox.h"
 
@@ -28,6 +27,15 @@
 #ifndef S_ISREG
 #define S_ISREG(m) (((m) & S_IFMT) == S_IFREG)
 #endif
+
+#if defined(WIN32)
+#ifndef S_ISDIR
+#define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
+#endif
+#endif
+
+// The minimum length for columns where drives are listed
+constexpr int minimum_column_length = 11;
 
 void MOUNT::ListMounts()
 {
@@ -296,13 +304,12 @@ bool MOUNT::MountImageFat(MountParameters& params)
 	}
 
 	if (Drives.at(drive_index(params.drive))) {
-		NOTIFY_DisplayWarning(Notification::Source::Console,
-		                      "MOUNT",
-		                      "PROGRAM_MOUNT_ALREADY_MOUNTED",
-							  params.drive,
-							  Drives.at(drive_index(params.drive))
-									  ->GetInfoString()
-									  .c_str());
+		NOTIFY_DisplayWarning(
+		        Notification::Source::Console,
+		        "MOUNT",
+		        "PROGRAM_MOUNT_ALREADY_MOUNTED",
+		        params.drive,
+		        Drives.at(drive_index(params.drive))->GetInfoString().c_str());
 		return false;
 	}
 
@@ -554,13 +561,58 @@ bool MOUNT::MountImage(MountParameters& params)
 	return true;
 }
 
+static std::string unmount(char umount)
+{
+	const char drive_id           = toupper(umount);
+	const bool using_drive_number = (drive_id >= '0' && drive_id <= '3');
+	const bool using_drive_letter = (drive_id >= 'A' && drive_id <= 'Z');
+
+	if (!using_drive_number && !using_drive_letter) {
+		return MSG_Get("PROGRAM_MOUNT_DRIVEID_ERROR");
+	}
+
+	const uint8_t i_drive = using_drive_number ? (drive_id - '0')
+	                                           : drive_index(drive_id);
+	assert(i_drive < DOS_DRIVES);
+
+	if (i_drive < MAX_DISK_IMAGES && !Drives[i_drive] && !imageDiskList[i_drive]) {
+		return MSG_Get("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED");
+	}
+
+	if (i_drive >= MAX_DISK_IMAGES && !Drives[i_drive]) {
+		return MSG_Get("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED");
+	}
+
+	if (Drives[i_drive]) {
+		switch (DriveManager::UnmountDrive(i_drive)) {
+		case 1: return MSG_Get("PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL");
+		case 2: return MSG_Get("MSCDEX_ERROR_MULTIPLE_CDROMS");
+		}
+
+		Drives[i_drive] = nullptr;
+
+		mem_writeb(RealToPhysical(dos.tables.mediaid) + i_drive * 9, 0);
+
+		if (i_drive == DOS_GetDefaultDrive()) {
+			constexpr auto ZDriveNum = 25;
+			DOS_SetDrive(ZDriveNum);
+		}
+	}
+
+	if (i_drive < MAX_DISK_IMAGES && imageDiskList[i_drive]) {
+		imageDiskList[i_drive] = nullptr;
+	}
+
+	return MSG_Get("PROGRAM_MOUNT_UMOUNT_SUCCESS");
+}
+
 bool MOUNT::HandleUnmount()
 {
 	std::string umount = {};
 
 	// Standard order: -u <drive>
 	if (cmd->FindString("-u", umount, false)) {
-		WriteOut(UnmountHelper(umount[0]), toupper(umount[0]));
+		WriteOut(unmount(umount[0]), toupper(umount[0]));
 		return true;
 	}
 
@@ -569,7 +621,7 @@ bool MOUNT::HandleUnmount()
 		// Check umount != "-u" to prevent parsing errors if the user
 		// just types "mount -u".
 		if (cmd->FindCommand(1, umount) && !umount.empty() && umount != "-u") {
-			WriteOut(UnmountHelper(umount[0]), toupper(umount[0]));
+			WriteOut(unmount(umount[0]), toupper(umount[0]));
 			return true;
 		}
 	}
@@ -1322,10 +1374,29 @@ void MOUNT::Run(void)
 
 void MOUNT::AddMessages()
 {
-	AddCommonMountMessages();
-	if (MSG_Exists("PROGRAM_MOUNT_HELP")) {
-		return;
-	}
+	MSG_Add("MSCDEX_SUCCESS", "MSCDEX installed.\n");
+	MSG_Add("MSCDEX_ERROR_MULTIPLE_CDROMS",
+	        "MSCDEX: Failure: Drive-letters of multiple CD-ROM drives have to be continuous.\n");
+	MSG_Add("MSCDEX_ERROR_NOT_SUPPORTED", "MSCDEX: Failure: Not yet supported.\n");
+	MSG_Add("MSCDEX_ERROR_PATH",
+	        "MSCDEX: Specified location is not a CD-ROM drive.\n");
+	MSG_Add("MSCDEX_ERROR_OPEN",
+	        "MSCDEX: Failure: Invalid file or unable to open.\n");
+	MSG_Add("MSCDEX_TOO_MANY_DRIVES",
+	        "MSCDEX: Failure: Too many CD-ROM drives (max: 5). MSCDEX Installation failed.\n");
+	MSG_Add("MSCDEX_LIMITED_SUPPORT",
+	        "MSCDEX: Mounted subdirectory: limited support.");
+	MSG_Add("MSCDEX_INVALID_FILEFORMAT",
+	        "MSCDEX: Failure: File is either no ISO/CUE image or contains errors.\n");
+	MSG_Add("MSCDEX_UNKNOWN_ERROR", "MSCDEX: Failure: Unknown error.\n");
+
+	MSG_Add("PROGRAM_MOUNT_STATUS_DRIVE", "Drive");
+	MSG_Add("PROGRAM_MOUNT_STATUS_TYPE", "Type");
+	MSG_Add("PROGRAM_MOUNT_STATUS_PATH", "Path");
+	MSG_Add("PROGRAM_MOUNT_STATUS_LABEL", "Label");
+	MSG_Add("PROGRAM_MOUNT_RESULT", "%s mounted as %c drive:\n%s");
+	MSG_Add("PROGRAM_MOUNT_STATUS", "%s mounted as %c drive\n");
+	MSG_Add("PROGRAM_MOUNT_READONLY", "Mounted read-only\n");
 	MSG_Add("PROGRAM_MOUNT_HELP",
 	        "Mount a directory or an image file to a drive letter.\n");
 
@@ -1407,8 +1478,7 @@ void MOUNT::AddMessages()
 	        "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy -ro\n"
 	        "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]disk01.img disk02.img[reset] -t floppy\n");
 
-	MSG_Add("PROGRAM_MOUNT_ERROR",
-	        "%s isn't a directory or valid image file.\n");
+	MSG_Add("PROGRAM_MOUNT_ERROR", "%s isn't a directory or valid image file.\n");
 
 	MSG_Add("PROGRAM_MOUNT_ILLEGAL_TYPE", "Illegal type %s");
 	MSG_Add("PROGRAM_MOUNT_ALREADY_MOUNTED", "Drive %c already mounted with %s\n");
@@ -1483,4 +1553,17 @@ void MOUNT::AddMessages()
 	MSG_Add("PROGRAM_IMGMOUNT_DEPRECATED",
 	        "The [color=light-green]IMGMOUNT[reset] command is deprecated; "
 	        "please use [color=light-green]MOUNT[reset] instead.");
+}
+
+void AddMountTypeMessages()
+{
+	MSG_Add("MOUNT_TYPE_LOCAL_DIRECTORY", "Local directory");
+	MSG_Add("MOUNT_TYPE_CDROM", "CD-ROM drive");
+	MSG_Add("MOUNT_TYPE_FAT", "FAT image");
+	MSG_Add("MOUNT_TYPE_FAT_PLURAL", "FAT images");
+	MSG_Add("MOUNT_TYPE_CDIMAGE", "CD-ROM image");
+	MSG_Add("MOUNT_TYPE_CDIMAGE_PLURAL", "CD-ROM images");
+	MSG_Add("MOUNT_TYPE_VIRTUAL", "Internal drive");
+	MSG_Add("MOUNT_TYPE_OVERLAY", "Overlay drive");
+	MSG_Add("MOUNT_TYPE_UNKNOWN", "unknown drive");
 }

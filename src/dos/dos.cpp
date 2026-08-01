@@ -29,7 +29,7 @@
 #include "ints/ems.h"
 #include "ints/xms.h"
 #include "misc/support.h"
-#include "programs/mount_common.h"
+#include "programs/mount.h"
 #include "utils/ascii.h"
 #include "utils/string_utils.h"
 

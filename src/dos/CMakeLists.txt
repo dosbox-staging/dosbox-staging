@@ -56,7 +56,6 @@ target_sources(dosboxcommon PRIVATE
   programs/more.cpp
   programs/more_output.cpp
   programs/mount.cpp
-  programs/mount_common.cpp
   programs/mouse.cpp
   programs/mousectl.cpp
   programs/move.cpp
