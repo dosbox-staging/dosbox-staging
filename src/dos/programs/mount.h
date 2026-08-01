@@ -29,10 +29,14 @@ struct MountParameters {
 	bool is_ide               = false;
 	int8_t ide_index          = -1;
 	bool is_second_cable_slot = false;
+
 	// Defaulting to Hard Disk prevents obscure issues in games like Hyperspace 
 	uint8_t mediaid           = MediaId::HardDisk;
+
 	// 0-3 vs A-Z
 	bool is_drive_number = false;
+
+	bool is_image_mode = false;
 };
 
 class MOUNT final : public Program {
@@ -71,8 +75,10 @@ private:
 
 	std::string GetDosMappedHostPath(const std::string& dos_path) const;
 
-	bool ProcessPaths(const std::string first_path, MountParameters& params,
+	void ProcessPaths(const std::string first_path, MountParameters& params,
 	                  bool path_relative_to_last_config);
+
+	bool MountPaths(MountParameters& params);
 
 	void MountLocal(MountParameters& params, const std::string& local_path);
 
