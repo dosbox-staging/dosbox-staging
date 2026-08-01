@@ -68,7 +68,9 @@ private:
 	                              bool is_relative_to_last_config) const;
 	std::string GetDosMappedHostPath(const std::string& dos_path) const;
 
-	bool ProcessPaths(MountParameters& params, bool path_relative_to_last_config);
+	bool ProcessPaths(const std::string first_path, MountParameters& params,
+	                  bool path_relative_to_last_config);
+
 	void MountLocal(MountParameters& params, const std::string& local_path);
 
 	bool MountImageFat(MountParameters& params);
