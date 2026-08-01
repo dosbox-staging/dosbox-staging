@@ -1407,9 +1407,6 @@ void MOUNT::AddMessages()
 	        "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy -ro\n"
 	        "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]disk01.img disk02.img[reset] -t floppy\n");
 
-	MSG_Add("PROGRAM_MOUNT_CDROMS_FOUND", "CD-ROMs found: %d\n");
-	MSG_Add("PROGRAM_MOUNT_ERROR_1", "Directory or file %s doesn't exist.\n");
-
 	MSG_Add("PROGRAM_MOUNT_ERROR_2",
 	        "%s isn't a directory or valid image file.\n");
 
@@ -1432,9 +1429,6 @@ void MOUNT::AddMessages()
 	MSG_Add("PROGRAM_MOUNT_WARNING_OTHER",
 	        "[color=light-red]Mounting / is NOT recommended. Please mount a (sub)directory next time.[reset]\n");
 
-	MSG_Add("PROGRAM_MOUNT_NO_OPTION",
-	        "Warning: Ignoring unsupported option '%s'.\n");
-
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_NO_BASE",
 	        "A normal directory needs to be MOUNTed first before an overlay can be added on\n"
 	        "top.\n");
@@ -1442,14 +1436,6 @@ void MOUNT::AddMessages()
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_INCOMPAT_BASE",
 	        "The overlay is NOT compatible with the drive that is specified.\n");
 
-	MSG_Add("PROGRAM_MOUNT_OVERLAY_MIXED_BASE",
-	        "The overlay needs to be specified using the same addressing as the underlying\n"
-	        "drive. No mixing of relative and absolute paths.\n");
-
-	MSG_Add("PROGRAM_MOUNT_OVERLAY_SAME_AS_BASE",
-	        "The overlay directory can not be the same as underlying drive.\n");
-
-	MSG_Add("PROGRAM_MOUNT_OVERLAY_GENERIC_ERROR", "Something went wrong.\n");
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_STATUS", "Overlay %s on drive %c mounted.\n");
 
 	MSG_Add("PROGRAM_MOUNT_INVALID_CHS",
