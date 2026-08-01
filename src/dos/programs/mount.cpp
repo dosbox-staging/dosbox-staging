@@ -135,7 +135,7 @@ void MOUNT::ListMounts()
 	}
 
 	if (!found_drives) {
-		WriteOut(MSG_Get("PROGRAM_IMGMOUNT_STATUS_NONE"));
+		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_NONE"));
 	}
 	WriteOut("\n");
 }
@@ -240,7 +240,7 @@ bool MOUNT::MountImageFat(MountParameters& params)
 		if (!diskfile) {
 			NOTIFY_DisplayWarning(Notification::Source::Console,
 			                      "MOUNT",
-			                      "PROGRAM_IMGMOUNT_INVALID_IMAGE");
+			                      "PROGRAM_MOUNT_INVALID_IMAGE");
 			return false;
 		}
 
@@ -249,7 +249,7 @@ bool MOUNT::MountImageFat(MountParameters& params)
 			fclose(diskfile);
 			NOTIFY_DisplayWarning(Notification::Source::Console,
 			                      "MOUNT",
-			                      "PROGRAM_IMGMOUNT_INVALID_IMAGE");
+			                      "PROGRAM_MOUNT_INVALID_IMAGE");
 			return false;
 		}
 
@@ -262,7 +262,7 @@ bool MOUNT::MountImageFat(MountParameters& params)
 
 			NOTIFY_DisplayWarning(Notification::Source::Console,
 			                      "MOUNT",
-			                      "PROGRAM_IMGMOUNT_INVALID_IMAGE");
+			                      "PROGRAM_MOUNT_INVALID_IMAGE");
 			return false;
 		}
 
@@ -271,7 +271,7 @@ bool MOUNT::MountImageFat(MountParameters& params)
 		if ((buf[510] != 0x55) || (buf[511] != 0xaa)) {
 			NOTIFY_DisplayWarning(Notification::Source::Console,
 			                      "MOUNT",
-			                      "PROGRAM_IMGMOUNT_INVALID_GEOMETRY");
+			                      "PROGRAM_MOUNT_INVALID_GEOMETRY");
 			return false;
 		}
 
@@ -279,7 +279,7 @@ bool MOUNT::MountImageFat(MountParameters& params)
 		if (sectors * 16 * 63 != fcsize) {
 			NOTIFY_DisplayWarning(Notification::Source::Console,
 			                      "MOUNT",
-			                      "PROGRAM_IMGMOUNT_INVALID_GEOMETRY");
+			                      "PROGRAM_MOUNT_INVALID_GEOMETRY");
 			return false;
 		}
 
@@ -298,7 +298,11 @@ bool MOUNT::MountImageFat(MountParameters& params)
 	if (Drives.at(drive_index(params.drive))) {
 		NOTIFY_DisplayWarning(Notification::Source::Console,
 		                      "MOUNT",
-		                      "PROGRAM_IMGMOUNT_ALREADY_MOUNTED");
+		                      "PROGRAM_MOUNT_ALREADY_MOUNTED",
+							  params.drive,
+							  Drives.at(drive_index(params.drive))
+									  ->GetInfoString()
+									  .c_str());
 		return false;
 	}
 
@@ -318,14 +322,14 @@ bool MOUNT::MountImageFat(MountParameters& params)
 		} else {
 			NOTIFY_DisplayWarning(Notification::Source::Console,
 			                      "MOUNT",
-			                      "PROGRAM_IMGMOUNT_CANT_CREATE");
+			                      "PROGRAM_MOUNT_CANT_CREATE");
 			return false;
 		}
 	}
 	if (fat_images.empty()) {
 		NOTIFY_DisplayWarning(Notification::Source::Console,
 		                      "MOUNT",
-		                      "PROGRAM_IMGMOUNT_CANT_CREATE");
+		                      "PROGRAM_MOUNT_CANT_CREATE");
 		return false;
 	}
 
@@ -404,9 +408,13 @@ static const char* mscdex_error_to_message_id(const int error, const bool is_ima
 bool MOUNT::MountImageIso(MountParameters& params)
 {
 	if (Drives.at(drive_index(params.drive))) {
-		NOTIFY_DisplayWarning(Notification::Source::Console,
-		                      "MOUNT",
-		                      "PROGRAM_IMGMOUNT_ALREADY_MOUNTED");
+		NOTIFY_DisplayWarning(
+		        Notification::Source::Console,
+		        "MOUNT",
+		        "PROGRAM_MOUNT_ALREADY_MOUNTED",
+		        params.drive,
+		        Drives.at(drive_index(params.drive))->GetInfoString().c_str());
+
 		return false;
 	}
 
@@ -427,7 +435,7 @@ bool MOUNT::MountImageIso(MountParameters& params)
 
 			NOTIFY_DisplayWarning(Notification::Source::Console,
 			                      "MOUNT",
-			                      "PROGRAM_IMGMOUNT_CANT_CREATE");
+			                      "PROGRAM_MOUNT_CANT_CREATE");
 			return false;
 		}
 	}
@@ -449,7 +457,7 @@ bool MOUNT::MountImageIso(MountParameters& params)
 		} else {
 			NOTIFY_DisplayWarning(Notification::Source::Console,
 			                      "MOUNT",
-			                      "PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE");
+			                      "PROGRAM_MOUNT_IDE_CONTROLLERS_UNAVAILABLE");
 		}
 	}
 
@@ -473,7 +481,7 @@ bool MOUNT::MountImageRaw(MountParameters& params)
 	if (!new_disk) {
 		NOTIFY_DisplayWarning(Notification::Source::Console,
 		                      "MOUNT",
-		                      "PROGRAM_IMGMOUNT_INVALID_IMAGE");
+		                      "PROGRAM_MOUNT_INVALID_IMAGE");
 		return false;
 	}
 
@@ -483,7 +491,7 @@ bool MOUNT::MountImageRaw(MountParameters& params)
 
 		NOTIFY_DisplayWarning(Notification::Source::Console,
 		                      "MOUNT",
-		                      "PROGRAM_IMGMOUNT_INVALID_IMAGE");
+		                      "PROGRAM_MOUNT_INVALID_IMAGE");
 		return false;
 	}
 
@@ -500,7 +508,7 @@ bool MOUNT::MountImageRaw(MountParameters& params)
 
 		NOTIFY_DisplayWarning(Notification::Source::Console,
 		                      "MOUNT",
-		                      "PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY");
+		                      "PROGRAM_MOUNT_SPECIFY_GEOMETRY");
 		return false;
 	}
 
@@ -520,7 +528,7 @@ bool MOUNT::MountImageRaw(MountParameters& params)
 		updateDPT();
 	}
 
-	WriteOut(MSG_Get("PROGRAM_IMGMOUNT_MOUNT_NUMBER"),
+	WriteOut(MSG_Get("PROGRAM_MOUNT_MOUNT_NUMBER"),
 	         drv_idx,
 	         params.paths[0].c_str());
 
@@ -773,7 +781,7 @@ bool MOUNT::ParseDrive(MountParameters& params, bool explicit_fs)
 		} else {
 			NOTIFY_DisplayWarning(Notification::Source::Console,
 			                      "MOUNT",
-			                      "PROGRAM_IMGMOUNT_SPECIFY2");
+			                      "PROGRAM_MOUNT_SPECIFY2");
 			return false;
 		}
 
@@ -803,7 +811,7 @@ bool MOUNT::ParseDrive(MountParameters& params, bool explicit_fs)
 				// Don't allow booting from E:, F:, etc.
 				NOTIFY_DisplayWarning(Notification::Source::Console,
 				                      "MOUNT",
-				                      "PROGRAM_IMGMOUNT_SPECIFY2");
+				                      "PROGRAM_MOUNT_SPECIFY2");
 				return false;
 			}
 		}
@@ -1053,7 +1061,7 @@ bool MOUNT::ProcessPaths(MountParameters& params, bool path_relative_to_last_con
 		if (params.paths.empty()) {
 			NOTIFY_DisplayWarning(Notification::Source::Console,
 			                      "MOUNT",
-			                      "PROGRAM_IMGMOUNT_FILE_NOT_FOUND");
+			                      "PROGRAM_MOUNT_FILE_NOT_FOUND");
 			return false;
 		}
 
@@ -1456,39 +1464,35 @@ void MOUNT::AddMessages()
 
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_UNKNOWN_ERROR", "Something went wrong.\n");
 
-	// IMGMOUNT merged messages
-	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY2",
+	MSG_Add("PROGRAM_MOUNT_SPECIFY2",
 	        "Must specify a drive letter A/B/C/D or drive number 0/1/2/3 to mount image at.\n");
 
-	MSG_Add("PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY",
+	MSG_Add("PROGRAM_MOUNT_SPECIFY_GEOMETRY",
 	        "For hard drive images, drive geometry must be specified:\n"
-	        "  [color=light-green]imgmount[reset] [color=white]DRIVE[reset] [color=light-cyan]IMAGEFILE[reset] -chs Cylinders,Heads,Sectors\n"
+	        "  [color=light-green]mount[reset] [color=white]DRIVE[reset] [color=light-cyan]IMAGEFILE[reset] -chs Cylinders,Heads,Sectors\n"
 	        "Alternatively:\n"
-	        "  [color=light-green]imgmount[reset] [color=white]DRIVE[reset] [color=light-cyan]IMAGEFILE[reset] -size BytesPerSector,Sectors,Heads,Cylinders\n"
+	        "  [color=light-green]mount[reset] [color=white]DRIVE[reset] [color=light-cyan]IMAGEFILE[reset] -size BytesPerSector,Sectors,Heads,Cylinders\n"
 	        "For CD-ROM images:\n"
-	        "  [color=light-green]imgmount[reset] [color=white]DRIVE[reset] [color=light-cyan]IMAGEFILE[reset] -t iso\n");
+	        "  [color=light-green]mount[reset] [color=white]DRIVE[reset] [color=light-cyan]IMAGEFILE[reset] -t iso\n");
 
-	MSG_Add("PROGRAM_IMGMOUNT_STATUS_NONE", "No drive available.\n");
+	MSG_Add("PROGRAM_MOUNT_STATUS_NONE", "No drive available.\n");
 
-	MSG_Add("PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE",
+	MSG_Add("PROGRAM_MOUNT_IDE_CONTROLLERS_UNAVAILABLE",
 	        "No available IDE controllers. Drive will not have IDE emulation.\n");
 
-	MSG_Add("PROGRAM_IMGMOUNT_INVALID_IMAGE",
+	MSG_Add("PROGRAM_MOUNT_INVALID_IMAGE",
 	        "Could not load image file.\n"
 	        "Check that the path is correct and the image is accessible.\n");
 
-	MSG_Add("PROGRAM_IMGMOUNT_INVALID_GEOMETRY",
+	MSG_Add("PROGRAM_MOUNT_INVALID_GEOMETRY",
 	        "Could not extract drive geometry from image.\n"
 	        "Use parameter -chs Cylinders,Heads,Sectors to specify the geometry.\n"
 	        "Alternatively: -size BytesPerSector,Sectors,Heads,Cylinders\n");
 
-	MSG_Add("PROGRAM_IMGMOUNT_FILE_NOT_FOUND", "Image file not found.\n");
+	MSG_Add("PROGRAM_MOUNT_FILE_NOT_FOUND", "Image file not found.\n");
 
-	MSG_Add("PROGRAM_IMGMOUNT_ALREADY_MOUNTED",
-	        "Drive already mounted at that letter.\n");
-
-	MSG_Add("PROGRAM_IMGMOUNT_CANT_CREATE", "Can't create drive from file.\n");
-	MSG_Add("PROGRAM_IMGMOUNT_MOUNT_NUMBER", "Drive number %d mounted as %s.\n");
+	MSG_Add("PROGRAM_MOUNT_CANT_CREATE", "Can't create drive from file.\n");
+	MSG_Add("PROGRAM_MOUNT_MOUNT_NUMBER", "Drive number %d mounted as %s.\n");
 
 	MSG_Add("PROGRAM_IMGMOUNT_DEPRECATED",
 	        "The [color=light-green]IMGMOUNT[reset] command is deprecated; "
