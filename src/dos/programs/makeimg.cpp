@@ -1525,30 +1525,40 @@ void MAKEIMG::AddMessages()
 
 	MSG_Add("SHELL_CMD_MAKEIMG_MISSING_SIZE",
 	        "You must specify -size or -chs for custom hard disks.");
+
 	MSG_Add("SHELL_CMD_MAKEIMG_INVALID_TYPE",
 	        "Unknown disk type: [color=light-cyan]%s[reset]");
+
 	MSG_Add("SHELL_CMD_MAKEIMG_BAD_SIZE", "Invalid disk size calculated.");
 	MSG_Add("SHELL_CMD_MAKEIMG_FILE_EXISTS",
 	        "File [color=light-cyan]%s[reset] already exists. Use -force to overwrite.");
+
 	MSG_Add("SHELL_CMD_MAKEIMG_CANNOT_WRITE",
 	        "Cannot open file [color=light-cyan]%s[reset] for writing.");
+
 	MSG_Add("SHELL_CMD_MAKEIMG_SPACE_ERROR",
 	        "Disk full or cannot allocate image size.");
+
 	MSG_Add("SHELL_CMD_MAKEIMG_CREATED",
 	        "Created [color=light-cyan]%s[reset] [CHS: %u, %u, %u]");
+
 	MSG_Add("SHELL_CMD_MAKEIMG_FORMATTED",
 	        "\nFormatted as [color=light-cyan]FAT%s[reset]");
+
 	MSG_Add("SHELL_CMD_MAKEIMG_CONFIRM_HOST",
 	        "Image will be created on the [color=light-green]HOST[reset] filesystem at:\n  [color=light-cyan]%s[reset]\n\n"
 	        "Proceed? (Y/N)\n");
+
 	MSG_Add("SHELL_CMD_MAKEIMG_CONFIRM_DOS",
 	        "Image will be created on the [color=light-green]DOS[reset] filesystem at:\n  [color=light-cyan]%s[reset]\n"
 	        "  Host path: %s\n\n"
 	        "Proceed? (Y/N)\n");
+
 	MSG_Add("SHELL_CMD_MAKEIMG_ABORTED", "\nOperation aborted.");
 	MSG_Add("SHELL_CMD_MAKEIMG_INVALID_PATH", "Invalid DOS path: %s");
 	MSG_Add("SHELL_CMD_MAKEIMG_INVALID_DRIVE", "Target drive is invalid.");
 	MSG_Add("SHELL_CMD_MAKEIMG_DRIVE_READONLY", "Target drive is read-only.");
+
 	MSG_Add("SHELL_CMD_MAKEIMG_NOT_LOCAL_DRIVE",
 	        "Cannot create image inside another disk image.\nTarget must be a mounted local directory.");
 }
