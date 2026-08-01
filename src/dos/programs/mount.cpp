@@ -230,11 +230,11 @@ void MOUNT::WriteMountStatus(const std::string& image_type,
 bool MOUNT::MountImageFat(MountParameters& params)
 {
 	// Autosize detection
-	bool imgsizedetect = (params.type == "hdd") &&
-	                     (params.sizes[0] == 0 && params.sizes[1] == 0 &&
-	                      params.sizes[2] == 0 && params.sizes[3] == 0);
+	bool detect_image_size = (params.type == "hdd") &&
+	                         (params.sizes[0] == 0 && params.sizes[1] == 0 &&
+	                          params.sizes[2] == 0 && params.sizes[3] == 0);
 
-	if (imgsizedetect) {
+	if (detect_image_size) {
 		FILE* diskfile = fopen_wrap_ro_fallback(params.paths[0],
 		                                        params.roflag);
 		if (!diskfile) {
@@ -276,6 +276,7 @@ bool MOUNT::MountImageFat(MountParameters& params)
 		}
 
 		Bitu sectors = (Bitu)(fcsize / (16 * 63));
+
 		if (sectors * 16 * 63 != fcsize) {
 			NOTIFY_DisplayWarning(Notification::Source::Console,
 			                      "MOUNT",
@@ -288,7 +289,7 @@ bool MOUNT::MountImageFat(MountParameters& params)
 		params.sizes[2] = 16;
 		params.sizes[3] = static_cast<uint16_t>(sectors);
 
-		LOG_MSG("autosized image file: %d:%d:%d:%d",
+		LOG_MSG("DRIVE: Autosized image file: %d:%d:%d:%d",
 		        params.sizes[0],
 		        params.sizes[1],
 		        params.sizes[2],
@@ -336,6 +337,7 @@ bool MOUNT::MountImageFat(MountParameters& params)
 	// Set the correct media byte in the table
 	// Each entry is 9 bytes, with the media byte at offset 0x00
 	constexpr auto DptEntrySize = 9;
+
 	mem_writeb(RealToPhysical(dos.tables.mediaid) +
 	                   drive_index(params.drive) * DptEntrySize,
 	           params.mediaid);
@@ -349,14 +351,15 @@ bool MOUNT::MountImageFat(MountParameters& params)
 
 		DriveManager::CycleDisks(drive_index(params.drive), should_notify);
 
+		// Obtain the drive label, saving it in the dirCache
 		char root[7] = {params.drive, ':', '\\', '*', '.', '*', 0};
 
-		// Obtain the drive label, saving it in the dirCache
 		if (!DOS_FindFirst(root, FatAttributeFlags::Volume)) {
 			LOG_WARNING("DRIVE: Unable to find %c drive's volume label",
 			            params.drive);
 		}
 	}
+
 	dos.dta(save_dta);
 
 	std::string mount_message = (params.paths.size() > 1)
@@ -367,6 +370,7 @@ bool MOUNT::MountImageFat(MountParameters& params)
 
 	const auto fat_image = std::dynamic_pointer_cast<fatDrive>(
 	        fat_images.front());
+
 	assert(fat_image);
 
 	const auto has_hdd = fat_image->loadedDisk && fat_image->loadedDisk->hardDrive;
@@ -380,6 +384,7 @@ bool MOUNT::MountImageFat(MountParameters& params)
 		imageDiskList.at(drive_index(params.drive)) = fat_image->loadedDisk;
 		updateDPT();
 	}
+
 	return true;
 }
 
@@ -401,7 +406,7 @@ static const char* mscdex_error_to_message_id(const int error, const bool is_ima
 	}
 }
 
-bool MOUNT::MountImageIso(MountParameters& params)
+bool MOUNT::MountImageIso(const MountParameters& params)
 {
 	if (Drives.at(drive_index(params.drive))) {
 		NOTIFY_DisplayWarning(Notification::Source::Console,
@@ -577,6 +582,7 @@ bool MOUNT::ParseArguments(MountParameters& params, bool& explicit_fs,
 	}
 
 	cmd->FindString("-t", params.type, true);
+
 	// Allow aliases or standard image types to pass through
 	if (params.type == "cdrom") {
 		params.type = "iso";
@@ -628,7 +634,8 @@ bool MOUNT::ParseGeometry(MountParameters& params)
 
 	// Default sizing logic based on type
 	if (params.type == "floppy") {
-		str_size       = "512,1,2880,2880";
+		str_size = "512,1,2880,2880";
+
 		params.mediaid = MediaId::Floppy1_44MB;
 
 	} else if (params.type == "dir" || params.type == "overlay") {
@@ -652,6 +659,7 @@ bool MOUNT::ParseGeometry(MountParameters& params)
 
 	} else if (params.type == "iso") {
 		str_size = "2048,1,65535,0";
+
 		// mediaid is used in staging to differentiate between floppy
 		// and non-floppy for cache rescan, disk noise and I/O timing.
 		// The same value was used in the original dosbox code
@@ -666,6 +674,7 @@ bool MOUNT::ParseGeometry(MountParameters& params)
 	std::string mb_size;
 
 	if (cmd->FindString("-freesize", mb_size, true)) {
+
 		char teststr[1024];
 		uint16_t freesize = static_cast<uint16_t>(atoi(mb_size.c_str()));
 
@@ -676,7 +685,8 @@ bool MOUNT::ParseGeometry(MountParameters& params)
 			             freesize * 1024 / (512 * 1));
 		} else {
 			uint32_t total_size_cyl = 32765;
-			uint32_t free_size_cyl  = (uint32_t)freesize * 1024 *
+
+			uint32_t free_size_cyl = (uint32_t)freesize * 1024 *
 			                         1024 / (512 * 32);
 
 			if (free_size_cyl > 65534) {
@@ -700,8 +710,9 @@ bool MOUNT::ParseGeometry(MountParameters& params)
 	if (!str_size.empty()) {
 		char number[21]  = {0};
 		const char* scan = str_size.c_str();
-		int index        = 0;
-		int count        = 0;
+
+		int index = 0;
+		int count = 0;
 
 		// Parse the str_size string
 		while (*scan && index < 20 && count < 4) {
@@ -717,21 +728,26 @@ bool MOUNT::ParseGeometry(MountParameters& params)
 
 		if (count < 4) {
 			// always goes correct as index is max 20 at this point.
-			number[index]       = 0;
+			number[index] = 0;
+
 			params.sizes[count] = atoi(number);
 		}
 	}
 
 	// Parse -chs C,H,S
 	if (cmd->FindString("-chs", str_chs, true)) {
-		int cmd_cylinders = 0, cmd_heads = 0, cmd_sectors = 0;
+		int cmd_cylinders = 0;
+		int cmd_heads     = 0;
+		int cmd_sectors   = 0;
 
 		if (sscanf(str_chs.c_str(), "%d,%d,%d", &cmd_cylinders, &cmd_heads, &cmd_sectors) ==
 		    3) {
+
 			params.sizes[0] = 512;
 			params.sizes[1] = static_cast<uint16_t>(cmd_sectors);
 			params.sizes[2] = static_cast<uint16_t>(cmd_heads);
 			params.sizes[3] = static_cast<uint16_t>(cmd_cylinders);
+
 		} else {
 			NOTIFY_DisplayWarning(Notification::Source::Console,
 			                      "MOUNT",
@@ -752,6 +768,7 @@ bool MOUNT::ParseDrive(MountParameters& params, bool explicit_fs)
 
 	if ((temp_line.size() > 2) ||
 	    ((temp_line.size() > 1) && (temp_line[1] != ':'))) {
+
 		ShowUsage();
 		return false;
 	}
@@ -834,6 +851,7 @@ bool MOUNT::ParseDrive(MountParameters& params, bool explicit_fs)
 			return false;
 		}
 	}
+
 	return true;
 }
 
@@ -844,7 +862,8 @@ std::string MOUNT::ApplyRelativePath(const std::string& path,
 	    !std_fs::path(path).is_absolute()) {
 
 		auto last_config_dir = control->config_files.back();
-		const auto pos       = last_config_dir.rfind(CROSS_FILESPLIT);
+
+		const auto pos = last_config_dir.rfind(CROSS_FILESPLIT);
 
 		last_config_dir.erase(pos == std::string::npos ? 0 : pos);
 		if (!last_config_dir.empty()) {
@@ -875,6 +894,7 @@ std::string MOUNT::GetDosMappedHostPath(const std::string& dos_path) const
 			}
 		}
 	}
+
 	return "";
 }
 
@@ -918,8 +938,8 @@ void MOUNT::ProcessPaths(const std::string first_path, MountParameters& params,
 	const auto has_wildcards = path_arg_1.find_first_of("*?") !=
 	                           std::string::npos;
 
-	params.is_image_mode = explicit_image_type || params.is_drive_number ||
-	                       has_wildcards;
+	params.is_image_mode = (explicit_image_type || params.is_drive_number ||
+	                        has_wildcards);
 
 	// If the target is a directory, it is a directory mount,
 	// even if -t floppy was specified (legacy MOUNT behavior).
@@ -1004,6 +1024,7 @@ void MOUNT::ProcessPaths(const std::string first_path, MountParameters& params,
 					if (ext == "iso" || ext == "cue" ||
 					    ext == "bin" || ext == "mds" ||
 					    ext == "ccd") {
+
 						params.type   = "iso";
 						params.fstype = "iso";
 
