@@ -202,7 +202,7 @@ void MOUNT::WriteMountStatus(const std::string& image_type,
 		// line:
 		images_str = image_type.c_str() + std::string(" ") + images[0];
 
-		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),
+		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS"),
 		         images_str.c_str(),
 		         drive_letter);
 
@@ -600,7 +600,7 @@ bool MOUNT::ParseArguments(MountParameters& params, bool& explicit_fs,
 
 		NOTIFY_DisplayWarning(Notification::Source::Console,
 		                      "MOUNT",
-		                      "PROGRAM_MOUNT_ILL_TYPE",
+		                      "PROGRAM_MOUNT_ILLEGAL_TYPE",
 		                      params.type.c_str());
 		return false;
 	}
@@ -781,7 +781,7 @@ bool MOUNT::ParseDrive(MountParameters& params, bool explicit_fs)
 		} else {
 			NOTIFY_DisplayWarning(Notification::Source::Console,
 			                      "MOUNT",
-			                      "PROGRAM_MOUNT_SPECIFY2");
+			                      "PROGRAM_MOUNT_SPECIFY");
 			return false;
 		}
 
@@ -811,7 +811,7 @@ bool MOUNT::ParseDrive(MountParameters& params, bool explicit_fs)
 				// Don't allow booting from E:, F:, etc.
 				NOTIFY_DisplayWarning(Notification::Source::Console,
 				                      "MOUNT",
-				                      "PROGRAM_MOUNT_SPECIFY2");
+				                      "PROGRAM_MOUNT_SPECIFY");
 				return false;
 			}
 		}
@@ -1082,7 +1082,7 @@ bool MOUNT::ProcessPaths(MountParameters& params, bool path_relative_to_last_con
 	if (!S_ISDIR(test.st_mode)) {
 		NOTIFY_DisplayWarning(Notification::Source::Console,
 		                      "MOUNT",
-		                      "PROGRAM_MOUNT_ERROR_2",
+		                      "PROGRAM_MOUNT_ERROR",
 		                      path_arg_1.c_str());
 		return false;
 	}
@@ -1220,7 +1220,7 @@ void MOUNT::MountLocal(MountParameters& params, const std::string& local_path)
 	           newdrive->GetMediaByte());
 
 	if (params.type != "overlay") {
-		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),
+		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS"),
 		         newdrive->GetInfoString().c_str(),
 		         params.drive);
 
@@ -1407,10 +1407,10 @@ void MOUNT::AddMessages()
 	        "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]floppy*.img[reset] -t floppy -ro\n"
 	        "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]disk01.img disk02.img[reset] -t floppy\n");
 
-	MSG_Add("PROGRAM_MOUNT_ERROR_2",
+	MSG_Add("PROGRAM_MOUNT_ERROR",
 	        "%s isn't a directory or valid image file.\n");
 
-	MSG_Add("PROGRAM_MOUNT_ILL_TYPE", "Illegal type %s");
+	MSG_Add("PROGRAM_MOUNT_ILLEGAL_TYPE", "Illegal type %s");
 	MSG_Add("PROGRAM_MOUNT_ALREADY_MOUNTED", "Drive %c already mounted with %s\n");
 	MSG_Add("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED", "Drive %c isn't mounted.\n");
 
@@ -1450,7 +1450,7 @@ void MOUNT::AddMessages()
 
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_UNKNOWN_ERROR", "Something went wrong.\n");
 
-	MSG_Add("PROGRAM_MOUNT_SPECIFY2",
+	MSG_Add("PROGRAM_MOUNT_SPECIFY",
 	        "Must specify a drive letter A/B/C/D or drive number 0/1/2/3 to mount image at.\n");
 
 	MSG_Add("PROGRAM_MOUNT_SPECIFY_GEOMETRY",
