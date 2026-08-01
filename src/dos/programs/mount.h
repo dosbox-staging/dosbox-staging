@@ -14,13 +14,25 @@
 #include <string>
 #include <vector>
 
+enum class MountType {
+	FloppyImage,
+	HardDiskImage,
+	CdRomImage,
+	Directory,
+	Overlay
+};
+
+enum class FileSystemType { Fat16, Iso, None };
+
 // Struct to hold all parameters required for a mount operation
 struct MountParameters {
-	char drive                     = '\0';
+	char drive            = '\0';
+	MountType type        = MountType::Directory;
+	FileSystemType fstype = FileSystemType::Fat16;
+
 	std::vector<std::string> paths = {};
-	std::string type               = "dir";
-	std::string fstype             = "fat";
-	std::string label              = "";
+
+	std::string label = "";
 
 	// Geometry: [0]=BytesPerSector, [1]=Sectors, [2]=Heads, [3]=Cylinders
 	std::array<uint16_t, 4> sizes = {0, 0, 0, 0};
