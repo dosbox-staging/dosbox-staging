@@ -430,10 +430,16 @@ TEST_F(MountTest, DriveNumberForcesNoneFstypeWhenNotExplicit)
 	EXPECT_EQ(result->fstype, "none");
 	EXPECT_EQ(result->mediaid, MediaId::HardDisk);
 
-	EXPECT_EQ(result->sizes[0], 512);
-	EXPECT_EQ(result->sizes[1], 32);
-	EXPECT_EQ(result->sizes[2], 32765);
-	EXPECT_EQ(result->sizes[3], 16000);
+	// MountImageFat() will autodetect the HDD image's geometry if sizes
+	// contains all zeroes.
+	//
+	// We're not testing the autodetection logic here; we'd need to write a
+	// valid HDD image for that in the test setup. Maybe later.
+	//
+	EXPECT_EQ(result->sizes[0], 0);
+	EXPECT_EQ(result->sizes[1], 0);
+	EXPECT_EQ(result->sizes[2], 0);
+	EXPECT_EQ(result->sizes[3], 0);
 }
 
 TEST_F(MountTest, LetterAtoDRemapsToDriveNumberWithFsNone)
@@ -443,16 +449,19 @@ TEST_F(MountTest, LetterAtoDRemapsToDriveNumberWithFsNone)
 	ASSERT_TRUE(result.has_value());
 	EXPECT_TRUE(result->is_drive_number);
 
-	EXPECT_EQ(result->drive, '2'); // C -> drive number 2
-	                               //
+	// C -> drive number 2
+	EXPECT_EQ(result->drive, '2');
+
 	EXPECT_EQ(result->type, "hdd");
 	EXPECT_EQ(result->fstype, "none");
 	EXPECT_EQ(result->mediaid, MediaId::HardDisk);
 
-	EXPECT_EQ(result->sizes[0], 512);
-	EXPECT_EQ(result->sizes[1], 32);
-	EXPECT_EQ(result->sizes[2], 32765);
-	EXPECT_EQ(result->sizes[3], 16000);
+	// MountImageFat() will autodetect the HDD image's geometry if sizes
+	// contains all zeroes.
+	EXPECT_EQ(result->sizes[0], 0);
+	EXPECT_EQ(result->sizes[1], 0);
+	EXPECT_EQ(result->sizes[2], 0);
+	EXPECT_EQ(result->sizes[3], 0);
 }
 
 // ---------------------------------------------------------------------
@@ -636,8 +645,15 @@ TEST_F(MountTest, AutoDetectsIsoFromCueExtension)
 	const auto result = Mount("E " + P("image.cue"));
 
 	ASSERT_TRUE(result.has_value());
+
 	EXPECT_EQ(result->type, "iso");
 	EXPECT_EQ(result->fstype, "iso");
+	EXPECT_EQ(result->mediaid, MediaId::HardDisk);
+
+	EXPECT_EQ(result->sizes[0], 2048);
+	EXPECT_EQ(result->sizes[1], 1);
+	EXPECT_EQ(result->sizes[2], 65535);
+	EXPECT_EQ(result->sizes[3], 0);
 }
 
 TEST_F(MountTest, AutoDetectsIsoFromBinExtension)
@@ -645,8 +661,15 @@ TEST_F(MountTest, AutoDetectsIsoFromBinExtension)
 	const auto result = Mount("E " + P("image.bin"));
 
 	ASSERT_TRUE(result.has_value());
+
 	EXPECT_EQ(result->type, "iso");
 	EXPECT_EQ(result->fstype, "iso");
+	EXPECT_EQ(result->mediaid, MediaId::HardDisk);
+
+	EXPECT_EQ(result->sizes[0], 2048);
+	EXPECT_EQ(result->sizes[1], 1);
+	EXPECT_EQ(result->sizes[2], 65535);
+	EXPECT_EQ(result->sizes[3], 0);
 }
 
 TEST_F(MountTest, AutoDetectsIsoFromMdsExtension)
@@ -654,8 +677,15 @@ TEST_F(MountTest, AutoDetectsIsoFromMdsExtension)
 	const auto result = Mount("E " + P("image.mds"));
 
 	ASSERT_TRUE(result.has_value());
+
 	EXPECT_EQ(result->type, "iso");
 	EXPECT_EQ(result->fstype, "iso");
+	EXPECT_EQ(result->mediaid, MediaId::HardDisk);
+
+	EXPECT_EQ(result->sizes[0], 2048);
+	EXPECT_EQ(result->sizes[1], 1);
+	EXPECT_EQ(result->sizes[2], 65535);
+	EXPECT_EQ(result->sizes[3], 0);
 }
 
 TEST_F(MountTest, AutoDetectsIsoFromCcdExtension)
@@ -663,8 +693,37 @@ TEST_F(MountTest, AutoDetectsIsoFromCcdExtension)
 	const auto result = Mount("E " + P("image.ccd"));
 
 	ASSERT_TRUE(result.has_value());
+
 	EXPECT_EQ(result->type, "iso");
 	EXPECT_EQ(result->fstype, "iso");
+	EXPECT_EQ(result->mediaid, MediaId::HardDisk);
+
+	EXPECT_EQ(result->sizes[0], 2048);
+	EXPECT_EQ(result->sizes[1], 1);
+	EXPECT_EQ(result->sizes[2], 65535);
+	EXPECT_EQ(result->sizes[3], 0);
+}
+
+TEST_F(MountTest, AutoDetectsHddFromImgExtension)
+{
+	const auto result = Mount("E " + P("image.img"));
+
+	ASSERT_TRUE(result.has_value());
+
+	EXPECT_EQ(result->type, "hdd");
+	EXPECT_EQ(result->fstype, "fat");
+	EXPECT_EQ(result->mediaid, MediaId::HardDisk);
+
+	// MountImageFat() will autodetect the HDD image's geometry if sizes
+	// contains all zeroes.
+	//
+	// We're not testing the autodetection logic here; we'd need to write a
+	// valid HDD image for that in the test setup. Maybe later.
+	//
+	EXPECT_EQ(result->sizes[0], 0);
+	EXPECT_EQ(result->sizes[1], 0);
+	EXPECT_EQ(result->sizes[2], 0);
+	EXPECT_EQ(result->sizes[3], 0);
 }
 
 TEST_F(MountTest, AutoDetectsHddFromImaExtension)
@@ -672,8 +731,17 @@ TEST_F(MountTest, AutoDetectsHddFromImaExtension)
 	const auto result = Mount("E " + P("image.ima"));
 
 	ASSERT_TRUE(result.has_value());
+
 	EXPECT_EQ(result->type, "hdd");
 	EXPECT_EQ(result->fstype, "fat");
+	EXPECT_EQ(result->mediaid, MediaId::HardDisk);
+
+	// MountImageFat() will autodetect the HDD image's geometry if sizes
+	// contains all zeroes.
+	EXPECT_EQ(result->sizes[0], 0);
+	EXPECT_EQ(result->sizes[1], 0);
+	EXPECT_EQ(result->sizes[2], 0);
+	EXPECT_EQ(result->sizes[3], 0);
 }
 
 TEST_F(MountTest, AutoDetectsHddFromVhdExtension)
@@ -681,8 +749,17 @@ TEST_F(MountTest, AutoDetectsHddFromVhdExtension)
 	const auto result = Mount("F " + P("image.vhd"));
 
 	ASSERT_TRUE(result.has_value());
+
 	EXPECT_EQ(result->type, "hdd");
 	EXPECT_EQ(result->fstype, "fat");
+	EXPECT_EQ(result->mediaid, MediaId::HardDisk);
+
+	// MountImageFat() will autodetect the HDD image's geometry if sizes
+	// contains all zeroes.
+	EXPECT_EQ(result->sizes[0], 0);
+	EXPECT_EQ(result->sizes[1], 0);
+	EXPECT_EQ(result->sizes[2], 0);
+	EXPECT_EQ(result->sizes[3], 0);
 }
 
 // ---------------------------------------------------------------------
