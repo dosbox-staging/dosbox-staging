@@ -145,14 +145,14 @@ extern std::string full_arguments;
 
 void Program::ChangeToLongCmd()
 {
-	// Get arguments directly from the shell instead of the psp.
-	// this is done in securemode: (as then the arguments to mount and
-	// friends can only be given on the shell ( so no int 21 4b) Securemode
-	// part is disabled as each of the internal command has already
-	// protection for it. (and it breaks games like cdman) it is also done
-	// for long arguments to as it is convient (as the total commandline can
-	// be longer then 127 characters. imgmount with lot's of parameters
-	// Length of arguments can be ~120. but switch when above 100 to be sure
+	// Get arguments directly from the shell instead of the psp. This is done
+	// in securemode, as then the arguments to mount and friends can only be
+	// given on the shell (so no int 21 4b). Securemode part is disabled as
+	// each of the internal command has already protection for it (and it
+	// breaks games like cdman). it is also done for long arguments to as it
+	// is convenient (as the total commandline can be longer then 127
+	// characters (e.g. MOUNT with lot's of parameters). Length of arguments
+	// can be ~120, but switch when above 100 to be sure.
 
 	if (/*control->SecureMode() ||*/ cmd->GetNumArguments() > 100) {
 		auto temp = new CommandLine(cmd->GetFileName(), full_arguments);
