@@ -209,6 +209,9 @@ void MOUNT::WriteMountStatus(const std::string& image_type,
 	}
 }
 
+// Sets:
+//   params.sizes
+//
 bool MOUNT::MountImageFat(MountParameters& params)
 {
 	// Autosize detection
@@ -446,6 +449,9 @@ bool MOUNT::MountImageIso(const MountParameters& params)
 	return true;
 }
 
+// Sets:
+//   params.roflag
+//
 bool MOUNT::MountImageRaw(MountParameters& params)
 {
 	auto new_disk = fopen_wrap_ro_fallback(params.paths[0], params.roflag);
@@ -546,6 +552,17 @@ bool MOUNT::HandleUnmount()
 	return false;
 }
 
+// Sets:
+//   params.type   (from the -t option)
+//   params.roflag (from the -ro option)
+//   params.fstype (from the -fs option or if -t iso is specified)
+//
+//   params.is_ide (from the -ide option))
+//   params.ide_index (based on DOS internal state)
+//   params.is_second_cable_slot (based on DOS internal state)
+//
+//   params.label  (from the -label option)
+//
 bool MOUNT::ParseArguments(MountParameters& params, bool& explicit_fs,
                            bool& path_relative_to_last_config)
 {
@@ -598,6 +615,10 @@ bool MOUNT::ParseArguments(MountParameters& params, bool& explicit_fs,
 	return true;
 }
 
+// Sets:
+//   params.mediaid
+//   params.sizes
+//
 bool MOUNT::ParseGeometry(MountParameters& params)
 {
 	std::string str_size = "";
@@ -728,6 +749,11 @@ bool MOUNT::ParseGeometry(MountParameters& params)
 	return true;
 }
 
+// Sets:
+//   params.drive
+//   params.fstype
+//   params.is_drive_number
+//
 bool MOUNT::ParseDrive(MountParameters& params, bool explicit_fs)
 {
 	// get the drive letter or number
@@ -868,6 +894,13 @@ std::string MOUNT::GetDosMappedHostPath(const std::string& dos_path) const
 // mounting. This includes resolving host paths, wildcard path arguments,
 // auto-detecting mount types, and determining whether we're dealing with
 // image or directory/overlay mounts.
+//
+// Sets:
+//   params.fstype
+//   params.is_image_mode
+//   params.mediaid
+//   params.paths
+//   params.type
 //
 void MOUNT::ProcessPaths(const std::string first_path, MountParameters& params,
                          bool path_relative_to_last_config)
