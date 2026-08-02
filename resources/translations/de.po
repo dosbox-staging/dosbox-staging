@@ -12,7 +12,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "MIME-Version: 1.0\n"
-"X-Generator: DOSBox Staging 0.83.0-RC1\n"
+"X-Generator: DOSBox Staging 0.84.0-alpha\n"
 
 
 #. Do not translate this, set it according to the instruction!
@@ -2662,7 +2662,7 @@ msgctxt "KEYBOARD_MOD_ADJECTIVE_RIGHT"
 msgid "Right"
 msgstr "Rechts"
 
-#: src/gui/render/shader_manager.cpp:377
+#: src/gui/render/shader_manager.cpp:373
 #, c-format, no-wrap
 msgctxt "DOSBOX_HELP_LIST_SHADERS_1"
 msgid ""
@@ -2672,7 +2672,7 @@ msgstr ""
 "Liste verfügbarer GLSL shader\n"
 "------------------------------"
 
-#: src/gui/render/shader_manager.cpp:380
+#: src/gui/render/shader_manager.cpp:376
 #, c-format, no-wrap
 msgctxt "DOSBOX_HELP_LIST_SHADERS_2"
 msgid ""
@@ -2683,19 +2683,19 @@ msgstr ""
 "Konfigurationseinstellung 'shader' aufgeführt sind, ohne dass der\n"
 "Ressourcenpfad oder die Erweiterung .glsl angegeben werden muss."
 
-#: src/gui/render/shader_manager.cpp:384
+#: src/gui/render/shader_manager.cpp:380
 #, c-format, no-wrap
 msgctxt "DOSBOX_HELP_LIST_SHADERS_NOT_EXISTS"
 msgid "Path '%s' does not exist."
 msgstr "Der Pfad '%s' existiert nicht."
 
-#: src/gui/render/shader_manager.cpp:385
+#: src/gui/render/shader_manager.cpp:381
 #, c-format, no-wrap
 msgctxt "DOSBOX_HELP_LIST_SHADERS_NO_SHADERS"
 msgid "Path '%s' has no shaders."
 msgstr "Der Pfad '%s' enthält keine Shader."
 
-#: src/gui/render/shader_manager.cpp:386
+#: src/gui/render/shader_manager.cpp:382
 #, c-format, no-wrap
 msgctxt "DOSBOX_HELP_LIST_SHADERS_LIST"
 msgid "Path '%s' has:"
@@ -3236,79 +3236,79 @@ msgstr ""
 "Umgebungsvariable zu überschreiben die normalerweise den Betriebssystem-\n"
 "Bildschirmschoner blockiert während DOSBox läuft (Standardmäßig 'auto')."
 
-#: src/gui/titlebar.cpp:778
+#: src/gui/titlebar.cpp:779
 #, c-format, no-wrap
 msgctxt "TITLEBAR_CYCLES_MS"
 msgid "cycles/ms"
 msgstr "Zyklen/ms"
 
-#: src/gui/titlebar.cpp:779
+#: src/gui/titlebar.cpp:780
 #, c-format, no-wrap
 msgctxt "TITLEBAR_CYCLES_THROTTLED"
 msgid "throttled"
 msgstr "gedrosselt"
 
-#: src/gui/titlebar.cpp:780
+#: src/gui/titlebar.cpp:781
 #, c-format, no-wrap
 msgctxt "TITLEBAR_MUTED"
 msgid "MUTED"
 msgstr "STUMMGESCHALTET"
 
-#: src/gui/titlebar.cpp:781
+#: src/gui/titlebar.cpp:782
 #, c-format, no-wrap
 msgctxt "TITLEBAR_PAUSED"
 msgid "PAUSED"
 msgstr "PAUSIERT"
 
-#: src/gui/titlebar.cpp:783
+#: src/gui/titlebar.cpp:784
 #, c-format, no-wrap
 msgctxt "TITLEBAR_HINT_CAPTURED"
 msgid "mouse captured"
 msgstr "Maus umgeschaltet"
 
-#: src/gui/titlebar.cpp:784
+#: src/gui/titlebar.cpp:785
 #, c-format, no-wrap
 msgctxt "TITLEBAR_HINT_CAPTURED_HOTKEY"
 msgid "mouse captured, %s+F10 to release"
 msgstr "Maus umgeschaltet, %s+F10 zum Freigeben"
 
-#: src/gui/titlebar.cpp:785
+#: src/gui/titlebar.cpp:786
 #, c-format, no-wrap
 msgctxt "TITLEBAR_HINT_CAPTURED_HOTKEY_MIDDLE"
 msgid "mouse captured, %s+F10 or middle-click to release"
 msgstr "Maus umgeschaltet, %s+F10 oder Mittelklick zum Freigeben"
 
-#: src/gui/titlebar.cpp:788
+#: src/gui/titlebar.cpp:789
 #, c-format, no-wrap
 msgctxt "TITLEBAR_HINT_RELEASED_HOTKEY"
 msgid "to capture the mouse press %s+F10"
 msgstr "Zum Umschalten der Maus %s+F10 drücken"
 
-#: src/gui/titlebar.cpp:789
+#: src/gui/titlebar.cpp:790
 #, c-format, no-wrap
 msgctxt "TITLEBAR_HINT_RELEASED_HOTKEY_MIDDLE"
 msgid "to capture the mouse press %s+F10 or middle-click"
 msgstr "Zum Umschalten der Maus %s+F10 drücken oder Mittelklick"
 
-#: src/gui/titlebar.cpp:792
+#: src/gui/titlebar.cpp:793
 #, c-format, no-wrap
 msgctxt "TITLEBAR_HINT_RELEASED_HOTKEY_ANY_BUTTON"
 msgid "to capture the mouse press %s+F10 or click any button"
 msgstr "Zum Umschalten der Maus %s+F10 drücken oder klicken"
 
-#: src/gui/titlebar.cpp:794
+#: src/gui/titlebar.cpp:795
 #, c-format, no-wrap
 msgctxt "TITLEBAR_HINT_SEAMLESS_HOTKEY"
 msgid "seamless mouse, %s+F10 to capture"
 msgstr "Übergangslose Maus, drücke %s+F10 zum Umschalten"
 
-#: src/gui/titlebar.cpp:795
+#: src/gui/titlebar.cpp:796
 #, c-format, no-wrap
 msgctxt "TITLEBAR_HINT_SEAMLESS_HOTKEY_MIDDLE"
 msgid "seamless mouse, %s+F10 or middle-click to capture"
 msgstr "Übergangslose Maus, %s+F10 drücken oder Mittelklick schaltet um"
 
-#: src/gui/sdl_gui.cpp:2606
+#: src/gui/sdl_gui.cpp:2557
 #, c-format, no-wrap
 msgctxt "DISPLAY_INVALID_VSYNC_SETTING"
 msgid ""
@@ -3626,6 +3626,28 @@ msgstr ""
 "               Produktionen aus den späten 90er Jahren benötigt."
 
 #: src/config/setup.cpp:262
+#, fuzzy, c-format, no-wrap
+msgctxt "CONFIG_VESA_CUSTOM_RESOLUTION"
+msgid ""
+"Replace the 1152x864 VESA resolution with a custom one ('none' by default).\n"
+"Useful for playing games in widescreen that support custom VESA resolutions\n"
+"(e.g., Quake and Build Engine games such as Duke Nukem 3D and Blood), or for\n"
+"running Windows 3.1 in widescreen with the VBESVGA driver. Custom resolutions\n"
+"always use square pixels. Possible values:\n"
+"\n"
+"  none:  Don't replace the 1152x864 VESA resolution.\n"
+"\n"
+"  WxH:   Replacement resolution in WxH format (e.g., 1920x1080, 960x540,\n"
+"         480x270). Valid range is 320x200 to 1920x1440; width must be a multiple\n"
+"         of 8. Colour depth variants that don't fit into the video memory are\n"
+"         skipped with a warning in the logs; increase 'vmemsize' to fit them\n"
+"         (e.g., 1920x1080 32-bit needs 8 MB).\n"
+"\n"
+"Note: The feature only works with the `svga_s3` machine type; any other `svga_*`\n"
+"      and `vesa_*` machine types are not supported."
+msgstr ""
+
+#: src/config/setup.cpp:262
 #, c-format, no-wrap
 msgctxt "CONFIG_VGA_8DOT_FONT"
 msgid "Use 8-pixel-wide fonts on VGA adapters ('off' by default)."
@@ -3634,12 +3656,11 @@ msgstr ""
 "(standardmäßig deaktiviert)."
 
 #: src/config/setup.cpp:262
-#, c-format, no-wrap
+#, fuzzy, c-format, no-wrap
 msgctxt "CONFIG_VGA_RENDER_PER_SCANLINE"
 msgid ""
-"Emulate accurate per-scanline VGA rendering ('on' by default). Currently, you\n"
-"need to disable this for a few games, otherwise they will crash at startup\n"
-"(e.g., Deus, Ishar 3, Robinson's Requiem, Time Warriors)."
+"The [color=light-green]'vga_render_per_scanline'[reset] setting has been removed;\n"
+"it's no longer necessary."
 msgstr ""
 "Emuliert akkurates per-scanline VGA-Rendering (standardmäßig aktiviert).\n"
 "Derzeit musst du dies für einige Spiele deaktivieren, da sie sonst beim\n"
@@ -3979,7 +4000,7 @@ msgstr ""
 "                       emulieren."
 
 #: src/config/setup.cpp:262
-#, c-format, no-wrap
+#, fuzzy, c-format, no-wrap
 msgctxt "CONFIG_INTEGER_SCALING"
 msgid ""
 "Constrain the horizontal or vertical scaling factor to the largest integer\n"
@@ -3989,19 +4010,22 @@ msgid ""
 "other dimension. If the image is larger than the viewport, the integer scaling\n"
 "constraint is auto-disabled (same as 'off'). Possible values:\n"
 "\n"
-"  auto:        A special vertical mode auto-enabled only for the adaptive CRT\n"
-"               shaders (see `shader`). This mode has refinements over standard\n"
-"               vertical integer scaling: 3.5x and 4.5x scaling factors are also\n"
-"               allowed, and integer scaling is disabled above 5.0x scaling.\n"
+"  auto:        A special vertical mode auto-enabled only for the CRT shaders\n"
+"               (see `shader`). This mode has refinements over standard vertical\n"
+"               integer scaling: 3.5x and 4.5x scaling factors are also allowed,\n"
+"               and integer scaling is disabled above 5.0x scaling.\n"
 "\n"
-"  vertical:    Constrain the vertical scaling factor to integer values.\n"
-"               This is the recommended setting for third-party shaders to avoid\n"
-"               uneven scanlines and interference artifacts.\n"
+"  vertical:    Constrain the vertical scaling factor to integer values. This is\n"
+"               the recommended setting for 3rd party CRT shaders with scanline\n"
+"               simulation to avoid uneven scanlines and interference artifacts.\n"
+"               For the built-in CRT shaders, use 'auto'.\n"
 "\n"
-"  horizontal:  Constrain the horizontal scaling factor to integer values.\n"
+"  horizontal:  Constrain the horizontal scaling factor to integer values. Might\n"
+"               be useful on low-resolution displays to optimise for horizontal\n"
+"               text sharpness.\n"
 "\n"
-"  off:         No integer scaling constraint is applied; the image fills the\n"
-"               viewport while maintaining the configured aspect ratio."
+"  off:         Apply no integer scaling constraint; the image fills the viewport\n"
+"               while maintaining the configured aspect ratio."
 msgstr ""
 "Beschränkt den horizontalen oder vertikalen Skalierungsfaktor auf den größten\n"
 "ganzzahligen Werte, damit das dargestellte Bild in das Fenster passt\n"
@@ -4133,7 +4157,7 @@ msgstr ""
 "Paletten wechseln."
 
 #: src/config/setup.cpp:262
-#, c-format, no-wrap
+#, fuzzy, c-format, no-wrap
 msgctxt "CONFIG_CGA_COLORS"
 msgid ""
 "Set the interpretation of CGA RGBI colours ('default' by default). Affects all\n"
@@ -4176,18 +4200,8 @@ msgid ""
 "  dga16:         A modern take on the canonical CGA palette with dialed back\n"
 "                 contrast.\n"
 "\n"
-"You can also set custom colours by specifying 16 space or comma separated\n"
-"sRGB colour values, either as 3 or 6-digit hex codes (e.g., #f00 or #ff0000 for\n"
-"full red), or decimal RGB triplets (e.g., (255, 0, 255) for magenta). The 16\n"
-"colours are ordered as follows:\n"
-"\n"
-"  black, blue, green, cyan, red, magenta, brown, light-grey, dark-grey,\n"
-"  light-blue, light-green, light-cyan, light-red, light-magenta, yellow, white.\n"
-"\n"
-"Their default values, shown here in 6-digit hex code format, are:\n"
-"\n"
-"  #000000 #0000aa #00aa00 #00aaaa #aa0000 #aa00aa #aa5500 #aaaaaa\n"
-"  #555555 #5555ff #55ff55 #55ffff #ff5555 #ff55ff #ffff55 #ffffff"
+"Note: You can place custom palette configuration files inside the 'cga-colors'\n"
+"      resource folder and load them by name (without .preset extension)."
 msgstr ""
 "Legt die Interpretation von CGA-RGBI-Farben fest (standardmäßig 'default').\n"
 "Betrifft alle Gerätetypen, die CGA- oder höhere Grafikauflösungen darstellen\n"
@@ -4272,10 +4286,10 @@ msgstr ""
 "    [color=light-green]'shader'[reset]-Optionen in Betracht."
 
 #: src/config/setup.cpp:278
-#, c-format, no-wrap
+#, fuzzy, c-format, no-wrap
 msgctxt "CONFIGITEM_COLOR_SPACE_COLOR_SPACE_DESCRIPTION"
 msgid ""
-"Set the colour space of the video output ('display-p3' by default). This setting\n"
+"Set the colour space of the video output ('srgb' by default). This setting\n"
 "allows to take advantage of wide color gamut monitors and to more accurately\n"
 "emulate CRT colors. Possible values:"
 msgstr ""
@@ -4806,7 +4820,7 @@ msgstr ""
 "   - Dedithering wird auf gerenderte Screenshots angewendet, nicht jedoch\n"
 "     auf unbearbeitete und hochskalierte Screenshots und Videoaufnahmen."
 
-#: src/gui/render/render.cpp:2919
+#: src/gui/render/render.cpp:3040
 #, c-format, no-wrap
 msgctxt "RENDER_SHADER_RENAMED"
 msgid ""
@@ -4816,7 +4830,7 @@ msgstr ""
 "Der integrierte Shader [color=white]'%s'[reset] wurde in [color=white]'%s'[reset]\n"
 "umbenannt; Verwendung von [color=white]'%s'[reset]"
 
-#: src/gui/render/render.cpp:2923
+#: src/gui/render/render.cpp:3044
 #, c-format, no-wrap
 msgctxt "RENDER_SHADER_FALLBACK"
 msgid ""
@@ -4826,7 +4840,7 @@ msgstr ""
 "Fehler beim Einstellen des Shaders [color=white]'%s'[reset],\n"
 "es wird auf [color=white]'%s'[reset] zurückgegriffen"
 
-#: src/gui/render/render.cpp:2927
+#: src/gui/render/render.cpp:3048
 #, c-format, no-wrap
 msgctxt "RENDER_DEFAULT_SHADER_PRESET_FALLBACK"
 msgid ""
@@ -4837,7 +4851,7 @@ msgstr ""
 "es wird auf die Standardvoreinstellung zurückgegriffen"
 
 #: src/config/setup.cpp:262
-#, c-format, no-wrap
+#, fuzzy, c-format, no-wrap
 msgctxt "CONFIG_COMPOSITE"
 msgid ""
 "Enable CGA composite monitor emulation ('auto' by default). Only available for\n"
@@ -4853,8 +4867,8 @@ msgid ""
 "         mode if the game uses it (default). You need to enable composite mode\n"
 "         manually for the 320x200 mode.\n"
 "\n"
-"Note: Fine-tune the composite emulation settings (e.g., 'composite_hue') using\n"
-"      the composite hotkeys, then copy the new settings from the logs into your\n"
+"Note: Fine-tune the composite emulation settings (e.g., 'hue') using the\n"
+"      composite hotkeys, then copy the new settings from the logs into your\n"
 "      config."
 msgstr ""
 "CGA-Composite-Monitor-Emulation aktivieren (Standardwert: 'auto'). Nur verfügbar\n"
@@ -5822,13 +5836,13 @@ msgstr ""
 "umrechnen."
 
 #: src/config/setup.cpp:262
-#, c-format, no-wrap
+#, fuzzy, c-format, no-wrap
 msgctxt "CONFIG_BLOCKSIZE"
 msgid ""
-"Block size of the host audio device in sample frames (%s by default). Valid\n"
-"range is 64 to 8192. Should be set to power-of-two values (e.g., 256, 512, 1024,\n"
+"Block size of the host audio device in sample frames ('auto' by default). Valid\n"
+"range is 16 to 8192. Should be set to power-of-two values (e.g., 256, 512, 1024,\n"
 "etc.) Larger values might help with sound stuttering but will introduce more\n"
-"latency. Also see 'negotiate'."
+"latency."
 msgstr ""
 "Blockgröße des Host-Audiogeräts in Sample-Frames (standardmäßig %s). Der gültige\n"
 "Bereich liegt zwischen 64 und 8192. Sollte auf Werte eingestellt werden, die eine\n"
@@ -5848,12 +5862,12 @@ msgstr ""
 "verhindern, aber der Ton wird auch mehr verzögert."
 
 #: src/config/setup.cpp:262
-#, c-format, no-wrap
+#, fuzzy, c-format, no-wrap
 msgctxt "CONFIG_NEGOTIATE"
 msgid ""
-"Negotiate a possibly better 'blocksize' setting (%s by default). Enable it if\n"
-"you're not getting audio or the sound is stuttering with your 'blocksize'\n"
-"setting. Disable it to force the manually set 'blocksize' value."
+"Removed as of SDL3. This used to tell SDL2 whether to negotiate blocksize\n"
+"with the audio driver or to force/emulate any arbitary value.\n"
+"As of SDL3, blocksize is a hint which may or may not be honored."
 msgstr ""
 "Verhandelt eine möglicherweise bessere Einstellung für die 'Blocksize'\n"
 "(Standardwert: %s). Aktiviere diese Option, wenn du keinen Ton hörst\n"
@@ -6057,7 +6071,7 @@ msgstr ""
 "        Klangqualität; er entfernt lediglich das kaum hörbare Restrauschen in\n"
 "        leisen Passagen."
 
-#: src/audio/mixer.cpp:3244
+#: src/audio/mixer.cpp:3537
 #, c-format, no-wrap
 msgctxt "MIXER_INVALID_CUSTOM_FILTER"
 msgid ""
@@ -6068,7 +6082,7 @@ msgstr ""
 "Muss im Format [color=light-cyan]'lpf|hpf ORDER CUTOFF_FREQUENCY'[reset] angegeben\n"
 "werden."
 
-#: src/audio/mixer.cpp:3249
+#: src/audio/mixer.cpp:3542
 #, c-format, no-wrap
 msgctxt "MIXER_INVALID_CUSTOM_FILTER_ORDER"
 msgid "Invalid %s filter order: [color=white]'%s'[reset]. Must be an integer between 1 and %d."
@@ -6076,7 +6090,7 @@ msgstr ""
 "Ungültige Reihenfolge des %s-Filters: [color=white]'%s'[reset]. Es muss eine ganze Zahl\n"
 "zwischen 1 und %d sein."
 
-#: src/audio/mixer.cpp:3253
+#: src/audio/mixer.cpp:3546
 #, c-format, no-wrap
 msgctxt "MIXER_INVALID_CUSTOM_FILTER_CUTOFF"
 msgid "Invalid %s filter cutoff frequency: [color=white]'%s'[reset]. Must be a positive number."
@@ -6084,13 +6098,13 @@ msgstr ""
 "Ungültige Filtergrenzfrequenz %s: [color=white]'%s'[Zurücksetzen]. Es muss sich um\n"
 "eine positive Zahl handeln."
 
-#: src/audio/mixer.cpp:3257
+#: src/audio/mixer.cpp:3550
 #, c-format, no-wrap
 msgctxt "MIXER_INVALID_CUSTOM_FILTER_TYPE"
 msgid "Invalid filter type: [color=white]'%s'[reset]. Must be either 'hpf' or 'lpf'."
 msgstr "Ungültiger Filtertyp: [color=white]'%s'[reset]. Muss entweder 'hpf' oder 'lpf' lauten."
 
-#: src/audio/mixer.cpp:3261
+#: src/audio/mixer.cpp:3554
 #, c-format, no-wrap
 msgctxt "MIXER_INVALID_CUSTOM_FILTER_DUPLICATE"
 msgid ""
@@ -6100,7 +6114,7 @@ msgstr ""
 "Ungültige Definition eines benutzerdefinierten Filters: [color=white]'%s'[reset].\n"
 "Die beiden Filter müssen unterschiedlichen Typen angehören."
 
-#: src/audio/mixer.cpp:3265
+#: src/audio/mixer.cpp:3558
 #, c-format, no-wrap
 msgctxt "MIXER_INVALID_CUSTOM_FADEOUT"
 msgid ""
@@ -6390,13 +6404,13 @@ msgstr ""
 "  off:       Die Ausgabe nicht filtern (Standard).\n"
 "  <custom>:  Benutzerdefinierter Filter; siehe 'sb_filter' für Details."
 
-#: src/midi/fluidsynth.cpp:1304
+#: src/midi/fluidsynth.cpp:1323
 #, c-format, no-wrap
 msgctxt "FLUIDSYNTH_NO_SOUNDFONTS"
 msgid "No available SoundFonts"
 msgstr "Es sind keine SoundFonts verfügbar"
 
-#: src/midi/fluidsynth.cpp:1306
+#: src/midi/fluidsynth.cpp:1325
 #, c-format, no-wrap
 msgctxt "FLUIDSYNTH_INVALID_SOUNDFONT_DIR"
 msgid "Invalid [color=light-green]soundfont_dir[reset] setting; cannot open directory [color=white]'%s'[reset], using ''"
@@ -6404,13 +6418,13 @@ msgstr ""
 "Ungültige Einstellung [color=light-green]soundfont_dir[reset]; Verzeichnis [color=white]'%s'[reset] kann\n"
 "nicht geöffnet werden, es wird '' verwendet"
 
-#: src/midi/fluidsynth.cpp:1310
+#: src/midi/fluidsynth.cpp:1329
 #, c-format, no-wrap
 msgctxt "FLUIDSYNTH_ERROR_LOADING_SOUNDFONT"
 msgid "Error loading SoundFont [color=white]'%s'[reset]"
 msgstr "Fehler beim Laden der SoundFont-Datei [color=white]'%s'[reset]"
 
-#: src/midi/fluidsynth.cpp:1313
+#: src/midi/fluidsynth.cpp:1332
 #, c-format, no-wrap
 msgctxt "FLUIDSYNTH_INVALID_EFFECT_PARAMETER"
 msgid ""
@@ -6420,7 +6434,7 @@ msgstr ""
 "Ungültiger [color=light-green]'%s'[reset]-Synth-Parameter (%s): [color=white]%s[reset];\n"
 "muss zwischen %.2f und %.2f liegen, Verwende [color=white]'%s'[reset]"
 
-#: src/midi/fluidsynth.cpp:1318
+#: src/midi/fluidsynth.cpp:1337
 #, c-format, no-wrap
 msgctxt "FLUIDSYNTH_INVALID_CHORUS_WAVE"
 msgid ""
@@ -6430,7 +6444,7 @@ msgstr ""
 "Ungültiger [color=light-green]'fsynth_chorus'[reset]-Synth-Parameter (Modulationswellenform): [color=white]%s[reset];\n"
 "muss [color=white]'sine'[reset] oder [color=white]'triangle'[reset] lauten"
 
-#: src/midi/fluidsynth.cpp:1323
+#: src/midi/fluidsynth.cpp:1342
 #, c-format, no-wrap
 msgctxt "FLUIDSYNTH_INVALID_NUM_EFFECT_PARAMS"
 msgid ""
@@ -6502,13 +6516,13 @@ msgstr ""
 "  <custom>:  Benutzerdefinierte Filterdefinition; weitere Informationen findest\n"
 "             du unter 'sb_filter'."
 
-#: src/midi/soundcanvas.cpp:933
+#: src/midi/soundcanvas.cpp:956
 #, c-format, no-wrap
 msgctxt "SC55_MODELS_LABEL"
 msgid "SC-55 models    "
 msgstr "SC-55-Modelle    "
 
-#: src/midi/soundcanvas.cpp:934
+#: src/midi/soundcanvas.cpp:957
 #, c-format, no-wrap
 msgctxt "SOUNDCANVAS_ACTIVE_MODEL_LABEL"
 msgid "Active model:    "
@@ -6688,13 +6702,13 @@ msgstr ""
 "ränderte MIDI-Ausgabe eines Programms aufzeichnen möchte, z.B. bei der Arbeit\n"
 "mit Musik-Anwendungen oder beim Debuggen von MIDI-Problemen."
 
-#: src/midi/midi.cpp:931
+#: src/midi/midi.cpp:1000
 #, c-format, no-wrap
 msgctxt "MIDI_DEVICE_ERROR_OPENING_DEVICE"
 msgid "Error opening MIDI device [color=white]'%s'[reset]; using [color=white]'%s'[reset]"
 msgstr "Fehler beim Öffnen des MIDI-Geräts [color=white]'%s'[reset]; Verwendung von [color=white]'%s'[reset]"
 
-#: src/midi/midi.cpp:935
+#: src/midi/midi.cpp:1004
 #, c-format, no-wrap
 msgctxt "MIDI_DEVICE_ERROR_OPENING_DEVICE_NO_MIDI"
 msgid "Error opening MIDI device [color=white]'%s'[reset]; using 'none' (disabling MIDI output)"
@@ -6702,31 +6716,31 @@ msgstr ""
 "Fehler beim Öffnen des MIDI-Geräts [color=white]'%s'[reset];\n"
 "Verwendung von 'none' (MIDI-Ausgabe wird deaktiviert)"
 
-#: src/midi/midi.cpp:939
+#: src/midi/midi.cpp:1008
 #, c-format, no-wrap
 msgctxt "MIDI_DEVICE_LIST_NOT_SUPPORTED"
 msgid "Listing not supported"
 msgstr "Auflistung nicht unterstützt"
 
-#: src/midi/midi.cpp:940
+#: src/midi/midi.cpp:1009
 #, c-format, no-wrap
 msgctxt "MIDI_DEVICE_NOT_CONFIGURED"
 msgid "Device not configured"
 msgstr "Gerät nicht konfiguriert"
 
-#: src/midi/midi.cpp:941
+#: src/midi/midi.cpp:1010
 #, c-format, no-wrap
 msgctxt "MIDI_DEVICE_NO_PORTS"
 msgid "No available ports"
 msgstr "Keine freien Ports"
 
-#: src/midi/midi.cpp:942
+#: src/midi/midi.cpp:1011
 #, c-format, no-wrap
 msgctxt "MIDI_DEVICE_NO_MODEL_ACTIVE"
 msgid "No model is currently active"
 msgstr "Derzeit ist kein Modell aktiv"
 
-#: src/midi/midi.cpp:943
+#: src/midi/midi.cpp:1012
 #, c-format, no-wrap
 msgctxt "MIDI_DEVICE_NO_MODELS"
 msgid "No available models"
@@ -7360,7 +7374,7 @@ msgid "Use [color=light-green]'lpt_dac = disney'[reset] to enable the Disney Sou
 msgstr "Verwende [color=light-green]'lpt_dac = disney'[reset], um die Disney-Soundquelle zu aktivieren."
 
 #: src/config/setup.cpp:262
-#, c-format, no-wrap
+#, fuzzy, c-format, no-wrap
 msgctxt "CONFIG_PCSPEAKER"
 msgid ""
 "PC speaker emulation model ('impulse' by default). Possible values:\n"
@@ -7370,7 +7384,9 @@ msgid ""
 "              in a small number of programs.\n"
 "\n"
 "  discrete:   Legacy simplified PC speaker emulation; only use this on specific\n"
-"              titles that give you problems with the 'impulse' model.\n"
+"              titles that give you problems with the 'impulse' model,\n"
+"              and please report any issues. The discrete model is\n"
+"              deprecated and will be removed in a future release.\n"
 "\n"
 "  none, off:  Don't emulate the PC speaker."
 msgstr ""
@@ -7927,6 +7943,31 @@ msgid "Enable UMB memory support ('on' by default)."
 msgstr "Aktiviert die UMB-Unterstützung (standardmäßig 'on')."
 
 #: src/config/setup.cpp:262
+#, fuzzy, c-format, no-wrap
+msgctxt "CONFIG_STACKS"
+msgid ""
+"Use DOS-style private stacks for hardware interrupts ('auto' by default).\n"
+"When a wrapped hardware interrupt fires, DOSBox Staging switches to one\n"
+"stack from a private pool before invoking the previous handler. Disabling\n"
+"this means each running program must have enough stack space for hardware\n"
+"interrupts (and any chained handlers) itself. Most programs work correctly\n"
+"without it; a few legacy programs depend on it to avoid corrupting their\n"
+"own stack.\n"
+"\n"
+"Note: the current implementation wraps the timer interrupt (INT 08h, IRQ0)\n"
+"and the keyboard interrupt (INT 09h, IRQ1). MS-DOS's STACKS feature wraps\n"
+"additional hardware-IRQ vectors; coverage may be expanded in future versions.\n"
+"\n"
+"  auto:        Enable on AT-class machine types with the MS-DOS defaults\n"
+"               (9 stacks of 128 bytes each). Disable on PC/XT-class machine\n"
+"               types (e.g., cga, pcjr, tandy).\n"
+"  count,size:  Allocate `count` private stacks of `size` bytes each, e.g.\n"
+"               'stacks = 9,128'. Equivalent to the DOS 'STACKS=count,size'\n"
+"               setting; 'count' must be 8-64, 'size' must be 32-512.\n"
+"  0,0:         Disable; use the interrupted program's stack."
+msgstr ""
+
+#: src/config/setup.cpp:262
 #, c-format, no-wrap
 msgctxt "CONFIG_PCJR_MEMORY_CONFIG"
 msgid ""
@@ -8241,11 +8282,11 @@ msgstr ""
 "Weiterleitung von TCP-Ports."
 
 #: src/config/setup.cpp:262
-#, c-format, no-wrap
+#, fuzzy, c-format, no-wrap
 msgctxt "CONFIG_WEBSERVER_ENABLED"
 msgid ""
 "Enable the HTTP REST API that exposes internal state and memory (disabled by\n"
-"default). Open http://localhost:8080 in a browser (or use the configured port)\n"
+"default). Open http://localhost:8086 in a browser (or use the configured port)\n"
 "to view the API documentation."
 msgstr ""
 "Aktiviert die HTTP-REST-API, die den internen Status und den Speicher offen-\n"
@@ -8273,7 +8314,7 @@ msgctxt "CONFIG_WEBSERVER_PORT"
 msgid "TCP port to bind to."
 msgstr "TCP-Port, auf den eine Verbindung hergestellt werden soll."
 
-#: src/dosbox.cpp:1103
+#: src/dosbox.cpp:1634
 #, c-format, no-wrap
 msgctxt "AUTOEXEC_CONFIGFILE_HELP"
 msgid ""
@@ -8285,7 +8326,7 @@ msgstr ""
 "Wichtig: Der Abschnitt [autoexec] muss der letzte Abschnitt in der\n"
 "         Konfigurationsdatei sein!\n"
 
-#: src/dosbox.cpp:1107
+#: src/dosbox.cpp:1638
 #, c-format, no-wrap
 msgctxt "CONFIGFILE_INTRO"
 msgid ""
@@ -8726,23 +8767,59 @@ msgctxt "PROGRAM_CONFIG_DEPRECATED_VALUES"
 msgid "Deprecated values"
 msgstr "Veraltete Werte"
 
-#: src/ints/bios.cpp:1532
+#: src/ints/bios.cpp:1530
 #, c-format, no-wrap
 msgctxt "BIOS_REBOOTING_3"
 msgid "Rebooting in 3 seconds..."
 msgstr "Neustart in 3 Sekunden..."
 
-#: src/ints/bios.cpp:1533
+#: src/ints/bios.cpp:1531
 #, c-format, no-wrap
 msgctxt "BIOS_REBOOTING_2"
 msgid "Rebooting in 2 seconds..."
 msgstr "Neustart in 2 Sekunden..."
 
-#: src/ints/bios.cpp:1534
+#: src/ints/bios.cpp:1532
 #, c-format, no-wrap
 msgctxt "BIOS_REBOOTING_1"
 msgid "Rebooting in 1 second..."
 msgstr "Neustart in 1 Sekunde..."
+
+#: src/ints/int10.cpp:932
+#, fuzzy, c-format, no-wrap
+msgctxt "INT10H_CGA_PALETTE_NOT_FOUND"
+msgid "CGA palette preset [color=white]'%s'[reset] not found, falling back to default colors"
+msgstr ""
+
+#: src/ints/int10.cpp:936
+#, fuzzy, c-format, no-wrap
+msgctxt "INT10H_CGA_PALETTE_LOAD_FAILED"
+msgid "Failed to load CGA palette resource file: [color=white]'%s'[reset], falling back to default colors"
+msgstr ""
+
+#: src/ints/int10.cpp:940
+#, fuzzy, c-format, no-wrap
+msgctxt "INT10H_CGA_PALETTE_MISSING_SECTION"
+msgid "Missing [color=light-green][cga_colors][reset] section header in palette file: [color=white]'%s'[reset], falling back to default colors"
+msgstr ""
+
+#: src/ints/int10.cpp:944
+#, fuzzy, c-format, no-wrap
+msgctxt "INT10H_CGA_PALETTE_MISSING_COLOR"
+msgid "Palette file [color=white]'%s'[reset] is missing the required color '[color=white]%s[reset]', falling back to default colors"
+msgstr ""
+
+#: src/ints/int10.cpp:948
+#, fuzzy, c-format, no-wrap
+msgctxt "INT10H_CGA_PALETTE_INVALID_COLOR_VALUE"
+msgid "Palette file [color=white]'%s'[reset] has an invalid value '[color=white]%s[reset]' for color '[color=white]%s[reset]', falling back to default colors"
+msgstr ""
+
+#: src/ints/int10.cpp:953
+#, fuzzy, c-format, no-wrap
+msgctxt "INT10H_CGA_PALETTE_UNKNOWN_COLOR"
+msgid "Palette file [color=white]'%s'[reset] contains an unknown color key '[color=white]%s[reset]', falling back to default colors"
+msgstr ""
 
 #: src/dos/programs/mount_common.cpp:82
 #, c-format, no-wrap
@@ -9111,6 +9188,8 @@ msgid ""
 "    CGA, or Hercules always use the ROM screen font.\n"
 "  - You can use the 'us' keyboard layout with any code page; all the other\n"
 "    layouts work with selected code pages only.\n"
+"  - Use the [color=light-green]chcp[reset] command to change the code page while keeping the\n"
+"    current keyboard layout.\n"
 "\n"
 "Examples:\n"
 "  [color=light-green]KEYB[reset]\n"
@@ -9149,6 +9228,8 @@ msgstr ""
 "    CGA oder Hercules verwenden immer die ROM-Bildschirmschriftart.\n"
 "  - Du kannst das Tastaturlayout 'us' mit jeder Codeseite verwenden; andere\n"
 "    Layouts funktionieren nur mit ausgewählten Codeseiten.\n"
+"  - Verwende den Befehl [color=light-green]chcp[reset], um die Codepage zu ändern und dabei das aktuelle\n"
+"    Tastaturlayout beizubehalten.\n"
 "\n"
 "Beispiele:\n"
 "  [color=light-green]KEYB[reset]\n"
@@ -9156,67 +9237,67 @@ msgstr ""
 "  [color=light-green]KEYB[reset] [color=light-cyan]sp[reset] [color=white]850[reset]\n"
 "  [color=light-green]KEYB[reset] [color=light-cyan]de[reset] [color=white]858[reset] meinecp.cpi\n"
 
-#: src/dos/programs/keyb.cpp:378
+#: src/dos/programs/keyb.cpp:380
 #, c-format, no-wrap
 msgctxt "PROGRAM_KEYB_CODE_PAGE"
 msgid "Code page"
 msgstr "Codepage"
 
-#: src/dos/programs/keyb.cpp:379
+#: src/dos/programs/keyb.cpp:381
 #, c-format, no-wrap
 msgctxt "PROGRAM_KEYB_ROM_FONT"
 msgid "ROM font"
 msgstr "ROM-Schriftart"
 
-#: src/dos/programs/keyb.cpp:380
+#: src/dos/programs/keyb.cpp:382
 #, c-format, no-wrap
 msgctxt "PROGRAM_KEYB_KEYBOARD_LAYOUT"
 msgid "Keyboard layout"
 msgstr "Tastaturbelegung"
 
-#: src/dos/programs/keyb.cpp:381
+#: src/dos/programs/keyb.cpp:383
 #, c-format, no-wrap
 msgctxt "PROGRAM_KEYB_KEYBOARD_SCRIPT"
 msgid "Keyboard script"
 msgstr "Tastaturschrift"
 
-#: src/dos/programs/keyb.cpp:382
+#: src/dos/programs/keyb.cpp:384
 #, c-format, no-wrap
 msgctxt "PROGRAM_KEYB_NOT_LOADED"
 msgid "not loaded"
 msgstr "nicht geladen"
 
-#: src/dos/programs/keyb.cpp:384
+#: src/dos/programs/keyb.cpp:386
 #, c-format, no-wrap
 msgctxt "PROGRAM_KEYB_INVALID_CODE_PAGE"
 msgid "Invalid code page.\n"
 msgstr "Ungültige Codepage.\n"
 
-#: src/dos/programs/keyb.cpp:386
+#: src/dos/programs/keyb.cpp:388
 #, c-format, no-wrap
 msgctxt "PROGRAM_KEYB_CPI_FILE_NOT_FOUND"
 msgid "Code page information file not found.\n"
 msgstr "Codepage-Informationsdatei nicht gefunden.\n"
 
-#: src/dos/programs/keyb.cpp:388
+#: src/dos/programs/keyb.cpp:390
 #, c-format, no-wrap
 msgctxt "PROGRAM_KEYB_CPI_READ_ERROR"
 msgid "Error reading code page information file.\n"
 msgstr "Fehler beim Lesen der Codepage-Informationsdatei.\n"
 
-#: src/dos/programs/keyb.cpp:390
+#: src/dos/programs/keyb.cpp:392
 #, c-format, no-wrap
 msgctxt "PROGRAM_KEYB_INVALID_CPI_FILE"
 msgid "Invalid code page information file.\n"
 msgstr "Ungültige Codepage-Informationsdatei.\n"
 
-#: src/dos/programs/keyb.cpp:392
+#: src/dos/programs/keyb.cpp:394
 #, c-format, no-wrap
 msgctxt "PROGRAM_KEYB_CPI_FILE_TOO_LARGE"
 msgid "Code page information file too large.\n"
 msgstr "Codepage-Informationsdatei zu groß.\n"
 
-#: src/dos/programs/keyb.cpp:394
+#: src/dos/programs/keyb.cpp:396
 #, c-format, no-wrap
 msgctxt "PROGRAM_KEYB_UNSUPPORTED_CPX_FILE"
 msgid ""
@@ -9227,7 +9308,7 @@ msgstr ""
 "CPI-Format, indem du sie mit dem Drittanbieter-Tool\n"
 "[color=light-green]upx[reset] entpackst.\n"
 
-#: src/dos/programs/keyb.cpp:397
+#: src/dos/programs/keyb.cpp:399
 #, c-format, no-wrap
 msgctxt "PROGRAM_KEYB_PRINTER_CPI_FILE"
 msgid "This is a printer code page information file, it does not contain screen fonts.\n"
@@ -9235,7 +9316,7 @@ msgstr ""
 "Dies ist eine Drucker-Codepage-Informationsdatei, sie enthält keine\n"
 "Bildschirmschriftarten.\n"
 
-#: src/dos/programs/keyb.cpp:399
+#: src/dos/programs/keyb.cpp:401
 #, c-format, no-wrap
 msgctxt "PROGRAM_KEYB_SCREEN_FONT_UNUSABLE"
 msgid "Code page %d found, but the screen font could not be used.\n"
@@ -9243,19 +9324,19 @@ msgstr ""
 "Codepage %d gefunden, aber die Bildschirmschriftart konnte nicht\n"
 "verwendet werden.\n"
 
-#: src/dos/programs/keyb.cpp:401
+#: src/dos/programs/keyb.cpp:403
 #, c-format, no-wrap
 msgctxt "PROGRAM_KEYB_NO_BUNDLED_CPI_FILE"
 msgid "No bundled code page information file for code page %d.\n"
 msgstr "Keine mitgelieferte Codepage-Informationsdatei für Codepage %d.\n"
 
-#: src/dos/programs/keyb.cpp:403
+#: src/dos/programs/keyb.cpp:405
 #, c-format, no-wrap
 msgctxt "PROGRAM_KEYB_NO_CODE_PAGE_IN_FILE"
 msgid "No code page %d in the code page information file.\n"
 msgstr "Codepage %d nicht in der Codepage-Informationsdatei enthalten.\n"
 
-#: src/dos/programs/keyb.cpp:405
+#: src/dos/programs/keyb.cpp:407
 #, c-format, no-wrap
 msgctxt "PROGRAM_KEYB_INCOMPATIBLE_MACHINE"
 msgid "Can't change the screen font; EGA machine or better is required.\n"
@@ -9263,25 +9344,25 @@ msgstr ""
 "Bildschirmschriftart kann nicht geändert werden; EGA-Grafik oder besser\n"
 "wird benötigt.\n"
 
-#: src/dos/programs/keyb.cpp:408
+#: src/dos/programs/keyb.cpp:410
 #, c-format, no-wrap
 msgctxt "PROGRAM_KEYB_LAYOUT_FILE_NOT_FOUND"
 msgid "File with keyboard layout '%s' not found.\n"
 msgstr "Datei mit Tastaturbelegung '%s' nicht gefunden.\n"
 
-#: src/dos/programs/keyb.cpp:410
+#: src/dos/programs/keyb.cpp:412
 #, c-format, no-wrap
 msgctxt "PROGRAM_KEYB_INVALID_LAYOUT_FILE"
 msgid "Invalid file with keyboard layout '%s'.\n"
 msgstr "Ungültige Datei mit Tastaturbelegung '%s'.\n"
 
-#: src/dos/programs/keyb.cpp:412
+#: src/dos/programs/keyb.cpp:414
 #, c-format, no-wrap
 msgctxt "PROGRAM_KEYB_LAYOUT_NOT_KNOWN"
 msgid "Keyboard layout '%s' not known.\n"
 msgstr "Tastaturbelegung '%s' nicht bekannt.\n"
 
-#: src/dos/programs/keyb.cpp:413
+#: src/dos/programs/keyb.cpp:415
 #, c-format, no-wrap
 msgctxt "PROGRAM_KEYB_NO_LAYOUT_FOR_CODE_PAGE"
 msgid "No keyboard layout '%s' for code page %d.\n"
@@ -9719,7 +9800,7 @@ msgstr ""
 "  - Wird die Offline-Dokumentation nicht gefunden, öffnet der Befehl\n"
 "    das Handbuch auf der Projektwebsite (Internetverbindung erforderlich)."
 
-#: src/dos/programs/mem.cpp:1249
+#: src/dos/programs/mem.cpp:1251
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_HELP_LONG"
 msgid ""
@@ -9772,385 +9853,385 @@ msgstr ""
 "Beispiele:\n"
 "  [color=light-green]mem[reset]\n"
 
-#: src/dos/programs/mem.cpp:1276
+#: src/dos/programs/mem.cpp:1278
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_SUMMARY_TABLE_HEADER"
 msgid "[color=white]Memory Type           Total        Used         Free[reset]"
 msgstr "[color=white]Speichertyp           Gesamt       Belegt        Frei[reset]"
 
-#: src/dos/programs/mem.cpp:1278
+#: src/dos/programs/mem.cpp:1280
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_SUMMARY_TABLE_HORIZONTAL_LINE"
 msgid "----------------   ----------   ----------   ----------"
 msgstr "----------------   ----------   ----------   ----------"
 
-#: src/dos/programs/mem.cpp:1280
+#: src/dos/programs/mem.cpp:1282
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_SUMMARY_TABLE_ROW_FORMAT"
 msgid "[color=light-cyan]%-16s[reset]   %10s   %10s   %10s"
 msgstr "[color=light-cyan]%-16s[reset]   %10s   %10s   %10s"
 
-#: src/dos/programs/mem.cpp:1283
+#: src/dos/programs/mem.cpp:1285
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_TYPE_CONVENTIONAL"
 msgid "Conventional"
 msgstr "Konventionell"
 
-#: src/dos/programs/mem.cpp:1284
+#: src/dos/programs/mem.cpp:1286
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_TYPE_UMB"
 msgid "Upper (UMB)"
 msgstr "Oberer (UMB)"
 
-#: src/dos/programs/mem.cpp:1285
+#: src/dos/programs/mem.cpp:1287
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_TYPE_HMA"
 msgid "High (HMA)"
 msgstr "Hoher (HMA)"
 
-#: src/dos/programs/mem.cpp:1286
+#: src/dos/programs/mem.cpp:1288
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_TYPE_XMS"
 msgid "Extended (XMS)"
 msgstr "Erweiterter (XMS)"
 
-#: src/dos/programs/mem.cpp:1287
+#: src/dos/programs/mem.cpp:1289
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_TYPE_EMS"
 msgid "Expanded (EMS)"
 msgstr "Expandierter (EMS)"
 
-#: src/dos/programs/mem.cpp:1288
+#: src/dos/programs/mem.cpp:1290
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_TYPE_UNDER_1MB"
 msgid "Total under 1 MB"
 msgstr "Gesamt unter 1 MB"
 
-#: src/dos/programs/mem.cpp:1290
+#: src/dos/programs/mem.cpp:1292
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_LABEL_LARGEST"
 msgid "Largest free Conventional Memory block"
 msgstr "Größter freier konventioneller Speicherblock"
 
-#: src/dos/programs/mem.cpp:1292
+#: src/dos/programs/mem.cpp:1294
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_LABEL_LARGEST_UMB"
 msgid "Largest free Upper Memory (UMB) block"
 msgstr "Größter freier oberer Speicherblock (UMB)"
 
-#: src/dos/programs/mem.cpp:1295
+#: src/dos/programs/mem.cpp:1297
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_BYTES"
 msgid "bytes"
 msgstr "Bytes"
 
-#: src/dos/programs/mem.cpp:1299
+#: src/dos/programs/mem.cpp:1301
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_CLASSIFY_TITLE"
 msgid "Modules using memory below 1 MB:"
 msgstr "Module, die Speicher unter 1 MB verwenden:"
 
-#: src/dos/programs/mem.cpp:1300
+#: src/dos/programs/mem.cpp:1302
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_CLASSIFY_TABLE_HEADER"
 msgid "[color=white]Name        PSP         Total      =   Conventional  +   Upper (UMB)[reset]"
 msgstr "[color=white]Name        PSP         Gesamt     =   Konventionell +   Oberer (UMB)[reset]"
 
-#: src/dos/programs/mem.cpp:1302
+#: src/dos/programs/mem.cpp:1304
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_CLASSIFY_TABLE_HORIZONTAL_LINE"
 msgid "--------   -----   ---------------   ---------------   ---------------"
 msgstr "--------   -----   ---------------   ---------------   ---------------"
 
-#: src/dos/programs/mem.cpp:1304
+#: src/dos/programs/mem.cpp:1306
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_CLASSIFY_TABLE_ROW_FORMAT"
 msgid "%-8s%c  %04Xh   %15s   %s   %15s"
 msgstr "%-8s%c  %04Xh   %15s   %s   %15s"
 
-#: src/dos/programs/mem.cpp:1307
+#: src/dos/programs/mem.cpp:1309
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_CLASSIFY_FREE"
 msgid "free"
 msgstr "frei"
 
-#: src/dos/programs/mem.cpp:1311
+#: src/dos/programs/mem.cpp:1313
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_DEBUG_TITLE_CONVENTIONAL"
 msgid "Conventional Memory MCB chain:"
 msgstr "Konventionelle Speicher-MCB-Kette:"
 
-#: src/dos/programs/mem.cpp:1313
+#: src/dos/programs/mem.cpp:1315
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_DEBUG_TITLE_UPPER"
 msgid "Upper Memory MCB chain #%u:"
 msgstr "Obere Speicher-MCB-Kette #%u:"
 
-#: src/dos/programs/mem.cpp:1316
+#: src/dos/programs/mem.cpp:1318
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_DEBUG_TABLE_HEADER"
 msgid "[color=white]Segment        Size        Name       PSP   Type[reset]"
 msgstr "[color=white]Segment        Größe       Name       PSP   Typ[reset]"
 
-#: src/dos/programs/mem.cpp:1318
+#: src/dos/programs/mem.cpp:1320
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_DEBUG_TABLE_HORIZONTAL_LINE"
 msgid "-------   ---------------  --------  -----  -------------"
 msgstr "-------   ---------------  --------  -----  -------------"
 
-#: src/dos/programs/mem.cpp:1320
+#: src/dos/programs/mem.cpp:1322
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_DEBUG_TABLE_ROW_FORMAT"
 msgid " %04Xh %c  %15s  %-8s  %04Xh  %s"
 msgstr " %04Xh %c  %15s  %-8s  %04Xh  %s"
 
-#: src/dos/programs/mem.cpp:1325
+#: src/dos/programs/mem.cpp:1327
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_FREE_TITLE_CONVENTIONAL"
 msgid "Free segments in Conventional Memory:"
 msgstr "Freie Segmente im konventionellen Speicher:"
 
-#: src/dos/programs/mem.cpp:1327
+#: src/dos/programs/mem.cpp:1329
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_FREE_TITLE_UPPER"
 msgid "Free segments in Upper Memory (UMB):"
 msgstr "Freie Segmente im oberen Speicher (UMB):"
 
-#: src/dos/programs/mem.cpp:1330
+#: src/dos/programs/mem.cpp:1332
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_FREE_TABLE_HEADER"
 msgid "[color=white]Segment         Size[reset]"
 msgstr "[color=white]Segment         Größe[reset]"
 
-#: src/dos/programs/mem.cpp:1332
+#: src/dos/programs/mem.cpp:1334
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_FREE_TABLE_HORIZONTAL_LINE"
 msgid "-------   ---------------"
 msgstr "-------   ---------------"
 
-#: src/dos/programs/mem.cpp:1334
+#: src/dos/programs/mem.cpp:1336
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_FREE_TABLE_ROW_FORMAT"
 msgid " %04Xh %c  %15s"
 msgstr " %04Xh %c  %15s"
 
-#: src/dos/programs/mem.cpp:1336
+#: src/dos/programs/mem.cpp:1338
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_FREE_TABLE_UNDERLINE"
 msgid "          ---------------"
 msgstr "          ---------------"
 
-#: src/dos/programs/mem.cpp:1338
+#: src/dos/programs/mem.cpp:1340
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_FREE_TABLE_SUMMARY"
 msgid "Total:    %s"
 msgstr "Gesamt:   %s"
 
-#: src/dos/programs/mem.cpp:1343
+#: src/dos/programs/mem.cpp:1345
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_MODULE_TITLE"
 msgid "Module '%s' (PSP segment %04Xh) uses the following memory:"
 msgstr "Modul '%s' (PSP-Segment %04Xh) verwendet folgenden Speicher:"
 
-#: src/dos/programs/mem.cpp:1346
+#: src/dos/programs/mem.cpp:1348
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_MODULE_TABLE_HEADER"
 msgid "[color=white]Segment         Size        Type[reset]"
 msgstr "[color=white]Segment         Größe       Typ[reset]"
 
-#: src/dos/programs/mem.cpp:1348
+#: src/dos/programs/mem.cpp:1350
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_MODULE_TABLE_HORIZONTAL_LINE"
 msgid "-------   ---------------   -------------"
 msgstr "-------   ---------------   -------------"
 
-#: src/dos/programs/mem.cpp:1350
+#: src/dos/programs/mem.cpp:1352
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_MODULE_TABLE_ROW_FORMAT"
 msgid " %04Xh    %s   %s"
 msgstr " %04Xh    %s   %s"
 
-#: src/dos/programs/mem.cpp:1352
+#: src/dos/programs/mem.cpp:1354
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_MODULE_TABLE_UNDERLINE"
 msgid "          ---------------"
 msgstr "          ---------------"
 
-#: src/dos/programs/mem.cpp:1354
+#: src/dos/programs/mem.cpp:1356
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_MODULE_TABLE_SUMMARY"
 msgid "Total:    %s"
 msgstr "Gesamt:   %s"
 
-#: src/dos/programs/mem.cpp:1359
+#: src/dos/programs/mem.cpp:1361
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_MCB_TYPE_FREE"
 msgid "(free)"
 msgstr "(frei)"
 
-#: src/dos/programs/mem.cpp:1360
+#: src/dos/programs/mem.cpp:1362
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_MCB_TYPE_SYSTEM"
 msgid "System data"
 msgstr "Systemdaten"
 
-#: src/dos/programs/mem.cpp:1361
+#: src/dos/programs/mem.cpp:1363
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_MCB_TYPE_RESERVED"
 msgid "Reserved area"
 msgstr "Reservierter Bereich"
 
-#: src/dos/programs/mem.cpp:1362
+#: src/dos/programs/mem.cpp:1364
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_MCB_TYPE_PROGRAM"
 msgid "Program"
 msgstr "Programm"
 
-#: src/dos/programs/mem.cpp:1363
+#: src/dos/programs/mem.cpp:1365
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_MCB_TYPE_ENVIRONMENT"
 msgid "Environment"
 msgstr "Umgebung"
 
-#: src/dos/programs/mem.cpp:1364
+#: src/dos/programs/mem.cpp:1366
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_MCB_TYPE_DATA"
 msgid "Data"
 msgstr "Daten"
 
-#: src/dos/programs/mem.cpp:1366
+#: src/dos/programs/mem.cpp:1368
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_XMS_TITLE"
 msgid "Detailed Extended Memory (XMS) information:"
 msgstr "Detaillierte Informationen zum erweiterten Speicher (XMS):"
 
-#: src/dos/programs/mem.cpp:1369
+#: src/dos/programs/mem.cpp:1371
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_XMS_LABEL_VERSION"
 msgid "XMS version"
 msgstr "XMS-Version"
 
-#: src/dos/programs/mem.cpp:1370
+#: src/dos/programs/mem.cpp:1372
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_XMS_LABEL_DRIVER"
 msgid "Driver revision"
 msgstr "Treiberversion"
 
-#: src/dos/programs/mem.cpp:1371
+#: src/dos/programs/mem.cpp:1373
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_XMS_LABEL_HMA"
 msgid "High Memory (HMA)"
 msgstr "Hoher Speicher (HMA)"
 
-#: src/dos/programs/mem.cpp:1372
+#: src/dos/programs/mem.cpp:1374
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_XMS_LABEL_TOTAL"
 msgid "Total XMS memory"
 msgstr "XMS-Speicher gesamt"
 
-#: src/dos/programs/mem.cpp:1373
+#: src/dos/programs/mem.cpp:1375
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_XMS_LABEL_FREE"
 msgid "Free XMS memory"
 msgstr "Freier XMS-Speicher"
 
-#: src/dos/programs/mem.cpp:1374
+#: src/dos/programs/mem.cpp:1376
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_XMS_LABEL_LARGEST"
 msgid "Largest free XMS block"
 msgstr "Größter freier XMS-Block"
 
-#: src/dos/programs/mem.cpp:1376
+#: src/dos/programs/mem.cpp:1378
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_XMS_HMA_FREE"
 msgid "free"
 msgstr "frei"
 
-#: src/dos/programs/mem.cpp:1377
+#: src/dos/programs/mem.cpp:1379
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_XMS_HMA_NOT_AVAILABLE"
 msgid "not available"
 msgstr "nicht verfügbar"
 
-#: src/dos/programs/mem.cpp:1381
+#: src/dos/programs/mem.cpp:1383
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_EMS_TITLE"
 msgid "Detailed Expanded Memory (EMS) information:"
 msgstr "Detaillierte Informationen zum expandierten Speicher (EMS):"
 
-#: src/dos/programs/mem.cpp:1384
+#: src/dos/programs/mem.cpp:1386
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_EMS_TABLE_HEADER"
 msgid "[color=white]Handle   Name         Pages         Size[reset]"
 msgstr "[color=white]Handle   Name         Seiten        Größe[reset]"
 
-#: src/dos/programs/mem.cpp:1386
+#: src/dos/programs/mem.cpp:1388
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_EMS_TABLE_HORIZONTAL_LINE"
 msgid "------   --------   -------   ----------"
 msgstr "------   --------   -------   ----------"
 
-#: src/dos/programs/mem.cpp:1388
+#: src/dos/programs/mem.cpp:1390
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_EMS_TABLE_ROW_FORMAT"
 msgid "   %3d   %-8s   %7s   %10s"
 msgstr "   %3d   %-8s   %7s   %10s"
 
-#: src/dos/programs/mem.cpp:1391
+#: src/dos/programs/mem.cpp:1393
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_EMS_LABEL_VERSION"
 msgid "EMS version"
 msgstr "EMS-Version"
 
-#: src/dos/programs/mem.cpp:1392
+#: src/dos/programs/mem.cpp:1394
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_EMS_LABEL_SEGMENT"
 msgid "Frame segment"
 msgstr "Rahmensegment"
 
-#: src/dos/programs/mem.cpp:1393
+#: src/dos/programs/mem.cpp:1395
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_EMS_LABEL_HANDLES_TOTAL"
 msgid "Total handles"
 msgstr "Handles gesamt"
 
-#: src/dos/programs/mem.cpp:1394
+#: src/dos/programs/mem.cpp:1396
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_EMS_LABEL_HANDLES_FREE"
 msgid "Free handles"
 msgstr "Freie Handles"
 
-#: src/dos/programs/mem.cpp:1395
+#: src/dos/programs/mem.cpp:1397
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_EMS_LABEL_TOTAL"
 msgid "Total EMS memory"
 msgstr "EMS-Speicher gesamt"
 
-#: src/dos/programs/mem.cpp:1396
+#: src/dos/programs/mem.cpp:1398
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_EMS_LABEL_FREE"
 msgid "Free EMS memory"
 msgstr "Freier EMS-Speicher"
 
-#: src/dos/programs/mem.cpp:1400
+#: src/dos/programs/mem.cpp:1402
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_ASTERISK"
 msgid "* - the currently running MEM command"
 msgstr "* - der aktuell ausgeführte MEM-Befehl"
 
-#: src/dos/programs/mem.cpp:1404
+#: src/dos/programs/mem.cpp:1406
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_ERROR_NO_MODULE"
 msgid "No module '%s' in memory.\n"
 msgstr "Kein Modul '%s' im Speicher.\n"
 
-#: src/dos/programs/mem.cpp:1405
+#: src/dos/programs/mem.cpp:1407
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_ERROR_NO_XMS"
 msgid "No Extended Memory (XMS) found.\n"
 msgstr "Kein erweiterter Speicher (XMS) gefunden.\n"
 
-#: src/dos/programs/mem.cpp:1406
+#: src/dos/programs/mem.cpp:1408
 #, c-format, no-wrap
 msgctxt "PROGRAM_MEM_ERROR_NO_EMS"
 msgid "No Expanded Memory (EMS) found.\n"
@@ -10799,13 +10880,13 @@ msgctxt "PROGRAM_MOUNT_READONLY"
 msgid "Mounted read-only\n"
 msgstr "Laufwerk mit Lesezugriff eingebunden\n"
 
-#: src/dos/programs/mount.cpp:1208
+#: src/dos/programs/mount.cpp:1321
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_HELP"
 msgid "Mount a directory or an image file to a drive letter.\n"
 msgstr "Verzeichnis oder Image-Datei als Laufwerksbuchstaben einbinden.\n"
 
-#: src/dos/programs/mount.cpp:1211
+#: src/dos/programs/mount.cpp:1324
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_HELP_LONG"
 msgid ""
@@ -10910,7 +10991,7 @@ msgstr ""
 "\n"
 "\n"
 
-#: src/dos/programs/mount.cpp:1260
+#: src/dos/programs/mount.cpp:1373
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_HELP_LONG_WIN32"
 msgid ""
@@ -10930,7 +11011,7 @@ msgstr ""
 "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]disk*.img[reset] -t floppy\n"
 "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]disk01.img disk02.img[reset] -t floppy\n"
 
-#: src/dos/programs/mount.cpp:1269
+#: src/dos/programs/mount.cpp:1382
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_HELP_LONG_MACOSX"
 msgid ""
@@ -10952,7 +11033,7 @@ msgstr ""
 "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]disk*.img[reset] -t floppy\n"
 "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]disk01.img disk02.img[reset] -t floppy\n"
 
-#: src/dos/programs/mount.cpp:1279
+#: src/dos/programs/mount.cpp:1392
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_HELP_LONG_OTHER"
 msgid ""
@@ -10974,79 +11055,79 @@ msgstr ""
 "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]disk*.img[reset] -t floppy\n"
 "  [color=light-green]mount[reset] [color=white]A[reset] [color=light-cyan]disk01.img disk02.img[reset] -t floppy\n"
 
-#: src/dos/programs/mount.cpp:1289
+#: src/dos/programs/mount.cpp:1402
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_CDROMS_FOUND"
 msgid "CD-ROMs found: %d\n"
 msgstr "CD-ROMs gefunden: %d\n"
 
-#: src/dos/programs/mount.cpp:1290
+#: src/dos/programs/mount.cpp:1403
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_ERROR_1"
 msgid "Directory or file %s doesn't exist.\n"
 msgstr "Datei oder Verzeichnis %s existiert nicht.\n"
 
-#: src/dos/programs/mount.cpp:1292
+#: src/dos/programs/mount.cpp:1405
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_ERROR_2"
 msgid "%s isn't a directory or valid image file.\n"
 msgstr "%s ist kein Verzeichnis oder eine gültige Image-Datei.\n"
 
-#: src/dos/programs/mount.cpp:1295
+#: src/dos/programs/mount.cpp:1408
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_ILL_TYPE"
 msgid "Illegal type %s"
 msgstr "Unzulässiger Typ %s"
 
-#: src/dos/programs/mount.cpp:1296
+#: src/dos/programs/mount.cpp:1409
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_ALREADY_MOUNTED"
 msgid "Drive %c already mounted with %s\n"
 msgstr "Laufwerk %c bereits mit %s eingebunden.\n"
 
-#: src/dos/programs/mount.cpp:1297
+#: src/dos/programs/mount.cpp:1410
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED"
 msgid "Drive %c isn't mounted.\n"
 msgstr "Laufwerk %c ist nicht eingebunden.\n"
 
-#: src/dos/programs/mount.cpp:1299
+#: src/dos/programs/mount.cpp:1412
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_UMOUNT_SUCCESS"
 msgid "Drive %c has successfully been removed.\n"
 msgstr "Laufwerk %c wurde erfolgreich entfernt.\n"
 
-#: src/dos/programs/mount.cpp:1302
+#: src/dos/programs/mount.cpp:1415
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_UMOUNT_NO_VIRTUAL"
 msgid "Virtual Drives can not be unMOUNTed.\n"
 msgstr "Virtuelle Laufwerke können nicht ausgeworfen werden.\n"
 
-#: src/dos/programs/mount.cpp:1305
+#: src/dos/programs/mount.cpp:1418
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_DRIVEID_ERROR"
 msgid "'%c' is not a valid drive identifier.\n"
 msgstr "'%c' ist keine gültige Laufwerksbezeichnung.\n"
 
-#: src/dos/programs/mount.cpp:1308
+#: src/dos/programs/mount.cpp:1421
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_WARNING_WIN"
 msgid "[color=light-red]Mounting c:\\ is NOT recommended. Please mount a (sub)directory next time.[reset]\n"
 msgstr "[color=light-red]Einbinden von c:\\ wird NICHT empfohlen. Bitte ein Unterverzeichnis einbinden.[reset]\n"
 
-#: src/dos/programs/mount.cpp:1311
+#: src/dos/programs/mount.cpp:1424
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_WARNING_OTHER"
 msgid "[color=light-red]Mounting / is NOT recommended. Please mount a (sub)directory next time.[reset]\n"
 msgstr "[color=light-red]Einbinden von / wird NICHT empfohlen. Bitte ein Unterverzeichnis einbinden.[reset]\n"
 
-#: src/dos/programs/mount.cpp:1314
+#: src/dos/programs/mount.cpp:1427
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_NO_OPTION"
 msgid "Warning: Ignoring unsupported option '%s'.\n"
 msgstr "Warnung: Ignoriere nicht unterstützte Option '%s'.\n"
 
-#: src/dos/programs/mount.cpp:1317
+#: src/dos/programs/mount.cpp:1430
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_NO_BASE"
 msgid ""
@@ -11056,13 +11137,13 @@ msgstr ""
 "Ein normales Verzeichnis muss zuerst eingebunden werden,\n"
 "bevor ein Overlay darüber gelegt werden kann.\n"
 
-#: src/dos/programs/mount.cpp:1321
+#: src/dos/programs/mount.cpp:1434
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_INCOMPAT_BASE"
 msgid "The overlay is NOT compatible with the drive that is specified.\n"
 msgstr "Das Overlay ist NICHT kompatibel mit dem angegebenen Laufwerk.\n"
 
-#: src/dos/programs/mount.cpp:1324
+#: src/dos/programs/mount.cpp:1437
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_MIXED_BASE"
 msgid ""
@@ -11072,7 +11153,7 @@ msgstr ""
 "Das Overlay muss mit der gleichen Adressierung wie das zugrunde liegende\n"
 "Laufwerk angegeben werden. Kein Mischen von relativen und absoluten Pfaden.\n"
 
-#: src/dos/programs/mount.cpp:1328
+#: src/dos/programs/mount.cpp:1441
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_SAME_AS_BASE"
 msgid "The overlay directory can not be the same as underlying drive.\n"
@@ -11080,25 +11161,25 @@ msgstr ""
 "Das Overlay-Verzeichnis kann nicht dasselbe sein\n"
 "wie das darunterliegende Laufwerk.\n"
 
-#: src/dos/programs/mount.cpp:1331
+#: src/dos/programs/mount.cpp:1444
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_GENERIC_ERROR"
 msgid "Something went wrong.\n"
 msgstr "Etwas ist schief gelaufen.\n"
 
-#: src/dos/programs/mount.cpp:1332
+#: src/dos/programs/mount.cpp:1445
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_STATUS"
 msgid "Overlay %s on drive %c mounted.\n"
 msgstr "Overlay %s auf Laufwerk %c eingebunden.\n"
 
-#: src/dos/programs/mount.cpp:1334
+#: src/dos/programs/mount.cpp:1447
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_INVALID_CHS"
 msgid "Invalid CHS format. Use -chs cylinders,heads,sectors\n"
 msgstr "Ungültiges CHS-Format. Verwende -chs Zylinder,Köpfe,Sektoren\n"
 
-#: src/dos/programs/mount.cpp:1337
+#: src/dos/programs/mount.cpp:1450
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_REL_ABS"
 msgid ""
@@ -11109,7 +11190,7 @@ msgstr ""
 "liegende Laufwerk angegeben werden. Relative und absolute Pfade dürfen nicht\n"
 "gemischt werden.\n"
 
-#: src/dos/programs/mount.cpp:1341
+#: src/dos/programs/mount.cpp:1454
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_SAME_FS"
 msgid "The overlay needs to be on the same filesystem as the underlying drive.\n"
@@ -11117,13 +11198,13 @@ msgstr ""
 "Das Overlay muss sich auf demselben Dateisystem befinden wie das zugrunde\n"
 "liegende Laufwerk.\n"
 
-#: src/dos/programs/mount.cpp:1344
+#: src/dos/programs/mount.cpp:1457
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUNT_OVERLAY_UNKNOWN_ERROR"
 msgid "Something went wrong.\n"
 msgstr "Es ist ein Fehler aufgetreten.\n"
 
-#: src/dos/programs/mount.cpp:1347
+#: src/dos/programs/mount.cpp:1460
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_SPECIFY2"
 msgid "Must specify a drive letter A/B/C/D or drive number 0/1/2/3 to mount image at.\n"
@@ -11131,7 +11212,7 @@ msgstr ""
 "Gibt einen Laufwerksbuchstaben (A/B/C/D) oder eine Laufwerksnummer (0/1/2/3) an,\n"
 "worüber das Image eingebunden werden soll.\n"
 
-#: src/dos/programs/mount.cpp:1350
+#: src/dos/programs/mount.cpp:1463
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_SPECIFY_GEOMETRY"
 msgid ""
@@ -11149,19 +11230,19 @@ msgstr ""
 "Für CD-ROM-Images:\n"
 "[color=light-green]imgmount[reset] [color=white]LAUFWERK[reset] [color=light-cyan]IMAGEDATEI[reset] -t iso\n"
 
-#: src/dos/programs/mount.cpp:1358
+#: src/dos/programs/mount.cpp:1471
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_STATUS_NONE"
 msgid "No drive available.\n"
 msgstr "Kein Laufwerk vorhanden.\n"
 
-#: src/dos/programs/mount.cpp:1360
+#: src/dos/programs/mount.cpp:1473
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_IDE_CONTROLLERS_UNAVAILABLE"
 msgid "No available IDE controllers. Drive will not have IDE emulation.\n"
 msgstr "Keine IDE-Controller verfügbar. Das Laufwerk wird keine IDE-Emulation unterstützen.\n"
 
-#: src/dos/programs/mount.cpp:1363
+#: src/dos/programs/mount.cpp:1476
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_INVALID_IMAGE"
 msgid ""
@@ -11171,7 +11252,7 @@ msgstr ""
 "Die Image-Datei konnte nicht geladen werden.\n"
 "Überprüfe, dass der Pfad korrekt und die Datei lesbar ist.\n"
 
-#: src/dos/programs/mount.cpp:1367
+#: src/dos/programs/mount.cpp:1480
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_INVALID_GEOMETRY"
 msgid ""
@@ -11183,31 +11264,31 @@ msgstr ""
 "Verwende den Parameter -chs Zylinder,Köpfe,Sektoren, um die Geometrie anzugeben.\n"
 "Alternativ: -size BytesProSektor,Sektoren,Köpfe,Zylinder\n"
 
-#: src/dos/programs/mount.cpp:1372
+#: src/dos/programs/mount.cpp:1485
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_FILE_NOT_FOUND"
 msgid "Image file not found.\n"
 msgstr "Image-Datei nicht gefunden.\n"
 
-#: src/dos/programs/mount.cpp:1374
+#: src/dos/programs/mount.cpp:1487
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_ALREADY_MOUNTED"
 msgid "Drive already mounted at that letter.\n"
 msgstr "Ein Laufwerk ist bereits unter diesem Buchstaben eingebunden.\n"
 
-#: src/dos/programs/mount.cpp:1377
+#: src/dos/programs/mount.cpp:1490
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_CANT_CREATE"
 msgid "Can't create drive from file.\n"
 msgstr "Kann aus dieser Datei kein Laufwerk erstellen.\n"
 
-#: src/dos/programs/mount.cpp:1378
+#: src/dos/programs/mount.cpp:1491
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_MOUNT_NUMBER"
 msgid "Drive number %d mounted as %s.\n"
 msgstr "Laufwerk Nummer %d eingebunden als %s.\n"
 
-#: src/dos/programs/mount.cpp:1380
+#: src/dos/programs/mount.cpp:1493
 #, c-format, no-wrap
 msgctxt "PROGRAM_IMGMOUNT_DEPRECATED"
 msgid "The [color=light-green]IMGMOUNT[reset] command is deprecated; please use [color=light-green]MOUNT[reset] instead."
@@ -11313,7 +11394,7 @@ msgstr ""
 "Verwende den Befehl '[color=light-green]mousectl[reset]',\n"
 "um die Interrupt-Rate zu ändern."
 
-#: src/dos/programs/mousectl.cpp:573
+#: src/dos/programs/mousectl.cpp:571
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUSECTL_HELP_LONG"
 msgid ""
@@ -11373,25 +11454,25 @@ msgstr ""
 "Beispiele:\n"
 "  [color=light-green]mousectl[reset] [color=white]DOS[reset] [color=white]COM1[reset] -map   Auswahl der Mäuse für Spiel mit 2 Spielern"
 
-#: src/dos/programs/mousectl.cpp:601
+#: src/dos/programs/mousectl.cpp:599
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUSECTL_SYNTAX_PATTERN"
 msgid "Incorrect syntax, only ASCII characters allowed in pattern.\n"
 msgstr "Falsche Syntax, nur ASCII-Zeichen erlaubt.\n"
 
-#: src/dos/programs/mousectl.cpp:604
+#: src/dos/programs/mousectl.cpp:602
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUSECTL_SYNTAX_SENSITIVITY"
 msgid "Incorrect syntax, sensitivity needs to be in -999 to +999 range.\n"
 msgstr "Falsche Syntax, die Empfindlichkeit muss im Bereich von -999 bis +999 liegen.\n"
 
-#: src/dos/programs/mousectl.cpp:607
+#: src/dos/programs/mousectl.cpp:605
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUSECTL_SYNTAX_DUPLICATED"
 msgid "Incorrect syntax, duplicated mouse interfaces.\n"
 msgstr "Falsche Syntax, doppelte Maus-Schnittstellen.\n"
 
-#: src/dos/programs/mousectl.cpp:610
+#: src/dos/programs/mousectl.cpp:608
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUSECTL_SYNTAX_MIN_RATE"
 msgid ""
@@ -11401,121 +11482,121 @@ msgstr ""
 "Falsche Syntax, die Abtastrate muss eine der folgenden sein:\n"
 "%s\n"
 
-#: src/dos/programs/mousectl.cpp:613
+#: src/dos/programs/mousectl.cpp:611
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUSECTL_MAPPING_NO_MOUSE"
 msgid "Mapping not available in no-mouse mode.\n"
 msgstr "Im Modus ohne Maus ist die Zuordnung nicht möglich.\n"
 
-#: src/dos/programs/mousectl.cpp:616
+#: src/dos/programs/mousectl.cpp:614
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUSECTL_MAPPING_BLOCKED_BY_DRIVER"
 msgid "Mapping not possible with current guest mouse driver.\n"
 msgstr "Mapping nicht möglich mit aktuellem Gast-Maustreiber.\n"
 
-#: src/dos/programs/mousectl.cpp:619
+#: src/dos/programs/mousectl.cpp:617
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUSECTL_MANYMOUSE_NOT_BUILT"
 msgid "Individual physical mice not supported in this build.\n"
 msgstr "Einzelne physikalische Mäuse werden in dieser Version nicht unterstützt.\n"
 
-#: src/dos/programs/mousectl.cpp:622
+#: src/dos/programs/mousectl.cpp:620
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUSECTL_MANYMOUSE_RAW_INPUT"
 msgid "Individual physical mice not supported if 'mouse_raw_input' is enabled.\n"
 msgstr "Einzelne physikalische Mäuse nicht unterstützt, bei 'mouse_raw_input'.\n"
 
-#: src/dos/programs/mousectl.cpp:625
+#: src/dos/programs/mousectl.cpp:623
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUSECTL_NO_INTERFACES"
 msgid "No mouse interfaces available.\n"
 msgstr "Keine Maus-Schnittstellen verfügbar.\n"
 
-#: src/dos/programs/mousectl.cpp:627
+#: src/dos/programs/mousectl.cpp:625
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUSECTL_MISSING_INTERFACES"
 msgid "Mouse interface not available.\n"
 msgstr "Die Maus-Schnittstelle ist nicht verfügbar.\n"
 
-#: src/dos/programs/mousectl.cpp:630
+#: src/dos/programs/mousectl.cpp:628
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUSECTL_NO_PHYSICAL_MICE"
 msgid "No physical mice detected.\n"
 msgstr "Es wurden keine physischen Mäuse erkannt.\n"
 
-#: src/dos/programs/mousectl.cpp:632
+#: src/dos/programs/mousectl.cpp:630
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUSECTL_NO_MATCH"
 msgid "No available mouse found matching the pattern.\n"
 msgstr "Es wurde keine Maus gefunden, die dem Suchkriterium entspricht.\n"
 
-#: src/dos/programs/mousectl.cpp:635
+#: src/dos/programs/mousectl.cpp:633
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUSECTL_TABLE_HEADER1"
 msgid "[color=white]Interface      Sensitivity      Rate (Hz)     Status[reset]"
 msgstr "[color=white]Schnittstelle  Empfindlichkeit  Rate (Hz)     Status[reset]"
 
-#: src/dos/programs/mousectl.cpp:638
+#: src/dos/programs/mousectl.cpp:636
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUSECTL_TABLE_LAYOUT1"
 msgid "[color=light-cyan]%-4s[reset]          X:%+.3d Y:%+.3d       %1s %3s       %s"
 msgstr "[color=light-cyan]%-4s[reset]           X:%+.3d Y:%+.3d  %1s %3s           %s"
 
-#: src/dos/programs/mousectl.cpp:641
+#: src/dos/programs/mousectl.cpp:639
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUSECTL_TABLE_HEADER2"
 msgid "[color=white]Interface     Mouse Name[reset]"
 msgstr "[color=white]Schnittstelle Maus-Bezeichnung[reset]"
 
-#: src/dos/programs/mousectl.cpp:644
+#: src/dos/programs/mousectl.cpp:642
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUSECTL_TABLE_LAYOUT2"
 msgid "[color=light-cyan]%-4s[reset]          %s"
 msgstr "[color=light-cyan]%-4s[reset]          %s"
 
-#: src/dos/programs/mousectl.cpp:647
+#: src/dos/programs/mousectl.cpp:645
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUSECTL_TABLE_LAYOUT2_UNMAPPED"
 msgid "not mapped    %s"
 msgstr "nicht zugeordnet %s"
 
-#: src/dos/programs/mousectl.cpp:649
+#: src/dos/programs/mousectl.cpp:647
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUSECTL_TABLE_STATUS_HOST"
 msgid "uses system pointer"
 msgstr "verwendet Systemzeiger"
 
-#: src/dos/programs/mousectl.cpp:650
+#: src/dos/programs/mousectl.cpp:648
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUSECTL_TABLE_STATUS_MAPPED"
 msgid "mapped physical mouse"
 msgstr "zugeordnete physische Maus"
 
-#: src/dos/programs/mousectl.cpp:652
+#: src/dos/programs/mousectl.cpp:650
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUSECTL_TABLE_STATUS_DISCONNECTED"
 msgid "[color=light-red]mapped mouse disconnected[reset]"
 msgstr "[color=light-red]zugeordnete Maus entfernt[reset]"
 
-#: src/dos/programs/mousectl.cpp:655
+#: src/dos/programs/mousectl.cpp:653
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUSECTL_TABLE_STATUS_DISABLED"
 msgid "disabled"
 msgstr "deaktiviert"
 
-#: src/dos/programs/mousectl.cpp:657
+#: src/dos/programs/mousectl.cpp:655
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUSECTL_TABLE_HINT_RATE_COM"
 msgid "Sampling rates for mice on [color=light-cyan]COM[reset] interfaces are estimations only."
 msgstr "Die Abtastraten für Mäuse an [color=light-cyan]COM[reset]-Schnittstellen sind nur Schätzungen."
 
-#: src/dos/programs/mousectl.cpp:660
+#: src/dos/programs/mousectl.cpp:658
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUSECTL_TABLE_HINT_RATE_MIN"
 msgid "Sampling rates with minimum value set are marked with '*'."
 msgstr "Abtastraten mit eingestelltem Mindestwert sind mit '*' markiert."
 
-#: src/dos/programs/mousectl.cpp:663
+#: src/dos/programs/mousectl.cpp:661
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUSECTL_MAP_ADVICE"
 msgid ""
@@ -11527,13 +11608,13 @@ msgstr ""
 "Bei Klick auf eine andere Taste wird die Zuordnung abgebrochen und der System-\n"
 "zeiger wird allen Maus-Schnittstellen zugeordnet."
 
-#: src/dos/programs/mousectl.cpp:668
+#: src/dos/programs/mousectl.cpp:666
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUSECTL_MAP_CANCEL"
 msgid "(mapping cancelled)"
 msgstr "(Zuordnung abgebrochen)"
 
-#: src/dos/programs/mousectl.cpp:670
+#: src/dos/programs/mousectl.cpp:668
 #, c-format, no-wrap
 msgctxt "PROGRAM_MOUSECTL_MAP_HINT"
 msgid ""
@@ -11808,13 +11889,13 @@ msgctxt "PROGRAM_SETVER_BATCH_BY_FILE_PATH"
 msgid "rules for matching by file name with path"
 msgstr "Regeln für den Abgleich nach Dateinamen mit Pfad"
 
-#: src/dos/programs/showpic.cpp:255
+#: src/dos/programs/showpic.cpp:258
 #, c-format, no-wrap
 msgctxt "PROGRAM_SHOWPIC_HELP"
 msgid "Display an image file.\n"
 msgstr "Eine Bilddatei anzeigen.\n"
 
-#: src/dos/programs/showpic.cpp:257
+#: src/dos/programs/showpic.cpp:260
 #, c-format, no-wrap
 msgctxt "PROGRAM_SHOWPIC_HELP_LONG"
 msgid ""
@@ -11855,25 +11936,25 @@ msgstr ""
 "  [color=light-green]showpic[reset] [color=light-cyan]bild1.png[reset]\n"
 "  [color=light-green]showpic[reset] [color=light-cyan]d:\\bilder\\gods.iff[reset]\n"
 
-#: src/dos/programs/showpic.cpp:275
+#: src/dos/programs/showpic.cpp:278
 #, c-format, no-wrap
 msgctxt "PROGRAM_SHOWPIC_SVGA_S3_REQUIRED"
 msgid "This program requires an S3 SVGA adapter.\n"
 msgstr "Für dieses Programm ist eine S3-SVGA-Grafikkarte erforderlich.\n"
 
-#: src/dos/programs/showpic.cpp:278
+#: src/dos/programs/showpic.cpp:281
 #, c-format, no-wrap
 msgctxt "PROGRAM_SHOWPIC_LOAD_ERROR"
 msgid "Error loading image '%s'\n"
 msgstr "Fehler beim Laden des Bildes '%s'\n"
 
-#: src/dos/programs/showpic.cpp:280
+#: src/dos/programs/showpic.cpp:283
 #, c-format, no-wrap
 msgctxt "PROGRAM_SHOWPIC_NOT_PALETTED_IMAGE"
 msgid "Only paletted images are supported."
 msgstr "Es werden nur Bilder mit Farbpalette unterstützt."
 
-#: src/dos/programs/showpic.cpp:283
+#: src/dos/programs/showpic.cpp:286
 #, c-format, no-wrap
 msgctxt "PROGRAM_SHOWPIC_IMAGE_TOO_LARGE"
 msgid "Image dimensions are too large."
@@ -11953,7 +12034,7 @@ msgctxt "PROGRAM_TREE_TOO_MANY_FILES_SUBDIRS"
 msgid "Too many files or subdirectories.\n"
 msgstr "Zu viele Dateien oder Unterverzeichnisse.\n"
 
-#: src/hardware/video/reelmagic/driver.cpp:1072
+#: src/hardware/video/reelmagic/driver.cpp:1071
 #, c-format, no-wrap
 msgctxt "PROGRAM_FMPDRV_HELP_LONG"
 msgid ""
@@ -11977,43 +12058,43 @@ msgstr ""
 "  Die Konfigurationseinstellung 'reelmagic = on' lädt den\n"
 "  Treiber beim Start und verhindert, dass er entfernt wird.\n"
 
-#: src/hardware/video/reelmagic/driver.cpp:1083
+#: src/hardware/video/reelmagic/driver.cpp:1082
 #, c-format, no-wrap
 msgctxt "PROGRAM_FMPDRV_TITLE"
 msgid "ReelMagic Full Motion Player Driver (built-in) %hhu.%hhu\n"
 msgstr "ReelMagic Full Motion Player Treiber (integriert) %hhu.%hhu\n"
 
-#: src/hardware/video/reelmagic/driver.cpp:1086
+#: src/hardware/video/reelmagic/driver.cpp:1085
 #, c-format, no-wrap
 msgctxt "PROGRAM_FMPDRV_LOADED"
 msgid "[reset][color=brown]Loaded at interrupt %xh[reset]\n"
 msgstr "[reset][color=brown]Geladen bei Interrupt %xh[reset]\n"
 
-#: src/hardware/video/reelmagic/driver.cpp:1089
+#: src/hardware/video/reelmagic/driver.cpp:1088
 #, c-format, no-wrap
 msgctxt "PROGRAM_FMPDRV_LOAD_FAILED_ALREADY_LOADED"
 msgid "[reset][color=brown]Already loaded at interrupt %xh[reset]\n"
 msgstr "[reset][color=brown]Bereits bei Interrupt %xh geladen[reset]\n"
 
-#: src/hardware/video/reelmagic/driver.cpp:1092
+#: src/hardware/video/reelmagic/driver.cpp:1091
 #, c-format, no-wrap
 msgctxt "PROGRAM_FMPDRV_LOAD_FAILED_INT_CONFLICT"
 msgid "[reset][color=light-red]Not loaded: No free interrupts![reset]\n"
 msgstr "[reset][color=light-red]Nicht geladen: Keine freien Interrupts![reset]\n"
 
-#: src/hardware/video/reelmagic/driver.cpp:1095
+#: src/hardware/video/reelmagic/driver.cpp:1094
 #, c-format, no-wrap
 msgctxt "PROGRAM_FMPDRV_UNLOADED"
 msgid "[reset][color=brown]Driver unloaded[reset]\n"
 msgstr "[reset][color=brown]Treiber entfernt[reset]\n"
 
-#: src/hardware/video/reelmagic/driver.cpp:1097
+#: src/hardware/video/reelmagic/driver.cpp:1096
 #, c-format, no-wrap
 msgctxt "PROGRAM_FMPDRV_UNLOAD_FAILED_NOT_LOADED"
 msgid "[reset][color=brown]Driver was not loaded[reset]\n"
 msgstr "[reset][color=brown]Treiber wurde nicht geladen[reset]\n"
 
-#: src/hardware/video/reelmagic/driver.cpp:1100
+#: src/hardware/video/reelmagic/driver.cpp:1099
 #, c-format, no-wrap
 msgctxt "PROGRAM_FMPDRV_UNLOAD_FAILED_BLOCKED"
 msgid "[reset][color=brown]Driver not unloaded: configured to stay resident[reset]\n"
@@ -13804,11 +13885,108 @@ msgstr ""
 
 #: src/shell/shell.cpp:1219
 #, c-format, no-wrap
+msgctxt "SHELL_CMD_CHCP_HELP"
+msgid "Display or change the active character set (code page).\n"
+msgstr "Zeigt den aktiven Zeichensatz (Codepage) an oder ändert ihn.\n"
+
+#: src/shell/shell.cpp:1222
+#, c-format, no-wrap
+msgctxt "SHELL_CMD_CHCP_HELP_LONG"
+msgid ""
+"Usage:\n"
+"  [color=light-green]chcp[reset]\n"
+"  [color=light-green]chcp[reset] [color=white]CODEPAGE[reset]\n"
+"\n"
+"Parameters:\n"
+"  [color=white]CODEPAGE[reset]  code page number, e.g. [color=white]437[reset] or [color=white]850[reset]\n"
+"\n"
+"Notes:\n"
+"  - Running [color=light-green]chcp[reset] without an argument shows the currently active code page.\n"
+"  - Changing the code page keeps the currently loaded keyboard layout; use the\n"
+"    [color=light-green]keyb[reset] command to also change the keyboard layout.\n"
+"  - The code page cannot be changed if no keyboard layout is loaded yet.\n"
+"\n"
+"Examples:\n"
+"  [color=light-green]chcp[reset]\n"
+"  [color=light-green]chcp[reset] [color=white]437[reset]\n"
+msgstr ""
+"Verwendung:\n"
+"  [color=light-green]chcp[reset]\n"
+"  [color=light-green]chcp[reset] [color=white]CODEPAGE[reset]\n"
+"\n"
+"Parameter:\n"
+"  [color=white]CODEPAGE[reset]  Codepage, z. B. [color=white]437[reset] oder [color=white]850[reset]\n"
+"\n"
+"Hinweise:\n"
+"  - Wird [color=light-green]chcp[reset] ohne Argument ausgeführt, zeigt es die aktuell aktive Codepage.\n"
+"  - Beim Ändern der Codepage bleibt das aktuell geladene Tastaturlayout\n"
+"    erhalten; verwende den Befehl [color=light-green]keyb[reset], um auch das Tastaturlayout zu ändern.\n"
+"  - Die Codepage kann nicht geändert werden, wenn noch kein Tastaturlayout\n"
+"    geladen ist.\n"
+"\n"
+"Beispiele:\n"
+"  [color=light-green]chcp[reset]\n"
+"  [color=light-green]chcp[reset] [color=white]437[reset]\n"
+
+#: src/shell/shell.cpp:1240
+#, c-format, no-wrap
+msgctxt "SHELL_CMD_CHCP_ACTIVE"
+msgid "Active code page: %d\n"
+msgstr "Aktive Codepage: %d\n"
+
+#: src/shell/shell.cpp:1241
+#, c-format, no-wrap
+msgctxt "SHELL_CMD_CHCP_INVALID_CODE_PAGE"
+msgid "Invalid code page.\n"
+msgstr "Ungültige Codepage.\n"
+
+#: src/shell/shell.cpp:1243
+#, c-format, no-wrap
+msgctxt "SHELL_CMD_CHCP_NO_LAYOUT_LOADED"
+msgid "No keyboard layout loaded, can't change the code page.\n"
+msgstr "Kein Tastaturlayout geladen, die Codepage kann nicht geändert werden.\n"
+
+#: src/shell/shell.cpp:1246
+#, c-format, no-wrap
+msgctxt "SHELL_CMD_CHCP_SCREEN_FONT_UNUSABLE"
+msgid "Code page %d found, but the screen font could not be used.\n"
+msgstr ""
+"Codepage %d gefunden, aber die Bildschirmschriftart konnte nicht\n"
+"verwendet werden.\n"
+
+#: src/shell/shell.cpp:1249
+#, c-format, no-wrap
+msgctxt "SHELL_CMD_CHCP_NO_BUNDLED_CPI_FILE"
+msgid "No bundled code page information file for code page %d.\n"
+msgstr "Keine mitgelieferte Codepage-Informationsdatei für Codepage %d.\n"
+
+#: src/shell/shell.cpp:1252
+#, c-format, no-wrap
+msgctxt "SHELL_CMD_CHCP_NO_CODE_PAGE_IN_FILE"
+msgid "No code page %d in the code page information file.\n"
+msgstr "Codepage %d nicht in der Codepage-Informationsdatei enthalten.\n"
+
+#: src/shell/shell.cpp:1255
+#, c-format, no-wrap
+msgctxt "SHELL_CMD_CHCP_INCOMPATIBLE_MACHINE"
+msgid "Can't change the screen font; EGA machine or better is required.\n"
+msgstr ""
+"Bildschirmschriftart kann nicht geändert werden; EGA-Grafik oder besser\n"
+"wird benötigt.\n"
+
+#: src/shell/shell.cpp:1258
+#, c-format, no-wrap
+msgctxt "SHELL_CMD_CHCP_NO_LAYOUT_FOR_CODE_PAGE"
+msgid "No keyboard layout '%s' for code page %d.\n"
+msgstr "Keine Tastaturbelegung '%s' für Codepage %d.\n"
+
+#: src/shell/shell.cpp:1261
+#, c-format, no-wrap
 msgctxt "SHELL_CMD_MOVE_HELP"
 msgid "Move files and rename files and directories.\n"
 msgstr "Verschiebt Dateien und benennt Dateien und Verzeichnisse um.\n"
 
-#: src/shell/shell.cpp:1221
+#: src/shell/shell.cpp:1263
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MOVE_HELP_LONG"
 msgid ""
@@ -13854,19 +14032,19 @@ msgstr ""
 "  [color=light-green]move[reset] [color=white]quelle.bat[reset] [color=light-cyan]neu.bat[reset]\n"
 "  [color=light-green]move[reset] [color=white]datei1.txt,datei2.txt[reset] [color=light-cyan]ordner[reset]\n"
 
-#: src/shell/shell.cpp:1241
+#: src/shell/shell.cpp:1283
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_MOVE_MULTIPLE_TO_SINGLE"
 msgid "Cannot move multiple files to a single file.\n"
 msgstr "Es können nicht mehrere Dateien in eine einzelne Datei verschoben werden.\n"
 
-#: src/shell/shell.cpp:1243
+#: src/shell/shell.cpp:1285
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_FOR_HELP"
 msgid "Run a specified command for each string in a set.\n"
 msgstr "Führt angegebenen Befehl für jede Zeichenkette in einer Gruppe aus.\n"
 
-#: src/shell/shell.cpp:1245
+#: src/shell/shell.cpp:1287
 #, c-format, no-wrap
 msgctxt "SHELL_CMD_FOR_HELP_LONG"
 msgid ""
@@ -13947,3 +14125,4 @@ msgstr "Sonstige Befehle"
 msgctxt "HELP_UTIL_CATEGORY_UNKNOWN"
 msgid "Unknown Command"
 msgstr "Unbekannter Befehl"
+
