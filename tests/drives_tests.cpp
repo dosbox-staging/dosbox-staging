@@ -1,23 +1,6 @@
 // SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-/* This sample shows how to write a simple unit test for dosbox-staging using
- * Google C++ testing framework.
- *
- * Read Google Test Primer for reference of most available features, macros,
- * and guidance about writing unit tests:
- *
- * https://github.com/google/googletest/blob/master/googletest/docs/primer.md#googletest-primer
- */
-
-/* Include necessary header files; order of headers should be as follows:
- *
- * 1. Header declaring functions/classes being tested
- * 2. <gtest/gtest.h>, which declares the testing framework
- * 3. Additional system headers (if needed)
- * 4. Additional dosbox-staging headers (if needed)
- */
-
 #include "dos/drives.h"
 
 #include <gtest/gtest.h>
@@ -31,8 +14,6 @@ std::string run_Set_Label(char const * const input, bool cdrom) {
         " Input: " << input << " Output: " << output << '\n';
     return std::string(output);
 }
-
-// Open anonymous namespace (this is Google Test requirement)
 
 namespace {
 
