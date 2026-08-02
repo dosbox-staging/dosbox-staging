@@ -1095,40 +1095,40 @@ void MOUNT::ProcessPaths(const std::string first_path, MountParameters& params,
 				}
 			}
 
-			// Auto-detect type from FIRST valid file if generic "dir"
-			if (params.paths.empty() &&
-			    params.type == MountType::Directory) {
-
-				struct stat t2 = {};
-				if (stat(loop_final_path.c_str(), &t2) == 0 &&
-				    S_ISREG(t2.st_mode)) {
-
-					auto ext = loop_final_path.substr(
-					        loop_final_path.find_last_of('.') + 1);
-
-					std::transform(ext.begin(),
-					               ext.end(),
-					               ext.begin(),
-					               ::tolower);
-
-					if (ext == "iso" || ext == "cue" ||
-					    ext == "bin" || ext == "mds" ||
-					    ext == "ccd") {
-
-						params.type = MountType::CdRomImage;
-						params.fstype = FileSystemType::Iso;
-
-					} else if (ext == "img" ||
-					           ext == "ima" || ext == "vhd") {
-
-						params.type = MountType::HardDiskImage;
-					}
-				}
-			}
-
 			// Resolves to absolute canonical path
 			loop_final_path = simplify_path(loop_final_path).string();
 			params.paths.push_back(loop_final_path);
+		}
+
+		// Auto-detect type from first valid file if unspecified
+		if (!params.type && !params.paths.empty()) {
+
+			const auto first_path = params.paths[0];
+
+			struct stat t2 = {};
+			if (stat(first_path.c_str(), &t2) == 0 &&
+			    S_ISREG(t2.st_mode)) {
+
+				auto ext = first_path.substr(
+				        first_path.find_last_of('.') + 1);
+
+				std::transform(ext.begin(),
+				               ext.end(),
+				               ext.begin(),
+				               ::tolower);
+
+				if (ext == "iso" || ext == "cue" || ext == "bin" ||
+				    ext == "mds" || ext == "ccd") {
+
+					params.type   = MountType::CdRomImage;
+					params.fstype = FileSystemType::Iso;
+
+				} else if (ext == "img" || ext == "ima" ||
+				           ext == "vhd") {
+
+					params.type = MountType::HardDiskImage;
+				}
+			}
 		}
 
 		// Ensure consistency between type and fstype if user didn't
