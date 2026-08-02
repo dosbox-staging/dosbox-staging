@@ -42,29 +42,34 @@ public:
 		               HELP_CmdType::Program,
 		               "MOUNT"};
 	}
-	void ListMounts();
 	void Run() override;
-	bool AddWildcardPaths(const std::string& path_arg,
-	                      std::vector<std::string>& paths);
-
-	bool MountImage(MountParameters& params);
 
 private:
 	static void AddMessages();
 	void ShowUsage();
 
+	void ListMounts();
+
 	bool HandleUnmount();
+
+	bool AddWildcardPaths(const std::string& path_arg,
+	                      std::vector<std::string>& paths);
+
 	bool ParseArguments(MountParameters& params, bool& explicit_fs,
 	                    bool& path_relative_to_last_config);
+
 	bool ParseGeometry(MountParameters& params);
 	bool ParseDrive(MountParameters& params, bool explicit_fs);
 
 	std::string ApplyRelativePath(const std::string& path,
 	                              bool is_relative_to_last_config) const;
+
 	std::string GetDosMappedHostPath(const std::string& dos_path) const;
 
 	bool ProcessPaths(MountParameters& params, bool path_relative_to_last_config);
 	void MountLocal(MountParameters& params, const std::string& local_path);
+
+	bool MountImage(MountParameters& params);
 
 	bool MountImageFat(MountParameters& params);
 	bool MountImageIso(MountParameters& params);
