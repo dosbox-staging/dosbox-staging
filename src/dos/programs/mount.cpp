@@ -152,8 +152,9 @@ bool MOUNT::AddWildcardPaths(const std::string& path_arg,
                              std::vector<std::string>& paths)
 {
 	// Expand the given path argument
-	constexpr auto OnlyExpandFiles          = true;
-	constexpr auto SkipNativePath           = true;
+	constexpr auto OnlyExpandFiles = true;
+	constexpr auto SkipNativePath  = true;
+
 	std::vector<std::string> expanded_paths = {};
 	if (!get_expanded_files(path_arg, expanded_paths, OnlyExpandFiles, SkipNativePath)) {
 		return false;
@@ -594,7 +595,7 @@ static std::optional<FileSystemType> parse_file_system_type(const std::string s)
 // Sets:
 //   params.type   (from the -t option)
 //   params.roflag (from the -ro option)
-//   params.fstype (from the -fs option or if -t iso is specified)
+//   params.fstype (from the -fs option, or if -t iso is specified)
 //
 //   params.is_ide (from the -ide option))
 //   params.ide_index (based on DOS internal state)
@@ -602,63 +603,73 @@ static std::optional<FileSystemType> parse_file_system_type(const std::string s)
 //
 //   params.label  (from the -label option)
 //
-bool MOUNT::ParseArguments(MountParameters& params, bool& explicit_fs,
-                           bool& path_relative_to_last_config)
+bool MOUNT::ParseArguments(MountParameters& params, bool& path_relative_to_last_config)
 {
-	if (cmd->FindExist("-pr", true)) {
+
+	constexpr auto RemoveIfFound = true;
+
+	// Parse -pr parameter
+	if (cmd->FindExist("-pr", RemoveIfFound)) {
 		path_relative_to_last_config = true;
 	}
 
+	// Parse -t parameter (mount type)
 	// Default is "dir" if the -t option is not provided
-	std::string type_str = "dir";
-	cmd->FindString("-t", type_str, true);
+	std::string type_str = {};
+	const auto type_provided = cmd->FindString("-t", type_str, RemoveIfFound);
 
-	const auto maybe_mount_type = parse_mount_type(type_str);
-	if (!maybe_mount_type) {
-		NOTIFY_DisplayWarning(Notification::Source::Console,
-		                      "MOUNT",
-		                      "PROGRAM_MOUNT_ILL_TYPE",
-		                      type_str.c_str());
-		return false;
-	}
-	params.type = *maybe_mount_type;
-
-	params.roflag = cmd->FindExist("-ro", true);
-
-	// Parse -fs (filesystem type)
-	// Default is "fat" if the -fs option is not provided
-	std::string fstype_str = "fat";
-
-	explicit_fs = cmd->FindString("-fs", fstype_str, true);
-
-	const auto maybe_fs_type = parse_file_system_type(fstype_str);
-	if (!maybe_fs_type) {
-		NOTIFY_DisplayWarning(Notification::Source::Console,
-		                      "MOUNT",
-		                      "PROGRAM_MOUNT_ILL_TYPE",
-		                      fstype_str.c_str());
-		return false;
-	}
-	if (explicit_fs) {
-		params.fstype = *maybe_fs_type;
-	} else {
-		if (params.type == MountType::CdRomImage) {
-			params.fstype = FileSystemType::Iso;
+	if (type_provided) {
+		const auto maybe_mount_type = parse_mount_type(type_str);
+		if (!maybe_mount_type) {
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "MOUNT",
+			                      "PROGRAM_MOUNT_ILL_TYPE",
+			                      type_str.c_str());
+			return false;
 		}
+		params.type = maybe_mount_type;
+	} else {
+		// TODO
+		params.type = MountType::Directory;
 	}
 
-	// Parse -ide
+	// Parse -ro parameter
+	params.roflag = cmd->FindExist("-ro", RemoveIfFound);
+
+	// Parse -fs parameter (filesystem type)
+	// Default is "fat" if the -fs parameter is not provided
+	std::string fstype_str = {};
+	const auto fstype_provided = cmd->FindString("-fs", fstype_str, RemoveIfFound);
+
+	if (fstype_provided) {
+		const auto maybe_fs_type = parse_file_system_type(fstype_str);
+		if (!maybe_fs_type) {
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "MOUNT",
+			                      "PROGRAM_MOUNT_ILL_TYPE",
+			                      fstype_str.c_str());
+			return false;
+		}
+		params.fstype = *maybe_fs_type;
+
+	} else {
+		params.fstype = (params.type == MountType::CdRomImage)
+		                      ? FileSystemType::Iso
+		                      : FileSystemType::Fat16;
+	}
+
+	// Parse -ide parameter
 	std::string ide_value = {};
 
-	params.is_ide = cmd->FindString("-ide", ide_value, true) ||
-	                cmd->FindExist("-ide", true);
+	params.is_ide = cmd->FindString("-ide", ide_value, RemoveIfFound) ||
+	                cmd->FindExist("-ide", RemoveIfFound);
 
 	if (params.is_ide && (params.type == MountType::CdRomImage)) {
 		IDE_Get_Next_Cable_Slot(params.ide_index, params.is_second_cable_slot);
 	}
 
-	// Label
-	cmd->FindString("-label", params.label, true);
+	// Parse -label parameter
+	cmd->FindString("-label", params.label, RemoveIfFound);
 
 	return true;
 }
@@ -673,52 +684,56 @@ bool MOUNT::ParseGeometry(MountParameters& params)
 	std::string str_chs  = "";
 
 	// Default sizing logic based on type
-	switch (params.type) {
-	case MountType::FloppyImage:
-		str_size = "512,1,2880,2880";
+	if (params.type) {
+		switch (*params.type) {
+		case MountType::FloppyImage:
+			str_size = "512,1,2880,2880";
 
-		params.mediaid = MediaId::Floppy1_44MB;
-		break;
+			params.mediaid = MediaId::Floppy1_44MB;
+			break;
 
-	case MountType::Directory:
-	case MountType::Overlay: {
-		// 512*32*32765==~500MB total size
-		// 512*32*16000==~250MB total free size
-		str_size = "512,32,32765,16000";
+		case MountType::Directory:
+		case MountType::Overlay: {
+			// 512*32*32765==~500MB total size
+			// 512*32*16000==~250MB total free size
+			str_size = "512,32,32765,16000";
 
-		// If drive mounted to A or B, set mediaid to floppy
-		// This is preferable to using type because floppies can
-		// be auto-mounted as type "dir"
-		std::string command_arg;
-		cmd->FindCommand(1, command_arg);
+			// If drive mounted to A or B, set mediaid to floppy
+			// This is preferable to using type because floppies can
+			// be auto-mounted as type "dir"
+			std::string command_arg;
+			cmd->FindCommand(1, command_arg);
 
-		if (!command_arg.empty()) {
-			const int i_drive = std::toupper(command_arg[0]);
-			if (i_drive == 'A' || i_drive == 'B') {
-				params.mediaid = MediaId::Floppy1_44MB;
+			if (!command_arg.empty()) {
+				const int i_drive = std::toupper(command_arg[0]);
+				if (i_drive == 'A' || i_drive == 'B') {
+					params.mediaid = MediaId::Floppy1_44MB;
+				}
 			}
+		} break;
+
+		case MountType::CdRomImage:
+			str_size = "2048,1,65535,0";
+
+			// mediaid is used in staging to differentiate between floppy
+			// and non-floppy for cache rescan, disk noise and I/O timing.
+			// The same value was used in the original dosbox code
+			params.mediaid = MediaId::HardDisk;
+			break;
+
+		case MountType::HardDiskImage:
+			break;
+
+		default: assertm(false, "Invalid MountType");
 		}
-	} break;
-
-	case MountType::CdRomImage:
-		str_size = "2048,1,65535,0";
-
-		// mediaid is used in staging to differentiate between floppy
-		// and non-floppy for cache rescan, disk noise and I/O timing.
-		// The same value was used in the original dosbox code
-		params.mediaid = MediaId::HardDisk;
-		break;
-
-	case MountType::HardDiskImage:
-		break;
-
-	default: assertm(false, "Invalid MountType");
 	}
 
 	// Parse the free space in mb (kb for floppies)
+	constexpr auto RemoveIfFound = true;
+
 	std::string mb_size;
 
-	if (cmd->FindString("-freesize", mb_size, true)) {
+	if (cmd->FindString("-freesize", mb_size, RemoveIfFound)) {
 
 		char teststr[1024];
 		uint16_t freesize = static_cast<uint16_t>(atoi(mb_size.c_str()));
@@ -749,7 +764,7 @@ bool MOUNT::ParseGeometry(MountParameters& params)
 	}
 
 	// Parse -size
-	cmd->FindString("-size", str_size, true);
+	cmd->FindString("-size", str_size, RemoveIfFound);
 
 	// Apply str_size string to sizes array
 	if (!str_size.empty()) {
@@ -779,7 +794,7 @@ bool MOUNT::ParseGeometry(MountParameters& params)
 	}
 
 	// Parse -chs C,H,S
-	if (cmd->FindString("-chs", str_chs, true)) {
+	if (cmd->FindString("-chs", str_chs, RemoveIfFound)) {
 		int cmd_cylinders = 0;
 		int cmd_heads     = 0;
 		int cmd_sectors   = 0;
@@ -808,7 +823,7 @@ bool MOUNT::ParseGeometry(MountParameters& params)
 //   params.fstype
 //   params.is_drive_number
 //
-bool MOUNT::ParseDrive(MountParameters& params, bool explicit_fs)
+bool MOUNT::ParseDrive(MountParameters& params)
 {
 	// get the drive letter or number
 	std::string temp_line;
@@ -832,7 +847,7 @@ bool MOUNT::ParseDrive(MountParameters& params, bool explicit_fs)
 
 			// If user did not explicit specify filesystem, assume
 			// 'none' for raw bootable access
-			if (!explicit_fs) {
+			if (!params.fstype) {
 				params.fstype = FileSystemType::None;
 			}
 		} else {
@@ -841,11 +856,12 @@ bool MOUNT::ParseDrive(MountParameters& params, bool explicit_fs)
 			                      "PROGRAM_IMGMOUNT_SPECIFY2");
 			return false;
 		}
+
 	} else if (first_char >= 'A' && first_char <= 'Z') {
 		params.drive = first_char;
 
 		// Allow A:, B:, C: and D: to be mounted as raw bootable images
-		if (explicit_fs && params.fstype == FileSystemType::None) {
+		if (params.fstype && params.fstype == FileSystemType::None) {
 			switch (params.drive) {
 			case 'A':
 				params.drive           = '0';
@@ -959,6 +975,25 @@ std::string MOUNT::GetDosMappedHostPath(const std::string& dos_path) const
 void MOUNT::ProcessPaths(const std::string first_path, MountParameters& params,
                          bool path_relative_to_last_config)
 {
+	// If the filesystem type is still none at this point if it wasn't
+	// explicitly provided and our previous auto-detection attempt didn't fill
+	// it out, set if to FAT16
+	//
+	// TODO This is some really messy "pipelined" parsing/autodetection code
+	// we inherited from old DOSBox. ParseArguments(), ParseDrive() and
+	// ProcessPaths() all mutate MountParameters along the way; that makes it
+	// very hard to follow what decision affects what logic across the
+	// "pipeline".
+	//
+	// A much better model that's easy to reason about would be to have an
+	// `AutodetectMountType()` an `AutodetectFilesystemType()` function take a
+	// look at the entire command line, don't mutate anything, and just return
+	// a single optional type.
+	//
+	if (!params.fstype) {
+		params.fstype = FileSystemType::Fat16;
+	}
+
 	// Expand ~ to home directory and apply relative path logic
 	auto path_arg_1 = ApplyRelativePath(resolve_home(first_path).string(),
 	                                    path_relative_to_last_config);
@@ -1038,6 +1073,7 @@ void MOUNT::ProcessPaths(const std::string first_path, MountParameters& params,
 
 			if (real_path.empty() ||
 			    !local_drive_path_exists(real_path.c_str())) {
+
 				// Try Virtual DOS Drive mapping
 				auto found_on_virtual = false;
 
@@ -1062,8 +1098,8 @@ void MOUNT::ProcessPaths(const std::string first_path, MountParameters& params,
 			// Auto-detect type from FIRST valid file if generic "dir"
 			if (params.paths.empty() &&
 			    params.type == MountType::Directory) {
-				struct stat t2 = {};
 
+				struct stat t2 = {};
 				if (stat(loop_final_path.c_str(), &t2) == 0 &&
 				    S_ISREG(t2.st_mode)) {
 
@@ -1344,11 +1380,10 @@ std::optional<MountParameters> MOUNT::ProcessArguments(CommandLine* cmd)
 
 	MountParameters params;
 
-	bool explicit_fs                  = false;
 	bool path_relative_to_last_config = false;
 
 	// Parse command line arguments
-	if (!ParseArguments(params, explicit_fs, path_relative_to_last_config)) {
+	if (!ParseArguments(params, path_relative_to_last_config)) {
 		return {};
 	}
 
@@ -1370,7 +1405,7 @@ std::optional<MountParameters> MOUNT::ProcessArguments(CommandLine* cmd)
 	}
 
 	// Check drive letter/number and overlaps, abort if not valid
-	if (!ParseDrive(params, explicit_fs)) {
+	if (!ParseDrive(params)) {
 		return {};
 	}
 

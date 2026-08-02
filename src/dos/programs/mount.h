@@ -26,13 +26,13 @@ enum class FileSystemType { Fat16, Iso, None };
 
 // Struct to hold all parameters required for a mount operation
 struct MountParameters {
-	char drive            = '\0';
-	MountType type        = MountType::Directory;
-	FileSystemType fstype = FileSystemType::Fat16;
+	char drive = '\0';
+
+	std::optional<MountType> type        = {};
+	std::optional<FileSystemType> fstype = {};
 
 	std::vector<std::string> paths = {};
-
-	std::string label = "";
+	std::string label              = "";
 
 	// Geometry: [0]=BytesPerSector, [1]=Sectors, [2]=Heads, [3]=Cylinders
 	std::array<uint16_t, 4> sizes = {0, 0, 0, 0};
@@ -76,11 +76,11 @@ private:
 	bool AddWildcardPaths(const std::string& path_arg,
 	                      std::vector<std::string>& paths);
 
-	bool ParseArguments(MountParameters& params, bool& explicit_fs,
+	bool ParseArguments(MountParameters& params,
 	                    bool& path_relative_to_last_config);
 
 	bool ParseGeometry(MountParameters& params);
-	bool ParseDrive(MountParameters& params, bool explicit_fs);
+	bool ParseDrive(MountParameters& params);
 
 	std::string ApplyRelativePath(const std::string& path,
 	                              bool is_relative_to_last_config) const;
