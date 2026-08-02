@@ -7,7 +7,10 @@
 
 #include "dos/dos.h"
 #include "dos/programs.h"
+#include "shell/command_line.h"
+
 #include <array>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -43,6 +46,8 @@ public:
 		               "MOUNT"};
 	}
 	void Run() override;
+
+	std::optional<MountParameters> ProcessArguments(CommandLine* cmd);
 
 private:
 	static void AddMessages();

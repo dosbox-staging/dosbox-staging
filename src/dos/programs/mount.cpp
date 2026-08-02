@@ -1145,8 +1145,6 @@ void MOUNT::MountLocal(MountParameters& params, const std::string& local_path)
 
 void MOUNT::Run(void)
 {
-	MountParameters params;
-
 	if (std::string{cmd->GetFileName()} == "Z:\\IMGMOUNT.COM") {
 		// Print deprecation notice
 		NOTIFY_DisplayWarning(Notification::Source::Console,
@@ -1177,26 +1175,40 @@ void MOUNT::Run(void)
 		return;
 	}
 
+	ProcessArguments(cmd);
+}
+
+std::optional<MountParameters> MOUNT::ProcessArguments(CommandLine* cmd)
+{
+	// To make it easier injecting arbitrary command lines in the unit tests
+	this->cmd = cmd;
+
+	MountParameters params;
+
 	bool explicit_fs                  = false;
 	bool path_relative_to_last_config = false;
 
 	// Parse command line arguments
 	if (!ParseArguments(params, explicit_fs, path_relative_to_last_config)) {
-		return;
+		return {};
 	}
 
 	// Check drive geometry and types, abort if not valid
 	if (!ParseGeometry(params)) {
-		return;
+		return {};
 	}
 
 	// Check drive letter/number and overlaps, abort if not valid
 	if (!ParseDrive(params, explicit_fs)) {
-		return;
+		return {};
 	}
 
 	// Parse paths and execute (MountImage or MountLocal)
-	ProcessPaths(params, path_relative_to_last_config);
+	if (!ProcessPaths(params, path_relative_to_last_config)) {
+		return {};
+	}
+
+	return params;
 }
 
 void MOUNT::AddMessages()
