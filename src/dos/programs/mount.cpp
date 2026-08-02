@@ -678,141 +678,165 @@ bool MOUNT::ParseArguments(MountParameters& params, bool& path_relative_to_last_
 //   params.mediaid
 //   params.sizes
 //
-bool MOUNT::ParseGeometry(MountParameters& params)
+void MOUNT::SetSizesFromMountType(MountParameters& params)
 {
-	std::string str_size = "";
-	std::string str_chs  = "";
+	std::string size_str = "";
 
 	// Default sizing logic based on type
-	if (params.type) {
-		switch (*params.type) {
-		case MountType::FloppyImage:
-			str_size = "512,1,2880,2880";
+	switch (*params.type) {
+	case MountType::FloppyImage:
+		params.sizes[0] = 512;
+		params.sizes[1] = 1;
+		params.sizes[2] = 2880;
+		params.sizes[3] = 2880;
 
-			params.mediaid = MediaId::Floppy1_44MB;
-			break;
+		params.mediaid = MediaId::Floppy1_44MB;
+		break;
 
-		case MountType::Directory:
-		case MountType::Overlay: {
-			// 512*32*32765==~500MB total size
-			// 512*32*16000==~250MB total free size
-			str_size = "512,32,32765,16000";
+	case MountType::Directory:
+	case MountType::Overlay: {
+		// 512 * 32 * 32765 == ~500MB total size
+		// 512 * 32 * 16000 == ~250MB total free size
+		params.sizes[0] = 512;
+		params.sizes[1] = 32;
+		params.sizes[2] = 32765;
+		params.sizes[3] = 16000;
 
-			// If drive mounted to A or B, set mediaid to floppy
-			// This is preferable to using type because floppies can
-			// be auto-mounted as type "dir"
-			std::string command_arg;
-			cmd->FindCommand(1, command_arg);
+		// If drive mounted to A or B, set mediaid to floppy
+		// This is preferable to using type because floppies can
+		// be auto-mounted as type "dir"
+		std::string command_arg;
+		cmd->FindCommand(1, command_arg);
 
-			if (!command_arg.empty()) {
-				const int i_drive = std::toupper(command_arg[0]);
-				if (i_drive == 'A' || i_drive == 'B') {
-					params.mediaid = MediaId::Floppy1_44MB;
-				}
+		if (!command_arg.empty()) {
+			const int i_drive = std::toupper(command_arg[0]);
+			if (i_drive == 'A' || i_drive == 'B') {
+				params.mediaid = MediaId::Floppy1_44MB;
 			}
-		} break;
-
-		case MountType::CdRomImage:
-			str_size = "2048,1,65535,0";
-
-			// mediaid is used in staging to differentiate between floppy
-			// and non-floppy for cache rescan, disk noise and I/O timing.
-			// The same value was used in the original dosbox code
-			params.mediaid = MediaId::HardDisk;
-			break;
-
-		case MountType::HardDiskImage:
-			break;
-
-		default: assertm(false, "Invalid MountType");
 		}
+	} break;
+
+	case MountType::CdRomImage:
+		params.sizes[0] = 2048;
+		params.sizes[1] = 1;
+		params.sizes[2] = 65535;
+		params.sizes[3] = 0;
+
+		// mediaid is used in staging to differentiate between floppy
+		// and non-floppy for cache rescan, disk noise and I/O timing.
+		// The same value was used in the original dosbox code
+		params.mediaid = MediaId::HardDisk;
+		break;
+
+	case MountType::HardDiskImage: break;
+
+	default: assertm(false, "Invalid MountType");
 	}
+}
 
-	// Parse the free space in mb (kb for floppies)
-	constexpr auto RemoveIfFound = true;
+// Sets:
+//   params.sizes
+//
+void MOUNT::SetSizesFromFreesizeArg(const std::string& freesize_str, MountParameters& params)
+{
+	// Parse -freesize parameter (KB for floppies, MB otherwise)
+	char s[1024];
+	auto freesize = static_cast<uint16_t>(atoi(freesize_str.c_str()));
 
-	std::string mb_size;
+	if (params.type == MountType::FloppyImage) {
+		params.sizes[0] = 512;
+		params.sizes[1] = 1;
+		params.sizes[2] = 2880;
 
-	if (cmd->FindString("-freesize", mb_size, RemoveIfFound)) {
+		// freesize in KB
+		params.sizes[3] = freesize * 1024 / (512 * 1);
 
-		char teststr[1024];
-		uint16_t freesize = static_cast<uint16_t>(atoi(mb_size.c_str()));
+	} else {
+		uint32_t total_size_cyl = 32765;
 
-		if (params.type == MountType::FloppyImage) {
-			// freesize in kb
-			safe_sprintf(teststr,
-			             "512,1,2880,%d",
-			             freesize * 1024 / (512 * 1));
+		// freesize in MB
+		uint32_t free_size_cyl = (uint32_t)freesize * 1024 *
+								 1024 / (512 * 32);
+
+		if (free_size_cyl > 65534) {
+			free_size_cyl = 65534;
+		}
+		if (total_size_cyl < free_size_cyl) {
+			total_size_cyl = free_size_cyl + 10;
+		}
+		if (total_size_cyl > 65534) {
+			total_size_cyl = 65534;
+		}
+
+		params.sizes[0] = 512;
+		params.sizes[1] = 32;
+		params.sizes[2] = total_size_cyl;
+
+		// freesize in KB
+		params.sizes[3] = free_size_cyl;
+	}
+}
+
+// Sets:
+//   params.sizes
+//
+void MOUNT::SetSizesFromSizeArg(const std::string& size_str, MountParameters& params)
+{
+	char number[21]  = {0};
+	const char* scan = size_str.c_str();
+
+	int index = 0;
+	int count = 0;
+
+	// Parse the size_str in B,S,H,C format where:
+	//   B = BytesPerSector
+	//   S = Sectors
+	//   H = Heads
+	//   C = Cylinders
+	while (*scan && index < 20 && count < 4) {
+		if (*scan == ',') {
+			number[index]         = 0;
+			params.sizes[count++] = atoi(number);
+			index                 = 0;
 		} else {
-			uint32_t total_size_cyl = 32765;
-
-			uint32_t free_size_cyl = (uint32_t)freesize * 1024 *
-			                         1024 / (512 * 32);
-
-			if (free_size_cyl > 65534) {
-				free_size_cyl = 65534;
-			}
-			if (total_size_cyl < free_size_cyl) {
-				total_size_cyl = free_size_cyl + 10;
-			}
-			if (total_size_cyl > 65534) {
-				total_size_cyl = 65534;
-			}
-			safe_sprintf(teststr, "512,32,%d,%d", total_size_cyl, free_size_cyl);
+			number[index++] = *scan;
 		}
-		str_size = teststr;
+		scan++;
 	}
 
-	// Parse -size
-	cmd->FindString("-size", str_size, RemoveIfFound);
-
-	// Apply str_size string to sizes array
-	if (!str_size.empty()) {
-		char number[21]  = {0};
-		const char* scan = str_size.c_str();
-
-		int index = 0;
-		int count = 0;
-
-		// Parse the str_size string
-		while (*scan && index < 20 && count < 4) {
-			if (*scan == ',') {
-				number[index]         = 0;
-				params.sizes[count++] = atoi(number);
-				index                 = 0;
-			} else {
-				number[index++] = *scan;
-			}
-			scan++;
-		}
-		if (count < 4) {
-			// always goes correct as index is max 20 at this point.
-			number[index] = 0;
-
-			params.sizes[count] = atoi(number);
-		}
+	if (count < 4) {
+		// always goes correct as index is max 20 at this point.
+		number[index]       = 0;
+		params.sizes[count] = atoi(number);
 	}
+}
 
-	// Parse -chs C,H,S
-	if (cmd->FindString("-chs", str_chs, RemoveIfFound)) {
-		int cmd_cylinders = 0;
-		int cmd_heads     = 0;
-		int cmd_sectors   = 0;
+// Sets:
+//   params.sizes
+//
+bool MOUNT::MaybeSetSizesFromChsArg(MountParameters& params)
+{
+	int cmd_cylinders = 0;
+	int cmd_heads     = 0;
+	int cmd_sectors   = 0;
 
-		if (sscanf(str_chs.c_str(), "%d,%d,%d", &cmd_cylinders, &cmd_heads, &cmd_sectors) ==
-		    3) {
+	// Parse the chs_str in C,H,C format where:
+	//   C = Cylinders
+	//   H = Heads
+	//   S = Sectors
+	if (sscanf(chs_str.c_str(), "%d,%d,%d", &cmd_cylinders, &cmd_heads, &cmd_sectors) ==
+		3) {
 
-			params.sizes[0] = 512;
-			params.sizes[1] = static_cast<uint16_t>(cmd_sectors);
-			params.sizes[2] = static_cast<uint16_t>(cmd_heads);
-			params.sizes[3] = static_cast<uint16_t>(cmd_cylinders);
+		params.sizes[0] = 512;
+		params.sizes[1] = static_cast<uint16_t>(cmd_sectors);
+		params.sizes[2] = static_cast<uint16_t>(cmd_heads);
+		params.sizes[3] = static_cast<uint16_t>(cmd_cylinders);
 
-		} else {
-			NOTIFY_DisplayWarning(Notification::Source::Console,
-			                      "MOUNT",
-			                      "PROGRAM_MOUNT_INVALID_CHS");
-			return false;
-		}
+	} else {
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+							  "MOUNT",
+							  "PROGRAM_MOUNT_INVALID_CHS");
+		return false;
 	}
 
 	return true;
@@ -1400,9 +1424,24 @@ std::optional<MountParameters> MOUNT::ProcessArguments(CommandLine* cmd)
 	ProcessPaths(first_path, params, path_relative_to_last_config);
 
 	// Check drive geometry and types, abort if not valid
-	if (!ParseGeometry(params)) {
-		return {};
+	if (params.type) {
+		SetSizesFromMountType(MountParameters& params);
 	}
+
+	if (std::string freesize_str;
+	    const auto found = cmd->FindString("-freesize", freesize_str, RemoveIfFound);
+	    found) {
+
+		SetSizesFromFreesizeArg(freesize_str, params);
+	}
+	if (std::string size_str;
+	    const auto found = cmd->FindString("-size", size_str, RemoveIfFound);
+	    found) {
+
+		SetSizesFromSizeArg(size_str, params);
+	}
+
+	MaybeSetSizesFromChsArg(MountParameters& params);
 
 	// Check drive letter/number and overlaps, abort if not valid
 	if (!ParseDrive(params)) {

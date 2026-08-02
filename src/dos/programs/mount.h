@@ -42,8 +42,8 @@ struct MountParameters {
 	int8_t ide_index          = -1;
 	bool is_second_cable_slot = false;
 
-	// Defaulting to Hard Disk prevents obscure issues in games like Hyperspace 
-	uint8_t mediaid           = MediaId::HardDisk;
+	// Defaulting to Hard Disk prevents obscure issues in games like Hyperspace
+	uint8_t mediaid = MediaId::HardDisk;
 
 	// 0-3 vs A-Z
 	bool is_drive_number = false;
@@ -79,7 +79,11 @@ private:
 	bool ParseArguments(MountParameters& params,
 	                    bool& path_relative_to_last_config);
 
-	bool ParseGeometry(MountParameters& params);
+	void SetSizesFromMountType(MountParameters& params);
+	void SetSizesFromFreesizeArg(const std::string& freesize_str, MountParameters& params);
+	void MaybeSetSizesFromSizeArg(MountParameters& params);
+	void MaybeSetSizesFromChsArg(MountParameters& params);
+
 	bool ParseDrive(MountParameters& params);
 
 	std::string ApplyRelativePath(const std::string& path,
