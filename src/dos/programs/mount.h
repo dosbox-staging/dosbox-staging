@@ -7,7 +7,10 @@
 
 #include "dos/dos.h"
 #include "dos/programs.h"
+#include "shell/command_line.h"
+
 #include <array>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -48,6 +51,8 @@ public:
 	                      std::vector<std::string>& paths);
 
 	bool MountImage(MountParameters& params);
+
+	std::optional<MountParameters> ProcessArguments(CommandLine* cmd);
 
 private:
 	static void AddMessages();
