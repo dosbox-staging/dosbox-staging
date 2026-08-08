@@ -1,34 +1,18 @@
 # DOS
 
-The `[dos]` section controls the emulated DOS environment itself --- version
-number, memory management, and regional settings.
+The `[dos]` section (plus a few shell-related settings from `[dosbox]`)
+controls the emulated DOS environment itself --- the reported DOS version,
+shell behaviour, and file-locking.
+
+<!-- TODO: memory management (XMS/EMS/UMB) and PCjr memory layout used to
+     live in this file; they've moved to memory.md and machine-types.md
+     respectively. Rewrite this intro so it doesn't promise content that's
+     no longer here. -->
 
 The reported DOS version defaults to 5.0, which covers the vast majority of
 games from the entire DOS era. A handful of very late titles check for DOS
 7.0, and some very early ones expect DOS 3.0, but these are edge cases you'll
 likely never hit.
-
-### Memory management
-
-The first IBM PCs only supported up to 640 KB of memory --- the so-called
-"conventional memory" that DOS programs can access directly. As PCs gained more
-RAM, a patchwork of standards emerged to make the extra memory available:
-
-- **XMS** (Extended Memory) --- the main pool of memory above 1 MB. This is
-  what the [`memsize`](general.md#memsize) setting controls (16 MB by default).
-  Nearly all games from the late DOS era use XMS.
-
-- **EMS** (Expanded Memory) --- an older scheme that maps 64 KB pages of
-  memory into the conventional memory area. Some early to mid-1990s games
-  require EMS; a few older titles may actually malfunction if it's enabled.
-
-- **UMB** (Upper Memory Blocks) --- small pockets of memory between 640 KB
-  and 1 MB, used to free up conventional memory by loading drivers and TSRs
-  into them.
-
-All three are enabled by default and you can safely ignore them. On the rare
-occasion a game misbehaves (usually an old title that chokes on EMS),
-disabling the offending memory type is a quick fix.
 
 ## Regional settings
 
@@ -63,58 +47,28 @@ is stored; set it to empty to disable persistence. The
 variables like `%PATH%` are expanded in commands --- the default `auto` enables
 this for DOS 7.0+ (matching real FreeDOS and MS-DOS 7 behaviour).
 
-## PCjr memory
+<!-- TODO: autoexec_section and automount are arguably "shell/startup"
+     behaviour too — folded in below from general.md's "DOS & shell" section.
+     Consider whether this section needs a better heading once everything's
+     in one place. -->
 
-The [`pcjr_memory_config`](#pcjr_memory_config) setting controls memory layout
-on the emulated PCjr. The default `expanded` provides 640 KB and is compatible
-with most games. A few very old PCjr titles ([Jumpman](https://www.mobygames.com/game/80/jumpman/), [Troll](https://www.mobygames.com/game/14214/troll/)) require the
-`standard` 128 KB layout.
+The [`autoexec_section`](#autoexec_section) setting controls how multiple
+config files' autoexec sections are combined. [`automount`](#automount)
+controls whether `drives/[c]` folders are auto-mounted on startup.
+[`startup_verbosity`](#startup_verbosity) controls how much is printed before
+your program runs, and [`shell_config_shortcuts`](#shell_config_shortcuts)
+enables shorthand commands like `sbtype sb16` instead of
+`config -set sbtype sb16`.
+
+[`allow_write_protected_files`](#allow_write_protected_files) and
+[`mcb_fault_strategy`](#mcb_fault_strategy) control lower-level file and
+memory-chain-block error handling — mostly relevant if a game is misbehaving
+in unusual ways.
 
 ## Configuration settings
 
-You can set the DOS parameters in the `[dos]` configuration section.
-
-
-### Memory
-
-##### ems
-
-:   Enable EMS support. Enabled provides the best compatibility but certain
-    applications may run better with other choices, or require EMS support to
-    be disabled to work at all.
-
-    Possible values: `on` *default*{ .default }, `off`
-
-
-##### xms
-
-:   Enable XMS memory support.
-
-    Possible values: `on` *default*{ .default }, `off`
-
-
-##### umb
-
-:   Enable UMB memory support.
-
-    Possible values: `on` *default*{ .default }, `off`
-
-
-##### pcjr_memory_config
-
-:   Set PCjr memory layout.
-
-    Possible values:
-
-    <div class="compact" markdown>
-
-    - `expanded` *default*{ .default } -- 640 KB total memory with
-      applications residing above 128 KB. Compatible with most games.
-    - `standard` -- 128 KB total memory with applications residing below
-      96 KB. Required for some older games (e.g., Jumpman, Troll).
-
-    </div>
-
+You can set the DOS parameters in the `[dos]` configuration section (shell
+startup settings below are in `[dosbox]`).
 
 ### Shell & version
 
@@ -174,3 +128,85 @@ You can set the DOS parameters in the `[dos]` configuration section.
 :   File containing persistent command line history (`shell_history.txt` by
     default). Setting it to empty disables persistent shell history.
 
+
+### Startup & shell shortcuts
+
+##### autoexec_section
+
+:   How autoexec sections are handled from multiple config files.
+
+    Possible values:
+
+    <div class="compact" markdown>
+
+    - `join` *default*{ .default } -- Combine them into one big section.
+    - `overwrite` -- Use the last one encountered, like other config
+      settings.
+
+    </div>
+
+
+##### automount
+
+:   Mount `drives/[c]` folders as drives on startup, where `[c]` is a
+    lower-case drive letter from `a` to `y`. The `drives` folder can be
+    provided relative to the current folder or via built-in resources. Mount
+    settings can be optionally provided using a `[c].conf` file alongside the
+    drive's folder.
+
+    Possible values: `on` *default*{ .default }, `off`
+
+
+##### startup_verbosity
+
+:   Controls verbosity prior to displaying the program.
+
+    Possible values:
+
+    <div class="compact" markdown>
+
+    - `auto` *default*{ .default } -- `low` if exec or dir is passed,
+      otherwise `high`.
+    - `high` -- Show welcome banner and early stdout.
+    - `low` -- Show early stdout only.
+    - `quiet` -- Don't show welcome banner or early stdout.
+
+    </div>
+
+
+##### shell_config_shortcuts
+
+:   Allow shortcuts for simpler configuration management. E.g., instead of
+    `config -set sbtype sb16`, it is enough to execute `sbtype sb16`, and
+    instead of `config -get sbtype`, you can just execute the `sbtype`
+    command.
+
+    Possible values: `on` *default*{ .default }, `off`
+
+
+##### allow_write_protected_files
+
+:   Many games open all their files with writable permissions; even files that
+    they never modify. This setting lets you write-protect those files while
+    still allowing the game to read them. A second use-case: if you're using a
+    copy-on-write or network-based filesystem, this setting avoids triggering
+    write operations for these write-protected files.
+
+    Possible values: `on` *default*{ .default }, `off`
+
+
+##### mcb_fault_strategy
+
+:   How software-corrupted memory chain blocks should be handled.
+
+    Possible values:
+
+    <div class="compact" markdown>
+
+    - `repair` *default*{ .default } -- Repair (and report) faults using
+      adjacent blocks.
+    - `report` -- Report faults but otherwise proceed as-is.
+    - `allow` -- Allow faults to go unreported (hardware behaviour).
+    - `deny` -- Quit (and report) when faults are detected.
+
+    </div>
