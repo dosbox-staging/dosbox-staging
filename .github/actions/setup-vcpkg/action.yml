@@ -39,13 +39,25 @@ runs:
         $baseline = (Get-Content .\vcpkg.json | ConvertFrom-Json)."builtin-baseline"
         Write-Output "DOSBOX_VCPKG_BASELINE=${baseline}" >> $Env:GITHUB_ENV
 
-    - name: Checkout VCPKG to baseline
+    - name: Create vcpkg downloads directory
+      shell: bash
+      run: mkdir -p "${VCPKG_DOWNLOADS}"
+
+    - name: Checkout vcpkg to baseline
       shell: bash
       run: |
         cd "${VCPKG_ROOT}"
         git reset --hard
         git fetch
         git checkout "$DOSBOX_VCPKG_BASELINE"
+
+    - name: Bootstrap vcpkg
+      shell: bash
+      run: "${VCPKG_ROOT}/bootstrap-vcpkg.sh"
+
+    - name: Print vcpkg version
+      shell: bash
+      run: "${VCPKG_ROOT}/vcpkg version"
 
     - name: Get vcpkg commit
       shell: bash
@@ -79,3 +91,26 @@ runs:
       shell: pwsh
       run: |
         New-Item -Path "${Env:VCPKG_DEFAULT_BINARY_CACHE}" -ItemType Directory
+
+    # Per-OS key: downloads/tools/ has platform-specific binaries.
+    # Compiler/ImageVersion are intentionally omitted -- tarballs are
+    # toolchain-independent, so runner-image bumps shouldn't invalidate.
+    - name:  Set vcpkg downloads cache key
+      id:    vcpkg_downloads_cache_key
+      shell: bash
+      run: |
+        echo "cacheKey=vcpkg-${VCPKG_SHORT_HASH}-downloads-${{ runner.os }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg-ports/**') }}" >> $GITHUB_OUTPUT
+
+    - name: Restore vcpkg downloads cache
+      uses: actions/cache@v4
+      id:   vcpkg_downloads_cache
+      with:
+        path: ${{ env.VCPKG_DOWNLOADS }}
+        key:  ${{ steps.vcpkg_downloads_cache_key.outputs.cacheKey }}
+
+    # 'true' = cache hit; 'false' = miss.
+    - name:  Report vcpkg cache status
+      shell: bash
+      run: |
+        echo "vcpkg binary cache hit:    ${{ steps.vcpkg_bin_cache.outputs.cache-hit || 'false' }}"
+        echo "vcpkg downloads cache hit: ${{ steps.vcpkg_downloads_cache.outputs.cache-hit || 'false' }}"
