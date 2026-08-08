@@ -46,13 +46,25 @@ runs:
         $baseline = (Get-Content .\vcpkg.json | ConvertFrom-Json)."builtin-baseline"
         Write-Output "DOSBOX_VCPKG_BASELINE=${baseline}" >> $Env:GITHUB_ENV
 
-    - name: Checkout VCPKG to baseline
+    - name: Create vcpkg downloads directory
+      shell: bash
+      run: mkdir -p "${VCPKG_DOWNLOADS}"
+
+    - name: Checkout vcpkg to baseline
       shell: bash
       run: |
         cd "${VCPKG_ROOT}"
         git reset --hard
         git fetch
         git checkout "$DOSBOX_VCPKG_BASELINE"
+
+    - name: Bootstrap vcpkg
+      shell: bash
+      run: "${VCPKG_ROOT}/bootstrap-vcpkg.sh"
+
+    - name: Print vcpkg version
+      shell: bash
+      run: "${VCPKG_ROOT}/vcpkg version"
 
     - name: Get vcpkg commit
       shell: bash
@@ -102,18 +114,6 @@ runs:
       with:
         path: ${{ env.VCPKG_DOWNLOADS }}
         key:  ${{ steps.vcpkg_downloads_cache_key.outputs.cacheKey }}
-
-    - name: Create downloads cache directory
-      if: ${{ steps.vcpkg_downloads_cache.outputs.cache-hit != 'true' && runner.os != 'Windows'}}
-      shell: bash
-      run: |
-        mkdir -p "${VCPKG_DOWNLOADS}"
-
-    - name: Create downloads cache directory (Windows)
-      if: ${{ steps.vcpkg_downloads_cache.outputs.cache-hit != 'true' && runner.os == 'Windows'}}
-      shell: pwsh
-      run: |
-        New-Item -Path "${Env:VCPKG_DOWNLOADS}" -ItemType Directory -Force
 
     # 'true' = cache hit; 'false' = miss.
     - name:  Report vcpkg cache status
