@@ -37,6 +37,7 @@ jobs:
         run: |
           sudo apt-get install ruby-full
           ruby --version
+          sudo gem install uri
           sudo gem install mdl
 
       - name: Run markdownlint
