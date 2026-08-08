@@ -216,7 +216,7 @@ nav:
       #  - 0.83/manual/game-setup-tips/mouse.md
       #  - 0.83/manual/game-setup-tips/troubleshooting.md
 
-      - System:
+      - System settings:
         - 0.83/manual/system/general.md
         - 0.83/manual/system/cpu.md
         - 0.83/manual/system/dos.md
@@ -230,7 +230,7 @@ nav:
         - 0.83/manual/system2/localisation.md
         - 0.83/manual/system2/machine-types.md
 
-      - Graphics:
+      - Graphics settings:
         - 0.83/manual/graphics/adapters.md
         - 0.83/manual/graphics/display-and-window.md
         - 0.83/manual/graphics/rendering.md
@@ -239,7 +239,7 @@ nav:
         - 0.83/manual/graphics/3dfx-voodoo.md
         - 0.83/manual/graphics/reelmagic.md
 
-      - Sound:
+      - Sound settings:
         - 0.83/manual/sound/overview.md
         - 0.83/manual/sound/on-subjectivity.md
         - 0.83/manual/sound/mixer.md
@@ -263,14 +263,14 @@ nav:
           - 0.83/manual/sound/sound-devices/imfc.md
           - 0.83/manual/sound/sound-devices/innovation.md
 
-      - Input:
+      - Input settings:
         - 0.83/manual/input/overview.md
         - 0.83/manual/input/keyboard.md
         - 0.83/manual/input/mouse.md
         - 0.83/manual/input/joystick.md
         - 0.83/manual/input/keymapper.md
 
-      - Networking:
+      - Network settings:
         - 0.83/manual/networking/serial-ports.md
         - 0.83/manual/networking/ipx.md
         - 0.83/manual/networking/ethernet.md
