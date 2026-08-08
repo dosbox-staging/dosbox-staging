@@ -1,7 +1,5 @@
 # Colour & image adjustments
 
-For a short summary of the rendering section, see [Rendering overview](overview.md).
-
 The [image adjustment](#image-adjustments) controls --- brightness, contrast,
 saturation, colour temperature, and more --- work much like the knobs on an
 old CRT monitor. They're useful for fine-tuning the picture to your taste or
@@ -12,9 +10,9 @@ distinct phosphor colours of different monitor types. On
 [wide gamut displays](#wide-gamut-colour-accuracy) these profiles can reproduce
 CRT colours that fall outside the standard sRGB colour space more accurately.
 
-For Hercules and CGA mono machines, DOSBox Staging offers authentic
-[monochrome display emulation](#monochrome-display-emulation) mimicking
-classic amber, green, white, and paperwhite looks.
+For Hercules and CGA machines, DOSBox Staging offers authentic [monochrome
+display emulation](#monochrome-display-emulation) mimicking classic amber,
+green, white, and paperwhite looks.
 
 
 ## CRT colour profiles
@@ -48,19 +46,18 @@ image adjustments](#automatic-image-adjustments) table for the full mapping.
 ## Monochrome display emulation
 
 For `hercules` and `cga_mono` machine types, the
-[`monochrome_palette`](#monochrome_palette) setting offers four classic
-terminal looks:
+[`monochrome_palette`](#monochrome_palette) setting offers four classic looks:
 
-- **`amber`** --- the warm orange-yellow glow of monitors like the IBM 5151
+- **`amber`** --- The warm orange-yellow glow of monitors like the IBM 5151
   with an amber phosphor. The most common monochrome display in offices and
   the most comfortable for extended reading.
 
-- **`green`** --- the classic green phosphor look of the original IBM 5151
+- **`green`** --- The classic green phosphor look of the original IBM 5151
   green screen, a staple of the early PC era.
 
-- **`white`** --- a cool blue-white typical of later monochrome VGA monitors.
+- **`white`** --- A cool blue-white typical of later monochrome VGA monitors.
 
-- **`paperwhite`** --- the Hercules-era paperwhite phosphor, a warmer,
+- **`paperwhite`** --- The Hercules-era paperwhite phosphor, a warmer,
   slightly yellowish white that's easier on the eyes than pure white.
 
 You can cycle through the available palettes via hotkeys during gameplay.
@@ -165,7 +162,8 @@ The available adjustments are:
 
 You can tweak these in real-time using
 [hotkeys](../../appendices/shortcuts.md#image-adjustments) --- use
-"Previous/Next Image Adjustment" to select a setting and "Increase/Decrease"
+**PrevImageAd** / **NextImageAdj** to select a setting and
+**DecImageAdj** / **IncImageAdj**
 to adjust its value. The adjusted values are logged so you can copy them into
 your config. Alternatively, use the `CONFIG -wc` DOS command to write the
 current settings to a config file.
@@ -438,10 +436,3 @@ apparent on the greens.
         These colours will be further adjusted by the video output settings
         (see [`crt_color_profile`](#crt_color_profile),
         [`brightness`](#brightness), [`saturation`](#saturation), etc.)
-
-
-## Leftovers
-
-Nothing identified as dropped from the original `rendering.md` colour and
-image adjustment sections. If you spot something missing, note the section
-title here for review.
