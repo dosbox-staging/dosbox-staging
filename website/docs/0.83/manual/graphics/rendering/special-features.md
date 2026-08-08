@@ -1,7 +1,5 @@
 # Special features
 
-For a short summary of the rendering section, see [Rendering overview](overview.md).
-
 Beyond authentically emulating real CRT monitors, DOSBox Staging offers two
 visual enhancements that are impossible on real hardware: blending away dither
 patterns in old EGA and CGA games, and deinterlacing FMV videos to remove the
@@ -24,10 +22,10 @@ intelligent; it only touches interlaced areas while leaving HUDs, UI frames,
 subtitles, and mouse cursors untouched.
 
 Both common interlacing patterns are supported: standard line interlacing
-(alternating black horizontal lines, used by most games) and dot interlacing
-(a checkerboard pattern, used by the CD-ROM versions of
+(alternating black horizontal lines, used by most games) and "dot interlacing"
+--- a special pattern used by the CD-ROM versions of
 [Dune](https://www.mobygames.com/game/380/dune/) and
-[KGB](https://www.mobygames.com/game/2894/kgb/)).
+[KGB](https://www.mobygames.com/game/2894/kgb/).
 
 !!! note
 
@@ -38,16 +36,19 @@ Both common interlacing patterns are supported: standard line interlacing
 
 ??? note "Games that benefit from deinterlacing"
 
+    Here's a non-exclusive list of DOS games that benefit from the
+    deinterlacing feature:
+
     <div class="compact" markdown>
 
-    - [Wing Commander IV (1996)](https://www.mobygames.com/game/343/wing-commander-iv-the-price-of-freedom/)
-    - [Phantasmagoria (1995)](https://www.mobygames.com/game/1164/roberta-williams-phantasmagoria/)
-    - [Gabriel Knight 2 (1995)](https://www.mobygames.com/game/118/the-beast-within-a-gabriel-knight-mystery/)
-    - [Crusader: No Remorse (1995)](https://www.mobygames.com/game/851/crusader-no-remorse/)
-    - [Crusader: No Regret (1996)](https://www.mobygames.com/game/852/crusader-no-regret/)
-    - [CyberMage (1995)](https://www.mobygames.com/game/791/cybermage-darklight-awakening/)
     - [Angel Devoid (1996)](https://www.mobygames.com/game/3468/angel-devoid-face-of-the-enemy/)
+    - [Crusader: No Regret (1996)](https://www.mobygames.com/game/852/crusader-no-regret/)
+    - [Crusader: No Remorse (1995)](https://www.mobygames.com/game/851/crusader-no-remorse/)
+    - [CyberMage (1995)](https://www.mobygames.com/game/791/cybermage-darklight-awakening/)
+    - [Gabriel Knight 2 (1995)](https://www.mobygames.com/game/118/the-beast-within-a-gabriel-knight-mystery/)
     - [Heroes of Might and Magic II (1996)](https://www.mobygames.com/game/1513/heroes-of-might-and-magic-ii-the-succession-wars/)
+    - [Phantasmagoria (1995)](https://www.mobygames.com/game/1164/roberta-williams-phantasmagoria/)
+    - [Wing Commander IV (1996)](https://www.mobygames.com/game/343/wing-commander-iv-the-price-of-freedom/)
 
     </div>
 
@@ -72,6 +73,9 @@ EGA, VGA, Hercules) and any resolution, and can be combined with any shader.
     instead.
 
 ??? note "Games that benefit from dedithering"
+
+    Here's a non-exclusive list of DOS games that benefit from the
+    dedithering feature:
 
     <div class="compact" markdown>
 
@@ -147,10 +151,3 @@ EGA, VGA, Hercules) and any resolution, and can be combined with any shader.
 
         - Dedithering is applied to rendered screenshots, but not to raw and
           upscaled screenshots and video captures.
-
-
-## Leftovers
-
-Nothing identified as dropped from the original `rendering.md` deinterlacing
-and dedithering sections. If you spot something missing, note the section
-title here for review.

@@ -1,35 +1,32 @@
 # Rendering overview
 
-The `[render]` section controls DOSBox Staging's final video presentation.
-After the emulated graphics adapter has produced a frame, these settings decide
-how that frame is scaled to your window or screen, which shader or filtering
-pass is applied, how its colours are mapped, and whether a few common video
-artifacts should be corrected. This section is about the image you see, not
-which graphics adapter or DOS video mode the game uses.
+The `[render]` section controls how DOSBox Staging turns an emulated video
+frame into the picture you see on your display. It covers the final stages of
+video output: scaling the image to fit the viewport, correcting its aspect
+ratio, applying shaders and filtering, adjusting its colours and brightness,
+and correcting certain video artifacts.
 
-[Shaders](shaders.md) choose the overall presentation style, from adaptive CRT
-monitor emulation to clean sharp-pixel output. [Aspect ratios &
-scaling](aspect-ratios-and-scaling.md) controls pixel aspect ratio correction,
-integer scaling, and viewport size so DOS-era modes keep their intended shape
-on modern displays. [Colour & image
-adjustments](colour-and-image-adjustments.md) covers monitor response, CRT
-colour profiles, monochrome palettes, and manual picture tuning. [Special
-features](special-features.md) contains targeted per-game cleanup tools such
-as dedithering for patterned EGA/CGA artwork and deinterlacing for FMV or
-other interlaced video content.
+These settings do **not** affect the [graphics hardware](../adapters.md) or video mode presented
+to the game. They only change how the resulting image is displayed.
 
-Most games look right with the defaults. Use these pages when a game looks
-stretched, too large, too small, too sharp, too soft, too dark, visibly
-interlaced, or when you want to choose a different balance between authentic
-CRT presentation and crisp modern output.
+The rendering settings are organised into the following areas:
 
-- [Shaders](shaders.md) - Choose adaptive CRT shaders, sharp-pixel output, and
-  shader presets for different graphics standards and viewport sizes.
-- [Aspect ratios & scaling](aspect-ratios-and-scaling.md) - Control pixel
-  aspect ratio correction, integer scaling, viewport sizing, black borders,
-  and custom stretch.
-- [Colour & image adjustments](colour-and-image-adjustments.md) - Tune
+* [Shaders](shaders.md) --- Choose how the image is rendered, from adaptive CRT
+  emulation to sharp, pixel-perfect output.
+
+* [Aspect ratios & scaling](aspect-ratios-and-scaling.md) --- Control pixel
+  aspect ratio correction, integer scaling, viewport size, borders, and
+  stretching.
+
+* [Colour & image adjustments](colour-and-image-adjustments.md) --- Adjust
   brightness, contrast, gamma, saturation, colour temperature, CRT colour
-  profiles, monochrome palettes, and CGA colour overrides.
-- [Special features](special-features.md) - Enable dedithering and
-  deinterlacing for games that benefit from those specific cleanup passes.
+  profiles, monochrome palettes, and custom CGA colours.
+
+* [Special features](special-features.md) --- Apply targeted corrections such as
+  dedithering for EGA/CGA artwork and deinterlacing for FMV (Full Motion
+  Video) games.
+
+For most games, the defaults produce a good result. These settings are mainly
+useful when you want to change the presentation, or when a particular game
+looks stretched, incorrectly scaled, too soft or sharp, too dark, or visibly
+interlaced.

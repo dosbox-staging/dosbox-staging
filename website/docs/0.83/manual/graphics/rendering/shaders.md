@@ -1,40 +1,50 @@
 # Shaders
 
 DOSBox Staging uses [adaptive CRT shaders](#adaptive-crt-shaders) by default
-that emulate the look of period-appropriate monitors. A VGA game gets a
-VGA-style CRT look, an EGA game gets an EGA-era monitor, and so on. The
-results are very close to what these games looked like on the real hardware
-they were designed for. If you prefer a crisp "sharp pixel" look without any
-CRT emulation, set [`shader`](#shader) to `sharp`.
-
+that emulate the look of period-appropriate PC monitors from the 1980s and
+90s. A VGA game gets a VGA-style CRT look, an EGA game gets an EGA-era
+monitor, and so on. The results are very close to what these games looked like
+on the real hardware they were designed for. If you prefer a crisp "sharp
+pixel" look without any CRT emulation, set [`shader`](#shader) to `sharp`.
 
 ## Adaptive CRT shaders
 
-DOSBox Staging includes adaptive CRT shaders that automatically select the
-appropriate monitor emulation based on the current video mode:
+The default CRT shader is **adaptive**: it changes its monitor emulation to
+match the kind of video output the game is producing. A VGA game gets the
+characteristic double-scanned, sharp "chunky pixel" look of a VGA monitor,
+while an EGA or CGA game gets the single-scanned "thick scanline" look and a
+slightly blurrier output. This is important because simply applying the same
+CRT effect to every DOS game wouldn't reproduce how these machines actually
+looked.
 
-- **`crt-auto`** *default*{ .default } --- Prioritises developer intent and
-  how people experienced games at the time. VGA games appear double-scanned
-  (as on a real VGA monitor), EGA games appear single-scanned with thicker
-  scanlines, and so on, regardless of the
-  [`machine`](../../system/general.md#machine) setting.
+There are several adaptive CRT shader variants, each intended for a different
+kind of experience. The default `crt-auto` follows the video standard used by
+the game rather than the video adapter configured in DOSBox Staging. Thus
+an EGA game gets EGA monitor emulation with "thick scanlines" even when
+[`machine`](../../system/general.md#machine) is set to a VGA adapter. The
+`crt-auto-machine` variant instead follows the configured video adapter, while
+the two `crt-auto-arcade` variants deliberately emulate the thicker scanlines
+of an arcade or home-computer display. See the [`shader`](#shader) setting for
+the complete list of options.
 
-- **`crt-auto-machine`** --- Emulates a fixed CRT monitor for the video
-  adapter configured via the [`machine`](../../system/general.md#machine)
-  setting. CGA and EGA modes on a VGA machine always appear double-scanned
-  with chunky pixels, as on a real VGA adapter.
+The adaptive shaders also take the available viewport size into account. They
+need enough vertical resolution to produce clean scanlines, and different
+shader variants are used at different scaling ratios. If the viewport becomes
+too small, CRT emulation is disabled and DOSBox Staging falls back to the
+[`sharp`](#shader) shader.
 
-- **`crt-auto-arcade`** --- A fantasy option that emulates a 15 kHz arcade or
-  home computer monitor with thick scanlines in low-resolution modes. Fun for
-  playing DOS VGA ports of Amiga and Atari ST games.
+This means the shader can change even though the game and its video mode have
+not changed. Resizing the window or switching between windowed and fullscreen
+mode changes the available viewport size and can therefore cause DOSBox
+Staging to select a different shader. With [`integer_scaling`](aspect-ratios-and-scaling.md#integer-scaling) enabled by default, the scaling
+factor can change at the same time, so the amount of black padding around the
+image can change too. This is normal; see [Integer
+scaling](aspect-ratios-and-scaling.md#integer-scaling) and [Why is there a
+black border?](aspect-ratios-and-scaling.md#why-is-there-a-black-border) for
+an explanation of the scaling and aspect-ratio behaviour.
 
-- **`crt-auto-arcade-sharp`** --- A sharper arcade variant that retains the
-  thick scanlines but with the sharpness of a typical PC monitor.
-
-If you're unsure which to use, leave it on `crt-auto`.
-
-For a full explanation of how double scanning affects these shaders, see
-[VGA double scanning](#vga-double-scanning).
+If you're unsure which adaptive CRT shader to use, leave it at the
+`crt-auto` default --- this is the best choice for most users.
 
 
 ### 1080p special cases
@@ -83,7 +93,7 @@ logical pixel row. This affects the most common DOS gaming resolutions:
 320&times;200, 320&times;240, and 640&times;350 among others.
 
 This is a fundamental difference from every graphics standard that came before
-it. CGA and EGA monitors, home computer monitors, TVs, and arcade monitors
+it. CGA and EGA monitors, home computer monitors, and arcade monitors
 could all display "true" low-resolution video --- one scanline per pixel row,
 exactly as the hardware produced it. On those displays, individual scanlines
 were thick and clearly visible, giving low-resolution content its
@@ -95,9 +105,9 @@ true 640&times;400 mode --- a VGA monitor has no way to distinguish between
 the two.
 
 The scanlines on VGA monitors are vanishingly fine, closer in character to a
-high-end broadcast monitor than to the bold scanline look of a CGA monitor or
-arcade cabinet. That refined, almost scanline-free look *is* what DOS VGA
-games looked like on real hardware. Instead of "chunky scanlines", VGA
+high-end broadcast monitor than to the bold "chunky scanline" look of a CGA
+monitor or arcade cabinet. That refined, almost scanline-free look *is* what
+DOS VGA games looked like on real hardware. Instead of "chunky scanlines", VGA
 monitors are known for their "chunky pixels" --- in low-resolution modes, each
 320&times;200 "pixel" was drawn as a sharp 2-by-2 pixel rectangle at
 640&times;400 resolution.
@@ -106,8 +116,8 @@ This means the double-scanned rendering of low-resolution VGA modes is not a
 stylistic choice, not a DOSBox Staging quirk, and not something that can be
 "fixed" --- it is the hardware reality of VGA. If you're coming from
 experience with an Amiga, Atari ST, Commodore 64, a games console, or even a
-CGA or EGA PC, this will feel unfamiliar. That's expected. VGA was genuinely
-different.
+CGA or EGA PC, this will feel unfamiliar. That's expected --- VGA was
+genuinely different.
 
 DOSBox Staging replicates this faithfully, and the adaptive CRT shaders are
 designed around it.
@@ -118,8 +128,8 @@ A 4&times; integer scale therefore produces a 2560&times;1600 image, not
 1280&times;800 (but we have implemented some special quality-of-life
 concessions for [1080p monitor users](#1080p-special-cases)).
 
-If you prefer the thick scanline look of a CGA monitor or arcade cabinet ---
-a look that was never actually available on VGA hardware --- the
+If you prefer the "chunky scanline" look of a CGA monitor or arcade cabinet
+--- a look that was never actually available on VGA hardware --- the
 [`crt-auto-arcade`](#adaptive-crt-shaders) and
 [`crt-auto-arcade-sharp`](#adaptive-crt-shaders) shaders offer exactly that as
 a deliberate fantasy option. It's particularly enjoyable with DOS ports of

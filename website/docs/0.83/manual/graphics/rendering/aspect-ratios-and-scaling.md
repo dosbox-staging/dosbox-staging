@@ -1,34 +1,32 @@
 # Aspect ratios & scaling
 
-For a short summary of the rendering section, see [Rendering overview](overview.md).
+Most DOS games were designed for 4:3 CRT displays and used non-square pixels.
+For example, the standard 320×200 VGA mode was intended to fill a 4:3 screen,
+so its pixels are slightly taller than they are wide (20% taller, to be exact,
+so with a pixel aspect ratio (PAR) of 1:1.2).
 
-Most DOS games used non-square pixels and were designed for 4:3 CRT displays.
-The standard 320&times;200 VGA mode fills a 4:3 screen completely, which is
-only possible if each pixel is a slightly tall rectangle --- exactly 20% taller
-than wide, giving a pixel aspect ratio (PAR) of 1:1.2 (or 5:6). You can derive
-this from the display: 4:3 scales to 320:240, and 240 / 200 = 1.2.
+Aspect ratio correction is enabled by default (`aspect = auto`) so games are
+displayed as intended. Without it, 320×200 graphics appear vertically squashed
+on modern square-pixel displays.
 
-Aspect ratio correction is enabled by default (`aspect = auto`) so games look
-as intended. Without it, 320&times;200 content appears squished on modern
-square-pixel displays.
+A small number of DOS games are better displayed with square pixels (`aspect =
+square-pixels`). These are typically DOS ports of European games originally
+developed for PAL Commodore Amiga home computers, where the original artwork
+was designed for square pixels at 320×256. Examples include [Beneath a Steel
+Sky](https://www.mobygames.com/game/386/beneath-a-steel-sky/), [Lure of the
+Temptress](https://www.mobygames.com/game/1134/lure-of-the-temptress/),
+[Another World](https://www.mobygames.com/game/564/out-of-this-world/),
+[Flashback](https://www.mobygames.com/game/555/flashback-the-quest-for-identity/),
+and the [Gobliiins](https://www.mobygames.com/game/1154/gobliiins/) series. A
+tell-tale sign is scanned or hand-drawn artwork that looks vertically
+stretched with aspect ratio correction enabled.
 
-A small number of DOS games need square pixels (`aspect = square-pixels`).
-These are typically European games ported from the PAL Amiga, where the
-original art was designed for square pixels at 320&times;256. Studios known
-for this include Revolution Software
-([Beneath a Steel Sky](https://www.mobygames.com/game/386/beneath-a-steel-sky/),
-[Lure of the Temptress](https://www.mobygames.com/game/1134/lure-of-the-temptress/)),
-Delphine Software ([Another World](https://www.mobygames.com/game/564/out-of-this-world/),
-[Flashback](https://www.mobygames.com/game/555/flashback-the-quest-for-identity/)),
-and Coktel Vision ([Gobliiins](https://www.mobygames.com/game/1154/gobliiins/)
-series). The tell-tale sign is scanned or hand-drawn artwork that appears
-vertically stretched with aspect ratio correction enabled.
-
-Pixels are square (1:1 PAR) in 640&times;480 and higher resolutions. A few
-other modes have their own non-square PARs: 640&times;350 EGA (1:1.37 PAR),
-640&times;200 EGA (1:2.4 PAR), and 720&times;348 Hercules (1:1.55 PAR).
-DOSBox Staging handles all of these automatically. For a more detailed
-explanation of pixel aspect ratios, see [Why is there a black border?](#why-is-there-a-black-border).
+Pixels are square (1:1 PAR) in **640&times;480** and higher resolutions. A few
+other modes have their own non-square PARs: **640&times;350 EGA** (1:1.37
+PAR), **640&times;200 EGA** (1:2.4 PAR), and **720&times;348 Hercules**
+(1:1.55 PAR). DOSBox Staging handles all of these automatically. For a more
+detailed explanation of pixel aspect ratios, see [Why is there a black
+border?](#why-is-there-a-black-border)
 
 
 ## Integer scaling
@@ -40,54 +38,70 @@ fractional.
 
 The `vertical` setting avoids uneven scanlines and interference artifacts with
 CRT shaders or the [deinterlacing](special-features.md#deinterlacing) feature.
-You could just use this, but there is an enhanced vertical scaling setting
-called `auto` that works in tandem with the
-[adaptive CRT shaders](shaders.md#adaptive-crt-shaders) (this is the default).
-This mode activates vertical integer scaling only for the CRT shaders.
+
+For the built-in CRT shaders, `auto` is recommended instead. It enables
+vertical integer scaling only when a CRT shader is active and allows a few
+additional scaling ratios for better use of available screen space (e.g., 3.5x
+and 4.5x scaling factors).
+
+The `horizontal` mode is included mainly for completeness, but can be useful
+on low-resolution displays to maximise horizontal text sharpness in
+text-heavy games.
+
+You can disable integer scaling completely with the `off` setting. The higher
+your monitor resolution, the less noticeable the effects of non-integer
+scaling become with CRT shaders. If you play in fullscreen on a 4K screen, you
+can generally disable integer scaling up to 640×480 with the CRT shaders
+without noticeable adverse effects.
+
+```ini
+[render]
+integer_scaling = off
+```
+
+On lower-resolution monitors or in windowed mode, you'll need to experiment
+--- some combinations look fine, while others produce interference patterns.
 
 Note that the [1080p special-case shaders](shaders.md#1080p-special-cases)
-alter the effective source resolution for 320&times;200 and 640&times;480
-content, which affects the scaling ratios you'd otherwise expect.
+alter the effective source resolution for 320×200 and 640×480 content, which
+affects the scaling ratios you'd otherwise expect.
 
-Generally, the CRT shaders need at least 3 times the vertical resolution of
-the emulated video mode to function. For example, the 800&times;600 SVGA mode
-needs at least 1800 pixels vertically (and 2400 pixels horizontally, given
-this mode has square (1:1) pixel aspect ratio). If the viewport is smaller,
-DOSBox Staging will turn off CRT emulation and revert to the `sharp` shader.
+CRT shaders generally need at least three times the vertical resolution of the
+emulated video mode to produce the intended CRT effect. For example, 800×600
+SVGA requires at least 1800 vertical pixels, or 2400 horizontal pixels because
+it uses square pixels. If the viewport is smaller, DOSBox Staging disables CRT
+emulation and falls back to the `sharp` shader.
 
-You can test this by resizing your window with the default settings --- you'll
-see the image "snap" between the integer scaling ratios, and you can see
-messages about the automatic shader switches in the log window. You'll also
-notice that the upscaled image might have some letterboxing, pillarboxing, or
-both, depending on the window size. This is an unavoidable consequence of
-integer scaling.
+You can see this behaviour by resizing the window with the default settings.
+The image will "snap" between scaling ratios, and the log window will report
+automatic shader switches. Because the adaptive CRT shaders also take the
+viewport size into account, resizing the window or switching between
+windowed and fullscreen modes can change the selected shader.
 
-The `auto` mode has some refinements over the standard `vertical` mode: 3.5x
-and 4.5x scaling factors are also allowed, and integer scaling is disabled
-above 5.0x.
+Integer scaling can also leave letterboxing, pillarboxing, or both around the
+image. This is unavoidable when the image cannot be enlarged by a whole-number
+factor while also filling the available space.
 
-The `horizontal` integer scaling mode is included more for completeness' sake,
-but it can be useful on low-resolution displays to maximise horizontal text
-sharpness in text-heavy games.
+See [Why is there a black border?](#why-is-there-a-black-border) for an
+explanation of why aspect-ratio correction can also leave black areas around
+the image.
 
 !!! note "About fractional scaling ratios"
 
     With the `sharp` shader, fractional scaling is not a problem as the
-    interpolation band is at most 1 pixel wide at the edges, which is sharp,
-    especially at 1440p or 4K. With CRT shaders, non-integer horizontal
-    scaling is practically a non-issue --- the CRT shading artifacts (i.e.,
-    the phosphor mask pattern) will effectively mask any minor unevenness even
-    on low-resolution displays.
+    interpolation band is at most 1 pixel wide at the edges, so the result remains
+    sharp, especially at 1440p or 4K. With CRT shaders, non-integer horizontal
+    scaling is practically a non-issue --- the CRT shading artifacts (i.e., the
+    phosphor mask pattern) will effectively mask any minor unevenness even on
+    low-resolution displays.
 
 
 ## Why is there a black border?
 
-Computer monitors were originally not widescreen but had a 4:3 display aspect
-ratio, just like old television sets. The complete switch to 16:9 in computer
-monitors and laptops happened only by the early 2010s. The low-resolution
-320&times;200 VGA mode was designed to completely fill a 4:3 CRT screen. When
-displaying such 4:3 content on a 16:9 modern flat panel, you'll get black bars
-on the sides of the image --- this is called **pillarboxing**.
+Computer monitors were traditionally 4:3 displays, much like old television
+sets. Modern flat-screen monitors are usually 16:9, so when DOSBox Staging
+displays a 4:3 game while preserving its original proportions, the unused
+space appears as black bars on the sides. This is called **pillarboxing**.
 
 {{ figure(
     "https://www.dosbox-staging.org/static/images/manual/monitor-aspect-ratios1.png",
@@ -96,17 +110,15 @@ on the sides of the image --- this is called **pillarboxing**.
     style="width: 25rem; margin: 1.5rem 0;"
 ) }}
 
-Hang on --- something is not right here! 320:200 simplifies to 16:10, which is
-close enough to 16:9 that the image should fill a widescreen monitor almost
-completely, with only minor pillarboxing. That would be true if the pixels of
-the 320&times;200 VGA mode were perfect squares --- but they're not.
+At first glance, this might seem strange for 320×200 VGA: 320×200 is 16:10,
+which is fairly close to 16:9. But 320×200 VGA was not designed to be
+displayed with square pixels. Its pixels are taller than they are wide --- 20%
+taller, with a 1:1.2 (5:6) pixel aspect ratio (PAR) --- so the image is
+intended to appear as 4:3.
 
-As mentioned, 320&times;200 graphics completely fill the screen on a 4:3 CRT,
-but that's only possible if the pixels are slightly tall rectangles rather than
-squares. If you do the maths, they need to be exactly 20% taller than wide.
-Here's how to derive it: 4:3 can be rewritten as 320:240 by multiplying both
-sides by 80. Then 240 divided by 200 is 1.2, so the pixel aspect ratio (PAR)
-is 1:1.2, or 5:6.
+The illustration below shows why this matters. With square pixels, a 320×200
+image is too wide to fill a 4:3 display without leaving space below it. With
+the intended taller pixels, the same 320×200 image fills the 4:3 screen.
 
 {{ figure(
     "https://www.dosbox-staging.org/static/images/manual/monitor-aspect-ratios2.png",
@@ -115,31 +127,41 @@ is 1:1.2, or 5:6.
     style="width: 25rem; margin: 1.5rem 0;"
 ) }}
 
-But hey, not everybody likes maths, especially not in the middle of a gaming
-session! Most of the time, you won't need to worry about aspect ratio
-correctness because DOSBox Staging handles that automatically for you. There
-is a small but significant number of games, though, where forcing square pixels
-yields better results (one good example is
-[Beneath a Steel Sky](../../../getting-started/beneath-a-steel-sky.md#aspect-ratio-correction)
-from the [Getting Started guide](../../../getting-started/index.md)).
+Aspect ratio correction accounts for these non-square pixels when displaying
+the game on a modern square-pixel screen. The result has the intended 4:3
+display aspect ratio rather than the 16:10 ratio of the raw framebuffer. On a
+16:9 display, preserving that 4:3 shape necessarily leaves black bars at the
+sides.
+
+This is why a correctly displayed 320×200 game does not nearly fill a modern
+16:9 display, despite the raw framebuffer being relatively close to
+widescreen. The black border is simply the space required to preserve the
+game's intended proportions.
+
+Most of the time, you don't need to worry about the underlying calculations:
+DOSBox Staging performs the aspect ratio correction automatically. If a
+particular game was designed around square pixels, you can use `aspect =
+square-pixels` instead. See [Beneath a Steel
+Sky](../../../getting-started/beneath-a-steel-sky.md#aspect-ratio-correction)
+in the [Getting Started guide](../../../getting-started/index.md) for an
+example.
+
 
 !!! note "When pixels are not squares"
 
-    The fact that monitors weren't widescreen until around 2010 tends to be
-    forgotten nowadays, and older DOSBox versions didn't perform aspect ratio
-    correction by default, which certainly didn't help matters either. The
-    unfortunate situation is that you're much more likely to encounter videos
-    and screenshots of DOS games in the wrong aspect ratio (using square
-    pixels) on the internet today --- at least for more recently created
-    content. If you check out any old computer magazine from the 1980s or
-    '90s, most screenshots are shown in the correct aspect ratio (though
-    occasionally the magazines got it wrong too).
+    The fact that older monitors were not widescreen is easy to forget, and
+    older DOSBox versions did not enable aspect ratio correction by default.
+    As a result, many modern screenshots and videos of DOS games are shown
+    with the wrong proportions, particularly for 320×200 modes.
 
-    In case you're wondering: pixels are perfectly square in 640&times;480 and
-    higher resolutions (1:1 pixel aspect ratio), but there are a few more
-    video modes with non-square pixels --- the 640&times;350 EGA mode (1:1.3714
-    PAR), the 640&times;200 EGA mode (1:2.4 PAR), and the 720&times;348
-    Hercules graphics mode (1:1.5517 PAR).
+    Well, at least on today's internet --- if you check out any old computer
+    magazine from the 1980s or 90s, most screenshots are shown in the correct
+    aspect ratio (though occasionally the magazines got it wrong too).
+
+    Pixels are perfectly square in 640×480 and most higher resolutions (1:1
+    pixel aspect ratio), but a few other DOS video modes also use non-square
+    pixels: 640×350 EGA (1:1.3714 PAR), 640×200 EGA (1:2.4 PAR), and 720×348
+    Hercules (1:1.5517 PAR). DOSBox Staging handles these modes automatically.
 
 
 ## Sharp pixels
@@ -164,101 +186,95 @@ shader = sharp
 integer_scaling = vertical
 ```
 
-This gives you 100% sharp pixels vertically. Horizontally, there may be a
-1-pixel-wide interpolation band at the edges of some pixels depending on the
-DOS video mode and upscale factor --- but this is the best possible compromise
-between correct aspect ratio, even pixel widths, and overall sharpness. At
-1080p the result is quite acceptable, and from 1440p upwards you'd have to
-press your nose against the screen to notice it.
+This gives you perfectly sharp pixels vertically. Horizontally, there may be a
+1-pixel-wide interpolation band at the edges of some pixels, depending on the
+DOS video mode and scaling factor. This is an unavoidable consequence of
+maintaining the correct aspect ratio while keeping the image as sharp as
+possible.
+
+At 1080p, the result is generally quite acceptable. At 1440p and 4K, the
+minor horizontal interpolation is difficult to notice at normal viewing
+distances.
 
 
 ## Custom viewport size
 
-All well and good, but at fullscreen on a large modern display the graphics
-can look like they were constructed from brightly coloured bricks.
+At fullscreen on a large modern display, low-resolution DOS graphics can look
+much larger than they did on the monitors they were designed for.
 
 14" VGA monitors were the most popular option until the mid-1990s. Before
-that, CGA and EGA monitors were typically 12--14", and monochrome Hercules
-monitors only 10--12" --- and those are nominal sizes, with the actual visible
-area roughly 1.5 to 2 inches smaller.
+that, CGA and EGA monitors were typically 12--14", while monochrome Hercules
+monitors were usually 10--12". These are nominal sizes; the actual visible
+area was roughly 1.5 to 2 inches smaller.
 
 To approximate the physical image size of a typical 14" VGA monitor on a
-modern 24" widescreen display, you'd want to restrict the output to around
-960&times;720 --- though that's a non-integer vertical scale factor, so it's
-better to bump it to 1067&times;800:
+modern 24" widescreen display, you could restrict the output to around
+960×720. However, this gives a non-integer vertical scaling factor, so
+1067×800 is a better choice:
 
 ```ini
 [render]
 viewport = 1067x800
 ```
 
-The viewport size is specified in _logical units_ (more on that below). You
-can also specify the viewport as a percentage of your desktop size:
+The viewport size is specified in **logical units** (see the note below). You
+can also specify it as a percentage of your desktop:
 
 ```ini
 [render]
 viewport = 89%
 ```
 
-The video output will be sized to fit within that rectangle while maintaining
-the correct aspect ratio. Why 89%? It's a value that produces optimal image
-sizes for DOS resolutions between 320&times;200 and 640&times;480 on most
-common modern displays --- with integer scaling enabled, 320&times;200 content
-will have roughly the physical size of a 15" CRT, and 640&times;480 that of a
-19" monitor. Good upper limits that balance modern comfort with something
-close to the original experience.
+The video output is fitted inside the viewport while maintaining the correct
+aspect ratio. 89% is a useful general-purpose value for DOS resolutions
+between 320×200 and 640×480 on modern displays. With integer scaling enabled,
+it gives these low-resolution modes a physical size roughly comparable to the
+CRTs they were commonly displayed on, without making the graphics
+unnecessarily large.
 
-Running DOS games in fullscreen on a modern 24" widescreen is the equivalent
-of playing them on a 21" CRT --- a huge professional monitor that very few
-gamers ever owned. Low-resolution art was never meant to be seen that large.
+Running DOS games fullscreen on a modern 24" widescreen display is roughly
+equivalent to playing them on a 21" CRT --- a large professional monitor that
+very few gamers owned. Low-resolution artwork was not designed to be viewed at
+that size.
 
 !!! info "Logical units vs pixels"
 
-    Most operating systems operate in high DPI mode using a 200% scaling
-    factor on 4K displays, and use "unscaled" logical units for specifying
-    window dimensions. The viewport setting adopts the same approach --- the
-    viewport size must always be specified in logical units.
+    Most operating systems support high-DPI scaling, where window dimensions
+    are specified in logical units rather than physical pixels. The viewport
+    setting uses the same approach.
 
-    For example, on a 4K display, a viewport resolution of 1280&times;960
-    logical units will translate to 2560&times;1920 physical pixels (assuming
-    a typical 200% scaling factor). On a 1080p display with 100% scaling, it
-    will simply translate to 1280&times;960 pixels.
+    For example, on a 4K display with a typical 200% scaling factor, a
+    viewport of 1280&times;960 logical units corresponds to 2560&times;1920
+    physical pixels. On a 1080p display with 100% scaling, it corresponds to
+    1280&times;960 physical pixels.
 
 
-!!! danger "The maths behind 89% (for the curious)"
+!!! note "Why 89%?"
 
-    This is hardcore mode --- only the brave and the mathematically inclined
-    shall prevail! 🤓 🧠 📚
+    `viewport = 89%` is based on the amount of vertical space available on a
+    typical 1920&times;1080 desktop. It gives a maximum viewport of about 961
+    logical pixels vertically.
 
-    - Assuming a 1920&times;1080 desktop resolution, `viewport = 89%`
-      restricts the maximum viewport size to 1709&times;961 logical units.
+    With integer scaling enabled, this is enough for a 2&times; vertical scale
+    of both 320&times;200 content after VGA double-scanning (resulting in a
+    640&times;400 image) and 640&times;480 content. The resulting image sizes
+    are approximately 1067&times;800 and 1280&times;960 logical pixels
+    respectively in fullscreen mode.
 
-    - The viewport size is a potential maximum. With integer scaling disabled
-      and aspect ratio correction enabled, a 4:3 DOS image will come out at
-      1281&times;961 logical units (because 1281 / 961 ≈ 4/3).
+    On a 1080p display, these correspond directly to physical pixels. On a 4K
+    display with 200% DPI scaling, they are rendered at twice the physical
+    resolution while retaining the same apparent size.
 
-    - On a 1080p monitor this gives you 1281&times;961 pixels; on a 4K monitor
-      with 200% DPI scaling, the resulting image will be 2562&times;1922
-      pixels.
-
-    - With integer scaling enabled and 320&times;200 VGA double-scanned to
-      640&times;400, dividing 961 by 400 gives 2.4025 --- so a 2&times;
-      vertical integer scaling factor is used. The resulting image will be
-      1067&times;800 on 1080p and 2133&times;1600 on 4K, measuring about
-      14.4" diagonally --- just above the viewable size of a typical 15" CRT.
-
-    - For the 640&times;480 VGA mode, 961 / 480 ≈ 2.0021, so a 2&times;
-      factor is used again. The resulting image will be 1280&times;960 on
-      1080p and 2560&times;1920 on 4K, measuring roughly 17.3" diagonally
-      --- almost exactly the viewable area of a typical 19" CRT.
-
-    Q.E.D. :sunglasses:
+    The result is roughly comparable to the physical image sizes of the CRTs
+    commonly used with these resolutions: around 15" for 320&times;200 and
+    around 19" for 640&times;480. This makes `89%` a useful general-purpose
+    starting point.
 
 
 ## Custom aspect ratios
 
-DOSBox Staging also has a "stretch everything" mode for when aspect ratio
-authenticity isn't the priority.
+DOSBox Staging also provides a "stretch everything" mode for cases where
+aspect ratio authenticity isn't the priority.
 
 The `stretch` aspect mode calculates the aspect ratio from the viewport
 dimensions, allowing you to force arbitrary aspect ratios. For example, to
@@ -274,13 +290,15 @@ viewport = fit
 integer_scaling = off
 ```
 
-It's hard to argue it matters much for text adventures or abstract games ---
-though for anything with carefully drawn art, opinions vary.
+This can make sense for text adventures or abstract games where the exact
+shape of the graphics is less important. For games with carefully drawn
+artwork, however, stretching will distort the image.
 
-The `relative` viewport mode starts from a 4:3 rectangle and scales it by
-horizontal and vertical stretch factors. With this, you can emulate the
-horizontal and vertical stretch controls of a CRT. This is useful for
-aspect-correcting lazy Hercules conversions that reused EGA/VGA assets.
+The `relative` viewport mode starts with a 4:3 rectangle and scales it
+independently in the horizontal and vertical directions. This effectively
+emulates the horizontal and vertical stretch controls found on CRT monitors.
+It can also be useful for correcting games that use the wrong aspect ratio,
+such as some Hercules conversions that reused EGA or VGA artwork.
 
 For example, to correct the [squashed
 look](../adapters.md#hercules-graphics-card) of Hercules graphics in [Prince
@@ -298,14 +316,13 @@ integer_scaling = off
     "Prince of Persia in Hercules mode with custom stretch factors<br>to make the image fill our 4:3 \"emulated CRT screen\"."
 ) }}
 
-Use the **Stretch Axis**, **Inc Stretch**, and **Dec Stretch** hotkey actions
-to adjust stretching in real-time (you'll need to map them in the [key
-mapper](../../input/keymapper.md) first), then copy the logged viewport
-setting to your config.
+You can adjust the stretch in real time with the **Stretch Axis**, **Inc
+Stretch**, and **Dec Stretch** hotkey actions. Map these actions in the [key
+mapper](../../input/keymapper.md), adjust the image until it looks right, then
+copy the resulting viewport setting from the log into your config.
 
 
 ## Configuration settings
-
 
 ##### aspect
 
@@ -403,31 +420,3 @@ setting to your config.
           actions to adjust the image size in `relative` mode in real-time,
           then copy the new settings from the logs into your config.
 
-
-## Leftovers
-
-The following content was present in one or both source files but didn't have
-an obvious home in the restructured page. Review and decide whether to merge,
-move, or cut.
-
----
-
-### Note: higher-resolution displays and integer scaling off
-
-From the old `aspect-ratios.md`:
-
-> The higher your monitor resolution, the more you can get away with
-> non-integer vertical scaling. If you play in fullscreen on a 4K screen, you
-> can safely disable integer scaling up to 640&times;480 without any adverse
-> effects:
->
-> ```ini
-> [render]
-> integer_scaling = off
-> ```
->
-> On lower-resolution monitors or in windowed mode, you'll need to experiment
-> --- some combinations look fine, others will produce interference patterns.
-
-This is a useful practical tip. Consider merging it into the [Integer
-scaling](#integer-scaling) section above, perhaps as a note box.
