@@ -23,21 +23,21 @@ runs:
   using: composite
   steps:
     - name: Set vcpkg env variables
-      if: ${{ runner.os != 'Windows'}}
       shell: bash
       run: |
-        echo "VCPKG_ROOT=${VCPKG_INSTALLATION_ROOT}" >> $GITHUB_ENV
-        echo "VCPKG_DEFAULT_BINARY_CACHE=${{ github.workspace }}/vcpkg_bin_cache" >> $GITHUB_ENV
-        echo "DOSBOX_VCPKG_BASELINE=$(jq -r .\"builtin-baseline\" ./vcpkg.json)" >> $GITHUB_ENV
-
-    - name: Set vcpkg cache env variable (Windows)
-      if: ${{ runner.os == 'Windows'}}
-      shell: pwsh
-      run: |
-        Write-Output "VCPKG_ROOT=$Env:VCPKG_INSTALLATION_ROOT" >> $Env:GITHUB_ENV
-        Write-Output "VCPKG_DEFAULT_BINARY_CACHE=C:\vcpkg_bin_cache" >> $Env:GITHUB_ENV
-        $baseline = (Get-Content .\vcpkg.json | ConvertFrom-Json)."builtin-baseline"
-        Write-Output "DOSBOX_VCPKG_BASELINE=${baseline}" >> $Env:GITHUB_ENV
+        echo "VCPKG_ROOT=${VCPKG_INSTALLATION_ROOT}" >> "$GITHUB_ENV"
+        if [ "$RUNNER_OS" = "Windows" ]; then
+          # Short, drive-root paths to stay under Windows' MAX_PATH limit --
+          # vcpkg build trees nest deeply.
+          echo "VCPKG_DOWNLOADS=C:\\vcpkg_downloads" >> "$GITHUB_ENV"
+          echo "VCPKG_DEFAULT_BINARY_CACHE=C:\\vcpkg_bin_cache" >> "$GITHUB_ENV"
+          echo "VCPKG_EXE=${VCPKG_INSTALLATION_ROOT}/vcpkg.exe" >> "$GITHUB_ENV"
+        else
+          echo "VCPKG_DOWNLOADS=${{ github.workspace }}/vcpkg_downloads" >> "$GITHUB_ENV"
+          echo "VCPKG_DEFAULT_BINARY_CACHE=${{ github.workspace }}/vcpkg_bin_cache" >> "$GITHUB_ENV"
+          echo "VCPKG_EXE=${VCPKG_INSTALLATION_ROOT}/vcpkg" >> "$GITHUB_ENV"
+        fi
+        echo "DOSBOX_VCPKG_BASELINE=$(jq -r .\"builtin-baseline\" ./vcpkg.json)" >> "$GITHUB_ENV"
 
     - name: Create vcpkg downloads directory
       shell: bash
@@ -81,16 +81,9 @@ runs:
         key:  ${{ steps.vcpkg_bin_cache_key.outputs.cacheKey }}
 
     - name: Create binary cache directory
-      if: ${{ steps.vcpkg_bin_cache.outputs.cache-hit != 'true' && runner.os != 'Windows'}}
+      if: ${{ steps.vcpkg_bin_cache.outputs.cache-hit != 'true' }}
       shell: bash
-      run: |
-        mkdir "${VCPKG_DEFAULT_BINARY_CACHE}"
-
-    - name: Create binary cache directory (Windows)
-      if: ${{ steps.vcpkg_bin_cache.outputs.cache-hit != 'true' && runner.os == 'Windows'}}
-      shell: pwsh
-      run: |
-        New-Item -Path "${Env:VCPKG_DEFAULT_BINARY_CACHE}" -ItemType Directory
+      run: mkdir -p "${VCPKG_DEFAULT_BINARY_CACHE}"
 
     # Per-OS key: downloads/tools/ has platform-specific binaries.
     # Compiler/ImageVersion are intentionally omitted -- tarballs are
