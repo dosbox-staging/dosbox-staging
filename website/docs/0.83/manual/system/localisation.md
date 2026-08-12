@@ -1,26 +1,31 @@
 # Localisation
 
 DOSBox Staging automatically detects your host operating system's language,
-country, and keyboard layout, so in most cases everything works out of the box.
-The auto-detection checks the list of preferred languages in your OS
-preferences, matches keyboard layouts from your configured host layouts, and
+country, and keyboard layout, so in most cases everything works out of the
+box. The auto-detection checks the list of preferred languages in your OS
+settings, matches keyboard layouts from your configured host layouts, and
 selects an appropriate country code. If you need to override the defaults ---
 perhaps you're running a German game on an English system, or you need a
 specific date format --- the settings below let you fine-tune the regional
 behaviour.
 
+!!! warning
+
+    DOSBox Staging's translations are a community-based effort. Some
+    translations may be incomplete or behind the current English version, so
+    translated interface messages may occasionally be missing or out of date.
 
 ## Interface language
 
 The [`language`](#language) setting controls the language of DOSBox Staging's
 own interface messages (not the DOS programs themselves). It can be changed at
-runtime via `config -set language=pl`. Available translations: German, English,
-Spanish, French, Italian, Dutch, Polish, Brazilian Portuguese, and Russian.
+runtime via `config -set language=pl`. The currently bundled translations are
+German, English, Spanish, French, Italian, Dutch, Polish, Brazilian Portuguese,
+and Russian.
 
 DOSBox Staging uses the [gettext](https://www.gnu.org/software/gettext/)
 `.po` translation file format, which makes contributing translations
 straightforward with tools like [Poedit](https://poedit.net/).
-
 
 ## Country and date/time formatting
 
@@ -30,10 +35,9 @@ default `auto` detects the appropriate country from your host OS settings.
 
 The [`locale_period`](#locale_period) setting controls whether formatting
 follows historic DOS conventions (how things looked on a real DOS PC of the
-era), modern conventions (consistent with current-day practice), or your host
+era), modern conventions (consistent with current-day practices), or your host
 OS's native settings. The default `native` mode reuses your desktop's display
 formats where the DOS locale system can represent them.
-
 
 ## Keyboard layout and code pages
 
@@ -44,29 +48,27 @@ suffix --- for example, `uk 850` selects the British layout with a Western
 European screen font.
 
 Code pages control which character set is available on screen. DOSBox Staging
-bundles the FreeDOS ISO, KOI, MAC, and WIN code page packages, providing
-broad coverage of Latin, Cyrillic, and Greek scripts. After startup, use the
-`KEYB` command to manage keyboard layouts and code pages at runtime (run
-`HELP KEYB` for details).
+bundles the FreeDOS ISO, KOI, MAC, and WIN code page packages, providing broad
+coverage of Latin, Cyrillic, and Greek scripts. After startup, use the `KEYB`
+command to manage keyboard layouts and code pages (run `HELP KEYB` for
+details).
 
 To see what's available, start DOSBox Staging with the following command line
 arguments:
 
 - [`--list-countries`](../using-dosbox-staging/command-line.md#-list-countries)
-  --- lists all supported countries with their numeric codes
+  \--- lists all supported countries with their numeric codes
 
 - [`--list-layouts`](../using-dosbox-staging/command-line.md#-list-layouts)
-  --- lists all supported keyboard layouts with their codes
+  \--- lists all supported keyboard layouts with their codes
 
 - [`--list-code-pages`](../using-dosbox-staging/command-line.md#-list-code-pages)
-  --- lists all bundled code pages (screen fonts)
-
+  \--- lists all bundled code pages (screen fonts)
 
 ## Configuration settings
 
 The [`language`](#language) setting is in the `[dosbox]` section; the rest are
 in `[dos]`.
-
 
 ### Interface language
 
@@ -86,7 +88,6 @@ in `[dos]`.
         `it`, `nl`, `pl`, `pt_BR`, and `ru`. English is built-in; the rest
         is stored in the bundled `resources/translations` folder.
 
-
 ### Regional settings
 
 ##### country
@@ -102,10 +103,10 @@ in `[dos]`.
         command-line argument.
 
 
-##### keyboard_layout
+##### keyboard\_layout
 
-:   Keyboard layout code (`auto` by default). Set to `auto` to guess the
-    values from the host OS settings. The layout can be followed by the code
+:   Keyboard layout code (`auto` by default). Set to `auto` to detect the
+    layout from the host OS settings. The layout can be followed by the code
     page number, e.g., `uk 850` selects a Western European screen font. After
     startup, use the `KEYB` command to manage keyboard layouts and code pages
     (run `HELP KEYB` for details).
@@ -117,22 +118,21 @@ in `[dos]`.
         [`--list-layouts`](../using-dosbox-staging/command-line.md#-list-layouts)
         command-line argument (e.g., `uk` is the British English layout).
 
+##### locale\_period
 
-##### locale_period
-
-:   Set locale epoch.
+:   Select which era of locale data to use.
 
     Possible values:
 
     <div class="compact" markdown>
 
-    - `native` *default*{ .default } -- Re-use current host OS settings,
+    - `native` *default*{ .default } -- Reuse current host OS settings,
       regardless of the country set; use `modern` data to fill in the gaps
       when the DOS locale system is too limited to follow the desktop
       settings.
     - `historic` -- If data is available for the given country, mimic old DOS
       behaviour when displaying time, dates, or numbers.
-    - `modern` -- Follow current day practices for user experience more
+    - `modern` -- Follow current-day practices for a user experience more
       consistent with typical host systems.
 
     </div>

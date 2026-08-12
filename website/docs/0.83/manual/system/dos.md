@@ -1,69 +1,55 @@
 # DOS
 
-The `[dos]` section (plus a few shell-related settings from `[dosbox]`)
-controls the emulated DOS environment itself --- the reported DOS version,
-shell behaviour, and file-locking.
+DOSBox Staging doesn't just run old programs --- it emulates the MS-DOS
+operating environment underneath them. Games talk to this emulated DOS
+directly: they check its version number and rely on quirks of how its shell
+behaves. When an old game misbehaves, one possible reason is that the emulated
+DOS doesn't match what the game expects. These settings let you close that
+gap.
 
-<!-- TODO: memory management (XMS/EMS/UMB) and PCjr memory layout used to
-     live in this file; they've moved to memory.md and machine-types.md
-     respectively. Rewrite this intro so it doesn't promise content that's
-     no longer here. -->
 
-The reported DOS version defaults to 5.0, which covers the vast majority of
-games from the entire DOS era. A handful of very late titles check for DOS
-7.0, and some very early ones expect DOS 3.0, but these are edge cases you'll
-likely never hit.
+## DOS version and compatibility
+
+The [`ver`](#ver) setting controls which DOS version is reported to programs.
+The default `5.0` is the most widely compatible. Some older games require
+`3.3`, while a few late-era programs need `6.22` or `7.1`. If you need to
+report a different version to just one program without changing the global
+setting, use [`setver_table_file`](#setver_table_file) with `SETVER.EXE`.
+
+Setting the DOS version to 7.0 or above also turns on environment variable
+expansion in the shell by default (see
+[`expand_shell_variable`](#expand_shell_variable)).
+
+The [`file_locking`](#file_locking) setting emulates `SHARE.EXE` file
+locking, which some Windows 3.1 applications need to work properly. It's on
+automatically when Windows 3.1 is running. If a DOS game crashes with file
+locking on, try setting it to `off`.
+
+
+## Shell behaviour
+
+The shell supports persistent
+[command history](../using-dosbox-staging/shell.md#command-history), stored
+via [`shell_history_file`](#shell_history_file); set that to empty to turn
+history off. [`expand_shell_variable`](#expand_shell_variable) controls
+whether things like `%PATH%` get expanded in commands, and
+[`shell_config_shortcuts`](#shell_config_shortcuts) lets you type `sbtype
+sb16` instead of `config -set sbtype sb16`.
+
+
+## Automount
+
+[`automount`](#automount) turns automatic drive mounting on or off. For how
+automounting actually works --- the `drives/` folder structure, mount-config
+files, and so on --- see
+[Automounting](../using-dosbox-staging/storage.md#automounting).
+
 
 ## Regional settings
 
 For language, country, keyboard layout, and code page settings, see the
 dedicated [Localisation](localisation.md) chapter.
 
-## DOS version and compatibility
-
-The [`ver`](#ver) setting controls which DOS version is reported to programs.
-The default `5.0` is the most widely compatible. Some older games require
-`3.3`, while a few late-era programs need `6.22` or `7.1`. Setting the DOS
-version to 7.0 or above automatically enables environment variable expansion
-in the DOS shell (see [`expand_shell_variable`](#expand_shell_variable)).
-
-The [`setver_table_file`](#setver_table_file) setting provides persistent
-storage for the `SETVER` command, which lets you report a different DOS version
-to specific programs without changing the global version.
-
-The [`file_locking`](#file_locking) setting emulates `SHARE.EXE` file locking.
-The default `auto` only enables it when Windows 3.1 is running, as it's
-required for some Windows 3.1 applications. In rare cases (e.g., Astral Blur
-demo), it can cause crashes in DOS games --- set it to `off` if that happens.
-
-## Shell settings
-
-The DOS shell supports persistent
-[command history](../using-dosbox-staging/shell.md#command-history) and
-environment variable expansion. The
-[`shell_history_file`](#shell_history_file) setting controls where the history
-is stored; set it to empty to disable persistence. The
-[`expand_shell_variable`](#expand_shell_variable) setting controls whether
-variables like `%PATH%` are expanded in commands --- the default `auto` enables
-this for DOS 7.0+ (matching real FreeDOS and MS-DOS 7 behaviour).
-
-<!-- TODO: autoexec_section and automount are arguably "shell/startup"
-     behaviour too — folded in below from general.md's "DOS & shell" section.
-     Consider whether this section needs a better heading once everything's
-     in one place. -->
-
-The [`autoexec_section`](#autoexec_section) setting controls how multiple
-config files' autoexec sections are combined. [`automount`](#automount)
-controls whether `drives/[c]` folders are auto-mounted on startup.
-[`startup_verbosity`](#startup_verbosity) controls how much is printed before
-your program runs, and [`shell_config_shortcuts`](#shell_config_shortcuts)
-enables shorthand commands like `sbtype sb16` instead of
-`config -set sbtype sb16`.
-
-[`allow_write_protected_files`](#allow_write_protected_files) and
-[`mcb_fault_strategy`](#mcb_fault_strategy) control lower-level file and
-memory-chain-block error handling — mostly relevant if a game is misbehaving
-in unusual ways.
 
 ## Configuration settings
 

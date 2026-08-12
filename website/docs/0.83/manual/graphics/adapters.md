@@ -1,6 +1,6 @@
 # Graphics adapters
 
-The [`machine`](../system/general.md#machine) setting selects which video
+The [`machine`](#machine) setting selects which video
 adapter DOSBox Staging emulates. This determines the graphics modes available
 to DOS programs and, in some cases, enables additional hardware like sound
 chips.
@@ -111,9 +111,9 @@ specific configuration.
 Released in 1983, the **IBM PCjr** was IBM's ambitious but ill-fated attempt
 at a home computer. It extended CGA with additional video modes — most notably
 16-colour 320&times;200, a significant step up from CGA's 4-colour limit — and
-added a Texas Instruments SN76496 [3-voice sound
-chip](../sound/sound-devices/tandy.md), the first built-in sound hardware
-beyond the PC speaker on any IBM PC platform.
+added a [3-voice sound chip](../sound/sound-devices/tandy.md) (Texas
+Instruments SN76496 ), the first built-in sound hardware beyond the PC speaker
+on any IBM PC platform.
 
 It was discontinued after just one year. The chiclet keyboard was universally
 mocked, the price was too high, and compatibility with standard IBM PC
@@ -123,27 +123,14 @@ opportunity, cloned the PCjr's enhanced graphics and sound into the [Tandy
 their Radio Shack stores nationwide in the USA. The rest is history --- the
 PCjr is a footnote, the Tandy 1000 is beloved.
 
-Setting `machine = pcjr` enables PCjr graphics,
-[PCjr sound](../sound/sound-devices/tandy.md) and
-[composite video](composite-video.md) emulation.
+Setting `machine = pcjr` enables PCjr graphics, [PCjr
+sound](../sound/sound-devices/tandy.md) and [composite
+video](composite-video.md) emulation.
 
 
 ### Tandy 1000
 
 `machine = tandy`
-
-The Tandy 1000 (1984) by Tandy Corporation successfully cloned the PCjr's
-enhanced graphics and sound into a longer-lived, more popular product line.
-All CGA and PCjr video modes are supported, including 16-colour 320&times;200.
-Later Tandy models with "Video II" hardware added 16-colour 640&times;200. The
-built-in TI SN76496 3-voice sound chip gave Tandy machines a major audio
-advantage over standard PCs.
-
-Combined with enhanced graphics and sound, the Tandy 1000 was the best
-consumer-grade DOS gaming platform of the mid-1980s. Many Sierra titles
-(King's Quest, Space Quest, Leisure Suit Larry), Defender of the Crown, and
-Sid Meier's Pirates! look and sound noticeably better in Tandy mode compared
-to standard CGA.
 
 The **Tandy 1000** released in 1984 by Tandy Corporation successfully cloned
 the [IBM PCjr's](#ibm-pcjr) enhanced graphics and sound into a longer-lived,

@@ -70,8 +70,7 @@ The defaults are:
 
 The conservative real mode default prevents older speed-sensitive games from
 the 1980s and early 1990s from running too fast. The higher protected mode
-default gives demanding games from the mid to late 1990s provides plenty of
-headroom.
+default gives demanding games from the mid to late 1990s plenty of headroom.
 
 You can easily tell which mode a game is using by watching the displayed
 cycles value in the DOSBox Staging window's title bar --- it will show 3000 in
@@ -124,24 +123,30 @@ fine-tune from there:
 
 - **Early 8088-era games** from the early 1980s
   ([Alley Cat](https://www.mobygames.com/game/190/alley-cat/),
-  [Sopwith](https://www.mobygames.com/game/1380/sopwith/)) need around 300
-  cycles.
+  [Sopwith](https://www.mobygames.com/game/1380/sopwith/)) need around 140 to
+  300 cycles. Often you'll need to zero in on a specific cycles value (e.g.
+  170) to ensure correct gameplay and music playback speed --- even a 10--20
+  cycles difference can make a big impact.
 
 - **286/386-era games** from the mid-to-late 1980s usually run fine at
-  3,000--6,000 cycles (fast 286 to 386DX/33 level).
+  1,500--6,000 cycles (286 to 386DX/33 level). These games are usually
+  much less speed sensitive --- the default 3,000 cycles value
+  should generally serve you well, but you might want to go a bit lower 
+  if the animations are too fast, and higher if the gameplay is sluggish.
 
-- **2D games** from the 1990s handle virtually everything at 25,000 cycles
-  (486DX2/66 level) --- 486-class games like
-  [Doom](https://www.mobygames.com/game/1068/doom/) are playable around here
-  but might need up to 50,000 for a completely smooth experience.
+- **2D games** from the 1990s generally run well at 25,000 cycles
+  (486DX2/66 level). You might want to drop to the 10,000--15,000 range if the
+  game runs too fast. 
 
-- **3D games** typically need 50,000--100,000 cycles (Pentium range) ---
-  late Pentium-era titles such as
-  [Quake](https://www.mobygames.com/game/374/quake/) sit at the upper end
-  of this or beyond.
+- **3D games** typically need 50,000--100,000 cycles (Pentium range).
+  [Doom](https://www.mobygames.com/game/1068/doom/) needs around 60,000 for a
+  completely smooth experience. Late Pentium-era titles such as
+  [Quake](https://www.mobygames.com/game/374/quake/) sit at the upper end of
+  this or beyond, depending on the screen resolution.
 
-- **3D SVGA gaming** at 640&times;480 or above usually requires 200,000+
-  cycles.
+- **3D SVGA gaming** at 640&times;480 or above usually requires 200,000 to
+  400,000 cycles. It's recommended to enable the
+  [`cpu_throttle`](#cpu_throttle) setting for these games.
 
 You can fine-tune the cycles setting while playing the game with the
 [`cycleup`](#cycleup) and [`cycledown`](#cycledown)
@@ -149,12 +154,13 @@ You can fine-tune the cycles setting while playing the game with the
 cycles by 20% and ++ctrl+f12++ increases them by 10% (++cmd+f11++ and
 ++cmd+f12++ on macOS). Once you've found a good value, update your config to
 match the cycles value shown in the DOSBox Staging window's title bar. If
-you'd rather the hotkeys stepped by a different amount, `cycleup`/`cycledown`
-control that too --- see the [Configuration settings](#configuration-settings)
-below.
+you'd prefer the hotkeys to adjust the cycles by a different amount, you can
+change this with the [`cycleup`](#cycleup) and [`cycledown`](#cycledown)
+settings (also see the [Configuration settings](#configuration-settings)
+below).
 
-Always aim for the lowest cycles value that gives adequate performance ---
-overdoing it only increases the chance of audio glitches and wastes host CPU
+Always aim for the lowest cycle value that gives adequate performance — going
+higher only increases the chance of audio glitches and wastes host CPU
 resources.
 
 !!! warning "Speed-sensitive games"
@@ -165,12 +171,13 @@ resources.
     errors). A few games may even fail sound card detection and refuse to
     start if the emulated CPU is too fast. If a game misbehaves, try lowering
     the cycles before investigating other causes. Lastly, a small number of
-    game misbehave if you change the cycles setting while the game is running.
+    games misbehave if you change the cycles setting while the game is
+    running.
 
 
 For a hands-on walkthrough of finding the right cycles setting for specific
 games, the [Getting Started guide](../../getting-started/index.md)
-walks you through a few a practical examples:
+walks you through a few practical examples:
 
 <div class="compact" markdown>
 
@@ -184,7 +191,7 @@ walks you through a few a practical examples:
 
 ## Configuration examples
 
-**Fixed speed globally** --- Roughly emulates an 486DX2/66 in both real and
+**Fixed speed globally** --- Roughly emulates a 486DX2/66 in both real and
 protected mode:
 
 ``` ini
@@ -214,38 +221,54 @@ cpu_cycles = max
 cpu_cycles_protected = max
 ```
 
-!!! warning
+!!! danger "Beware of `max` cycles!"
 
-    Using `max` cycles can cause problems: some games crash or misbehave
-    when the emulated CPU is "too fast". The effective speed varies across
-    different host machines, and audio glitches are common. It's best to use
-    the lowest fixed cycles value that runs the game at an acceptable speed.
+    Using `max` cycles can cause problems because it does not specify a fixed
+    emulated CPU speed. Instead, DOSBox Staging continually increases the
+    cycle rate until the host CPU becomes the limiting factor
+    ([`cpu_throttle`](#cpu_throttle) is implicitly always enabled). The
+    resulting cycle rate therefore depends on the performance of the host
+    machine, and fluctuates as the available CPU capacity changes.
+
+    This also means the same game can behave differently on different computers.
+    A game that runs correctly with `max` on a slower computer might run too fast,
+    crash, or otherwise misbehave on a faster computer because DOSBox Staging can
+    emulate more cycles. Even on the same computer, fluctuations in the effective
+    cycle rate can cause timing problems or audio glitches.
+
+    For reliable results, avoid using `max` for games that are sensitive to CPU
+    speed. Instead, use the lowest fixed cycles value that provides adequate
+    performance. This gives the game a consistent emulated CPU speed regardless of
+    the host computer.
+
+
 
 
 ## CPU type
 
-Separately from cycles (speed), the [`cputype`](#cputype) setting controls
-which CPU architecture is emulated --- essentially, which instructions the
-emulated processor understands. The default `auto` is a generic 386/486
-emulation that's compatible enough to run the vast majority of DOS games
-without any changes. You'll only need to touch `cputype` for a handful of
-special cases:
+Separately from the emulated CPU speed (cycles), the [`cputype`](#cputype)
+setting controls which CPU architecture is emulated --- essentially, which
+instructions the emulated processor understands. The default `auto` is a
+generic 386/486 emulation that's compatible with the vast majority of DOS
+games. You'll only need to touch `cputype` for a handful of special cases:
 
-- **Windows 3.1** runs best with `pentium`, which adds RDTSC instruction
-    support (e.g., [Betrayal in
-    Antara](https://www.mobygames.com/game/1763/betrayal-in-antara/)).
+- **Windows 3.1** runs best with [`cputype`](#cputype) set to `pentium`, which
+  adds RDTSC instruction support (e.g., [Betrayal in
+  Antara](https://www.mobygames.com/game/1763/betrayal-in-antara/)).
 
-- **Demoscene productions** occasionally need `pentium_mmx` for its MMX
-    instruction support --- very few actual games use MMX.
+- **Demoscene productions** occasionally need `pentium_mmx` for their MMX
+  instruction support (e.g., [heaven seven by
+  Exceed](https://www.pouet.net/prod.php?which=5)). Very few actual games use
+  MMX.
 
-- **Self-modifying code or anti-debugging tricks** need `386_prefetch`,
-    which requires `core = normal`. Known games needing this include
-    [Contra](https://www.mobygames.com/game/60474/contra/), [FIFA
-    International
-    Soccer](https://www.mobygames.com/game/155/fifa-international-soccer/),
-    [Terminator 1](https://www.mobygames.com/game/1543/the-terminator/), and
-    [X-Men: Madness in The
-    Murderworld](https://www.mobygames.com/game/6162/x-men-madness-in-murderworld/).
+- **Self-modifying code or anti-debugging tricks** need `386_prefetch` and
+  also `core = normal`. Known games needing this include
+  [Contra](https://www.mobygames.com/game/60474/contra/), [FIFA
+  International
+  Soccer](https://www.mobygames.com/game/155/fifa-international-soccer/),
+  [Terminator 1](https://www.mobygames.com/game/1543/the-terminator/), and
+  [X-Men: Madness in The
+  Murderworld](https://www.mobygames.com/game/6162/x-men-madness-in-murderworld/).
 
 If a game runs incorrectly on `auto`, check whether it falls into one of
 these categories before assuming the problem is cycles-related.
@@ -258,15 +281,12 @@ CPU --- there's no setting to disable it.
 
 The overwhelming majority of DOS games use integer arithmetic and never touch
 the FPU, but a handful rely on it heavily.
-[Quake](https://www.mobygames.com/game/374/quake/) is the classic outlier,
-while flight and space simulators often use the FPU extensively for 3D
-graphics, physics, and other floating-point calculations.
+[Quake](https://www.mobygames.com/game/374/quake/) is the classic example, and
+flight and space simulators often use the FPU extensively for 3D rendering and
+physics calculations, too.
 
 Windows 3.1 applications also tend to make greater use of the FPU than typical
-DOS software, largely because they were commonly written in C, whose standard
-library makes more frequent use of floating-point arithmetic than hand-written
-DOS assembly.
-
+DOS software.
 
 !!! danger "IEEE 754 80-bit extended precision floating point emulation"
 
@@ -285,7 +305,7 @@ DOS assembly.
     Although we do our best to emulate the DOS environment and legacy IBM PC
     hardware as accurately as we can, **we cannot guarantee** DOSBox Staging
     has zero bugs or can run every single DOS software ever written 100%
-    correctly. This is especially true for engineering software that rely on
+    correctly. This is especially true for engineering software that relies on
     accurate x87 FPU emulation which we **do not provide** in our emulator!
 
     **Under no circumstances** should DOSBox Staging be used for professional
