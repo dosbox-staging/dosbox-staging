@@ -93,6 +93,7 @@ EGA, VGA, Hercules) and any resolution, and can be combined with any shader.
 
 ## Configuration settings
 
+You can set these in the `[render]` configuration section.
 
 ##### deinterlacing
 

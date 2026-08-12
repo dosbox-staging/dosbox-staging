@@ -884,16 +884,17 @@ taller_ than they should (just trust me on that for a moment).
 So, where's this magical 20% vertical stretch factor coming from? DOSBox
 Staging enables [aspect ratio
 correction](../manual/graphics/rendering/aspect-ratios-and-scaling.md#aspect)
-by default to make 320&times;200 graphics appear exactly as it would on a
-4:3 aspect ratio VGA monitor, which requires pixels to be drawn 20% taller. This is the most sensible default as
-aspect ratio correction is *absolutely needed* for the vast majority of DOS
-games to look correct, but there are exceptions --- this game is one of those
-rare cases. One of the tell-tale signs is that the artwork in the intro was
-scanned using square pixels, and we need to disable aspect ratio correction
-for such games. With aspect ratio correction disabled, we'll *always* get
-square pixels, no matter what (1:1 pixel aspect ratio, or PAR). All this is
-explained in a lot more detail in the [Aspect ratios & black borders]
-options](../manual/graphics/aspect-ratios.md) section of the user manual.
+by default to make 320&times;200 graphics appear exactly as it would on a 4:3
+aspect ratio VGA monitor, which requires pixels to be drawn 20% taller. This
+is the most sensible default as aspect ratio correction is *absolutely needed*
+for the vast majority of DOS games to look correct, but there are exceptions
+--- this game is one of those rare cases. One of the tell-tale signs is that
+the artwork in the intro was scanned using square pixels, and we need to
+disable aspect ratio correction for such games. With aspect ratio correction
+disabled, we'll *always* get square pixels, no matter what (1:1 pixel aspect
+ratio, or PAR). All this is explained in a lot more detail in the [Aspect
+ratios & scaling](../manual/graphics/rendering/aspect-ratios-and-scaling.md)
+section of the user manual.
 
 {{ figure(
     "https://www.dosbox-staging.org/static/images/getting-started/bass-aspect.jpg",
@@ -977,8 +978,9 @@ Silmarils, Team 17, Thalamus, Thalion, Ubisoft*
     correction by default, which results in games primarily developed for DOS
     PCs assuming 1:1.2 pixel aspect ratio to look correct (as the artist
     intended). The detailed mathematical derivation of the 1:1.2 PAR is
-    explained in the [Aspect ratios & black
-    borders](../manual/graphics/aspect-ratios.md) section of the user manual.
+    explained in the [Aspect ratios &
+    scaling](../manual/graphics/rendering/aspect-ratios-and-scaling.md)
+    section of the user manual.
 
     But what about games where the leading platform was the Amiga or the Atari
     ST, and the game was developed by a European studio? The analog TV

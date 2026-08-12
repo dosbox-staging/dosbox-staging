@@ -90,7 +90,6 @@ behaviour by default. Disabling it produces sharper but blockier textures.
 You can set the 3dfx Voodoo parameters in the `[voodoo]` configuration
 section.
 
-
 ##### voodoo
 
 :   Enable 3dfx Voodoo emulation. This is authentic low-level emulation of

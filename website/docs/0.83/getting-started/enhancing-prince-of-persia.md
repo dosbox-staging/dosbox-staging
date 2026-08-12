@@ -118,9 +118,10 @@ look so it looks approximately similar to the real thing.
 
     However, there is also *letterboxing* (horizontal black bars) above and
     below the image. The reason for this is explained in detail in the [Aspect
-    ratios & black borders](../manual/graphics/aspect-ratios.md) section of
-    the user manual. Feel free to take a detour if you wish to gain an
-    understanding of these details now.
+    ratios &
+    scaling](../manual/graphics/rendering/aspect-ratios-and-scaling.md)
+    section of the user manual. Feel free to take a detour if you wish to gain
+    an understanding of these details now.
 
     Alternatively, if you're on a 4K (UHD, 3840x2160) or better screen, you
     can put this into your `[render]` section to get rid of pillarboxing
@@ -141,10 +142,8 @@ of games with EGA support use the 320&times;200 low-resolution EGA mode that
 has a fixed 16-colour palette.
 
 To run Prince of Persia in EGA mode, you simply need to tell DOSBox to emulate
-a machine equipped with an EGA adapter (see the
-[`machine`](../manual/system/general.md#machine) setting for the full
-list of emulated machines). That can be easily done by adding the following
-configuration snippet:
+a machine equipped with an EGA adapter. That can be easily done by adding the
+following configuration snippet:
 
 ```ini
 [dosbox]
@@ -277,8 +276,9 @@ shader = sharp
 
 That's it! Switching to the `sharp` shader will also make the image fill the
 screen vertically, so no more letterboxing. The reason for this (and a lot
-more) are explained in the [Aspect ratios & black
-borders](../manual/graphics/aspect-ratios.md) section of the user manual.
+more) are explained in the [Aspect ratios &
+scaling](../manual/graphics/rendering/aspect-ratios-and-scaling.md) section of
+the user manual.
 
 Keep in mind, though, that the rest of the guide assumes you're using the CRT
 emulation.

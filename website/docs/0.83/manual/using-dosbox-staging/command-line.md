@@ -210,7 +210,7 @@ dosbox [OPTIONS...] [PATH]
 
 :   Emulate a specific machine type. The machine type affects both the
     emulated video and sound hardware. See
-    [`machine`](../system/general.md#machine) for further details.
+    [`machine`](../graphics/adapters.md#machine) for further details.
 
 
 ### Discovery

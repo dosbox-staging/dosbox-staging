@@ -82,21 +82,22 @@ Each typically opens with a conversational overview explaining the hardware
 and when you'd want to change the defaults, followed by a detailed
 configuration reference.
 
-- **[System](../system/general.md)** --- Core emulator settings: machine type,
-  CPU speed and type, memory, disk speed, DOS shell options, and localisation.
+- **[System settings](../system/overview.md)** --- Core emulator settings:
+  machine type, CPU speed and type, memory, disk speed, DOS shell options, and
+  localisation.
 
-- **[Graphics](../graphics/adapters.md)** --- Video adapters (CGA through
-  SVGA), display settings, CRT shaders, composite video, 3dfx Voodoo, and
-  ReelMagic.
+- **[Graphics settings](../graphics/adapters.md)** --- Video adapters (CGA
+  through SVGA), display settings, CRT shaders, composite video, 3dfx Voodoo,
+  and ReelMagic.
 
-- **[Sound](../sound/overview.md)** --- All emulated audio devices from the PC
-  speaker to the Roland MT-32 and Sound Canvas, plus the mixer, effects, and
-  output filters.
+- **[Sound settings](../sound/overview.md)** --- All emulated audio devices
+  from the PC speaker to the Roland MT-32 and Sound Canvas, plus the mixer,
+  effects, and output filters.
 
-- **[Input](../input/overview.md)** --- Keyboard, mouse, joystick
+- **[Input settings](../input/overview.md)** --- Keyboard, mouse, joystick
   configuration, and the key mapper for remapping controls.
 
-- **[Networking](../networking/serial-ports.md)** --- Serial ports, IPX
+- **[Network settings](../networking/serial-ports.md)** --- Serial ports, IPX
   networking, Ethernet emulation, and multiplayer.
 
 

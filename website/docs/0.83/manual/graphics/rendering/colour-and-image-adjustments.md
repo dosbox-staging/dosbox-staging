@@ -186,28 +186,33 @@ apparent on the greens.
 
 ## Configuration settings
 
+You can set the colour parameters in the `[render]` configuration section.
 
-##### image_adjustments
+### Colour gamut
 
-:   Enable image adjustments. When disabled, the image adjustment settings
-    have no effect and raw RGB values are used for video output. Colour space
-    conversion is always active and cannot be disabled (see
-    [`color_space`](#color_space)).
+##### color_space
 
-    Possible values: `on` *default*{ .default }, `off`
+:   Set the colour space of the video output. Wide gamut colour spaces can
+    reproduce CRT phosphor colours that fall outside the sRGB gamut --- see
+    [Wide gamut colour accuracy](#wide-gamut-colour-accuracy) for details.
+
+    On macOS, this is always `display-p3`; the OS performs the conversion to
+    the colour profile set in your system settings. On Windows and Linux, the
+    effective output is currently sRGB.
+
+    Possible values:
+
+    - `display-p3` -- Display P3 wide gamut colour space with 6500K white
+      point and sRGB gamma.
 
     !!! note
 
-        - Image adjustments only work in OpenGL output mode.
+        Colour space transforms are applied to rendered screenshots, but not
+        to raw and upscaled screenshots and video captures (those are always
+        in sRGB).
 
-        - Adjustments are applied to rendered screenshots, but not to raw and
-          upscaled screenshots and video captures.
 
-        - Use the `PrevImageAdj` and `NextImageAdj` hotkeys to select an
-          image adjustment setting and the `DecImageAdj` and `IncImageAdj`
-          hotkeys to adjust settings in real-time. Copy the new settings from
-          the logs into your config, or write a new config with `CONFIG -wc`.
-
+### Monitor emulation
 
 ##### crt_color_profile
 
@@ -245,6 +250,42 @@ apparent on the greens.
 
     </div>
 
+
+##### monochrome_palette
+
+:   Set the palette for monochrome display emulation. Works only with the
+    `hercules` and `cga_mono` machine types.
+
+    Possible values: `amber` *default*{ .default }, `green`, `white`,
+    `paperwhite`.
+
+    !!! note
+
+        You can also cycle through the available palettes via hotkeys.
+
+
+### Image adjustments
+
+##### image_adjustments
+
+:   Enable image adjustments. When disabled, the image adjustment settings
+    have no effect and raw RGB values are used for video output. Colour space
+    conversion is always active and cannot be disabled (see
+    [`color_space`](#color_space)).
+
+    Possible values: `on` *default*{ .default }, `off`
+
+    !!! note
+
+        - Image adjustments only work in OpenGL output mode.
+
+        - Adjustments are applied to rendered screenshots, but not to raw and
+          upscaled screenshots and video captures.
+
+        - Use the `PrevImageAdj` and `NextImageAdj` hotkeys to select an
+          image adjustment setting and the `DecImageAdj` and `IncImageAdj`
+          hotkeys to adjust settings in real-time. Copy the new settings from
+          the logs into your config, or write a new config with `CONFIG -wc`.
 
 ##### brightness
 
@@ -346,40 +387,7 @@ apparent on the greens.
     to 200. 100 means no change.
 
 
-##### color_space
-
-:   Set the colour space of the video output. Wide gamut colour spaces can
-    reproduce CRT phosphor colours that fall outside the sRGB gamut --- see
-    [Wide gamut colour accuracy](#wide-gamut-colour-accuracy) for details.
-
-    On macOS, this is always `display-p3`; the OS performs the conversion to
-    the colour profile set in your system settings. On Windows and Linux, the
-    effective output is currently sRGB.
-
-    Possible values:
-
-    - `display-p3` -- Display P3 wide gamut colour space with 6500K white
-      point and sRGB gamma.
-
-    !!! note
-
-        Colour space transforms are applied to rendered screenshots, but not
-        to raw and upscaled screenshots and video captures (those are always
-        in sRGB).
-
-
-##### monochrome_palette
-
-:   Set the palette for monochrome display emulation. Works only with the
-    `hercules` and `cga_mono` machine types.
-
-    Possible values: `amber` *default*{ .default }, `green`, `white`,
-    `paperwhite`.
-
-    !!! note
-
-        You can also cycle through the available palettes via hotkeys.
-
+### Colour palette
 
 ##### cga_colors
 
@@ -436,3 +444,5 @@ apparent on the greens.
         These colours will be further adjusted by the video output settings
         (see [`crt_color_profile`](#crt_color_profile),
         [`brightness`](#brightness), [`saturation`](#saturation), etc.)
+
+

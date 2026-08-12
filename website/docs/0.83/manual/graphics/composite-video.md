@@ -93,7 +93,7 @@ patterns, and some games were designed with one revision in mind. The
 
 You can set the CGA composite video parameters in the `[composite]`
 configuration section. CGA composite monitor emulation is only available for
-`cga`, `pcjr`, and `tandy` [`machine`](../system/general.md#machine) types.
+`cga`, `pcjr`, and `tandy` [`machine`](adapters.md#machine) types.
 
 
 ##### composite

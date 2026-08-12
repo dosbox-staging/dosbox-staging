@@ -243,7 +243,7 @@ ranging from late 1980s designs to the mid-1990s [S3 Trio64](#s3-trio64).
 The **Paradise PVGA1A** (1988) was an early SVGA chipset from Western Digital,
 and the closest thing DOSBox Staging offers to a plain IBM VGA adapter. It has
 no VESA VBE support and defaults to 512 KB of video memory (configurable to
-256 KB or 1 MB via [`vmemsize`](../system/general.md#vmemsize)).
+256 KB or 1 MB via [`vmemsize`](#vmemsize)).
 
 Use this for games or demos that expect strict VGA behaviour with no SVGA
 extensions --- particularly titles that break or behave unexpectedly on more
@@ -276,7 +276,7 @@ the most popular SVGA chipsets of the early 1990s — widely adopted,
 well-supported, and significantly more capable than its predecessor. It offers
 a wider range of extended modes and defaults to 1 MB of video memory
 (configurable to 256 KB or 512 KB via
-[`vmemsize`](../system/general.md#vmemsize)). No VESA VBE is supported on this
+[`vmemsize`](#vmemsize)). No VESA VBE is supported on this
 card.
 
 The ET4000's popularity made it a common target for demoscene productions of
@@ -293,12 +293,12 @@ adapter in DOSBox Staging. By the mid-1990s, S3 cards were ubiquitous, and the
 Trio64 represents the peak of the DOS-era SVGA landscape. It provides full
 VESA VBE 2.0 support with a linear framebuffer, defaults to 4 MB of video
 memory (configurable from 512 KB to 8 MB via
-[`vmemsize`](../system/general.md#vmemsize)), and handles everything from
+[`vmemsize`](#vmemsize)), and handles everything from
 standard VGA up to high-resolution SVGA modes including 1600×1200.
 
 This is the right choice for the vast majority of DOS games — if you're not
 sure which adapter to use, stay here. Use the
-[`vesa_modes`](../system/general.md#vesa_modes) setting to control which SVGA
+[`vesa_modes`](#vesa_modes) setting to control which SVGA
 modes are exposed to software.
 
 !!! note
@@ -358,7 +358,7 @@ video adapter:
 - **[ReelMagic](reelmagic.md)** --- Sigma Designs MPEG-1 hardware decoder
   from 1993 for full-motion video in a handful of DOS titles.
 
-These are independent of the [`machine`](../system/general.md#machine) setting
+These are independent of the [`machine`](#machine) setting
 and can be used with any adapter.
 
 <!-- TODO: general.md's config-settings block for machine/vmemsize/
@@ -381,9 +381,9 @@ You can set these in the `[dosbox]` configuration section.
     <div class="compact" markdown>
 
     - `hercules` -- Hercules Graphics Card (HGC) (see
-      [`monochrome_palette`](rendering.md#monochrome_palette)).
+      [`monochrome_palette`](rendering/colour-and-image-adjustments.md#monochrome_palette)).
     - `cga_mono` -- CGA adapter connected to a monochrome monitor (see
-      [`monochrome_palette`](rendering.md#monochrome_palette)).
+      [`monochrome_palette`](rendering/colour-and-image-adjustments.md#monochrome_palette)).
     - `cga` -- IBM Color Graphics Adapter (CGA). Also enables composite
       video emulation (see [Composite video](composite-video.md)).
     - `pcjr` -- An IBM PCjr machine. Also enables PCjr sound and composite

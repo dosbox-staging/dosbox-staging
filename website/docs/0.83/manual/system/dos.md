@@ -39,7 +39,7 @@ sb16` instead of `config -set sbtype sb16`.
 
 ## Automount
 
-[`automount`](#automount) turns automatic drive mounting on or off. For how
+[`automount`](#automount_1) turns automatic drive mounting on or off. For how
 automounting actually works --- the `drives/` folder structure, mount-config
 files, and so on --- see
 [Automounting](../using-dosbox-staging/storage.md#automounting).
