@@ -53,10 +53,9 @@ dedicated [Localisation](localisation.md) chapter.
 
 ## Configuration settings
 
-You can set the DOS parameters in the `[dos]` configuration section (shell
-startup settings below are in `[dosbox]`).
-
 ### Shell & version
+
+You can set the DOS parameters in the `[dos]` configuration section.
 
 ##### ver
 
@@ -116,6 +115,8 @@ startup settings below are in `[dosbox]`).
 
 
 ### Startup & shell shortcuts
+
+You can set these parameters in the `[dosbox]` configuration section.
 
 ##### autoexec_section
 

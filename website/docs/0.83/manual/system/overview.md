@@ -66,10 +66,9 @@ needs otherwise.
 
 ## Configuration settings
 
-You can set these in the `[sdl]` (window/focus behaviour) and `[dosbox]`
-(disk speed) configuration sections.
-
 ### Window & focus behaviour
+
+You can set these in the `[sdl]` configuration sections.
 
 ##### mute_when_inactive
 
@@ -95,6 +94,8 @@ You can set these in the `[sdl]` (window/focus behaviour) and `[dosbox]`
 
 
 ### Disk speed
+
+You can set these in the `[dosbox]` configuration sections.
 
 ##### floppy_disk_speed
 
