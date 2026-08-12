@@ -88,9 +88,8 @@ to the hard disk.
 
 ## DOSBox Staging drives
 
-DOSBox Staging provides two special
-[automounted](../system/general.md#automount) drives in addition to whatever
-you mount:
+DOSBox Staging provides two special [automounted](#automounting) drives in
+addition to whatever you mount:
 
 - **Z:** contains the built-in programs and commands (`MOUNT`, `BOOT`,
   `MIXER`, `IMGMOUNT`, `MOUSECTL`, `SHOWPIC`, etc.). It is always present
@@ -555,9 +554,9 @@ Storage-related settings are in the `[dosbox]` section:
 
 <div class="compact" markdown>
 
-- [`automount`](../system/general.md#automount)
-- [`hard_disk_speed`](../system/general.md#hard_disk_speed)
-- [`floppy_disk_speed`](../system/general.md#floppy_disk_speed)
+- [`automount`](../system/dos.md#automount_1)
+- [`hard_disk_speed`](../system/overview.md#hard_disk_speed)
+- [`floppy_disk_speed`](../system/overview.md#floppy_disk_speed)
 
 </div>
 

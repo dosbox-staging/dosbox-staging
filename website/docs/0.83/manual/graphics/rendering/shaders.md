@@ -21,7 +21,7 @@ There are several adaptive CRT shader variants, each intended for a different
 kind of experience. The default `crt-auto` follows the video standard used by
 the game rather than the video adapter configured in DOSBox Staging. Thus
 an EGA game gets EGA monitor emulation with "thick scanlines" even when
-[`machine`](../../system/general.md#machine) is set to a VGA adapter. The
+[`machine`](../adapters.md#machine) is set to a VGA adapter. The
 `crt-auto-machine` variant instead follows the configured video adapter, while
 the two `crt-auto-arcade` variants deliberately emulate the thicker scanlines
 of an arcade or home-computer display. See the [`shader`](#shader) setting for
@@ -208,6 +208,7 @@ the shader source.
 
 ## Configuration settings
 
+You can set the shader in the `[render]` configuration section.
 
 ##### shader
 
@@ -224,11 +225,11 @@ the shader source.
       the time of release. An appropriate shader variant is auto-selected
       based on the graphics standard of the current video mode and the
       viewport size, irrespective of the
-      [`machine`](../../system/general.md#machine) setting.
+      [`machine`](../adapters.md#machine) setting.
 
     - `crt-auto-machine` -- A variation of `crt-auto`; this emulates a fixed
       CRT monitor for the video adapter configured via the
-      [`machine`](../../system/general.md#machine) setting.
+      [`machine`](../adapters.md#machine) setting.
 
     - `crt-auto-arcade` -- Emulation of an arcade or home computer monitor
       with a less sharp image and thick scanlines in low-resolution video

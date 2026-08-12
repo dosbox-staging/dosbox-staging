@@ -36,7 +36,7 @@ too:
 machine = pcjr
 ```
 
-See [`machine`](../../system/general.md#machine) for more details on machine
+See [`machine`](../../graphics/adapters.md#machine) for more details on machine
 types.
 
 Later Tandy 1000 models added support for digital audio as well. Due to

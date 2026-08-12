@@ -88,7 +88,7 @@ driver for proper SVGA support inside Windows.
   a safe starting point.
 
 - Higher resolutions up to 1600&times;1200 are available if you set
-  [`vmemsize`](../system/general.md#vmemsize) to `4` or higher.
+  [`vmemsize`](../graphics/adapters.md#vmemsize) to `4` or higher.
 
 !!! important
 

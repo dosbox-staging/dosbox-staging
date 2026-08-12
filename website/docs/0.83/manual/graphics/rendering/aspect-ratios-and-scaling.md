@@ -324,6 +324,8 @@ copy the resulting viewport setting from the log into your config.
 
 ## Configuration settings
 
+You can set these in the `[render]` configuration section.
+
 ##### aspect
 
 :   Set the aspect ratio correction mode.

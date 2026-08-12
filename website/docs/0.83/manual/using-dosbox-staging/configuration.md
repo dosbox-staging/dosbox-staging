@@ -209,7 +209,7 @@ exit
 
     The `[autoexec]` section must be the last section in the configuration file.
 
-See the [`autoexec_section`](../system/general.md#autoexec_section) setting for
+See the [`autoexec_section`](../system/dos.md#autoexec_section) setting for
 how autoexec sections from multiple configuration files are handled.
 
 
@@ -252,7 +252,7 @@ The shortcut form works for most settings and is the quickest way to
 experiment. If a value is invalid, an error is displayed in the DOS console
 and in the logs so you can see what went wrong.
 
-Some settings (such as [`machine`](../system/general.md#machine)) require a
+Some settings (such as [`machine`](../graphics/adapters.md#machine) require a
 restart to take effect. After changing such a setting, use `CONFIG -r` to
 restart DOSBox Staging. The setting's help text will tell you if a restart is
 needed.
@@ -306,7 +306,7 @@ CONFIG -h gus
 - A good, low-maintenance approach is to limit the primary
   configuration to settings that affect the emulator's general behaviour ---
   things like [`fullscreen`](../graphics/display-and-window.md#fullscreen),
-  [`pause_when_inactive`](../system/general.md#pause_when_inactive),
+  [`pause_when_inactive`](../system/overview.md#pause_when_inactive),
   [`language`](../system/localisation.md#language), and setting the [master
   volume](../sound/mixer.md#volume). Settings that configure the hardware a
   particular game needs can then go into the local per-game configurations. If

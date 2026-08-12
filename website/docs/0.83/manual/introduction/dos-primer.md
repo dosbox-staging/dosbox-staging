@@ -95,10 +95,11 @@ modern flat panel comes alive with the subtle blending and scanlines of the
 CRT emulation.
 
 See [Graphics adapters](../graphics/adapters.md) for details on each emulated
-adapter, and [Rendering](../graphics/rendering.md/overview.md) for shader and
+adapter, and [Rendering](../graphics/rendering/overview.md) for shader and
 display options. The Getting Started guide covers [choosing a graphics
 adapter](../../getting-started/enhancing-prince-of-persia.md#graphics-options)
-and [aspect ratios](../graphics/aspect-ratios.md) with practical examples.
+and [aspect ratios](../graphics/rendering/aspect-ratios-and-scaling.md) with
+practical examples.
 
 
 ## Audio
@@ -214,7 +215,7 @@ effectively. The vast majority of games and applications work well with the
 default 16 MB of memory, and usually there is no advantage to
 changing this.
 
-See [Memory management](../system/dos.md#memory-management) to learn more.
+See [Memory](../system/memory.md) to learn more.
 
 
 ## MS-DOS

@@ -233,8 +233,8 @@ options next!
 
 ## Sound options
 
-For a complete overview of all emulated sound devices, see the
-[Sound](../manual/sound/overview.md) section of the manual.
+For a complete overview of all emulated sound devices, see the [Sound
+overview](../manual/sound/overview.md) section of the manual.
 
 ### Sound Blaster / AdLib sound
 
@@ -601,7 +601,8 @@ end of the spectrum, but not overly so. If you go higher than this, the
 graphics will start looking overly blocky from a normal viewing distance.
 
 The rationale behind the "magic 89% value" is explained in detail in the
-[Aspect ratios & black borders](../manual/graphics/aspect-ratios.md)
+[Aspect ratios &
+scaling](../manual/graphics/rendering/aspect-ratios-and-scaling.md#custom-viewport-size)
 section of the user manual.
 
 
