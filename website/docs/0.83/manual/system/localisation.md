@@ -66,12 +66,12 @@ arguments:
 - [`--list-code-pages`](../using-dosbox-staging/command-line.md#-list-code-pages)
   \--- lists all bundled code pages (screen fonts)
 
+
 ## Configuration settings
 
-The [`language`](#language) setting is in the `[dosbox]` section; the rest are
-in `[dos]`.
-
 ### Interface language
+
+You can set the interface language in the `[dosbox]` configuration section.
 
 ##### language
 
@@ -90,6 +90,8 @@ in `[dos]`.
         is stored in the bundled `resources/translations` folder.
 
 ### Regional settings
+
+You can set these in the `[dos]` configuration section.
 
 ##### country
 
