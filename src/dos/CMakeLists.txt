@@ -35,6 +35,7 @@ target_sources(dosboxcommon PRIVATE
   drive_overlay.cpp
   drive_virtual.cpp
   drives.cpp
+  mount.cpp
   programs.cpp
 
   programs/attrib.cpp

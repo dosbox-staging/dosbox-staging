@@ -14,6 +14,7 @@
 #include "config/config.h"
 #include "dos/cdrom.h"
 #include "dos/drives.h"
+#include "dos/mount.h"
 #include "gui/mapper.h"
 #include "hardware/ide.h"
 #include "ints/bios_disk.h"
@@ -580,28 +581,6 @@ bool MOUNT::HandleUnmount()
 	}
 
 	return false;
-}
-
-static std::optional<MountType> parse_mount_type(const std::string s)
-{
-	if (iequals(s, "floppy") || iequals(s, "fdd")) {
-		return MountType::FloppyImage;
-
-	} else if (iequals(s, "hdd")) {
-		return MountType::HardDiskImage;
-
-	} else if (iequals(s, "iso") || iequals(s, "cdrom")) {
-		return MountType::CdRomImage;
-
-	} else if (iequals(s, "dir")) {
-		return MountType::Directory;
-
-	} else if (iequals(s, "overlay")) {
-		return MountType::Overlay;
-
-	} else {
-		return {};
-	}
 }
 
 static std::optional<MountFileSystemType> parse_file_system_type(const std::string s)
