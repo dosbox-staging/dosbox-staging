@@ -4,16 +4,17 @@
 
 #include "shell/autoexec.h"
 
-#include "utils/checks.h"
 #include "config/config.h"
+#include "config/setup.h"
+#include "dos/mount.h"
 #include "dosbox.h"
-#include "utils/fs_utils.h"
 #include "hardware/input/keyboard.h"
 #include "hardware/input/mouse.h"
-#include "config/setup.h"
-#include "shell/shell.h"
-#include "utils/string_utils.h"
 #include "misc/unicode.h"
+#include "shell/shell.h"
+#include "utils/checks.h"
+#include "utils/fs_utils.h"
+#include "utils/string_utils.h"
 
 #include <algorithm>
 #include <iostream>
@@ -254,12 +255,12 @@ private:
 };
 
 struct AutoMountSettings {
-	std::string override_drive = {};
-	std::string type           = {};
-	std::string label          = {};
-	bool readonly              = false;
-	std::string path           = {};
-	bool verbose               = false;
+	std::string override_drive    = {};
+	std::optional<MountType> type = {};
+	std::string label             = {};
+	bool readonly                 = false;
+	std::string path              = {};
+	bool verbose                  = false;
 };
 
 AutoExecModule::AutoExecModule(Section* configuration)
@@ -517,13 +518,16 @@ static std::unique_ptr<Config> specify_drive_conf()
 
 	// Define the [drive] section
 	const AutoMountSettings defaults = {};
+	const auto default_type          = defaults.type.has_value()
+	                                         ? to_string(defaults.type.value())
+	                                         : "";
 
 	const auto prop = conf->AddSection("drive");
 
 	// Define the allowed keys and types
 	constexpr auto OnStartup = Property::Changeable::OnlyAtStart;
 
-	prop->AddString("type", OnStartup, defaults.type.c_str())
+	prop->AddString("type", OnStartup, default_type.c_str())
 	        ->SetValues({"dir", "floppy", "cdrom", "iso", "overlay"});
 
 	prop->AddString("label", OnStartup, defaults.label.c_str());
@@ -571,19 +575,19 @@ static std::optional<AutoMountSettings> parse_drive_conf(const char dir_letter,
 		LOG_ERR("AUTOMOUNT: The override_drive setting can be left empty or a drive letter from 'a' to 'y'");
 	}
 
-	const auto type = section->GetString("type");
+	const auto type = parse_mount_type(section->GetString("type"));
 
-	if (type == "floppy" && dir_letter >= 'c') {
+	if (type == MountType::FloppyImage && dir_letter >= 'c') {
 		LOG_ERR("AUTOMOUNT: %s: setting 'type = %s' is invalid",
 		        conf_path.string().c_str(),
-		        type.c_str());
+		        to_string(type.value()).c_str());
 		LOG_ERR("AUTOMOUNT: Type can be set to 'floppy' only for drive letters 'a' or 'b'");
 
-	} else if ((type == "cdrom" || type == "iso") &&
+	} else if (type == MountType::CdRomImage &&
 	           (dir_letter == 'a' || dir_letter == 'b')) {
 		LOG_ERR("AUTOMOUNT: %s: setting 'type = %s' is invalid",
 		        conf_path.string().c_str(),
-		        type.c_str());
+		        to_string(type.value()).c_str());
 		LOG_ERR("AUTOMOUNT: Type can be set to 'cdrom' only for drive letters 'c' to 'y'");
 
 	} else {
@@ -639,8 +643,8 @@ static std::string build_auto_mount_dir_command(
 	command += " " + Quote + simplify_path(drive_path).string() + Quote;
 
 	if (settings.has_value()) {
-		if (!settings->type.empty()) {
-			command += " -t " + settings->type;
+		if (settings->type.has_value()) {
+			command += " -t " + to_string(settings->type.value());
 		}
 
 		if (!settings->label.empty()) {
@@ -726,13 +730,13 @@ static std::string build_auto_mount_command(const char dir_letter,
                                             const std_fs::path& drive_path,
                                             const std::optional<AutoMountSettings>& settings)
 {
-	std::set<std::string_view, std::less<>> image_type = {"cdrom", "iso"};
+	auto image_type                         = MountType::CdRomImage;
 	std::vector<std::string_view> image_ext = {".iso", ".cue", ".mds"};
 	auto build_auto_mount_images_command = build_auto_mount_cd_images_command;
 
 	// Look for floppy images when dir_letter matches a floppy drive
 	if (dir_letter == 'a' || dir_letter == 'b') {
-		image_type                  = {"floppy"};
+		image_type                  = MountType::FloppyImage;
 		image_ext                   = {".img", ".ima"};
 		build_auto_mount_images_command = build_auto_mount_floppy_images_command;
 	}
@@ -743,7 +747,7 @@ static std::string build_auto_mount_command(const char dir_letter,
 	// Use images for the drive mount if some have been found, and if the
 	// drive type is unset or matches the image type
 	if (!image_paths.empty() &&
-	    (settings->type.empty() || image_type.contains(settings->type))) {
+	    (!settings->type.has_value() || image_type == settings->type)) {
 		return build_auto_mount_images_command(dir_letter, image_paths, settings);
 	}
 
