@@ -22,6 +22,13 @@ enum class MountType {
 	Overlay
 };
 
+const std::vector<std::string> mount_type_valid =
+        {"dir", "overlay", "floppy", "fdd", "cdrom", "iso", "hdd"};
+
+std::string to_string(const MountType& mount_type);
+
+std::optional<MountType> parse_mount_type(const std::string& str);
+
 enum class MountFileSystemType { Fat16, Iso, None };
 
 // Struct to hold all parameters required for a mount operation
