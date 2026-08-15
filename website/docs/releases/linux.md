@@ -14,10 +14,10 @@ hide:
 
 <section class="release-downloads" markdown>
 
-[Download DOSBox Staging 0.82.2 (x86_64)][0_82_2]
+[Download DOSBox Staging 0.83.0 (x86_64)][0_83_0]
 <br>
 <small>
-sha256: bc229df72ea103b7865cdca67324772d<wbr>bffa8e58866477e69a79638b723a0442
+sha256: TODO<wbr>TODO
 </small>
 
 </section>
@@ -29,27 +29,8 @@ other libraries are statically linked.
 Please run the `install-icons.sh` script included with the release to install
 the application icons.
 
-Read the [0.82.2 release notes](release-notes/0.82.2.md) to learn
-about the changes and improvements introduced in this release.
-
-
-## 0.83.0 release candidate
-
-!!! warning "Release candidate warning"
-
-    Release candidates are intended for experienced early adopters willing to
-    help us stabilise the next DOSBox Staging version for the final release.
-    Regular users should download the [current stable version](#current-stable-version)
-    instead.
-
-    - [Download DOSBox Staging 0.83.0-RC1 (x86_64)][0_83_0-rc1]
-      <br>
-      <small>
-      sha256: 5cfe3962fb08fb2cc4f21236eb83c3d5<wbr>1397ebccabc820ceb3be0c7c72948dc2
-      </small>
-
-    Check out the [0.83.0-RC1 release notes](release-notes/0.83.0-rc1.md) to learn
-    about the changes and improvements introduced in this release.
+Read the [0.83.0 release notes](release-notes/0.83.0.md) to learn about the
+changes and improvements introduced in this release.
 
 
 ## System requirements
@@ -98,6 +79,12 @@ are designed with developers and testers in mind.
 
 
 ## Older releases
+
+- [DOSBox Staging 0.82.2 (x86_64)][0_82_2]
+  <br>
+  <small>
+  sha256: bc229df72ea103b7865cdca67324772d<wbr>bffa8e58866477e69a79638b723a0442
+  </small>
 
 - [DOSBox Staging 0.82.1 (x86_64)][0_82_1]
   <br>
@@ -201,7 +188,7 @@ are designed with developers and testers in mind.
   sha256: 594ba45280af240cb18b3882f7ffa711<wbr>69a697eb362b7d7a76c8ccda2b940e84
   </small>
 
-[0_83_0-rc1]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.83.0-rc1/dosbox-staging-linux-x86_64-v0.83.0-RC1.tar.xz
+[0_83_0]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.83.0/dosbox-staging-linux-x86_64-v0.83.0.tar.xz
 [0_82_2]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.2/dosbox-staging-linux-x86_64-v0.82.2.tar.xz
 [0_82_1]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.1/dosbox-staging-linux-x86_64-v0.82.1.tar.xz
 [0_82_0]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.0/dosbox-staging-linux-x86_64-v0.82.0.tar.xz
