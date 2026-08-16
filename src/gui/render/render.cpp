@@ -1580,8 +1580,9 @@ static void init_render_settings(SectionProp& section)
 	auto int_prop = section.AddInt("frameskip", Deprecated, 0);
 	int_prop->SetHelp(
 	        "The [color=light-green]'frameskip'[reset] setting has been removed; "
-	        "consider capping frame rates using the\n"
-	        "[color=light-green]'host_rate'[reset] setting instead.");
+	        "consider capping frame rates with\n"
+	        "[color=light-green]'presentation_mode'[reset] and "
+	        "[color=light-green]'dos_rate'[reset] instead.");
 
 	auto string_prop = section.AddString("glshader", DeprecatedButAllowed, "");
 	string_prop->SetHelp(
