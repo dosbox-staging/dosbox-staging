@@ -5,6 +5,7 @@
 #include "private/gus.h"
 
 #include <array>
+#include <cmath>
 #include <iomanip>
 #include <memory>
 #include <string>
@@ -380,7 +381,9 @@ Gus::Gus(const io_port_t port_pref, const uint8_t dma_pref, const uint8_t irq_pr
 	// GUS is prone to accumulating beyond the 16-bit range so we scale back
 	// by RMS.
 	constexpr auto rms_squared = static_cast<float>(M_SQRT1_2);
+	constexpr auto default_gain = 1.0f / rms_squared;
 	channel->Set0dbScalar(rms_squared);
+	channel->SetUserVolume({default_gain, default_gain});
 
 	SetFilter(filter_prefs);
 
