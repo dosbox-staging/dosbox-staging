@@ -116,7 +116,7 @@ plugins:
           # Unversioned getting-started paths redirect to the latest version
           'getting-started/introduction.md':                '0.83/getting-started/introduction.md'
           'getting-started/setting-up-prince-of-persia.md': '0.83/getting-started/setting-up-prince-of-persia.md'
-          'getting-started/enhancing-prince-of-persia.md':  '0.83/getting-started/enhancing-prince-of-persia.md'
+          'getting-started/enhancing-prince-of-persia.md':  '0.83/getting-started/customising-prince-of-persia.md'
           'getting-started/passport-to-adventure.md':       '0.83/getting-started/passport-to-adventure.md'
           'getting-started/beneath-a-steel-sky.md':         '0.83/getting-started/beneath-a-steel-sky.md'
           'getting-started/star-wars-dark-forces.md':       '0.83/getting-started/star-wars-dark-forces.md'
@@ -182,7 +182,7 @@ nav:
 
       - 0.83/getting-started/introduction.md
       - 0.83/getting-started/setting-up-prince-of-persia.md
-      - 0.83/getting-started/enhancing-prince-of-persia.md
+      - 0.83/getting-started/customising-prince-of-persia.md
       - 0.83/getting-started/passport-to-adventure.md
       - 0.83/getting-started/beneath-a-steel-sky.md
       - 0.83/getting-started/star-wars-dark-forces.md

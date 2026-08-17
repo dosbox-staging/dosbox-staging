@@ -53,29 +53,28 @@ you can).
 Luckily, this is an easy one: executable files (programs or scripts you can
 start) under MS-DOS have the `.EXE`, `.COM`, or `.BAT` file extension. Looking
 at `pop1demo.exe`, the solution is quite obvious: we'll need to run this
-executable file in DOSBox!
+executable file in DOSBox Staging!
 
 
-## The C drive
+## The C: drive
 
 Most DOS games need a hard drive as a *hard requirement* (okay, I'll show
 myself to the door...), but by default, DOSBox Staging doesn't have access to
 your computer's hard drive where your programs and documents reside --- we
 need to tell it which folder to use as its "virtual DOS hard drive". This is
 called **mounting**; we mount a folder as the "DOS hard drive", the contents
-of which are then available to DOSBox as the **C drive**. All drives in DOS
-are assigned letters from the English alphabet (just like in Windows), and the
-C drive is usually your first hard drive.
+of which are then available to DOSBox Staging as the **C: drive**. All drives
+in DOS are assigned letters from the English alphabet (just like in Windows),
+and the C: drive is usually your first hard drive.
 
-The recommended way to mount the C drive is to create a `drives` subfolder
+The recommended way to mount the C: drive is to create a `drives` subfolder
 inside your game folder. This `drives` folder is a "magic" folder with a
 special purpose: all its subfolders with single-letter names are automatically
 mounted as DOS drives with the same letter. This mechanism to auto-mount
 subfolders like `drives/c` and `drives/d` as DOS drives is called
-[automounting](../manual/using-dosbox-staging/storage.md#automounting) and is unique to
-DOSBox Staging.
+**automounting** (who would've guessed?).
 
-In our case, we only need a single C drive, so we'll create a `c` subfolder
+In our case, we only need a single C: drive, so we'll create a `c` subfolder
 inside our `drives` folder (technically, it does not make a difference whether
 you use uppercase or lowercase "letter C" on Windows and macOS, but it does in
 Linux, so we recommend always using lowercase). We'll then copy the files from
@@ -84,16 +83,17 @@ structure:
 
 ![Prince of Persia folder structure](images/prince-of-persia-dirtree1.png){ .skip-lightbox style="width: 16.5rem; margin: 0.3rem max(calc((50% - 16.5rem/2) * 0.85), 0rem);" }
 
-!!! info "Origins of the C drive"
+!!! info "Origins of the C: drive"
 
-    Have you ever wondered where the name "C drive" on Windows comes from?
+    Have you ever wondered where the name "C: drive" on Windows comes from?
     This is something Windows inherited from its MS-DOS heritage (which in
-    turn inherited it from CP/M). In DOS, all drives are assigned letters from
-    A to Z. Most computers of the era had two floppy drives, so letters A and
-    B were reserved for them or other removable media, and the first hard
-    drive partition was usually assigned the letter C. We no longer have
-    floppy drives in our computers as standard equipment, but this tradition
-    stuck around for backwards compatibility.
+    turn inherited it from an even more archaic operating system called CP/M).
+    In DOS, all drives are assigned letters from A to Z. Most computers of the
+    era had two floppy drives, so letters A and B were reserved for them or
+    other removable media, and the first hard drive partition was usually
+    assigned the letter C. We no longer have floppy drives in our computers as
+    standard equipment, but this tradition stuck around for backwards
+    compatibility.
 
     You can learn more about MS-DOS-era storage options and MS-DOS drives in
     the [Storage](../manual/using-dosbox-staging/storage.md) section of the user manual.
@@ -101,23 +101,23 @@ structure:
 
 !!! important "Attention, Windows users!"
 
-    If you're a Windows user, do not confuse your *real* C drive, where your
-    operating system and programs are stored, with the "virtual DOS C drive"
-    emulated inside DOSBox. You'll want to understand the distinction between
-    the two as they are completely separate concepts --- DOSBox will *not* see
-    the contents of your real Windows C drive by default (or the contents of
-    any of your other drives, for that matter).
+    If you're a Windows user, do not confuse your *real* C: drive --- where
+    your operating system and programs are stored --- with the "virtual DOS C:
+    drive" inside DOSBox Staging. You'll want to understand the distinction
+    between the two as they are completely separate concepts --- DOSBox
+    Staging will *not* see the contents of your real Windows C: drive by
+    default (or the contents of any of your other drives, for that matter).
 
 
 ## Starting DOSBox Staging
 
-Okay, with our C drive set up and ready to go, the next step is to start
+Okay, with our C: drive set up and ready to go, the next step is to start
 DOSBox Staging from our `DOS Games/Prince of Persia` folder. This is
 accomplished slightly differently on each platform.
 
 #### Windows
 
-!!! warning "First things first"
+!!! important "First things first"
 
     After installing DOSBox Staging, we strongly recommended starting it once
     using the Start Menu shortcut or the desktop icon [as described
@@ -133,6 +133,16 @@ Alternatively, navigate to the folder in Windows Explorer, right-click
 anywhere on the blank area inside it, and then select **Open with DOSBox
 Staging** in the context menu.
 
+
+!!! warning "Windows 11 note"
+
+    The Windows Explorer context menu integration only works in Windows 8 and
+    10 currently. If you're on Windows 11, you'll need to follow the steps
+    described in [Launching more
+    easily](beneath-a-steel-sky.md#launching-games-more-easily), then return
+    to this page.
+
+
 #### macOS
 
 ##### Method 1 — document packages
@@ -144,8 +154,8 @@ it to launch DOSBox Staging.
 
 ##### Method 2 — launch icons
 
-We instructed you not to delete the DMG disk image just yet, remember? If you
-missed that, please download it again, then do the following:
+We instructed you *not* to delete the DMG disk image just yet, remember? If
+you missed that, please download it again, then do the following:
 
 1. Mount the DOSBox Staging installer `.dmg` image file.
 
@@ -164,20 +174,23 @@ missed that, please download it again, then do the following:
    to your Documents folder. Click the **OK** button.
 
 
-You only need to perform this procedure the first time you open the **Start
-DOSBox Staging**. After the first launch, you can use it like any other
+You'll only need to perform this procedure the first time you open the **Start
+DOSBox Staging** icon. After the first launch, you can use it like any other
 regular icon.
 
 !!! tip
 
     You don't need to repeat this procedure for every new game. Once you've
-    opened an icon once, just copy that same icon into any future game folder
-    --- no need to fetch a fresh one from the `.dmg` each time.
+    opened an icon, just copy that same icon into any future game folder ---
+    no need to fetch a fresh one from the `.dmg` each time. You can rename the
+    copied icons too.
+
 
 #### Linux
 
 Open your favourite terminal and `cd` into the `Prince of Persia` directory,
-then run the `dosbox` command from there.
+then run the `dosbox` command from there (it's a good idea to put it into your
+`PATH` somehow).
 
 Use the `--version` argument to check that you're running DOSBox Staging and
 not some other DOSBox variant:
@@ -214,32 +227,33 @@ Z:\>_
 ```
 
 The first line is pretty straightforward --- it tells us that DOSBox Staging
-mounted `drives/c` we created earlier as the "C drive". In MS-DOS, folders are
-called **directories** --- the various DOSBox messages usually use the word
-"directory", and we'll use the two terms interchangeably in this guide.
+mounted `drives/c` we created earlier as the "C: drive". In MS-DOS, folders
+are called **directories**, so the various DOSBox Staging messages usually use
+the word "directory". We'll use "folder" and "directory" interchangeably in
+this guide.
 
 The second line is the **DOS prompt**. DOS has a command line interface that
 predates graphical user interfaces we're accustomed to from modern operating
 systems. We get DOS to do things by typing in commands, and if we manage to do
 this correctly, DOS will follow our instructions to the letter (pun intended).
 DOS is *not* a multitasking operating system; you can only do a single thing
-in it at any given point in time.
+in it at any given time.
 
 Let's analyse the prompt a little bit: it always starts with a letter followed
 by a colon, which denotes the current drive. Right after startup, this is
-always the **Z drive**. This is a special drive that's always available; DOSBox
-stores some of its commands on it --- you don't need to worry about it for
-now.
+always the **Z: drive**. This is a special drive that's always available;
+DOSBox Staging stores some of its commands on it --- you don't need to worry
+about it for now.
 
-After the colon is the path of the current folder or current *directory* in
-DOS terminology; this is currently the **root directory** (topmost directory)
-of the Z drive as indicated by the `\` (backslash) character. The `>`
-character just signifies the end of the prompt, and the blinking underscore
-(`_`) character after it is --- guess what? --- the cursor.
+After the colon is the path of the **current directory**; this is currently
+the **root directory** (topmost directory) of the Z: drive as indicated by the
+`\` (backslash) character. The `>` character just signifies the end of the
+prompt, and the blinking underscore (`_`) character after it is --- guess
+what? --- the cursor.
 
-Okay, enough theory! Type in `C:`, and then press ++enter++ to switch
-to the C drive. The prompt should now reflect that we're in the root directory
-of the C drive:
+Okay, enough theory! Type in `C:`, and then press ++enter++ to switch to the
+C: drive. The colon is important, don't leave it off. The prompt should now
+reflect that we're in the root directory of the C: drive:
 
 ``` { . .dos-prompt }
 Z:\>c:
@@ -261,13 +275,14 @@ POP1DEMO EXE                 267,420 07/05/1995  9:53a
 C:\>_
 ```
 
-Well, that's what we put into our virtual C drive, so nothing too spectacular
+Well, that's what we put into our virtual C: drive, so nothing too spectacular
 so far. We'll execute `pop1demo.exe` next! Type in `pop` and press the ++tab++
-key once to instruct DOSBox to complete the filename for you. This handy
-feature is called **[tab completion](../manual/using-dosbox-staging/shell.md#tab-completion)**, and it saves you from a lot of typing.
-Press ++tab++ a few more times and observe how it alternates between
-`POP1.TXT` and `POP1DEMO.EXE` --- this makes sense as these are the only two
-files in the current directory that start with `pop`.
+key once to instruct DOSBox Staging to complete the filename for you. This
+handy feature is called **[tab
+completion](../manual/using-dosbox-staging/shell.md#tab-completion)**, and it
+saves you from a lot of typing. Press ++tab++ a few more times and observe how
+it alternates between `POP1.TXT` and `POP1DEMO.EXE` --- this makes sense as
+these are the only two files in the current directory that start with `pop`.
 
 !!! important "DOS filenames"
 
@@ -342,7 +357,7 @@ C:\>_
 
 !!! note "FAT filesystem"
 
-    MS-DOS uses the *FAT filesystem* (nothing to do with body weight) that
+    MS-DOS uses the **FAT filesystem** (nothing to do with body weight) that
     allows up to 8-character filenames, followed optionally by a file
     extension consisting of a dot and at most three further characters.
     Filenames can only contain uppercase letters, digits, and certain special
@@ -351,10 +366,10 @@ C:\>_
 
     The two files we originally copied to our `drives/c` folder had all
     lowercase filenames (`pop1.txt` and `pop1demo.exe`). This does not matter
-    as DOSBox automatically converts all filenames in our `drives/c` folder to
-    uppercase behind the scenes.
+    as DOSBox Staging automatically converts all filenames in our `drives/c`
+    folder to uppercase behind the scenes.
 
-!!! tip "Want to learn more about DOS?"
+!!! info "Want to learn more about DOS?"
 
     The [DOS primer](../manual/introduction/dos-primer.md) in the manual covers the basics
     of the DOS environment, and the [Commands](../manual/using-dosbox-staging/commands.md) page
@@ -400,9 +415,9 @@ instead by pressing ++ctrl+k++!
 
 You can control the prince with the cursor keys. Hold down the ++shift++ key
 to walk carefully. It's not that hard to figure out the various movement
-combinations on your own, but reading the *Controlling Your Movements* section
-of the [user manual][pop-manual] should definitely help. The manual also
-contains helpful hints and a full list of available keyboard shortcuts.
+combinations on your own, but reading the **Controlling Your Movements**
+section of the [user manual][pop-manual] should definitely help. The manual
+also contains helpful hints and a full list of available keyboard shortcuts.
 
 {{ figure(
     "https://www.dosbox-staging.org/static/images/getting-started/pop-vga.jpg",
@@ -414,30 +429,33 @@ Staging! Have some fun, try to find the sword, overcome a few guards, and
 maybe even attempt to complete the first level.
 
 You can quit the game by pressing ++ctrl+q++, which will return you to the DOS
-prompt. There you can use the `exit` command to close DOSBox. Of course, you
-can quit DOSBox any time by pressing ++alt+f4++ on Windows and Linux, or
-++cmd+q++ on macOS. 
+prompt. You can use the `exit` command from the DOS prompt
+to quit DOSBox Staging. Of course, you can quit the emulator any time by
+pressing ++alt+f4++ on Windows and Linux, or ++cmd+q++ on macOS.
 
-!!! note
+!!! note "Read the game manuals"
 
     The ++ctrl+q++ shortcut for quitting the game is specific to Prince of
     Persia. Other games might provide completely different mechanisms for
     exiting to DOS, or perhaps none at all.
+
+    How do you know this is the key combination to use to quit this particular
+    game? --- by reading the game's manual!
 
 
 !!! tip "How to approach old games"
 
     If you've only ever played modern games, you're probably in for a bit of a
     culture shock! There's minimal to no handholding in most DOS games from
-    the 1980s and the '90s; you are expected to read the user manual, often
+    the 1980s and the 90s; you are expected to read the user manual, often
     there is no in-game tutorial, and the games are generally unforgiving and
     require a level of dedication from the player that's uncommon in more
     modern titles.
 
-    However, this does not mean that these games are less fun; on the
+    However, this does not mean that these games are less fun --- on the
     contrary! The old adage "you get out what you put in" is certainly true
     for old DOS games. Many people (including the author of this present
-    article) think that the satisfaction and enjoyment you get when mastering
+    guide) think that the satisfaction and enjoyment you get when mastering
     such difficult games have few parallels in the modern gaming landscape.
 
 
@@ -448,7 +466,7 @@ feature, which is enabled by default. It strives to achieve authentic,
 period-correct results; the look of PC CRT monitors from the 1980s and 1990s
 has been painstakingly recreated via shaders as accurately as current
 technology allows. These monitors exhibit certain characteristic peculiarities
-when displaying low-resolution graphics; you can think of them as "built-in
+when displaying low-resolution graphics --- you can think of them as "built-in
 filters" that can never be disabled. Artists of the era had to embrace and
 work with these peculiarities, and people playing DOS games on their CRTs saw
 the art through the same "filters" as the artists.
@@ -457,42 +475,44 @@ For this reason, many people who grew up with CRTs think that once these
 filters are "digitally removed" by drawing the pixels as sharp little
 rectangles on modern flat screens, the art looks bland, sterile, and loses its
 "analog magic". That's the main reason behind enabling the CRT emulation by
-default; to give people a chance to see the art of DOS games in their full
+default --- to give people a chance to see the art of DOS games in their full
 glory as the developers intended.
 
-The remarkable thing about the feature is that it's "zero config" --- it
-automatically adapts to the changing circumstances to always produce the
-correct CRT look based on the emulated graphics adapter, the current DOS video
-mode, the window size, and the native resolution of your monitor. You don't
-need to think about it or tinker with it, **It Just Works(tm)** :sunglasses:
+The remarkable thing about the feature is that it requires no configuration
+--- it automatically adapts to the changing circumstances to always produce
+the correct CRT look based on the emulated graphics adapter, the current DOS
+video mode, the window size, and the native resolution of your monitor. You
+don't need to think about it or tinker with it, **It Just Works(tm)**
+:sunglasses:
 
 We'll showcase the authentic CRT emulation throughout the guide, but if you
-prefer sharp pixels, we'll explain how to achieve that in the next chapter.
+prefer sharp "digital" pixels, we'll explain how to achieve that in the next
+chapter.
 
 
 !!! warning "Proper viewing of screenshots"
 
     Screenshots of CRT shaders in action *need* to be viewed at 100%
-    magnification; otherwise, you might see strange wavy interference patterns
+    magnification, otherwise you might see strange wavy interference patterns
     caused by the browser rescaling the images. These unwanted
     artifacts can sometimes
     resemble repeating rainbow-like patterns, and rest assured, that's *not*
     how CRT emulation is supposed to look in DOSBox Staging!
 
-    To view a screenshot featuring a CRT shader properly, click on the image
-    to enlarge it; then, if your mouse cursor looks like a magnifying glass,
-    click on the image again to display it at 100% magnification.
+    To view a screenshot featuring a CRT shader properly, first click on the
+    image to enlarge it; then, if your mouse cursor looks like a magnifying
+    glass, click on the image again to display it at 100% magnification.
 
 
 ## Auto-executing commands at startup
 
 Every time we want to play the game, we need to type in DOS commands to switch
-to the C drive and run `PRINCE.EXE` from there. Isn't there a way to
+to the C: drive and run `PRINCE.EXE` from there. Isn't there a way to
 automate that?
 
-There certainly is! We need to create a so-called
-*configuration file* that can contain various settings to customise the
-behaviour of DOSBox, along with a list of commands to auto-execute at startup.
+There certainly is! We need to create a so-called **configuration file** that
+contains various settings to customise the behaviour of DOSBox Staging,
+along with a list of commands to auto-execute at startup.
 
 Launch your [text editor of choice](introduction.md#other-stuff-well-need) and
 create a new plain text file called `dosbox.conf` inside the `Prince of
@@ -504,10 +524,11 @@ c:
 prince
 ```
 
-The commands you want to execute right after startup should be listed in the
-aptly titled `[autoexec]` configuration section, with each command in a
-separate line. Configuration sections are introduced by names enclosed in
-square brackets; everything that follows belongs to that section.
+The commands you want to be **auto**matically **exec**uted right after startup
+are to be listed in the aptly titled `[autoexec]` configuration section, with
+each command in a separate line. Configuration sections are introduced by
+names enclosed in square brackets; everything that follows belongs to that
+section.
 
 !!! warning
 
@@ -517,12 +538,12 @@ square brackets; everything that follows belongs to that section.
     editor and make sure you save the configuration file with the `.conf`
     extension only as `dosbox.conf`
 
-When DOSBox starts, it looks for this special `dosbox.conf` file in the folder
-from which it was started, and if it finds it, it configures the DOS
-environment and DOSBox itself according to its contents. This is handy because
-we can put a different configuration file into each of our game folders to set
-them up differently (this is necessary; it's simply impossible to create a
-single configuration that would work with all DOS games).
+When DOSBox Staging starts, it looks for this special `dosbox.conf` file in
+the folder from which it was started, and if it finds it, it configures the
+DOS environment and DOSBox Staging itself according to its contents. This is
+handy because we can put a different configuration file into each of our game
+folders to set them up differently (this is necessary; it's simply impossible
+to create a single configuration that would work with all DOS games).
 
 Just to make everything absolutely clear, this is the folder structure we
 should have at this point (only the first four files are shown in `drives/c`
@@ -535,27 +556,4 @@ game right away without any manual intervention!
 
 So far, so good --- now, let's see how we can use the advanced features offered
 by DOSBox Staging to our advantage!
-
-
-!!! info "DOSBox vs DOSBox Staging"
-
-    Astute readers might have noticed that the guide sometimes refers to
-    "DOSBox Staging" and sometimes to just "DOSBox". Why is that?
-
-    As explained on our [About page](../../about/index.md), DOSBox Staging is a
-    modern continuation of the original DOSBox project. Technically, DOSBox
-    Staging is an open-source fork of and separate project from the
-    [SourceForge-hosted DOSBox project](https://sourceforge.net/projects/dosbox/).
-
-    Generally, we use "DOSBox Staging" when we discuss features specific to
-    Staging, or when we talk about the DOSBox Staging application, installer,
-    or process itself. But when mentioning base functionality present in the
-    original DOSBox and pretty much all other DOSBox variants, we simply say
-    "DOSBox". Admittedly, sometimes the distinction gets rather blurry, and
-    seeing "DOSBox Staging" fully typed out everywhere would get old rather
-    quickly!
-
-    Using the term "DOSBox" is also a nod to the original DOSBox developers,
-    to whom we are grateful for starting this awesome open-source project in
-    the first place.
 

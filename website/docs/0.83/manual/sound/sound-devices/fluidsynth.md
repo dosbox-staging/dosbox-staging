@@ -86,7 +86,7 @@ folder first. Otherwise, it searches the following folders for SoundFont files
 
 **Windows**
 
-1. `%LOCALAPPDATA%\DOSBox\soundfonts\`
+1. `C:\Users\<USERNAME>\AppData\Local\DOSBox\soundfonts\`
 2. `C:\soundfonts\`
 
 **macOS**

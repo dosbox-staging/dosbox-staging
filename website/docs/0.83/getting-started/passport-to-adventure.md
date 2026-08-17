@@ -139,14 +139,14 @@ item at the Internet Archive, then extract its contents into the `c` subfolder.
 Below is the folder structure you should end up with. As explained before,
 we'll create one subfolder within `DOS Games` for each game; then each game
 folder will contain its own local `dosbox.conf` configuration specific to that
-game, along with its own "emulated C drive" in the `drives/c` subfolder.
+game, along with its own "emulated C: drive" in the `drives/c` subfolder.
 
 ![Passport to Adventure folder structure](images/passport-to-adventure-dirtree1.png){ .skip-lightbox style="width: 14.75rem; margin: 0.3rem max(calc((50% - 14.75rem/2) * 0.85), 0rem);" }
 
 
 ## Examining text files
 
-By poking around on the C drive a little bit with the `dir` command, we'll
+By poking around on the C: drive a little bit with the `dir` command, we'll
 quickly realise we only have two executables: `INSTALL.BAT` and `SAMPLER.EXE`.
 But there's also a `README.TXT`, so let's check that one out first!
 

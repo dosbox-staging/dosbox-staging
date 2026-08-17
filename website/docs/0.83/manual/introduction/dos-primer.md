@@ -97,7 +97,7 @@ CRT emulation.
 See [Graphics adapters](../graphics/adapters.md) for details on each emulated
 adapter, and [Rendering](../graphics/rendering/overview.md) for shader and
 display options. The Getting Started guide covers [choosing a graphics
-adapter](../../getting-started/enhancing-prince-of-persia.md#graphics-options)
+adapter](../../getting-started/customising-prince-of-persia.md#graphics-options)
 and [aspect ratios](../graphics/rendering/aspect-ratios-and-scaling.md) with
 practical examples.
 

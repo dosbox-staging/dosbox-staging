@@ -22,7 +22,7 @@ The primary configuration file is stored in a platform-specific location:
 
 | Platform | Path
 | ---      | ---
-| Windows  | `%LOCALAPPDATA%\DOSBox\dosbox-staging.conf`
+| Windows  | `C:\Users\%USERNAME%\AppData\Local\DOSBox\dosbox-staging.conf`
 | macOS    | `~/Library/Preferences/DOSBox/dosbox-staging.conf`
 | Linux    | `~/.config/dosbox/dosbox-staging.conf`
 
@@ -186,7 +186,7 @@ real DOS PC.
 Here's an example configuration that launches a game executable `PRINCE.EXE`
 from the C: drive, then exits DOSBox Staging after you quit the game. It is
 taken from the [Getting Started
-guide](../../getting-started/enhancing-prince-of-persia.md#final-configuration);
+guide](../../getting-started/customising-prince-of-persia.md#final-configuration);
 you'll find more such configuration examples there:
 
 
@@ -295,7 +295,7 @@ CONFIG -h gus
   game library. The [Getting Started
   guide](../../getting-started/introduction.md) contains several such local
   configuration examples ([Prince of
-  Persia](../../getting-started/enhancing-prince-of-persia.md#final-configuration),
+  Persia](../../getting-started/customising-prince-of-persia.md#final-configuration),
   [Passport to
   Adventure](../../getting-started/passport-to-adventure.md#final-configuration),
   [Beneath A Steel

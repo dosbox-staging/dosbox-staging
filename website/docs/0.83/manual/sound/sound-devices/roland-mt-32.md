@@ -267,7 +267,7 @@ subfolder inside the game's working folder.
 
 **Windows**
 
-1. `%LOCALAPPDATA%\DOSBox\mt32-roms\`
+1. `C:\Users\<USERNAME>\AppData\Local\DOSBox\mt32-roms\`
 2. `C:\mt32-rom-data\`
 
 **macOS**

@@ -36,12 +36,14 @@ too small, CRT emulation is disabled and DOSBox Staging falls back to the
 This means the shader can change even though the game and its video mode have
 not changed. Resizing the window or switching between windowed and fullscreen
 mode changes the available viewport size and can therefore cause DOSBox
-Staging to select a different shader. With [`integer_scaling`](aspect-ratios-and-scaling.md#integer-scaling) enabled by default, the scaling
-factor can change at the same time, so the amount of black padding around the
-image can change too. This is normal; see [Integer
-scaling](aspect-ratios-and-scaling.md#integer-scaling) and [Why is there a
-black border?](aspect-ratios-and-scaling.md#why-is-there-a-black-border) for
-an explanation of the scaling and aspect-ratio behaviour.
+Staging to select a different shader. With
+[`integer_scaling`](aspect-ratios-and-scaling.md#integer-scaling) enabled by
+default, the scaling factor can change at the same time, so the amount of
+black padding around the image can change too. This is normal; see [Why is
+there a black
+border?](aspect-ratios-and-scaling.md#why-is-there-a-black-border) and
+[Integer scaling](aspect-ratios-and-scaling.md#integer-scaling) for an
+explanation.
 
 If you're unsure which adaptive CRT shader to use, leave it at the
 `crt-auto` default --- this is the best choice for most users.
@@ -49,13 +51,15 @@ If you're unsure which adaptive CRT shader to use, leave it at the
 
 ### 1080p special cases
 
-The adaptive CRT shaders normally require at least 3&times; the vertical
-resolution of the emulated DOS video mode to display crisp scanlines without
-wavy vertical interference patterns. On a 1080p display, a double-scanned
-320&times;200 game has an effective height of 400 lines, which means the
-highest usable integer scale is 2&times; in fullscreen, leaving substantial
-black borders around a relatively small upscaled image. Two special shaders
-activate automatically under `crt-auto` to improve the situation:
+The adaptive CRT shaders normally require at least three times the vertical
+resolution of the emulated DOS video mode with vertical
+[`integer_scaling`](aspect-ratios-and-scaling.md#integer-scaling) enabled to
+display crisp scanlines without wavy vertical interference patterns. On a
+1080p display, a double-scanned 320&times;200 game has an effective height of
+400 lines, which means the highest usable integer scale is 2&times; in
+fullscreen, leaving substantial black borders around a relatively small
+upscaled image. Two special shaders activate automatically under `crt-auto` to
+improve the situation:
 
 - **`vga-1080p-fake-double-scan`** --- Used for 320&times;200 content. Rather
   than treating the source image as 640&times;400, this shader treats it as
@@ -66,9 +70,9 @@ activate automatically under `crt-auto` to improve the situation:
 
 - **`vga-1080p`** --- Used for 640&times;480 content. This mode upscales at
   exactly 2&times; to 1280&times;960 with the same alternating line overlay.
-  Not fake double scanning --- 640&times;480 is a square-pixel mode that
-  doesn't double-scan --- just a purpose-built upscaler that makes the most
-  of a 1080p viewport.
+  Not fake double scanning --- 640&times;480 is a mode that doesn't
+  double-scan --- just a purpose-built upscaler that makes the most of a
+  1080p viewport.
 
 Both activate transparently under `crt-auto`. You can also set them explicitly
 via the [`shader`](#shader) setting, though in most cases there's no reason
@@ -76,10 +80,10 @@ to.
 
 !!! note
 
-    Technically, these two special shaders are actived when then native pixels
-    per emulated scaline ratio falls between 2.0 and 3.0 in the viewport. It's
-    just easier to call them "1080p shaders" because they're most useful on
-    1080p monitors in fullscreen.
+    Technically, these two special shaders are actived when the "native
+    viewport height pixels" per "number of emulated scalines" ratio falls
+    between 2.0 and 3.0 in the viewport. It's just easier to call them "1080p
+    shaders" because they're most useful on 1080p monitors in fullscreen.
 
 
 ## VGA double scanning

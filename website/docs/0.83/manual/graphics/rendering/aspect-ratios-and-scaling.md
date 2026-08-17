@@ -1,15 +1,65 @@
 # Aspect ratios & scaling
 
+Computer monitors were traditionally 4:3 displays, much like old television
+sets. However, modern flat-screen monitors are usually 16:9 or even wider, so
+stretching DOS era graphics to fullscreen on a modern monitor would result in
+a distorted image. There is a further complication: modern screens use square
+pixels, but the most common DOS graphics modes use slighly elongated "tall
+pixels".
+
+DOSBox Staging displays all graphics with the correct proportions out-of-the
+box, but this often results in the image not completely filling the screen.
+Read on to understand why authentic video emulation and filling the screen are
+mutually exclusive goals, and to learn about the available options if you want
+to diverge from authentic emulation.
+
+
+## Why is there a black border?
+
 Most DOS games were designed for 4:3 CRT displays and used non-square pixels.
 For example, the standard 320×200 VGA mode was intended to fill a 4:3 screen,
 so its pixels are slightly taller than they are wide (20% taller, to be exact,
-so with a pixel aspect ratio (PAR) of 1:1.2).
+so with a **pixel aspect ratio (PAR)** of 1:1.2).
 
-Aspect ratio correction is enabled by default (`aspect = auto`) so games are
-displayed as intended. Without it, 320×200 graphics appear vertically squashed
-on modern square-pixel displays.
+Therefore, when DOSBox Staging displays a 4:3 aspect ratio image while
+preserving its original proportions, the unused space appears as black bars on
+the sides. This is called **pillarboxing**.
 
-A small number of DOS games are better displayed with square pixels (`aspect =
+{{ figure(
+    "https://www.dosbox-staging.org/static/images/manual/monitor-aspect-ratios1.png",
+    "Pillarboxing in action: black bars fill the extra space<br>when the aspect ratio of the screen and the image do not match",
+    lightbox=False,
+    style="width: 25rem; margin: 1.5rem 0;"
+) }}
+
+At first glance, this might seem strange for 320×200 VGA: 320×200 is 16:10
+when we only consider the pixel dimensions of the image, which is fairly close
+to 16:9. But 320×200 VGA was not designed to be displayed with square pixels.
+Its pixels are taller than they are wide --- 20% taller, with a 1:1.2 (5:6)
+ixel aspect ratio (PAR) --- so the image is intended to appear "stretched"
+into a 4:3 aspect ratio rectangle.
+
+The illustration below shows why this matters. With square pixels, a 320×200
+image is too wide to fill a 4:3 display without leaving space below it. With
+the intended 20% taller pixels, the same 320×200 image fills the 4:3 screen.
+
+{{ figure(
+    "https://www.dosbox-staging.org/static/images/manual/monitor-aspect-ratios2.png",
+    "Left: 320&times;200 pixel image with square pixels on a 4:3 monitor --- there is some letterboxing below the image; Right: the same image with 20% taller pixels on the same monitor --- the image fills the screen completely.",
+    lightbox=False,
+    style="width: 25rem; margin: 1.5rem 0;"
+) }}
+
+TODO concrete game image examples
+
+## Aspect ratio correction
+
+Aspect ratio correction (controlled by the [`aspect`](#aspect) setting)
+accounts for these non-square pixels when displaying the game on a modern
+square-pixel screen. It is enabled by default so most games look exactly as
+intended out-of-the-box.
+
+A small number of games are better displayed with square pixels (`aspect =
 square-pixels`). These are typically DOS ports of European games originally
 developed for PAL Commodore Amiga home computers, where the original artwork
 was designed for square pixels at 320×256. Examples include [Beneath a Steel
@@ -18,31 +68,55 @@ Temptress](https://www.mobygames.com/game/1134/lure-of-the-temptress/),
 [Another World](https://www.mobygames.com/game/564/out-of-this-world/),
 [Flashback](https://www.mobygames.com/game/555/flashback-the-quest-for-identity/),
 and the [Gobliiins](https://www.mobygames.com/game/1154/gobliiins/) series. A
-tell-tale sign is scanned or hand-drawn artwork that looks vertically
-stretched with aspect ratio correction enabled.
+tell-tale sign is artwork that looks vertically stretched with aspect ratio
+correction enabled. See [Beneath a Steel
+Sky](../../../getting-started/beneath-a-steel-sky.md#aspect-ratio-correction)
+in the [Getting Started guide](../../../getting-started/index.md) for an
+example.
 
-Pixels are square (1:1 PAR) in **640&times;480** and higher resolutions. A few
-other modes have their own non-square PARs: **640&times;350 EGA** (1:1.37
-PAR), **640&times;200 EGA** (1:2.4 PAR), and **720&times;348 Hercules**
-(1:1.55 PAR). DOSBox Staging handles all of these automatically. For a more
-detailed explanation of pixel aspect ratios, see [Why is there a black
-border?](#why-is-there-a-black-border)
+
+!!! note "When pixels are not squares"
+
+    The fact that older monitors were not widescreen is easy to forget, and
+    older DOSBox versions did not enable aspect ratio correction by default.
+    As a result, many modern screenshots and videos of DOS games are shown
+    with the wrong proportions, particularly for 320×200 modes.
+
+    Well, at least on today's internet --- if you check out any old computer
+    magazine from the 1980s or 90s, most screenshots are shown in the correct
+    aspect ratio (though occasionally the magazines got it wrong too).
+
+    Pixels are perfectly square in 640×480 and most higher resolutions (1:1
+    pixel aspect ratio), but a few other DOS video modes also use non-square
+    pixels: 640×350 EGA (1:1.3714 PAR), 640×200 EGA (1:2.4 PAR), and 720×348
+    Hercules (1:1.5517 PAR). DOSBox Staging handles these modes automatically.
+
+
+!!! info "Weird pixel aspect ratios"
+
+    Pixels are square (1:1 pixel aspect ratio, or PAR) in **640&times;480** and
+    higher resolutions. A few other modes have their own non-square PARs:
+    **640&times;350 EGA** (1:1.37 PAR), **640&times;200 EGA** (1:2.4 PAR), and
+    **720&times;348 Hercules** (1:1.55 PAR). DOSBox Staging handles all of these
+    automatically.
 
 
 ## Integer scaling
 
-The `integer_scaling` setting constrains the horizontal or vertical scaling
-factor to integer values when upscaling the image. The correct aspect ratio is
-always maintained, so the other dimension's scaling factor may become
-fractional.
+The `integer_scaling` setting (set to `auto` by default) constrains the
+horizontal or vertical scaling factor to integer values when upscaling the
+image. The correct aspect ratio is always maintained, so the other dimension's
+scaling factor may become fractional.
 
 The `vertical` setting avoids uneven scanlines and interference artifacts with
 CRT shaders or the [deinterlacing](special-features.md#deinterlacing) feature.
 
-For the built-in CRT shaders, `auto` is recommended instead. It enables
-vertical integer scaling only when a CRT shader is active and allows a few
-additional scaling ratios for better use of available screen space (e.g., 3.5x
-and 4.5x scaling factors).
+For the built-in CRT shaders, `auto` is recommended instead (this is the
+default). It enables vertical integer scaling only when a CRT shader is active
+and allows a few additional scaling ratios for better use of available screen
+space (e.g., 3.5x and 4.5x scaling factors). Moreover, it turns integer
+scaling off automatically when it's safe to do so (e.g., for low-resolution
+games in fullscreen on a 4K monitor).
 
 The `horizontal` mode is included mainly for completeness, but can be useful
 on low-resolution displays to maximise horizontal text sharpness in
@@ -96,81 +170,10 @@ the image.
     low-resolution displays.
 
 
-## Why is there a black border?
-
-Computer monitors were traditionally 4:3 displays, much like old television
-sets. Modern flat-screen monitors are usually 16:9, so when DOSBox Staging
-displays a 4:3 game while preserving its original proportions, the unused
-space appears as black bars on the sides. This is called **pillarboxing**.
-
-{{ figure(
-    "https://www.dosbox-staging.org/static/images/manual/monitor-aspect-ratios1.png",
-    "Pillarboxing in action: black bars fill the extra space<br>when the aspect ratio of the screen and the image do not match",
-    lightbox=False,
-    style="width: 25rem; margin: 1.5rem 0;"
-) }}
-
-At first glance, this might seem strange for 320×200 VGA: 320×200 is 16:10,
-which is fairly close to 16:9. But 320×200 VGA was not designed to be
-displayed with square pixels. Its pixels are taller than they are wide --- 20%
-taller, with a 1:1.2 (5:6) pixel aspect ratio (PAR) --- so the image is
-intended to appear as 4:3.
-
-The illustration below shows why this matters. With square pixels, a 320×200
-image is too wide to fill a 4:3 display without leaving space below it. With
-the intended taller pixels, the same 320×200 image fills the 4:3 screen.
-
-{{ figure(
-    "https://www.dosbox-staging.org/static/images/manual/monitor-aspect-ratios2.png",
-    "Left: 320&times;200 pixel image with square pixels on a 4:3 monitor --- there is some letterboxing below the image; Right: the same image with 20% taller pixels on the same monitor --- the image fills the screen completely.",
-    lightbox=False,
-    style="width: 25rem; margin: 1.5rem 0;"
-) }}
-
-Aspect ratio correction accounts for these non-square pixels when displaying
-the game on a modern square-pixel screen. The result has the intended 4:3
-display aspect ratio rather than the 16:10 ratio of the raw framebuffer. On a
-16:9 display, preserving that 4:3 shape necessarily leaves black bars at the
-sides.
-
-This is why a correctly displayed 320×200 game does not nearly fill a modern
-16:9 display, despite the raw framebuffer being relatively close to
-widescreen. The black border is simply the space required to preserve the
-game's intended proportions.
-
-Most of the time, you don't need to worry about the underlying calculations:
-DOSBox Staging performs the aspect ratio correction automatically. If a
-particular game was designed around square pixels, you can use `aspect =
-square-pixels` instead. See [Beneath a Steel
-Sky](../../../getting-started/beneath-a-steel-sky.md#aspect-ratio-correction)
-in the [Getting Started guide](../../../getting-started/index.md) for an
-example.
-
-
-!!! note "When pixels are not squares"
-
-    The fact that older monitors were not widescreen is easy to forget, and
-    older DOSBox versions did not enable aspect ratio correction by default.
-    As a result, many modern screenshots and videos of DOS games are shown
-    with the wrong proportions, particularly for 320×200 modes.
-
-    Well, at least on today's internet --- if you check out any old computer
-    magazine from the 1980s or 90s, most screenshots are shown in the correct
-    aspect ratio (though occasionally the magazines got it wrong too).
-
-    Pixels are perfectly square in 640×480 and most higher resolutions (1:1
-    pixel aspect ratio), but a few other DOS video modes also use non-square
-    pixels: 640×350 EGA (1:1.3714 PAR), 640×200 EGA (1:2.4 PAR), and 720×348
-    Hercules (1:1.5517 PAR). DOSBox Staging handles these modes automatically.
-
-
 ## Sharp pixels
 
-_"Okay, enough blabbering about all those near-extinct, mythical cathode-ray
-tube contraptions, grandpa. Can't you just give us sharp pixels and be done
-with it?"_
-
-Sure thing, kiddo. Just put this into your config:
+If you prefer to disable the CRT emulation altogether to make the pixels look
+like sharp little rectangeles, put this into your config:
 
 ```ini
 [render]
@@ -208,8 +211,8 @@ monitors were usually 10--12". These are nominal sizes; the actual visible
 area was roughly 1.5 to 2 inches smaller.
 
 To approximate the physical image size of a typical 14" VGA monitor on a
-modern 24" widescreen display, you could restrict the output to around
-960×720. However, this gives a non-integer vertical scaling factor, so
+modern 24" or larger widescreen display, you could restrict the output to
+around 960×720. However, this gives a non-integer vertical scaling factor, so
 1067×800 is a better choice:
 
 ```ini
@@ -228,14 +231,13 @@ viewport = 89%
 The video output is fitted inside the viewport while maintaining the correct
 aspect ratio. 89% is a useful general-purpose value for DOS resolutions
 between 320×200 and 640×480 on modern displays. With integer scaling enabled,
-it gives these low-resolution modes a physical size roughly comparable to the
-CRTs they were commonly displayed on, without making the graphics
-unnecessarily large.
+it gives the graphics the physical size roughly comparable to the CRTs they
+were commonly displayed on.
 
 Running DOS games fullscreen on a modern 24" widescreen display is roughly
 equivalent to playing them on a 21" CRT --- a large professional monitor that
 very few gamers owned. Low-resolution artwork was not designed to be viewed at
-that size.
+that size, the pixels would look too blocky.
 
 !!! info "Logical units vs pixels"
 
@@ -276,9 +278,9 @@ that size.
 DOSBox Staging also provides a "stretch everything" mode for cases where
 aspect ratio authenticity isn't the priority.
 
-The `stretch` aspect mode calculates the aspect ratio from the viewport
-dimensions, allowing you to force arbitrary aspect ratios. For example, to
-stretch a game to fill the entire screen:
+The `stretch` [`aspect`](#aspect) mode calculates the aspect ratio from the
+viewport dimensions, allowing you to force arbitrary aspect ratios. For
+example, to stretch a game to fill the entire screen:
 
 ```ini
 [sdl]
@@ -298,7 +300,8 @@ The `relative` viewport mode starts with a 4:3 rectangle and scales it
 independently in the horizontal and vertical directions. This effectively
 emulates the horizontal and vertical stretch controls found on CRT monitors.
 It can also be useful for correcting games that use the wrong aspect ratio,
-such as some Hercules conversions that reused EGA or VGA artwork.
+such as some Hercules conversions that reused EGA or VGA artwork with only a
+minimal colour conversion applied.
 
 For example, to correct the [squashed
 look](../adapters.md#hercules-graphics-card) of Hercules graphics in [Prince
