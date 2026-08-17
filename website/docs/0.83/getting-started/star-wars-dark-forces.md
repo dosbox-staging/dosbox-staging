@@ -57,7 +57,7 @@ three ZIP archives,
 [dforces1.zip](https://archive.org/download/StarWarsDarkForces/dforces1.zip),
 [dforces2.zip](https://archive.org/download/StarWarsDarkForces/dforces2.zip),
 and [dforces3.zip](https://archive.org/download/StarWarsDarkForces/dforces3.zip);
-we'll need to copy their contents to our virtual C drive. Make sure to
+we'll need to copy their contents to our virtual C: drive. Make sure to
 download the [manual](https://archive.org/details/dark-forces-manual) as well.
 
 There's a `README.TXT` included with the demo; it's recommended to read at

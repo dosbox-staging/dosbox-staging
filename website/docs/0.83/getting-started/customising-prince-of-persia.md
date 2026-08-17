@@ -2,13 +2,20 @@
 toc_depth: 3
 ---
 
-# Enhancing Prince of Persia
+# Customising Prince of Persia
+
+We got the game running --- that's a good start. Before moving on to our next
+game example, we'll stay with Prince of Persia a little longer and use it as a
+testbed for configuring the emulated display adapter and various other
+enhancements and tweaks.
+
+So let's get started!
 
 ## Fullscreen mode
 
 You can toggle between windowed and fullscreen mode at any time by pressing
 ++alt+enter++. But what if you always want to play the game in fullscreen?
-Wouldn't it be nice to make DOSBox start in fullscreen right away?
+Wouldn't it be nice to make DOSBox Staging start in fullscreen right away?
 
 You can easily do that by setting `fullscreen = on` in the `[sdl]` section.
 Modify your `dosbox.conf` file so it has the following content, then restart
@@ -38,52 +45,53 @@ game by pressing ++ctrl+q++. Not strictly necessary, but it's a nice touch.
 
 !!! important "Making configuration changes"
 
-    Every time you modify `dosbox.conf`, you need to restart DOSBox Staging
+    Every time you modify `dosbox.conf`, you'll need to restart DOSBox Staging
     for the changes to take effect. We will not mention this every single time
     from now on.
 
     You can do this by closing the DOSBox Staging application and then
     starting it again. But there is a better way: simply press
-    ++ctrl+alt+home++! This is a homage to the Ctrl+Alt+Del "three-finger
-    salute" way of soft-rebooting IBM PCs. :sunglasses:
+    ++ctrl+alt+home++! This is a homage to the **Ctrl+Alt+Del "three-finger
+    salute"** way of soft-rebooting IBM PCs. :sunglasses:
 
     If you're on macOS,  you'll need to press ++cmd+opt+home++ instead, and if
     Apple has decided for you that your MacBook doesn't need a Home key,
     ++cmd+opt+fn+left++ should do the trick.
 
-    See the [Shortcuts](../manual/appendices/shortcuts.md) appendix in the
-    manual for the full list of available keyboard shortcuts.
+    See the [Keyboard shortcuts](../manual/appendices/shortcuts.md) appendix
+    of the user manual for the full list of available shortcuts.
 
 
 ## Graphics options
 
-DOSBox emulates an SVGA (Super VGA) display adapter by default; this gives you
-good compatibility with most DOS games. DOSBox can also emulate all common
-display adapters from the history of the PC compatibles: the Hercules, CGA,
-and EGA adapters, among several others.
+DOSBox emulates a typical **SVGA (Super VGA)** display adapter from the
+mid-1990s by default; this gives you good compatibility with most DOS games.
+DOSBox can also emulate all common display adapters from the history of the PC
+compatibles: the **Hercules**, **CGA**, and **EGA** adapters, among several
+others.
 
 Although the VGA standard was introduced in 1987, it took a good five years
 until it gained widespread adoption. Games had to support all commonly used
-graphical standards during this transitional period. Prince of Persia,
-released in 1990, is such a game; it not only supports all common display
-adapters, but it also correctly auto-detects them. This is in contrast with
-the majority of DOS games, where you need to configure the graphics manually
-(we'll discuss how to do that, too, in later chapters).
+graphical adapters during this transitional period. Prince of Persia, released
+in 1990, is such a game --- it not only supports all common display adapters,
+but it also correctly auto-detects them. This is in contrast with the majority
+of DOS games, where you need to configure the graphics manually (we'll discuss
+how to do that, too, in later chapters).
 
 
 ### VGA
 
-The art in Prince of Persia was created for VGA first, so quite naturally, the
-game looks best on a VGA adapter. Most DOS games from the 1990s use the
-320&times;200 low-resolution VGA mode. This video mode allows up to 256
-colours to be displayed simultaneously on the screen from a total palette of
-16 million colours.
+The art in Prince of Persia was created for VGA graphics adapters first, so
+quite naturally, the game looks best on a VGA adapter. Most DOS games from the
+1990s use the 320&times;200 low-resolution VGA mode. This video mode allows up
+to 256 colours to be displayed simultaneously on the screen from a total
+palette of 16 million colours.
 
 This is how the start of the game looks with the [authentic CRT emulation
 feature](setting-up-prince-of-persia.md#authentic-crt-monitor-emulation),
-which is enabled by default. As mentioned previously, make sure to view all
-screenshots at 100% magnification to avoid weird artifacts caused by the
-browser rescaling the image.
+which is enabled by default. As mentioned at the end of the linked section,
+make sure to view all screenshots at 100% magnification to avoid weird
+artifacts caused by the browser rescaling the image.
 
 {{ figure(
     "https://www.dosbox-staging.org/static/images/getting-started/pop-vga.jpg",
@@ -94,12 +102,12 @@ But wait a minute, this doesn't look like anything I'm used to from console
 emulators. Where are those visible thick scanlines?
 
 VGA display adapters have a peculiarity in that they display not one but *two*
-scanlines per pixel in low-resolution video modes, which have less than about
+scanlines per pixel in low-resolution video modes hav less than about
 350 lines of vertical resolution. This means the 320&times;200 VGA mode is
 really 640&times;400, just pixel and line-doubled. In fact, the vast majority
-of VGA monitors from the 1980s and '90s are incapable of displaying "true"
+of VGA monitors from the 1980s and 90s cannot display "true"
 200-line graphics, so it's physically impossible to get the "thick scanline"
-arcade and home computer monitor look on a real VGA CRT.
+arcade and home computer monitor look on them.
 
 Double-scanned VGA emulation looks stellar on a 4K monitor and even on 1440p,
 but on 1080p, there is simply not enough vertical resolution to accurately
@@ -113,24 +121,16 @@ look so it looks approximately similar to the real thing.
     aspect ratio, just like old television sets. DOS games were normally
     designed to completely fill a 4:3 CRT screen. DOSBox Staging displays the
     emulated image in the correct aspect ratio by default, which means you'll
-    see *pillarboxing* (vertical black bars) at the two sides in fullscreen on
-    modern widescreen displays. This is normal.
+    see **pillarboxing** (vertical black bars) at the two sides in fullscreen
+    on modern widescreen displays. This is normal.
 
-    However, there is also *letterboxing* (horizontal black bars) above and
-    below the image. The reason for this is explained in detail in the [Aspect
-    ratios &
+    Depending on your monitor resolution and whether you're in windowed or
+    fullscreen mode, there might be also some **letterboxing** (horizontal
+    black bars) above and below the image. The reason for this is explained in
+    detail in the [Aspect ratios &
     scaling](../manual/graphics/rendering/aspect-ratios-and-scaling.md)
     section of the user manual. Feel free to take a detour if you wish to gain
     an understanding of these details now.
-
-    Alternatively, if you're on a 4K (UHD, 3840x2160) or better screen, you
-    can put this into your `[render]` section to get rid of pillarboxing
-    altogether:
-
-    ```ini
-    [render]
-    integer_scaling = off
-    ```
 
 
 ### EGA
@@ -178,7 +178,8 @@ machine = cga
 ```
 
 Ready? Behold the formidable 4-colour CGA graphics --- and what four colours those
-are! Similarly to EGA, CGA is capable of displaying true 200-line modes.
+are! Similarly to EGA, CGA is capable of displaying true 200-line modes with
+fat scanlines.
 
 {{ figure(
     "https://www.dosbox-staging.org/static/images/getting-started/pop-cga.jpg",
@@ -194,9 +195,11 @@ are! Similarly to EGA, CGA is capable of displaying true 200-line modes.
 
 ### Hercules
 
-The Hercules display adapter was released in 1982 to expand the text-only IBM
-PCs with basic graphical capabilities. It only supports monochrome graphics
-but at a higher 720&times;348 resolution. Can you guess how you can enable it?
+In our quest to make the game look even worse, we'll look at the Hercules
+adapter next. The Hercules display adapter was released in 1982 to expand the
+text-only IBM PCs with basic graphical capabilities. It only supports
+monochrome graphics but at a higher 720&times;348 resolution. Can you guess
+how to enable it?
 
 ```ini
 [dosbox]
@@ -217,7 +220,7 @@ manual).
 ) }}
 
 Monochrome monitors come in different colours, and DOSBox Staging can emulate
-all these variations via the `monochrome_palette` setting. The available
+most common variations via the `monochrome_palette` setting. The available
 options are `amber` (the default), `green`, `white`, and `paperwhite`.
 
 ```ini
@@ -225,8 +228,7 @@ options are `amber` (the default), `green`, `white`, and `paperwhite`.
 monochrome_palette = green
 ```
 
-You can also cycle between these while the game is running with the ++f11++
-key.
+You can cycle between these while the game is running with the ++f11++ key.
 
 <div class="image-grid" markdown>
 {{ figure(
@@ -264,10 +266,8 @@ key.
 
 ### Sharp pixels
 
-If you _really_ prefer sharp pixels over authentic CRT emulation (see
-[CRT shaders](../manual/graphics/rendering/shaders.md#adaptive-crt-shaders) for a
-detailed overview), you only need to add a single line to the `[render]`
-config section:
+If you _really_ prefer sharp pixels over authentic CRT emulation, you only
+need to add a single line to the `[render]` configuration section:
 
 ```ini
 [render]

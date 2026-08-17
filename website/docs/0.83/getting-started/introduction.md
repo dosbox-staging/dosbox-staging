@@ -2,7 +2,7 @@
 toc_depth: 3
 ---
 
-# Foreword
+# Introduction
 
 Welcome to the **DOSBox Staging 0.83 Getting Started guide**!
 
@@ -34,7 +34,7 @@ text files.
 
 The guide has been written so that everyone can follow it with ease,
 regardless of their operating system of choice. For example, Windows users
-probably know what the "C drive" is, and most Linux people are comfortable
+probably know what the "C: drive" is, and most Linux people are comfortable
 using the command line, but these things need to be explained to the Mac
 folks.
 
@@ -44,39 +44,55 @@ much joy as we had in developing it!
 
 ## Installing DOSBox Staging
 
-You must use the [current stable version](../../releases/index.md) of DOSBox
-Staging for this guide. If you already have other versions of DOSBox on your
-computer, installing DOSBox Staging won't interfere with them at all. That
-includes any DOSBox variants bundled with GOG and Steam games --- installing
-Staging won't break those games.
+You must use the version of DOSBox Staging this guide was written for (you can
+check the version in the navigation bar at the top of the page; it's the
+number to the right of the DOSBox Staging logo, e.g. **0.83**). A banner at
+the top of the page warns you if you're not viewing the latest version of the
+guide. We recommend using the latest stable version of our software; we just
+make the guide and the manual available for earlier versions too for people
+who haven't upgraded yet.
 
 If you're a beginner and have previously installed DOSBox Staging on your
 machine, we highly recommend uninstalling it first, then installing the
-current stable version to avoid confusion. Please make sure to follow the
+appropriate version to avoid confusion. Please make sure to follow the
 instructions [in this section](#a-note-for-existing-dosbox-staging-users) as
 well.
 
+!!! note "GOG and Steam DOS games"
+
+    If you already play DOS games through **GOG.com** or **Steam**, installing
+    DOSBox Staging is completely safe and won't interfere with them. Each of those
+    games ships with its own private copy of DOSBox inside the game's folder and
+    launches that copy directly.
+
+    DOSBox Staging installs separately in its own location and never touches
+    or overrides those bundled copies, so your existing GOG and Steam games
+    will keep working exactly as before. Of course, you can point a game at
+    DOSBox Staging later for better compatibility, but that's a deliberate
+    opt-in --- nothing about the installation does it for you.
+
+
 #### Windows
 
-Download the current stable installer from our [Windows
-releases](../../releases/windows.md) page, then proceed with the installation.
-Just accept the default options; don't change anything.
+Download the DOSBox Staging installer version appropriate for this guide from
+our [Windows releases](../../releases/windows.md) page, then proceed with the
+installation. Just accept the default options; don't change anything.
 
 Make sure to read the section about dealing with [Microsoft Defender SmartScreen](../manual/using-dosbox-staging/starting.md#windows-defender).
 
 #### macOS
 
-Download the current stable universal binary from our [macOS
-releases](../../releases/macos.md) page, then simply drag the DOSBox Staging
-icon into your Applications folder. Both Intel and Apple silicon are
-supported.
+Download the DOSBox Staging universal binary version appropriate for this
+guide from our [macOS releases](../../releases/macos.md) page, then simply
+drag the DOSBox Staging icon into your Applications folder. Both Intel and
+Apple silicon Macs are supported.
 
 Don't delete the `.dmg` installer disk image just yet --- we'll need it later.
 
 
 #### Linux
 
-Download the current stable release from our [Linux
+Download the DOSBox Staging version appropriate for this guide from our [Linux
 releases](../../releases/linux.md) page. Our official Linux build is
 statically linked and runs on most desktop Linux distributions (x86_64 only
 for now).
@@ -93,8 +109,8 @@ for now).
 
 As you follow along, you'll need to create and edit DOSBox configuration
 files, which are plain text files. While Notepad on Windows or TextEdit on
-macOS could do the job, it's preferable to use a better text editor better
-suited to the task.
+macOS could do the job, it's preferable to use a text editor better suited to
+the task.
 
 
 #### Windows
@@ -148,16 +164,17 @@ used it in the past but have uninstalled it, you most likely have a primary
 configuration file named `dosbox-staging.conf` somewhere on your drive (this
 is sometimes also referred to as the default or global configuration).
 
-The guide assumes the default settings of the current stable release, so we
-highly recommend removing any existing primary configuration files first
-(but make sure to back them up). If the primary config file does not exist in
-a platform-specific location, DOSBox Staging will create it on the first
-launch. If it exists, it will be used, but the defaults of some settings might
-have changed between releases, or you might have tweaked some settings
-yourself. Since the guide assumes the default settings, these differences may
-render its instructions invalid.
+The guide assumes the default settings of the DOSBox Staging version it is
+written for, so we highly recommend **removing any existing primary
+configuration files** first (but make sure to back them up). If the primary
+configuration file does not exist in a platform-specific location, DOSBox
+Staging will create it on the first launch (that's what we want). If it
+exists, it will be used, but the defaults of some settings might have changed
+between releases, or you might have tweaked some settings yourself. Since the
+guide assumes the default settings, these differences may render some of the
+instructions invalid.
 
-This is where the primary config is located per platform:
+This is where the primary configuration is located per platform:
 
 <div class="compact" markdown>
 
@@ -179,16 +196,16 @@ start it.
 
 ### Portable mode notes
 
-If you've been using DOSBox Staging in portable mode, `dosbox-staging.conf` is
-located in the same folder as your DOSBox Staging executable. In that case, we
-recommended backing up your existing primary config and then creating a new
-empty `dosbox-staging.conf` file in the executable folder. DOSBox Staging will
-write the new defaults to the empty `dosbox-staging.conf` file on the first
-launch.
+If you've already been using DOSBox Staging in portable mode,
+`dosbox-staging.conf` is located in the same folder as your DOSBox Staging
+executable. In that case, we recommended backing up your existing primary
+configuration and then creating a new empty `dosbox-staging.conf` file in the
+executable folder. DOSBox Staging will write the new defaults to the empty
+`dosbox-staging.conf` file on the first launch.
 
 !!! important
 
-    Having this empty config file there is important before you start up
-    Staging --- this instructs it to operate in portable mode. Otherwise, it
-    would create the new primary config in the platform-specific home folder
-    location.
+    Having this empty configuration file there is important before you start
+    up Staging --- this instructs it to operate in portable mode. Otherwise,
+    it would create the new primary configuration in the platform-specific
+    home folder location.

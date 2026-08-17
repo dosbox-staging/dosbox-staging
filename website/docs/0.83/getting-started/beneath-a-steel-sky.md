@@ -95,7 +95,7 @@ For the visually inclined, this is the structure we'll end up with:
 
 ![Beneath a Steel Sky folder structure](images/beneath-a-steel-sky-dirtree1.png){ .skip-lightbox style="width: 14rem; margin: 0.3rem max(calc((50% - 14rem/2) * 0.85), 0rem);" }
 
-We need to mount the CD image to use it. Our C drive is the hard drive, so
+We need to mount the CD image to use it. Our C: drive is the hard drive, so
 we'll mount the CD-ROM image using the following letter D by convention. This
 is equivalent to having a CD-ROM drive in our emulated computer assigned to
 the drive letter D and inserting the game CD into it.
@@ -171,7 +171,7 @@ first. Usually, there's an executable called `INSTALL.EXE` or `SETUP.EXE` in
 the root directory of the CD (the extension could be `.COM` or `.BAT` as
 well).
 
-Switch to the D drive by executing `d:` then run the `dir` command to inspect
+Switch to the D: drive by executing `d:` then run the `dir` command to inspect
 the contents of the CD:
 
 ``` { . .dos-prompt }
@@ -279,22 +279,22 @@ So before we run the game, what is this `cd \sky` command? Does it have
 something to do with the `cd` subfolder where we put our CD-ROM image,
 perhaps?
 
-No, that's just a coincidence. The `cd` command stands for Change Directory;
-you use it to change the current directory, which is displayed as part of the
-DOS prompt. So let's analyse what these lines we put into the `[autoexec]`
-section do:
+No, that's just a coincidence. The `cd` command stands for **change
+directory** --- you use it to change the current directory, which is displayed
+as part of the DOS prompt. So let's analyse what these lines we put into the
+`[autoexec]` section do:
 
 ```
 c:
 cd \sky
 ```
 
-The first command `c:` switches to the C drive (remember, the current drive is
-the special built-in Z drive when DOSBox starts).
+The first command `c:` switches to the C: drive (remember, the current drive is
+the special built-in Z: drive when DOSBox starts).
 
 Then, the second `cd \sky` command changes the current directory to the `sky`
-directory at the root level of the C drive. `cd sky` would also work because
-the current directory is the root directory when we switch to the C drive
+directory at the root level of the C: drive. `cd sky` would also work because
+the current directory is the root directory when we switch to the C: drive
 right after startup.
 
 How do you go up one level to the parent directory? With the `cd ..` command
@@ -332,8 +332,11 @@ you've had enough, uncomment the last `sky` command in the `[autoexec]` section
 !!! warning
 
     You cannot switch to a different drive with the `cd` command (e.g., `cd
-    z:` or `cd z` won't work); you *must* use the drive letter followed by a
+    z:` or `cd z` won't work); you must use the drive letter followed by a
     colon (`z:` in this example).
+
+    If you run `cd z`, DOS will attempt to enter a directory called `z` in the
+    current folder and will display an error if it doesn't exist.
 
 
 ## Adjusting volume levels
@@ -803,10 +806,10 @@ with modern sensibilities. You'll get used to it.
 This particular game turns things up a notch and does *not* copy the
 combined installer-and-setup utility into `C:\SKY` as one would rightly expect. To
 reconfigure the game, you'll need to run `INSTALL.EXE` from the CD, so from the
-D drive (I've told you --- setting up the game itself is often part of the
+D: drive (I've told you --- setting up the game itself is often part of the
 adventure!)
 
-So let's do that. As we've already installed the game on our C drive, we'll
+So let's do that. As we've already installed the game on our C: drive, we'll
 need to press ++esc++ instead of ++enter++ in the first *Path Selection
 Window*. Not exactly intuitive, but whatever. Now we're in the *Setup Menu*
 screen, where we can change the language and configure the sound options.
