@@ -125,13 +125,11 @@ Release build:
 
 ### Installing build tools
 
-- for Ubuntu:
+Refer to the [official vcpkg documentation](https://learn.microsoft.com/en-us/vcpkg/concepts/supported-hosts#dependencies)
+for installation instructions of the build tools required by vcpkg. 
 
-```shell
-sudo apt-get install git build-essential pkg-config cmake curl ninja-build \
-             autoconf autoconf-archive automake bison libtool libgl1-mesa-dev \
-             libsdl3-dev python3-venv
-```
+On Linux systems the C++ compiler is usually available through some meta-package
+(`build-essential` for Debian-based systems, `base-devel` for Arch, etc.).
 
 ### Install the vcpkg tool
 
