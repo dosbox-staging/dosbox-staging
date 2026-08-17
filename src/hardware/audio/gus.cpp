@@ -377,11 +377,6 @@ Gus::Gus(const io_port_t port_pref, const uint8_t dma_pref, const uint8_t irq_pr
 	channel->SetResampleMethod(ResampleMethod::ZeroOrderHoldAndResample);
 	channel->SetZeroOrderHoldUpsamplerTargetRate(GusOutputSampleRate);
 
-	// GUS is prone to accumulating beyond the 16-bit range so we scale back
-	// by RMS.
-	constexpr auto rms_squared = static_cast<float>(M_SQRT1_2);
-	channel->Set0dbScalar(rms_squared);
-
 	SetFilter(filter_prefs);
 
 	ms_per_render = MillisInSecond / channel->GetSampleRate();
