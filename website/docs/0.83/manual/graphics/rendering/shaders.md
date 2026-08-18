@@ -29,9 +29,11 @@ the complete list of options.
 
 The adaptive shaders also take the available viewport size into account. They
 need enough vertical resolution to produce clean scanlines, and different
-shader variants are used at different scaling ratios. If the viewport becomes
-too small, CRT emulation is disabled and DOSBox Staging falls back to the
-[`sharp`](#shader) shader.
+shader variants are used at different scaling ratios. Generally, CRT shaders
+need at least three times the vertical resolution of the emulated video mode
+to produce the intended CRT effect (e.g., 800×600 SVGA requires at least 1800
+vertical pixels). If the viewport becomes too small, CRT emulation is disabled
+and DOSBox Staging falls back to the [`sharp`](#shader) shader.
 
 This means the shader can change even though the game and its video mode have
 not changed. Resizing the window or switching between windowed and fullscreen

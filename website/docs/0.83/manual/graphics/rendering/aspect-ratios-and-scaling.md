@@ -19,7 +19,7 @@ to diverge from authentic emulation.
 Most DOS games were designed for 4:3 CRT displays and used non-square pixels.
 For example, the standard 320×200 VGA mode was intended to fill a 4:3 screen,
 so its pixels are slightly taller than they are wide (20% taller, to be exact,
-so with a **pixel aspect ratio (PAR)** of 1:1.2).
+so with a **pixel aspect ratio (PAR)** of 1:1.2 or 5:6).
 
 Therefore, when DOSBox Staging displays a 4:3 aspect ratio image while
 preserving its original proportions, the unused space appears as black bars on
@@ -32,16 +32,10 @@ the sides. This is called **pillarboxing**.
     style="width: 25rem; margin: 1.5rem 0;"
 ) }}
 
-At first glance, this might seem strange for 320×200 VGA: 320×200 is 16:10
-when we only consider the pixel dimensions of the image, which is fairly close
-to 16:9. But 320×200 VGA was not designed to be displayed with square pixels.
-Its pixels are taller than they are wide --- 20% taller, with a 1:1.2 (5:6)
-ixel aspect ratio (PAR) --- so the image is intended to appear "stretched"
-into a 4:3 aspect ratio rectangle.
-
-The illustration below shows why this matters. With square pixels, a 320×200
-image is too wide to fill a 4:3 display without leaving space below it. With
-the intended 20% taller pixels, the same 320×200 image fills the 4:3 screen.
+This might look odd at first — 320:200 simplifies to 16:10, which is already
+close to 16:9. But that math assumes square pixels, and VGA's weren't square.
+Stretch each pixel 20% taller, and the same 320×200 image fills the full 4:3
+frame instead of leaving a gap below it.
 
 {{ figure(
     "https://www.dosbox-staging.org/static/images/manual/monitor-aspect-ratios2.png",
@@ -54,10 +48,10 @@ TODO concrete game image examples
 
 ## Aspect ratio correction
 
-Aspect ratio correction (controlled by the [`aspect`](#aspect) setting)
-accounts for these non-square pixels when displaying the game on a modern
-square-pixel screen. It is enabled by default so most games look exactly as
-intended out-of-the-box.
+DOS games were designed around non-square pixels, but modern screens display
+everything in square pixels. Aspect ratio correction --- controlled by the
+[`aspect`](#aspect) setting --- corrects for this mismatch, so most games look
+exactly as intended out-of-the-box. It's enabled by default.
 
 A small number of games are better displayed with square pixels (`aspect =
 square-pixels`). These are typically DOS ports of European games originally
@@ -81,93 +75,76 @@ example.
     older DOSBox versions did not enable aspect ratio correction by default.
     As a result, many modern screenshots and videos of DOS games are shown
     with the wrong proportions, particularly for 320×200 modes.
-
     Well, at least on today's internet --- if you check out any old computer
     magazine from the 1980s or 90s, most screenshots are shown in the correct
     aspect ratio (though occasionally the magazines got it wrong too).
 
-    Pixels are perfectly square in 640×480 and most higher resolutions (1:1
-    pixel aspect ratio), but a few other DOS video modes also use non-square
-    pixels: 640×350 EGA (1:1.3714 PAR), 640×200 EGA (1:2.4 PAR), and 720×348
-    Hercules (1:1.5517 PAR). DOSBox Staging handles these modes automatically.
+!!! info "Other non-square pixel modes"
 
-
-!!! info "Weird pixel aspect ratios"
-
-    Pixels are square (1:1 pixel aspect ratio, or PAR) in **640&times;480** and
-    higher resolutions. A few other modes have their own non-square PARs:
-    **640&times;350 EGA** (1:1.37 PAR), **640&times;200 EGA** (1:2.4 PAR), and
-    **720&times;348 Hercules** (1:1.55 PAR). DOSBox Staging handles all of these
-    automatically.
+    Pixels are perfectly square in **640×480** and most higher resolutions
+    (1:1 pixel aspect ratio), but a few other DOS video modes also use
+    non-square pixels: **640×350 EGA** (1:1.3714 PAR), **640×200 EGA** (1:2.4
+    PAR), and **720×348 Hercules** (1:1.5517 PAR). DOSBox Staging handles
+    these modes automatically.
 
 
 ## Integer scaling
 
-The `integer_scaling` setting (set to `auto` by default) constrains the
-horizontal or vertical scaling factor to integer values when upscaling the
-image. The correct aspect ratio is always maintained, so the other dimension's
-scaling factor may become fractional.
+When the emulated image is enlarged to fill your screen, the vertical scaling
+factor is rarely a whole number --- e.g., stretching a 200-pixel-tall image to
+fill a 1200-pixel-tall screen is a factor of 6x, but most window sizes and
+resolutions don't divide evenly like that. This matters specifically for the
+vertical direction because [CRT shaders](shaders.md#adaptive-crt-shaders)
+simulate scanlines as horizontal bands, one per emulated row. With a
+fractional vertical scaling factor, some source rows end up mapped to more
+host pixels than others, so the simulated scanlines come out uneven heights
+instead of a regular repeating pattern -- and that's what can produce the wavy
+interference (moiré). Horizontal scaling doesn't have this problem, since
+there are no vertical lines to fall out of alignment. Integer scaling avoids
+the issue by only ever scaling the vertical direction by whole-number factors.
 
-The `vertical` setting avoids uneven scanlines and interference artifacts with
-CRT shaders or the [deinterlacing](special-features.md#deinterlacing) feature.
+The [`integer_scaling`](#integer_scaling) setting controls this:
 
-For the built-in CRT shaders, `auto` is recommended instead (this is the
-default). It enables vertical integer scaling only when a CRT shader is active
-and allows a few additional scaling ratios for better use of available screen
-space (e.g., 3.5x and 4.5x scaling factors). Moreover, it turns integer
-scaling off automatically when it's safe to do so (e.g., for low-resolution
-games in fullscreen on a 4K monitor).
+- **`auto`** (default) --- what you want for the built-in CRT shaders in most
+  cases. Enables vertical integer scaling only when a CRT shader is active,
+  allows a few extra scaling ratios (e.g., 3.5x, 4.5x) to make better use of
+  the screen, and turns integer scaling off by itself when it's safe to do so
+  (e.g., low-resolution games in fullscreen on a 4K display).
 
-The `horizontal` mode is included mainly for completeness, but can be useful
-on low-resolution displays to maximise horizontal text sharpness in
-text-heavy games.
+- **`vertical`** --- always constrains vertical scaling to integers; the
+  horizontal factor may end up fractional. Aspect ratio is preserved either
+  way. `auto` already does this when a CRT shader is active, so the main
+  reason to reach for `vertical` on its own is
+  [deinterlacing](special-features.md#deinterlacing) without a CRT shader.
 
-You can disable integer scaling completely with the `off` setting. The higher
-your monitor resolution, the less noticeable the effects of non-integer
-scaling become with CRT shaders. If you play in fullscreen on a 4K screen, you
-can generally disable integer scaling up to 640×480 with the CRT shaders
-without noticeable adverse effects.
+- **`horizontal`** --- mainly included for completeness; can help maximise
+  horizontal text sharpness in text-heavy games on low-resolution displays.
 
-```ini
-[render]
-integer_scaling = off
-```
+- **`off`** --- disables integer scaling entirely. Safe to use on
+  higher-resolution displays (e.g. 4K in fullscreen), where fractional scaling
+  with CRT shaders is barely noticeable. Not recommended on 1080p displays,
+  where the effect is much more visible. If you don't mind occasional moiré,
+  this gets you a larger image with less unused screen space.
 
-On lower-resolution monitors or in windowed mode, you'll need to experiment
---- some combinations look fine, while others produce interference patterns.
 
-Note that the [1080p special-case shaders](shaders.md#1080p-special-cases)
-alter the effective source resolution for 320×200 and 640×480 content, which
-affects the scaling ratios you'd otherwise expect.
+### Integer scaling and black borders
 
-CRT shaders generally need at least three times the vertical resolution of the
-emulated video mode to produce the intended CRT effect. For example, 800×600
-SVGA requires at least 1800 vertical pixels, or 2400 horizontal pixels because
-it uses square pixels. If the viewport is smaller, DOSBox Staging disables CRT
-emulation and falls back to the `sharp` shader.
+Integer scaling is the *other* thing (besides [aspect ratio
+correction](#why-is-there-a-black-border)) that can leave black borders around
+the image. Where aspect ratio correction pillarboxes (black bars on the sides)
+because the source and screen aspect ratios don't match, integer scaling can
+also **letterbox** (black bars on top and bottom) or pillarbox, because the
+image can't always be enlarged by a whole-number factor while also filling the
+available space. With integer scaling off, 4:3 content on a widescreen monitor
+would only ever pillarbox, never letterbox.
 
-You can see this behaviour by resizing the window with the default settings.
-The image will "snap" between scaling ratios, and the log window will report
-automatic shader switches. Because the adaptive CRT shaders also take the
-viewport size into account, resizing the window or switching between
-windowed and fullscreen modes can change the selected shader.
-
-Integer scaling can also leave letterboxing, pillarboxing, or both around the
-image. This is unavoidable when the image cannot be enlarged by a whole-number
-factor while also filling the available space.
-
-See [Why is there a black border?](#why-is-there-a-black-border) for an
-explanation of why aspect-ratio correction can also leave black areas around
-the image.
-
-!!! note "About fractional scaling ratios"
-
-    With the `sharp` shader, fractional scaling is not a problem as the
-    interpolation band is at most 1 pixel wide at the edges, so the result remains
-    sharp, especially at 1440p or 4K. With CRT shaders, non-integer horizontal
-    scaling is practically a non-issue --- the CRT shading artifacts (i.e., the
-    phosphor mask pattern) will effectively mask any minor unevenness even on
-    low-resolution displays.
+Because the adaptive CRT shaders take the viewport size into account,
+resizing the window or switching between windowed and fullscreen can change
+the selected shader and "snap" the image between scaling ratios (reported in
+the log window). See [Adaptive CRT shaders](shaders.md#adaptive-crt-shaders)
+for the underlying mechanics, including the [1080p special
+cases](shaders.md#1080p-special-cases) and how fractional horizontal scaling
+is handled.
 
 
 ## Sharp pixels
