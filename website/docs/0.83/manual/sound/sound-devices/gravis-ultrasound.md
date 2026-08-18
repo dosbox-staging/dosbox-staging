@@ -315,6 +315,19 @@ each other, or when you want to ensure a game uses its GUS code path
 exclusively.
 
 
+### Authentic clipping emulation
+
+The GUS simply sums the output its hardware mixer channels into a 16-bit
+accumulator, and clipping prevention is left to the composer or programmer ---
+some even drove output into clipping deliberately for a harder sound as an
+artistic choice. Also note that minor clipping is often barely audible.
+
+Leave the `GUS` mixer channel volume at 100 for authentic clipping behavior,
+and turn down the `MASTER` channel if it's too loud. Alternatively, lower the
+`GUS` channel's volume for more headroom, though this might yield less
+authentic results --- the choice is yours.
+
+
 ## Mixer channel
 
 The Gravis UltraSound outputs to the **GUS** [mixer channel](../mixer.md#list-of-mixer-channels).
