@@ -102,7 +102,7 @@ But wait a minute, this doesn't look like anything I'm used to from console
 emulators. Where are those visible thick scanlines?
 
 VGA display adapters have a peculiarity in that they display not one but *two*
-scanlines per pixel in low-resolution video modes hav less than about
+scanlines per pixel in low-resolution video modes have less than about
 350 lines of vertical resolution. This means the 320&times;200 VGA mode is
 really 640&times;400, just pixel and line-doubled. In fact, the vast majority
 of VGA monitors from the 1980s and 90s cannot display "true"
@@ -141,9 +141,9 @@ cards were initially prohibitively expensive for most hobbyists. The majority
 of games with EGA support use the 320&times;200 low-resolution EGA mode that
 has a fixed 16-colour palette.
 
-To run Prince of Persia in EGA mode, you simply need to tell DOSBox to emulate
-a machine equipped with an EGA adapter. That can be easily done by adding the
-following configuration snippet:
+To run Prince of Persia in EGA mode, you simply need to tell DOSBox Staging to
+emulate a machine equipped with an EGA adapter. That can be easily done by
+adding the following configuration snippet:
 
 ```ini
 [dosbox]
@@ -275,10 +275,10 @@ shader = sharp
 ```
 
 That's it! Switching to the `sharp` shader will also make the image fill the
-screen vertically, so no more letterboxing. The reason for this (and a lot
-more) are explained in the [Aspect ratios &
-scaling](../manual/graphics/rendering/aspect-ratios-and-scaling.md) section of
-the user manual.
+screen vertically, so no more letterboxing (however, some pillarboxing might
+remain). The reason for this (and a lot more) are explained in the [Aspect
+ratios & scaling](../manual/graphics/rendering/aspect-ratios-and-scaling.md)
+section of the user manual.
 
 Keep in mind, though, that the rest of the guide assumes you're using the CRT
 emulation.
@@ -306,7 +306,7 @@ especially through headphones. There's even some reverb added to the in-game
 footsteps and sound effects, although to a much lesser extent.
 
 You might want to experiment with the `small` and `medium` reverb presets, as
-well as the the `light` and `strong` chorus settings.
+well as the `light` and `strong` chorus settings.
 
 !!! note "Purist alert!"
 
@@ -335,9 +335,9 @@ joysticktype = disabled
 ```
 
 But if you want to play the game with your gamepad instead, you can do that
-too! DOSBox Staging auto-maps most common game controllers, so you can control
-the game with the left analog stick and the **X** button out-of-the-box with most
-gamepads.
+too! DOSBox Staging auto-maps most common game controllers, so you can play
+the game with the left analog stick and the **X** button out-of-the-box with
+most gamepads.
 
 You'll need to hit diagonals often to jump and crouch. If your left stick can
 only move in a circle, the following setting might make this easier:
@@ -382,21 +382,21 @@ deadzone = 15
 Prince of Persia can be paused by pressing the ++esc++ key during the game.
 That's nice, but not all games have such built-in pause functionality.
 
-Luckily, DOSBox has a pause feature that you can activate in any game with
-the ++alt+pause++ shortcut (++cmd+p++ on macOS), then unpause by pressing the
-same shortcut again.
+Luckily, DOSBox Staging has a pause feature that you can activate in any game
+with the ++alt+pause++ shortcut (++cmd+p++ on macOS), then unpause by pressing
+the same shortcut again.
 
-But wouldn't it be convenient if DOSBox could auto-pause itself whenever you
-switch to a different window? You can easily achieve that by enabling the
-`pause_when_inactive` option in the `[sdl]` section.
+But wouldn't it be convenient if DOSBox Staging could auto-pause itself
+whenever you switch to a different window? You can easily achieve that by
+enabling the `pause_when_inactive` option in the `[sdl]` section.
 
 ```ini
 [sdl]
 pause_when_inactive = yes
 ```
 
-Restart the game and switch to a different window --- DOSBox will pause itself.
-Switch back to DOSBox --- the game will resume. Nifty, isn't it?
+Restart the game and switch to a different window --- DOSBox Staging pauses
+itself. Switch back to DOSBox Staging --- the game resumes. Nifty, isn't it?
 
 !!! warning "Pause gotchas"
 
@@ -415,6 +415,9 @@ Below is the full config with all the enhancements we've added:
 fullscreen = on
 pause_when_inactive = yes
 
+[joystick]
+joysticktype = disabled
+
 [mixer]
 reverb = large
 chorus = normal
@@ -429,12 +432,12 @@ exit
 ## Configuration comments
 
 Instead of deleting those lines, you can prefix them with a `#` character
-(++shift+3++ on the US keyboard layout) to turn them into *comments*.
+(++shift+3++ on the US keyboard layout) to turn them into **comments**.
 
-Comments are lines starting with a `#` character; DOSBox ignores them when
-reading the configuration. Normally, you would use them to add, well,
-comments to your config, but "commenting out" a line is a quick way to
-disable it without actually removing the line.
+Comments are lines starting with a `#` character; DOSBox Staging ignores them
+when reading the configuration. Normally, you would use them to add, well,
+comments to your config, but "commenting out" a line is a quick way to disable
+it without actually removing the line.
 
 
 ```ini
@@ -474,8 +477,8 @@ What if you used a wrong value in your config, made a typo, or misremembered
 the name of a setting? How would you know about it? Having to triple-check
 every single character of the config when something goes wrong is not a good
 prospect... Fortunately, you don't have to do that because DOSBox Staging can
-inform you if something goes wrong. It does that via the *logs*, which are just
-a continuous stream of timestamped messages in a separate window.
+inform you if something goes wrong. It does that via the **logs**, which are
+just a continuous stream of timestamped messages in a separate window.
 
 The behaviour of the log window is different on each platform:
 
@@ -488,20 +491,20 @@ Staging executable.
 #### macOS
 
 DOSBox Staging does not open the log window by default when started via its
-application icon or with the *Start DOSBox Staging* icon you copied from the
+application icon or with the **Start DOSBox Staging** icon you copied from the
 `.dmg` installer archive earlier.
 
 To make the log window appear, you need to use another shortcut icon called
-_Start DOSBox Staging (logging)_, which you can copy into your game folder
+**Start DOSBox Staging (logging)**, which you can copy into your game folder
 from the same `.dmg` archive (note the word "logging" in the name of the
 icon).
 
 !!! note
 
     Remember, for the first time you'll need to right-click or ++ctrl++-click
-    on this icon, select the topmost *Open* menu item, and then press the
-    *Open* button in the appearing dialog. After the first start, you can simply
-    double-click on it.
+    on this icon, select the topmost **Open** menu item, and then press the
+    **Open** button in the appearing dialog. After the first start, you can
+    simply double-click on it.
 
 
 #### Linux
@@ -576,9 +579,8 @@ doing.
 
 While you might prefer to hide the log window for aesthetic reasons, it's
 wiser to just let it be so you can take a peek at it if something goes
-sideways. Without having access to the logs, your chances of fixing problems
-are significantly reduced, as, basically, you would be just stumbling in the
-dark. You've been warned!
+sideways. Without having access to the logs, you'll basically be stumbling in
+the dark --- you've been warned!
 
 ---
 
