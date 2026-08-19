@@ -40,8 +40,7 @@ png:
 	rsvg-convert -h  32 svg/dosbox-staging-32.svg > $(PNG_DIR)/icon_32.png
 
 	# Some desktop environments expect a 22x22 icon (e.g., KDE Plasma).
-	# Rendering this from the SVG optimised for 24x24px looks good enough.
-	rsvg-convert -h  22 svg/dosbox-staging-24.svg > $(PNG_DIR)/icon_22.png
+	rsvg-convert -h  22 svg/dosbox-staging-22.svg > $(PNG_DIR)/icon_22.png
 
 	rsvg-convert -h   48 svg/dosbox-staging.svg   > $(PNG_DIR)/icon_48.png
 	rsvg-convert -h   96 svg/dosbox-staging.svg   > $(PNG_DIR)/icon_96.png
