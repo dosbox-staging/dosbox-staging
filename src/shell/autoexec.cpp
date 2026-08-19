@@ -528,7 +528,7 @@ static std::unique_ptr<Config> specify_drive_conf()
 	constexpr auto OnStartup = Property::Changeable::OnlyAtStart;
 
 	prop->AddString("type", OnStartup, default_type.c_str())
-	        ->SetValues({"dir", "floppy", "cdrom", "iso", "overlay"});
+	        ->SetValues({"dir", "floppy", "fdd", "cdrom", "iso", "overlay"});
 
 	prop->AddString("label", OnStartup, defaults.label.c_str());
 	prop->AddString("path", OnStartup, defaults.path.c_str());
