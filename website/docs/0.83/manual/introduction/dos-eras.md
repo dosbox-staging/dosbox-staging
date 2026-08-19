@@ -279,7 +279,7 @@ cpu_cycles = 30000
 sbtype = sbpro2
 
 [gus]
-# Only enable it for games that use the Gravis Ultrasound
+# Only enable it for games that use the Gravis UltraSound
 gus = on
 
 [midi]
@@ -427,7 +427,7 @@ cputype = pentium_mmx
 sbtype = sb16
 
 [gus]
-# Only enable it for games that use the Gravis Ultrasound
+# Only enable it for games that use the Gravis UltraSound
 gus = on
 
 [midi]
