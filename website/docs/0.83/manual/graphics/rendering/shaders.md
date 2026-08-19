@@ -27,6 +27,8 @@ the two `crt-auto-arcade` variants deliberately emulate the thicker scanlines
 of an arcade or home-computer display. See the [`shader`](#shader) setting for
 the complete list of options.
 
+<!-- TODO screenshots -->
+
 The adaptive shaders also take the available viewport size into account. They
 need enough vertical resolution to produce clean scanlines, and different
 shader variants are used at different scaling ratios. Generally, CRT shaders
@@ -127,6 +129,8 @@ genuinely different.
 
 DOSBox Staging replicates this faithfully, and the adaptive CRT shaders are
 designed around it.
+
+<!-- TODO screenshots -->
 
 This has a direct consequence for [integer scaling](aspect-ratios-and-scaling.md#integer-scaling):
 a 320&times;200 VGA game has an effective internal resolution of 640&times;400.

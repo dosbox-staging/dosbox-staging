@@ -6,8 +6,9 @@ video output: scaling the image to fit the viewport, correcting its aspect
 ratio, applying shaders and filtering, adjusting its colours and brightness,
 and correcting certain video artifacts.
 
-These settings do **not** affect the [graphics hardware](../adapters.md) or video mode presented
-to the game. They only change how the resulting image is displayed.
+These settings do *not* affect the [graphics hardware](../adapters.md) or
+video mode presented to the game. They only change how the resulting image is
+displayed.
 
 The rendering settings are organised into the following areas:
 

@@ -1,9 +1,9 @@
 # What is DOSBox Staging?
 
-**DOSBox Staging** is a tool that allows you to run software written for the
-MS-DOS operating system and the Windows 3.1 operating environment on modern
-computers running Windows, macOS, or Linux. The emulation for MS-DOS is built
-in; you don't need to install the DOS operating system itself.
+**DOSBox Staging** is a program that allows you to run software written for
+the MS-DOS operating system and the Windows 3.1 operating environment on
+modern computers running Windows, macOS, or Linux. The emulation for MS-DOS is
+built in; you don't need to install the DOS operating system itself.
 
 Although DOSBox was initially intended for running DOS games only, now it has
 good compatibility with application programs too. It gives you access to the

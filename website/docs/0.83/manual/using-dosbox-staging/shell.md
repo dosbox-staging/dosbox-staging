@@ -1,10 +1,11 @@
 # The DOS shell
 
 When DOSBox Staging starts, you'll usually spend a few moments at the DOS
-command prompt before launching a game or application. This is the **shell**,
-the command interpreter that lets you navigate drives and directories, mount
-storage, configure the environment, and start programs. Most interactions with
-DOS begin here, so it's worth becoming familiar with a few shell basics.
+command prompt before launching a game or application. This is the **DOS
+shell**, the command interpreter that lets you navigate drives and
+directories, mount storage, configure the environment, and start programs.
+Most interactions with DOS begin here, so it's worth becoming familiar with a
+few shell basics.
 
 On a real PC, this role was filled by `COMMAND.COM`, the default command
 processor shipped with MS-DOS. DOSBox Staging provides its own shell that is
