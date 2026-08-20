@@ -35,6 +35,7 @@ png:
 	mkdir -p $(PNG_DIR)
 
 	rsvg-convert -h  16 svg/dosbox-staging-16.svg > $(PNG_DIR)/icon_16.png
+	rsvg-convert -h  20 svg/dosbox-staging-20.svg > $(PNG_DIR)/icon_20.png
 	rsvg-convert -h  24 svg/dosbox-staging-24.svg > $(PNG_DIR)/icon_24.png
 	rsvg-convert -h  30 svg/dosbox-staging-30.svg > $(PNG_DIR)/icon_30.png
 	rsvg-convert -h  32 svg/dosbox-staging-32.svg > $(PNG_DIR)/icon_32.png
