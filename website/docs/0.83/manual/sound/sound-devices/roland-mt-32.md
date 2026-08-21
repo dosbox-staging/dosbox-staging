@@ -272,17 +272,17 @@ subfolder inside the game's working folder.
 
 **macOS**
 
-1. `~/Library/Preferences/DOSBox/mt32-roms/`
-2. `~/Library/Audio/Sounds/MT32-Roms/`
+1. `/Users/<USERNAME>/Library/Preferences/DOSBox/mt32-roms/`
+2. `/Users/<USERNAME>/Library/Audio/Sounds/MT32-Roms/`
 3. `/usr/local/share/mt32-rom-data/`
 4. `/usr/share/mt32-rom-data/`
 
 **Linux**
 
-1. `$XDG_DATA_HOME/dosbox/mt32-roms/` (defaults to `~/.local/share/dosbox/mt32-roms/`)
-2. `$XDG_DATA_HOME/mt32-rom-data/` (defaults to `~/.local/share/mt32-rom-data/`)
+1. `$XDG_DATA_HOME/dosbox/mt32-roms/` (defaults to `$HOME/.local/share/dosbox/mt32-roms/`)
+2. `$XDG_DATA_HOME/mt32-rom-data/` (defaults to `$HOME/.local/share/mt32-rom-data/`)
 3. `$XDG_DATA_DIRS/mt32-rom-data/` (defaults to `/usr/local/share/mt32-rom-data/` and `/usr/share/mt32-rom-data/`)
-4. `$XDG_CONFIG_HOME/dosbox/mt32-roms/` (defaults to `~/.config/dosbox/mt32-roms/`)
+4. `$XDG_CONFIG_HOME/dosbox/mt32-roms/` (defaults to `$HOME/.config/dosbox/mt32-roms/`)
 
 
 ## Mixer channel

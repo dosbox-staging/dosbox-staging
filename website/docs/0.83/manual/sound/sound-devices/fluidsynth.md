@@ -26,8 +26,8 @@ your DOSBox configuration folder:
 | Platform   | SoundFont folder
 | ---------- | --------------------------------------------------------
 | Windows    | `C:\Users\<USERNAME>\AppData\Local\DOSBox\soundfonts\`
-| macOS      | `~/Library/Preferences/DOSBox/soundfonts/`
-| Linux      | `~/.config/dosbox/soundfonts/`
+| macOS      | `/Users/<USERNAME>/Library/Preferences/DOSBox/soundfonts/`
+| Linux      | `$HOME/.config/dosbox/soundfonts/`
 
 </div>
 
@@ -91,17 +91,17 @@ folder first. Otherwise, it searches the following folders for SoundFont files
 
 **macOS**
 
-1. `~/Library/Preferences/DOSBox/soundfonts/`
-2. `~/Library/Audio/Sounds/Banks/`
+1. `/Users/<USERNAME>/Library/Preferences/DOSBox/soundfonts/`
+2. `/Users/<USERNAME>/Library/Audio/Sounds/Banks/`
 
 **Linux**
 
-1. `$XDG_DATA_HOME/dosbox/soundfonts/` (defaults to `~/.local/share/dosbox/soundfonts/`)
-2. `$XDG_DATA_HOME/soundfonts/` (defaults to `~/.local/share/soundfonts/`)
-3. `$XDG_DATA_HOME/sounds/sf2/` (defaults to `~/.local/share/sounds/sf2/`)
+1. `$XDG_DATA_HOME/dosbox/soundfonts/` (defaults to `$HOME/.local/share/dosbox/soundfonts/`)
+2. `$XDG_DATA_HOME/soundfonts/` (defaults to `$HOME/.local/share/soundfonts/`)
+3. `$XDG_DATA_HOME/sounds/sf2/` (defaults to `$HOME/.local/share/sounds/sf2/`)
 4. `$XDG_DATA_DIRS/soundfonts/` (defaults to `/usr/local/share/soundfonts/` and `/usr/share/soundfonts/`)
 5. `$XDG_DATA_DIRS/sounds/sf2/` (defaults to `/usr/local/share/sounds/sf2/` and `/usr/share/sounds/sf2/`)
-6. `$XDG_CONFIG_HOME/dosbox/soundfonts/` (defaults to `~/.config/dosbox/soundfonts/`)
+6. `$XDG_CONFIG_HOME/dosbox/soundfonts/` (defaults to `$HOME/.config/dosbox/soundfonts/`)
 
 
 ## Reverb and chorus

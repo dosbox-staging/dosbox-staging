@@ -240,8 +240,8 @@ displayed image; viewport size decides how *large* it appears. At fullscreen
 on a large modern display, low-resolution DOS graphics can look much larger
 than they did on the monitors they were designed for.
 
-14" [VGA](../adapters.md#vga) monitors were the most popular option until the
-mid-1990s. Before that, [CGA](../adapters.md#cga) and
+14" [VGA](../adapters.md#vga-and-svga) monitors were the most popular option
+until the mid-1990s. Before that, [CGA](../adapters.md#cga) and
 [EGA](../adapters.md#ega) monitors were typically 12--14", while monochrome
 [Hercules](../adapters.md#hercules-graphics-card) monitors were usually
 10--12". These are nominal sizes; the actual visible area was roughly 1.5 to 2

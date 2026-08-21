@@ -715,8 +715,8 @@ MT&#8209;32 ROM folder:
 | <!-- --> | <!-- -->
 |----------|----------
 | **Windows** | `C:\Users\%USERNAME%\AppData\Local\DOSBox\mt32-roms\`
-| **macOS**   | `~/Library/Preferences/DOSBox/mt32-roms/`
-| **Linux**   | `~/.config/dosbox/mt32-roms/`
+| **macOS**   | `/Users/<USERNAME>/Library/Preferences/DOSBox/mt32-roms/`
+| **Linux**   | `$HOME/.config/dosbox/mt32-roms/`
 
 </div>
 
