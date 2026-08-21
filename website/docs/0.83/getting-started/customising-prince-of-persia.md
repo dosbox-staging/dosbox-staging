@@ -54,7 +54,7 @@ game by pressing ++ctrl+q++. Not strictly necessary, but it's a nice touch.
     ++ctrl+alt+home++! This is a homage to the **Ctrl+Alt+Del "three-finger
     salute"** way of soft-rebooting IBM PCs. :sunglasses:
 
-    If you're on macOS,  you'll need to press ++cmd+opt+home++ instead, and if
+    If you're on macOS, you'll need to press ++cmd+opt+home++ instead, and if
     Apple has decided for you that your MacBook doesn't need a Home key,
     ++cmd+opt+fn+left++ should do the trick.
 
@@ -102,12 +102,12 @@ But wait a minute, this doesn't look like anything I'm used to from console
 emulators. Where are those visible thick scanlines?
 
 VGA display adapters have a peculiarity in that they display not one but *two*
-scanlines per pixel in low-resolution video modes have less than about
+scanlines per pixel in low-resolution video modes that have less than about
 350 lines of vertical resolution. This means the 320&times;200 VGA mode is
 really 640&times;400, just pixel and line-doubled. In fact, the vast majority
-of VGA monitors from the 1980s and 90s cannot display "true"
-200-line graphics, so it's physically impossible to get the "thick scanline"
-arcade and home computer monitor look on them.
+of VGA monitors from the 1980s and 90s cannot display "true" 200-line
+graphics, so it's physically impossible to get the "thick scanline" arcade and
+home computer monitor look on them.
 
 Double-scanned VGA emulation looks stellar on a 4K monitor and even on 1440p,
 but on 1080p, there is simply not enough vertical resolution to accurately
@@ -164,9 +164,10 @@ thick scanline look.
 
 The notorious CGA adapter, the first colour graphics adapter created for the
 original IBM PC in 1981, is a serious contender for the worst graphics
-standard ever invented. In its 320&times;200 low-resolution mode, only four colours
-can be displayed simultaneously on the screen chosen from a small number of fixed
-palettes. Frankly, all combinations look pretty horrifying...
+standard ever invented. In its 320&times;200 low-resolution mode, only four
+colours, chosen from a small number of fixed palettes, can be displayed
+simultaneously on the screen. Frankly, all combinations look pretty
+horrifying...
 
 But no matter; the game supports it, so we'll have a
 look at it. Make the following adjustment to the `machine` setting, and don't
@@ -198,7 +199,7 @@ fat scanlines.
 In our quest to make the game look even worse, we'll look at the Hercules
 adapter next. The Hercules display adapter was released in 1982 to expand the
 text-only IBM PCs with basic graphical capabilities. It only supports
-monochrome graphics but at a higher 720&times;348 resolution. Can you guess
+monochrome graphics albeit at a higher 720&times;348 resolution. Can you guess
 how to enable it?
 
 ```ini

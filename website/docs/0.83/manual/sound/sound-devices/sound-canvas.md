@@ -33,8 +33,8 @@ into the `soundcanvas-roms` folder inside your DOSBox configuration folder:
 | Platform | ROM folder
 |----------|---------------------------------------------------------
 | Windows  | `C:\Users\<USERNAME>\AppData\Local\DOSBox\soundcanvas-roms\`
-| macOS    | `~/Library/Preferences/DOSBox/soundcanvas-roms/`
-| Linux    | `~/.config/dosbox/soundcanvas-roms/`
+| macOS    | `/Users/<USERNAME>/Library/Preferences/DOSBox/soundcanvas-roms/`
+| Linux    | `$HOME/.config/dosbox/soundcanvas-roms/`
 
 </div>
 

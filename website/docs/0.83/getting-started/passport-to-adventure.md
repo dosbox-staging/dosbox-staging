@@ -2,9 +2,6 @@
 
 Okay, so what we'll set up next is not a single game but a collection called
 **Passport to Adventure**, which contains playable demos of three classic
-LucasArts point-and-click adventure games: [Indiana Jones and the Last
-Crusade][indy3-moby], [The Secret of Monkey Island][monkey1-moby], and
-[Loom][loom-moby]. These were the blockbusters of the adventure gaming genre
 back in the day, and they still offer countless hours of fun if you like
 puzzle-solving and well-written, intriguing storylines.
 
@@ -16,26 +13,30 @@ But before we begin, let's discuss something fundamental to DOSBox Staging!
 
 ## Primary configuration
 
-Have you wondered how do you learn about all the available configuration
+Have you wondered how you learn about all the available configuration
 settings? When you start DOSBox Staging for the very first time, it creates a
-so-called *primary configuration* file in a standard location with the name
+so-called **primary configuration** file in a standard location with the name
 `dosbox-staging.conf`. This file contains the full list of available settings
-with their default values and a short description for each.
+with their default values and short descriptions for each.
 
 For example, this is the start of the description of the `viewport` setting:
 
     Set the viewport size ('fit' by default). This is the maximum drawable area;
     the video output is always contained within the viewport while taking the
     configured aspect ratio into account (see 'aspect'). Possible values:
-      fit:          Fit the viewport into the available window/screen (default).
-                    There might be padding (black areas) around the image with
-                    'integer_scaling' enabled.
-      WxH:          Set a fixed viewport size in WxH format in logical units
-                    (e.g., 960x720). The specified size must not be larger than
-                    the desktop. If it's larger than the window size, it's
-                    scaled to fit within the window.
-      N%:           Similar to 'WxH' but the size is specified as a percentage
-                    of the desktop size.
+
+      fit:           Fit the viewport into the available window/screen
+                     (default). There might be padding (black areas) around the
+                     image with 'integer_scaling' enabled.
+
+      WxH:           Set a fixed viewport size in WxH format in logical units
+                     (e.g., 960x720). The specified size must not be larger than
+                     the desktop. If it's larger than the window size, it will
+                     be scaled to fit within the window.
+
+      N%:            Similar to 'WxH', but the size is specified as a percentage
+                     of the desktop size.
+
       ...
 
 Here are the locations of `dosbox-staging.conf` on each platform:
@@ -45,8 +46,8 @@ Here are the locations of `dosbox-staging.conf` on each platform:
 | <!-- --> | <!-- -->
 |----------|----------
 | **Windows**  | `C:\Users\%USERNAME%\AppData\Local\DOSBox\dosbox-staging.conf`
-| **macOS**    | `~/Library/Preferences/DOSBox/dosbox-staging.conf`
-| **Linux**    | `~/.config/dosbox/dosbox-staging.conf`
+| **macOS**    | `/Users/<USERNAME>/Library/Preferences/DOSBox/dosbox-staging.conf`
+| **Linux**    | `$HOME/.config/dosbox/dosbox-staging.conf`
 
 </div>
 
@@ -54,7 +55,7 @@ Here are the locations of `dosbox-staging.conf` on each platform:
 
      The `Library` folder is hidden by default in the macOS Finder. To make it
      visible, go to your home folder in Finder, press ++cmd+j++ to bring up
-     the view options dialog, and then check *Show Library Folder*.
+     the view options dialog, and then check **Show Library Folder**.
 
 ## Online help
 
@@ -69,63 +70,65 @@ Let's see what `viewport /?` gives us!
 That's quite a handy online help system, isn't it? As the bottom line
 indicates, you can press ++space++ to go to the next page, ++enter++ to
 advance to the next line, or ++q++ to quit the help viewer. The help viewer
-will also automatically quit once we've reached the end of the output. You
-can also find the full description of all settings in the
-[manual](../manual/introduction/about-this-manual.md).
+automatically quits once you've reached the end of the text. The [user
+manual](../manual/introduction/about-this-manual.md) also contains the full
+description of all configuration settings, so you can use the search box in
+the top-right corner of this page to find them.
 
-You can run `config -h <section_name>`, too, to get the names of all available
-settings in a given config section. For example, this is the result of `config
--h render`:
+To get the names of all available settings in a given config section, run
+`config -h <section_name>`. For example, you'll get this for `config -h
+render`:
 
 ![Output of the 'config -h render' command](https://www.dosbox-staging.org/static/images/getting-started/config-render.png){ loading=lazy }
 
-
-It is highly recommended that you look up the descriptions of the various
-settings as you encounter them in this guide. That's a good way to get
-gradually acquainted with the available options.
+It's a good idea to look up the descriptions of the various settings as you
+encounter them in this guide. That's a good way to get gradually acquainted
+with the available options.
 
 
 ## Layered configurations
 
-In our Prince of Persia example, we created a `dosbox.conf` configuration file
-in the game's folder, and then we started DOSBox Staging from that folder. In
-such a scenario, DOSBox loads the _primary configuration_ first, then applies
-the _local_ `dosbox.conf` _configuration_ found in the folder from which it
-was started from (the game's folder). Because of this loading order, you can
-override any primary config setting in your local config.
+In our [Prince of Persia](setting-up-prince-of-persia.md) example, we created
+a `dosbox.conf` configuration file in the game's folder, and then we started
+DOSBox Staging from that folder. In that scenario, DOSBox Staging loads the
+**primary configuration** first, then applies the `dosbox.conf` **local
+configuration** found in the folder it was started from (the game folder).
+Because of this loading order, you can override any primary config setting in
+your local config.
 
-This *layered configuration* approach is very useful (see
-[Configuration](../manual/using-dosbox-staging/configuration.md) for the full details);
-you can apply broad, general settings in your primary configuration that
-will apply to all games, then fine-tune these defaults on a per-game basis
-via local `dosbox.conf` configs in the individual game folders. Because of this, the primary
-configuration is sometimes also referred to as the _default_ or _global
-configuration_.
+This **layered configuration** approach is very useful (see
+[Configuration](../manual/using-dosbox-staging/configuration.md) for the full
+details); you can apply broad, general settings in your primary configuration
+that will apply to all games, then fine-tune these defaults on a per-game
+basis via local `dosbox.conf` configs in the individual game folders. Because
+of this, the primary configuration is sometimes also referred to as the
+**default configuration** or **global configuration**.
 
 As DOSBox Staging comes with sensible defaults, you can keep these local
-configs quite minimal, as we've already seen. There's absolutely no need to
-specify every single setting in your local game-specific config --- that would
-make configurations very cumbersome to manage, plus it would be very difficult
-to see what settings have been changed from their defaults for a particular
-game.
+configs quite minimal, as we've already seen. There's no need to specify every
+setting in your local game-specific config. Doing so would make configs
+cumbersome to manage, and it would also make it harder to see at a glance what
+you've actually changed from the defaults for that game.
 
 !!! tip "A word of advice"
 
     It's best not to change the primary configuration while you're still a
-    beginner. Even more experienced DOSBox users are generally better off
-    changing the primary configuration very sparingly, as those settings will
-    affect all games.
+    beginner. Even more experienced DOSBox Staging users are generally better
+    off tweaking the primary configuration very sparingly, as those global
+    settings will affect all games.
 
     A few things that you might want to consider setting globally in the
     primary config include enabling fullscreen mode, turning on auto-pausing,
     integer scaling and shader defaults, and certain MIDI and audio-related
     settings (e.g., sample rate, buffer sizes, volume levels, etc.) We'll
-    examine these later.
+    examine these later. See [Configuration best
+    practices](../../0.83/manual/using-dosbox-staging/configuration.md#configuration-best-practices)
+    for further tips.
 
 
 ## Installing the game
 
-Ok, so let's create the subfolder for our second game then! Create another
+Okay, so let's create the subfolder for our second game then! Create another
 folder in `DOS Games` next to `Prince of Persia` and name it `Passport to
 Adventure`. Create the `drives` subfolder in it and the `c` subfolder in the
 `drives` folder.
@@ -153,26 +156,27 @@ But there's also a `README.TXT`, so let's check that one out first!
 We can try displaying its contents with the `type README.TXT` command
 (remember, use tab-completion), but we'll only see the end of the file that
 way because it's longer than a single page. The `type` command prints out the
-entire contents of the file, which will cause the screen to scroll, so we'll
-effectively only see the last page. Yep, that's DOS for you!
+entire contents of the file, which will quickly scroll past on the screen ---
+we'll only be able to read the last page, effectively. Yep, that's DOS for
+you!
 
-Fortunately, there is a way to fix this: we can "pipe" the output of the `type` command
-through the `more` command that will paginate the preceding command's output,
-just like the `config` command does. The `|` is called the "pipe" character --- how fitting! You can
-type it by pressing ++shift+backslash++, which is located above the ++enter++
-key on the standard US keyboard.
+Fortunately, there is a way to remedy this: we can "pipe" the output of the
+`TYPE` command through the `MORE` command that will paginate the preceding
+command's output, just like the `CONFIG` command does. The `|` is called the
+"pipe" character --- how fitting! You can type it by pressing
+++shift+backslash++, which is located above the ++enter++ key on the standard
+US keyboard.
 
-Okay, so let's try it! 
+Okay, so let's try it!
 
     type README.TXT | more
 
 Now we can read the whole file, starting from the beginning. But there's an
-easier way to accomplish the same thing: we can simply execute `more
-README.TXT`. You can think of the `more` command as a more advanced,
-paginating version of the `type` command.
+easier way: just run `more README.TXT`. You can think of the `MORE` command as
+a more advanced, paginating version of `TYPE`.
 
-Of course, you can always cheat and read such text files outside of DOSBox,
-but we wanted to teach you something useful about DOS here.
+Of course, you can always cheat and read such text files outside of DOSBox
+Staging, but we wanted to teach you something useful about DOS here.
 
 The file contains important instructions about installing and playing the
 game, including the list of available keyboard shortcuts, so read it
@@ -191,9 +195,7 @@ the ++ctrl+f10++ shortcut (++cmd+f10++ on macOS). The title bar of the DOSBox
 Staging window informs you about the current mouse capture state.
 
 It's also possible to tell DOSBox Staging to start with the mouse captured
-(this might not work on all operating systems, though). See the
-[Mouse](../manual/input/mouse.md) page in the manual for all available capture
-modes and mouse settings.
+(this might not work on all operating systems, though):
 
 ```ini
 [mouse]
@@ -205,10 +207,10 @@ mouse_capture = onstart
 This is a really user-friendly program; you can press ++f1++ on the main
 screen to read the general instructions, then start a game demo by clicking on
 one of the three game icons on the left. Pressing ++f1++ during the game
-displays further game-specific help; make sure you read them if you actually
-want to play these demos. They're worth playing even if you intend to play the
-full games later, as the demos contain slightly different scenes, puzzles, and
-dialogues, plus some fun easter-eggs.
+displays further game-specific help --- make sure you read it if you actually
+want to play these demos. They're worth your time even if you intend to play
+the full games later, as the demos contain slightly different scenes, puzzles,
+and dialogues, plus some fun easter-eggs.
 
 For people who really don't like to read: ++f5++ brings up the save/load/quit
 dialog, and you can pause/unpause the game with the ++space++ key.
@@ -231,32 +233,30 @@ options next!
 ) }}
 </div>
 
+
 ## Sound options
 
-For a complete overview of all emulated sound devices, see the [Sound
-overview](../manual/sound/overview.md) section of the manual.
+For most of the DOS era, no single audio device dominated, so games often
+ended up supporting a whole lineup of them at once --- everything from the
+humble built-in PC speaker to dedicated synthesiser cards, each sounding
+noticeably different. This game demo gives us a nice sampling of that variety,
+letting us switch between several of the period's most common devices and hear
+the difference for ourselves. We'll go through each one in turn below,
+starting with the sound card DOSBox Staging emulates by default.
 
 ### Sound Blaster / AdLib sound
 
-The game managed to auto-detect our emulated Sound Blaster card, so what we're
-hearing during the intro is AdLib music.
+The game managed to auto-detect our emulated Sound Blaster card (emulated by
+default), so what we're hearing during the intro is AdLib music.
 
 *"Whoa, let me stop you right there, dude! You said Sound Blaster, so what's
 this AdLib thing now?!"*
 
 Okay, we'll need to understand a few technical details again. Most Sound
-Blaster cards support at least two sound generation mechanisms:
-
-- **Playing digitised sounds** (sounds recorded from real-world sources, such
-    as speech, sound effects, and sometimes even recorded music). This is
-    referred to as *digital audio*, *digitised sound*, *sampled audio*, *PCM
-    audio*, or just *voice* or *speech* in the game manuals and setup
-    utilities (yes, it's all over the place; I'm sure there are a dozen more
-    variations out there...)
-
-- **Playing music and sound effects using a built-in synthesiser.** This is
-    usually called *AdLib*, *OPL synthesiser*, *FM synthesiser*, simply just
-    *music*, or somewhat confusingly *Sound Blaster MIDI*.
+Blaster cards can do two things: play back **digitised sound** (recordings of
+real-world audio, like speech or sound effects), and play music through a
+**built-in synthesiser**. We'll get into the various names for these further
+down; for now, just the two categories.
 
 Storing music as a list of instructions for a synthesiser takes *very* little
 disk space (think of sheet music), whereas storing digital audio eats disk
@@ -268,13 +268,14 @@ only.
 These game demos don't have any digital sound effects; they all just use the
 OPL chip of the Sound Blaster for both music and some limited sound effects.
 The game is clever enough to auto-detect our OPL-equipped Sound Blaster 16
-(the default sound card emulated by DOSBox), so we'll get OPL sound by simply
-starting `SAMPLER.EXE`.
+(the default sound card emulated by DOSBox Staging), so we'll get OPL sound by
+simply starting `SAMPLER.EXE`.
 
 Of course, we can enhance the OPL music by adding reverb and chorus effects to
-it, just as we've done with Prince of Persia. Unless you're an absolute
-purist, this is generally a good idea, especially when using headphones. We'll
-only need to add a few lines to our config:
+it, just as we've done with [Prince of
+Persia](customising-prince-of-persia.md#chorus-reverb). Unless you're an
+absolute purist, this is generally a good idea, especially when using
+headphones. We'll only need to add a few lines to our config:
 
 ```ini
 [mixer]
@@ -292,7 +293,8 @@ chorus = normal
 
 !!! info "1-minute Sound Blaster OPL synthesiser crash course"
 
-    In case you're wondering:
+    Now for the terminology, since it does get used interchangeably and can
+    be confusing:
 
     - **OPL** is just the name of the Yamaha OPL sound synthesiser chip present
         on most Sound Blaster cards.
@@ -316,6 +318,10 @@ chorus = normal
         fallback option to play the same MIDI music via the OPL chip, using
         synthesised approximations of the same instruments.
 
+    Digitised sound has its own pile of names too --- you'll see it called
+    **digital audio**, **sampled audio**, **PCM audio**, or just **voice** or
+    **speech** depending on the game manual or setup utility.
+
     All in all, the terms **OPL**, **AdLib**, and **FM** are used
     interchangeably in practice, and usually, they refer to the exact same
     thing.
@@ -326,7 +332,7 @@ chorus = normal
 The observant among you might have spotted the list of graphics and sound
 configuration options in `README.TXT`. Playing with the graphics options is an
 exercise for the reader; it should be easy to apply what we've learned while
-setting up Prince of Persia.
+setting up [Prince of Persia](customising-prince-of-persia.md#graphics-options).
 
 The sound settings, however, are quite interesting. We can get the executable
 to print out the list of available options by passing it some invalid
@@ -366,16 +372,17 @@ C:\>SAMPLER.EXE i
 
 Well, it does sound a lot worse, doesn't it?
 
-DOSBox emulates the little *internal speaker* (also known as *PC speaker*)
-that was a standard accessory of all PCs for a long time. It was designed to
-only produce rather primitive bleeps and bloops, but certain games can coerce
-it to play digitised sound by employing some cunning tricks. In any case, this
-a bleepy-bloopy type of game...
+DOSBox Staging emulates the little **internal speaker** (also known as **PC
+speaker**) that was a standard accessory of all PCs for a long time. It was
+designed to only produce rather primitive bleeps and bloops, but certain games
+can coerce it to play digitised sound by employing some cunning tricks. In any
+case, this a bleepy-bloopy type of game...
 
 It's hard to envision anyone *willingly* subjecting themselves to the internal
 speaker experience when a game supports much better quality sound (even
 nostalgia can't be that strong!) But in most games released before about 1988,
-that's the only sound option you have.
+that's the only sound option you have, you you just gotta take what you can
+get (or turn down the volume if it's too annoying).
 
 For such early games, we can make the PC speaker a little more pleasant to
 listen to by enabling the special `tiny` reverb preset. This has been
@@ -410,8 +417,8 @@ help you find these pre-1990 Tandy specials.
 
 [wiki-tandy]: https://github.com/dosbox-staging/dosbox-staging/wiki/Games-with-enhanced-Tandy-&-PCjr-graphics-and-sound
 
-DOSBox can emulate a Tandy machine --- we only need to instruct it to do so in
-our config:
+DOSBox Staging can emulate a Tandy machine --- we only need to instruct it to
+do so in our config:
 
 ```ini
 [dosbox]
@@ -422,22 +429,22 @@ Emulating the Tandy will cause the standard DOS font to be a bit different;
 this is normal, so don't be alarmed by it.
 
 After a restart, we're finally hearing different synthesised music, which
-sounds definitely better than the PC speaker rendition but not as good as the
-OPL music. Interestingly, the Tandy music plays a little bit faster than the
-other sound options.
+sounds definitely better than the PC speaker rendition but not as good as OPL
+music. Interestingly, the Tandy music plays a little bit faster than the other
+sound options.
 
 !!! note
 
     If you started `SAMPLER.EXE` without providing the `ts` argument to
     specifically ask for Tandy sound, the game will auto-detect the Sound
     Blaster's OPL synthesiser and prefer it over the Tandy sound. That's
-    understandable; the game is really good at picking the best available
+    understandable --- the game is really good at picking the best available
     sound device!
 
-    As an exercise, you can disable the Sound Blaster emulation altogether
-    with the below config snippet. Then you can start `SAMPLER.EXE` without
-    any arguments, and the game will use Tandy sound as that's the best
-    available option (the PC speaker would be the only other alternative):
+    As an exercise, disable the Sound Blaster emulation altogether with the
+    below config snippet, then start `SAMPLER.EXE` without any arguments ---
+    the game will use Tandy sound as that's the best available option (the PC
+    speaker would be the only other alternative):
 
     ```ini
     [sblaster]
@@ -446,10 +453,10 @@ other sound options.
 
 ### Game Blaster / CMS sound
 
-The demos also support the *Game Blaster*, which is one of the earliest PC
+The demos also support the **Game Blaster**, which is one of the earliest PC
 sound cards developed by Creative Technologies, the folks responsible for the
 Sound Blaster family of cards. The Game Blaster was also sold under the name
-*Creative Music System*, or just *CMS* for short.
+**Creative Music System**, or just **CMS** for short.
 
 To enable it, we'll need to set the emulated Sound Blaster type (`sbtype`) to
 Game Blaster (`gb`), and the game will auto-detect it correctly. As the Game
@@ -474,15 +481,9 @@ crossfeed = on
 ```
 
 Naturally, you can combine crossfeed with chorus and reverb. You can also set
-`crossfeed` to `light`, `normal`, or `strong` according to your preference or
-specify a custom crossfeed amount as a percentage from 0% (no crossfeed) to
-100% (collapse the stereo image to mono):
+`crossfeed` to `light`, `normal`, or `strong` according to your preference.
 
-```ini
-crossfeed = 50
-```
-
-Try it with headphones; the improvement is very noticeable!
+Try it with headphones --- the improvement is very noticeable!
 
 
 ## "True EGA" emulation
@@ -624,10 +625,10 @@ This game falls into the second category. Note we're talking about the speed
 of the *emulated CPU* here, not the speed of the physical CPU in your
 computer!
 
-DOSBox defaults to emulating 3000 CPU instructions, or *CPU cycles*, per
-millisecond. For the more technically inclined among you, this corresponds to
-~3 MIPS (Million Instructions Per Second). When running in windowed mode, the
-text in the title bar informs you about the current cycles value, e.g.:
+DOSBox Staging defaults to emulating 3000 CPU instructions, or *CPU cycles*,
+per millisecond. For the more technically inclined among you, this corresponds
+to ~3 MIPS (Million Instructions Per Second). When running in windowed mode,
+the text in the title bar informs you about the current cycles value, e.g.:
 
 ```
 DOSBox Staging - 3000 cycles/ms - to capture the mouse press...

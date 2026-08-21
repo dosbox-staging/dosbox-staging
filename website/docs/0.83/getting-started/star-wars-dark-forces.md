@@ -481,8 +481,8 @@ into the DOSBox Staging `soundcanvas-roms` folder:
 | <!-- -->    | <!-- -->
 | ----------  | ----------
 | **Windows** | `C:\Users\%USERNAME%\AppData\Local\DOSBox\soundcanvas-roms\`
-| **macOS**   | `~/Library/Preferences/DOSBox/soundcanvas-roms/`
-| **Linux**   | `~/.config/dosbox/soundcanvas-roms/`
+| **macOS**   | `/Users/<USERNAME>/Library/Preferences/DOSBox/soundcanvas-roms/`
+| **Linux**   | `$HOME/.config/dosbox/soundcanvas-roms/`
 
 </div>
 
@@ -594,8 +594,8 @@ SoundFont file with the `.sf2` extension into its designated folder:
 | <!-- -->    | <!-- -->
 | ----------  | ----------
 | **Windows** | `C:\Users\%USERNAME%\AppData\Local\DOSBox\soundfonts\`
-| **macOS**   | `~/Library/Preferences/DOSBox/soundfonts/`
-| **Linux**   | `~/.config/dosbox/soundfonts/`
+| **macOS**   | `/Users/<USERNAME>/Library/Preferences/DOSBox/soundfonts/`
+| **Linux**   | `$HOME/.config/dosbox/soundfonts/`
 
 </div>
 

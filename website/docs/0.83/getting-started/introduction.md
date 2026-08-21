@@ -181,8 +181,8 @@ This is where the primary configuration is located per platform:
 | <!-- -->    | <!-- -->
 | ----------  | ----------
 | **Windows** | `C:\Users\%USERNAME%\AppData\Local\DOSBox\dosbox-staging.conf`
-| **macOS**   | `~/Library/Preferences/DOSBox/dosbox-staging.conf`
-| **Linux**   | `~/.config/dosbox/dosbox-staging.conf`
+| **macOS**   | `/Users/<USERNAME>/Library/Preferences/DOSBox/dosbox-staging.conf`
+| **Linux**   | `$HOME/.config/dosbox/dosbox-staging.conf`
 
 </div>
 
