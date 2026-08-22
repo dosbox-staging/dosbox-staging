@@ -485,22 +485,20 @@ Naturally, you can combine crossfeed with chorus and reverb. You can also set
 
 Try it with headphones --- the improvement is very noticeable!
 
-
 ## "True EGA" emulation
 
 Many classic graphic adventure games, including most of the early Sierra and
 LucasArts catalogue and this collection of game demos, feature EGA graphics.
-The most commonly used EGA screen mode in games is 320&times;200 with a fixed
-16-colour palette.
+The most common EGA video mode used by games is 320&times;200 with a fixed 16-colour
+palette.
 
-EGA monitors had visible "fat" scanlines, and the pixels were a bit round,
+EGA monitors had visible "fat scanlines", and the pixels were a bit round,
 whereas later VGA monitors displayed EGA graphics without strong scanlines,
 and the pixels appeared as little sharp rectangles. It's as if EGA monitors
 had a "built-in filter" that smoothed the image somewhat while adding a subtle
 texture to it as well, making it more interesting and pleasant to look at.
-Later VGA cards and monitors offered backward compatibility with EGA graphics,
-although this was not full compatibility but a kind of emulation: 320&times;200 EGA
-graphics were simply line and pixel-doubled to 640&times;400.
+Later VGA cards and monitors could display EGA graphics, but not natively —
+320&times;200 EGA graphics were simply line and pixel-doubled to 640&times;400.
 
 VGA-style line-doubling changes the feel of EGA graphics, and many prefer the
 original EGA look. After all, this is what the artists saw on their screens
@@ -532,7 +530,7 @@ The below screenshots illustrate the difference between the "true EGA" and
 ) }}
 {{ figure(
     "https://www.dosbox-staging.org/static/images/getting-started/indy3-ingame-ega.jpg",
-    "Indiana Jones and the Last Crusade ---<br>\"True EGA\" emulation"
+    "Indiana Jones and the Last Crusade ---<br>\"True EGA\" monitor emulation"
 ) }}
 </div>
 
@@ -544,7 +542,7 @@ The below screenshots illustrate the difference between the "true EGA" and
 ) }}
 {{ figure(
     "https://www.dosbox-staging.org/static/images/getting-started/monkey-ingame-ega.jpg",
-    "The Secret of Monkey Island ---<br>\"True EGA\" emulation"
+    "The Secret of Monkey Island ---<br>\"True EGA\" monitor emulation"
 ) }}
 </div>
 
@@ -555,31 +553,33 @@ The below screenshots illustrate the difference between the "true EGA" and
 ) }}
 {{ figure(
     "https://www.dosbox-staging.org/static/images/getting-started/loom-ingame-ega.jpg",
-    "Loom --- \"True EGA\" emulation"
+    "Loom --- \"True EGA\" monitor emulation"
 ) }}
 </div>
 
 !!! info "On recolouring the classics"
 
-    Some adventure games that originally supported EGA graphics only got later
-    VGA remakes. While many of these VGA versions are competent, they rarely
-    reach the artistic genius of the EGA originals, plus often they don't have
-    the exact same gameplay either. This is especially true for the three
-    classic LucasArts games included in this demo collection. Check out the
-    comparison and analysis of the EGA versus VGA versions of [**Indiana Jones
-    and the Last Crusade**](https://www.mobygames.com/game/534/indiana-jones-and-the-last-crusade-the-graphic-adventure/) and [**Loom**](https://www.mobygames.com/game/176/loom/)
+    Some adventure games that were originally designed for EGA graphics got
+    later VGA remakes. While many of these VGA versions are competent, they
+    rarely reach the artistic genius of the EGA originals, and they often
+    don't have quite the same gameplay either. This is especially true for the
+    three classic LucasArts games included in this demo collection. Check out
+    the comparison and analysis of the EGA versus VGA versions of [**Indiana
+    Jones and the Last
+    Crusade**](https://www.mobygames.com/game/534/indiana-jones-and-the-last-crusade-the-graphic-adventure/)
+    and [**Loom**](https://www.mobygames.com/game/176/loom/)
     [here](https://www.superrune.com/tutorials/lucasfilm_ega.php).
 
     In [another article](https://www.arcadeattack.co.uk/brian-moriarty/),
-    Brian Moriatry, the creator of [**Loom**](https://www.mobygames.com/game/176/loom/), shares his opinion about the VGA
-    remake of the game (he calls it "an abomination", so apparently, he's quite
-    unimpressed...) Note that about one-third of the original game's dialogue
-    had been cut from the VGA remake.
+    Brian Moriarty, the creator of [**Loom**](https://www.mobygames.com/game/176/loom/), shares his opinion about the VGA
+    remake of the game — he calls it "an abomination", so apparently he's not
+    a fan. About one-third of the original game's dialogue was also cut from
+    the VGA remake.
 
-    In any case, the point here is it would be a mistake to dismiss
-    the original EGA games outright, thinking they are "inferior" somehow. Even
-    if you might prefer the VGA remakes in the end, you should at least give
-    the EGA versions a chance to experience the creators' original vision.
+    The point is, it's a mistake to dismiss EGA originals outright as
+    "inferior". Even if you might prefer the VGA remakes, you should at least
+    give the EGA versions a chance to experience the creators' original
+    vision.
 
 
 ## Authentic image size
@@ -589,7 +589,13 @@ This is not how people experienced these games back in the day. Typical
 monitor sizes were 14-15" throughout the 320&times;200 VGA era, and 17-19" for
 the brief 640&times;480 SVGA period at the end of the DOS days.
 
-We can make the image a bit smaller with the following setting:
+Running DOS games fullscreen on a modern 24” widescreen display is roughly
+equivalent to playing them on a 21” CRT — a large professional monitor that
+very few gamers owned. Low-resolution artwork was not designed to be viewed at
+that size — at that scale, the pixels look like little colourful bricks.
+
+To approximate period-accurate graphics, we can make the image a bit smaller
+with the following setting:
 
 ```ini
 [render]
@@ -609,10 +615,7 @@ section of the user manual.
 
 ## CPU sensitive games
 
-Certain older games, such as these three demos, are sensitive to CPU speed
-(see the [CPU](../manual/system/cpu.md) page for a full discussion of
-cycles settings).
-
+Certain older games, such as these three demos, are sensitive to CPU speed.
 This can manifest in different ways:
 
 - The game may run too fast or may generally act weird if the emulated CPU is
@@ -622,10 +625,10 @@ This can manifest in different ways:
   rarer).
 
 This game falls into the second category. Note we're talking about the speed
-of the *emulated CPU* here, not the speed of the physical CPU in your
+of the *emulated* CPU here, not the speed of the *physical* CPU in your
 computer!
 
-DOSBox Staging defaults to emulating 3000 CPU instructions, or *CPU cycles*,
+DOSBox Staging defaults to emulating 3000 CPU instructions, or **CPU cycles**,
 per millisecond. For the more technically inclined among you, this corresponds
 to ~3 MIPS (Million Instructions Per Second). When running in windowed mode,
 the text in the title bar informs you about the current cycles value, e.g.:
@@ -650,12 +653,12 @@ run-time error R6003
 C:\>
 ```
 
-These problems happen because the game's creators did not anticipate the
+This kind of problem happens because the game's creators didn't anticipate the
 massive advancements in consumer CPU technology that started at the beginning
-of the 1990s (CPU power roughly doubling every three years). This is not too
-surprising as this is a 1990 release. Later DOS games tended to be more
-resilient to wildly varying CPU speeds as more programmers became aware of the
-issue, but many games from the 1980s and the early 90s are affected.
+of the 1990s (CPU power roughly doubling every three years). That's not
+surprising, since this game is a 1990 release. Later DOS games tended to be
+more resilient to wildly varying CPU speeds as more programmers became aware
+of the issue, but many games from the 1980s and early 1990s are affected.
 
 We will discuss the CPU speed settings in more detail
 [in the next chapter](beneath-a-steel-sky.md#adjusting-the-emulated-cpu-speed),
@@ -681,7 +684,7 @@ mouse_capture = onstart
 
 [render]
 viewport = 89%
-# uncomment for double-scanned VGA CRT emulation
+# uncomment to force double-scanned VGA CRT emulation for EGA modes
 #shader = crt-auto-machine
 
 [sblaster]
@@ -705,4 +708,5 @@ c:
 sampler
 exit
 ```
+
 
