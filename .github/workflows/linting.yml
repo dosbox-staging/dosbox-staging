@@ -29,7 +29,7 @@ jobs:
         id:   apt_cache
         uses: awalsh128/cache-apt-pkgs-action@681749ae568c81c2037cb9185e38b709b261bd2f # v1.6.1
         with:
-          packages: python3-setuptools ruby-full appstream-util
+          packages: python3-setuptools python3-venv ruby-full appstream-util
           version: "1.0"
 
       - name: Report apt cache status
@@ -38,10 +38,15 @@ jobs:
       - name: Run shellcheck
         run:  ./scripts/linting/verify-bash.sh
 
-      - name: Install pylint
+      - name: Install Python lint dependencies
         run: |
-          sudo pip3 install pylint beautifulsoup4 html5lib
-          sudo pip3 install -r extras/documentation/mkdocs-package-requirements.txt
+          python3 -m venv .venv-lint
+          . .venv-lint/bin/activate
+          python3 -m pip install --upgrade pip
+          python3 -m pip install pylint beautifulsoup4 html5lib
+          python3 -m pip install -r extras/documentation/mkdocs-package-requirements.txt
+          python3 -m pip install -r extras/mcp/requirements.txt
+          echo "${GITHUB_WORKSPACE}/.venv-lint/bin" >> "${GITHUB_PATH}"
 
       - name: Run pylint
         run:  ./scripts/linting/verify-python.sh
