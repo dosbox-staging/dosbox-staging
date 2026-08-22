@@ -8,7 +8,7 @@ distracting black lines found in many 90s games.
 Both are opt-in and work best when enabled per-game rather than globally.
 
 
-## Deinterlacing
+## FMV deinterlacer
 
 Many 90s DOS games displayed full-motion video (FMV) using interlaced
 rendering, showing only every second line of each frame. This halved storage
@@ -26,6 +26,8 @@ Both common interlacing patterns are supported: standard line interlacing
 --- a special pattern used by the CD-ROM versions of
 [Dune](https://www.mobygames.com/game/380/dune/) and
 [KGB](https://www.mobygames.com/game/2894/kgb/).
+
+<!--- TODO image examples --->
 
 !!! note
 
@@ -53,7 +55,7 @@ Both common interlacing patterns are supported: standard line interlacing
     </div>
 
 
-## Dedithering
+## Checkerboard dedithering
 
 Many DOS games used dithering --- alternating pixel patterns --- to simulate
 more colours than their limited palette could display. This was especially
@@ -63,6 +65,8 @@ illusion of intermediate shades.
 The [`dedithering`](#dedithering) setting detects these checkerboard patterns
 and blends them into solid colours. It works with any graphics adapter (CGA,
 EGA, VGA, Hercules) and any resolution, and can be combined with any shader.
+
+<!--- TODO image examples --->
 
 !!! note
 
