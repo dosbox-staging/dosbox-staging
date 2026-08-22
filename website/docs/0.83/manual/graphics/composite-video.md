@@ -3,7 +3,7 @@
 Before dedicated RGB monitors became common in the late 1980s, many home PC
 users connected their computers to TVs or composite video monitors. The NTSC
 composite signal introduces interference patterns that produce unexpected
-colours --- a phenomenon known as _artifact colours_ --- expanding
+colours --- a phenomenon known as **artifact colours** --- expanding
 [CGA's](adapters.md#cga) usual 4-colour palette to as many as 16. It sounds
 like a bug, but developers deliberately exploited it.
 
@@ -29,7 +29,7 @@ the composite graphics being the more colourful and detailed of the two. On
 RGB without that mode selected, they appear as garish 4-colour affairs.
 Earlier titles like [Microsoft
 Decathlon](https://www.mobygames.com/game/1652/olympic-decathlon/) and [Ultima
-II : Revenge of the Enchantress](https://www.mobygames.com/game/880/ultima-ii-the-revenge-of-the-enchantress/)
+II --- Revenge of the Enchantress](https://www.mobygames.com/game/880/ultima-ii-the-revenge-of-the-enchantress/)
 used composite colour from the outset, without bothering to offer an RGB
 fallback at all.
 
@@ -66,8 +66,8 @@ you'll need to enable the [`composite`](#composite) setting manually.
     - [Seven Cities of Gold, The (1985)](https://www.mobygames.com/game/3451/the-seven-cities-of-gold/)
     - [Space Quest (1986)](https://www.mobygames.com/game/114/space-quest-chapter-i-the-sarien-encounter/)
     - [Transylvania (1986)](https://www.mobygames.com/game/133318/transylvania/)
-    - [Ultima II : Revenge of the Enchantress (1983)](https://www.mobygames.com/game/880/ultima-ii-the-revenge-of-the-enchantress/)
-    - [Ultima III: Exodus (1985)](https://www.mobygames.com/game/878/exodus-ultima-iii/)
+    - [Ultima II --- Revenge of the Enchantress (1983)](https://www.mobygames.com/game/880/ultima-ii-the-revenge-of-the-enchantress/)
+    - [Ultima III --- Exodus (1985)](https://www.mobygames.com/game/878/exodus-ultima-iii/)
     - [Where in the U.S.A. is Carmen Sandiego? (1986)](https://www.mobygames.com/game/315/where-in-the-usa-is-carmen-sandiego/)
     - [Zak McKracken and the Alien Mindbenders (1988)](https://www.mobygames.com/game/634/zak-mckracken-and-the-alien-mindbenders/) (CGA version)
 

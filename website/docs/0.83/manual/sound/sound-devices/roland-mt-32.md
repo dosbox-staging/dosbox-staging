@@ -21,6 +21,94 @@ as the [AdLib](adlib.md#adlib-music-synthesizer-card), it
 remained out of reach for most computer users.
 
 
+## Setting up the MT-32 ROM images
+
+The emulation of the Roland MT-32 family of devices requires the ROM data from
+the original hardware to work.
+
+Download the MT-32 ROM files from
+[here](https://archive.org/details/Roland-MT-32-ROMs), unpack the ZIP archive,
+then move the contents of the `MAME` folder into the `mt32-roms` folder inside
+your DOSBox configuration folder:
+
+<div class="compact" markdown>
+
+| Platform | Default MT-32 ROM folder
+| -------- | ---------------------------------------------------------
+| Windows  | `C:\Users\<USERNAME>\AppData\DOSBox\mt32-roms\`
+| macOS    | `/Users/<USERNAME>/Library/Preferences/DOSBox/mt32-roms/`
+| Linux    | `$HOME/.local/share/dosbox/mt32-roms/`
+
+</div>
+
+By doing so, you will make these ROMs globally available for all games.
+
+This is what the contents of `mt32-roms` should look like:
+
+```
+mt32-roms
+├── blue_ridge__mt32a.bin
+├── blue_ridge__mt32b.bin
+├── cm32l_control.rom
+├── ctrl_cm32ln_1_00.rom
+│   ...
+```
+
+Alternatively, you can create `mt32-roms` subfolders in your individual game
+folders and put the ROMs there, then DOSBox Sating will find them when started
+from these game folders.
+
+You can also set a custom MT-32 ROM folder via the
+[`romdir`](#romdir) setting.
+
+
+### Supported ROM sets
+
+ROMs are identified by their checksums, so file names do not matter. Both
+interleaved (mt32pi style) and non-interleaved (MAME style) ROM dumps are
+supported. 
+
+The following ROM sets are supported. These originate from the MAME video
+game preservation project.
+
+<div class="compact" markdown>
+
+| Model               | `model` value            |
+| ------------------- | ------------------------ |
+| CM-32LN v1.00       | `cm32ln_100`              |
+| CM-32L/LAPC-I v1.02 | `cm32l_102`              |
+| CM-32L/LAPC-I  1.00 | `cm32l_100`              |
+| MT-32 v2.07         | `mt32_207`               |
+| MT-32 v2.06         | `mt32_206`               |
+| MT-32 v2.04 ("new") | `mt32_204` or `mt32_new` |
+| MT-32 v2.03         | `mt32_203`               |
+| MT-32 BlueRidge     | `mt32_bluer`             |
+| MT-32 v1.07 ("old") | `mt32_107` or `mt32_old` |
+| MT-32 v1.06         | `mt32_106`               |
+| MT-32 v1.05         | `mt32_105`               |
+| MT-32 v1.04         | `mt32_104`               |
+
+</div>
+
+
+### Listing the installed ROMs
+
+Run the `MIXER /LISTMIDI` command to see the list of available MT-32 ROMs:
+
+<!-- TODO(JN) screenshot -->
+
+In the above screenshot, `mt32_107` is the currently active model. The green
+highlighted **'y'** additionally indicates which folder will be used during
+the actual loading. <!-- TODO rewrite this -->
+
+!!! warning
+
+    Both the control and PCM ROMs need to be present for a given model. If
+    some model could not be detected, or you're getting `Failed to find ROMs
+    for model <model_name>` error at startup, make sure that both ROM sets
+    have been copied to your ROM folder for that model.
+
+
 ## MT-32 variants
 
 Roland produced several revisions and related models. Understanding the
@@ -53,8 +141,14 @@ that were fixed in the newer ROMs.
 As a rule of thumb:
 
 - **Early Sierra games** (1988--1990) --- [King's Quest IV](https://www.mobygames.com/game/129/kings-quest-iv-the-perils-of-rosella/), [Police Quest II](https://www.mobygames.com/game/147/police-quest-2-the-vengeance/),
-  [Space Quest III](https://www.mobygames.com/game/142/space-quest-iii-the-pirates-of-pestulon/), [Leisure Suit Larry 2](https://www.mobygames.com/game/409/leisure-suit-larry-goes-looking-for-love-in-several-wrong-places/)/[3](https://www.mobygames.com/game/412/leisure-suit-larry-iii-passionate-patti-in-pursuit-of-the-pulsat/) --- were composed on "old" hardware
-  and generally sound more authentic on `mt32_old`.
+  [Space Quest
+  III](https://www.mobygames.com/game/142/space-quest-iii-the-pirates-of-pestulon/),
+  [Leisure Suit Larry
+  2](https://www.mobygames.com/game/409/leisure-suit-larry-goes-looking-for-love-in-several-wrong-places/),
+  [Leisure Suit Larry
+  3](https://www.mobygames.com/game/412/leisure-suit-larry-iii-passionate-patti-in-pursuit-of-the-pulsat/)
+  --- were composed on "old" hardware and generally sound more authentic on
+  `mt32_old`.
 
 - **Games from 1991 onwards** --- and most LucasArts titles --- work well on
   either revision.
@@ -84,7 +178,6 @@ early Sierra titles that sound best on "old" hardware, override with
 
 ## MIDI before General MIDI
 
-
 !!! important
 
     Although the Roland MT-32 comes with a built-in library of 128 synth and
@@ -97,8 +190,6 @@ early Sierra titles that sound best on "old" hardware, override with
     wrong on them. Even Roland's own later sound modules suffer from the same
     problem. In short, most music composed for the Roland MT-32 only sounds
     correct when played back on a Roland MT-32, and nothing else.
-
-
 
 !!! note
 
@@ -175,89 +266,6 @@ model = mt32_old
     you can pick one specific MT-32 model per game.
 
 
-## Roland ROM images
-
-The emulation of the Roland MT-32 family of devices requires the ROM data from
-the original hardware to work.
-
-!!! important
-
-    The Roland MT-32 ROM images are copyrighted by Roland Corporation,
-    therefore they cannot be bundled with DOSBox. You need to provide these
-    ROM files yourself to get any sound out of the MT-32 emulation.
-
-ROMs are identified by their checksums, so file names do not matter. Both
-interleaved and non-interleaved ROM dumps are supported. Once you have
-acquired the necessary ROM sets, it's recommended to copy them to the default
-ROM folder:
-
-<div class="compact" markdown>
-
-| Platform | Default MT-32 ROM folder
-| -------- | ---------------------------------------------------------
-| Windows  | `C:\Users\<USERNAME>\AppData\DOSBox\mt32-roms\`
-| macOS    | `/Users/<USERNAME>/Library/Preferences/DOSBox/mt32-roms/`
-| Linux    | `$HOME/.local/share/dosbox/mt32-roms/`
-
-</div>
-
-By doing so, you will make these ROMs globally available for all games.
-
-Alternatively, you can create `mt32-roms` subfolders in your individual game
-folders to hold these ROMs, then DOSBox will find them when started from these
-game folders.
-
-You can customise where DOSBox looks for these ROMs, see the [`romdir`](#romdir)
-configuration setting for further details.
-
-
-
-### Supported ROM sets
-
-The following ROM sets are supported. These originate from the MAME video
-game preservation project --- learn more by searching for _"mt32 mame roms"_
-and _"cm32l mame roms"_.
-
-<div class="compact" markdown>
-
-| Model               | `model` value            | Control ROM filename                               |
-| ------------------- | ------------------------ | -------------------------------------------------- |
-| CM-32L/LAPC-I v1.02 | `cm32l_102`              | `cm32l_control.rom`                                |
-| CM-32L/LAPC-I  1.00 | `cm32l_100`              | `lapc-i.v1.0.0.ic3.bin`                            |
-| MT-32 v2.04 ("new") | `mt32_204` or `mt32_new` | `mt32_2.0.4.ic28.bin`                              |
-| MT-32 v1.07 ("old") | `mt32_107` or `mt32_old` | `mt32_1.0.7.ic26.bin`<br>`mt32_1.0.7.ic27.bin`     |
-| MT-32 v1.06         | `mt32_106`               | `mt32_1.0.6.ic26.bin`<br>`mt32_1.0.6.ic27.bin`     |
-| MT-32 v1.05         | `mt32_105`               | `mt32_1.0.5.ic26.bin`<br>`mt32_1.0.5.ic27.bin`     |
-| MT-32 v1.04         | `mt32_104`               | `mt32_1.0.4.ic26.bin`<br>`mt32_1.0.4.ic27.bin`     |
-| MT-32 BlueRidge     | `mt32_bluer`             | `blue_ridge__mt32a.bin`<br>`blue_ridge__mt32b.bin` |
-
-| Model                 | PCM ROM filename                                                     |
-| --------------------- | -------------------------------------------------------------------- |
-| MT-32 (all versions)  | `r15449121.ic37.bin`<br>`r15179844.ic21.bin`<br>`r15179845.ic22.bin` |
-| CM-32L (all versions) | `r15179945.ic8.bin`                                                  |
-
-</div>
-
-
-### Listing the installed ROMs
-
-Run the `MIXER /LISTMIDI` command to see the list of available MT-32 ROMs:
-
-<!-- TODO(JN) screenshot -->
-
-In the above screenshot, `mt32_107` is the currently active model. The green
-highlighted **'y'** additionally indicates which folder will be used during
-the actual loading. <!-- TODO rewrite this -->
-
-!!! warning
-
-    Both the control and PCM ROMs need to be present for a given model. If
-    some model could not be detected, or you're getting `Failed to find ROMs
-    for model <model_name>` error at startup, make sure that both ROM sets
-    have been copied to your ROM folder for that model.
-
-
-
 
 ### ROM lookup paths
 
@@ -289,6 +297,22 @@ subfolder inside the game's working folder.
 
 The Roland MT-32 outputs to the **MT32** [mixer
 channel](../mixer.md#list-of-mixer-channels).
+
+
+## Legal notes
+
+!!! warning "Important"
+
+    By providing an easy-to-use Roland MT-32 emulation feature, we aim to
+    preserve an important part of DOS gaming history for all to freely enjoy
+    for posterity. The feature is **only intended** for personal use (e.g.,
+    retro gaming, or writing music as a hobby) and research purposes.
+
+    The Roland MT-32 ROM images are copyrighted by Roland Corporation,
+    therefore they cannot be bundled with DOSBox.
+
+    You are **not** allowed to include the MT-32 ROM sets in any commercial
+    software package without Roland's explicit permission.
 
 
 ## Configuration settings

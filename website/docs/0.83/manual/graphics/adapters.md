@@ -426,19 +426,20 @@ You can set these in the `[dosbox]` configuration section.
     - `compatible` *default*{ .default } -- Only the most compatible VESA
       modes for the configured video memory size. Recommended with 4 or 8 MB
       of video memory ([`vmemsize`](#vmemsize)) for the widest compatibility
-      with games. 320x200 high colour modes are excluded as they were not
-      properly supported until the late '90s. The 256-colour linear
-      framebuffer 320x240, 400x300, and 512x384 modes are also excluded as
-      they cause timing problems in Build Engine games.
+      with games. 320&times;200 high colour modes are excluded as they were
+      not properly supported until the late '90s. The 256-colour linear
+      framebuffer 320&times;240, 400&times;300, and 512&times;384 modes are
+      also excluded as they cause timing problems in Build Engine games.
 
     - `halfline` -- Same as `compatible`, but the 120h VESA mode is replaced
-      with a special halfline mode used by [Extreme Assault](https://www.mobygames.com/game/1396/extreme-assault/). Use only if
-      needed.
+      with a special halfline mode used by [Extreme
+      Assault](https://www.mobygames.com/game/1396/extreme-assault/). Use only
+      if needed.
 
     - `all` -- All modes are available, including extra DOSBox-specific VESA
       modes. Use 8 MB of video memory for the best results. Some games
       misbehave in the presence of certain VESA modes; try `compatible` mode
-      if this happens. The 320x200 high colour modes available in this mode
+      if this happens. The 320&times;200 high colour modes available in this mode
       are often required by late '90s demoscene productions.
 
     The following table shows the available resolutions in `compatible` mode

@@ -8,12 +8,14 @@ gold standard for how the soundtrack was meant to sound.
 For background on the General MIDI and GS standards, and help deciding which
 MIDI device to use for a particular game, see the [MIDI overview](../midi.md#which-midi-device-should-i-use).
 
-DOSBox Staging emulates the SC-55 via the **Nuked SC55 CLAP** audio plugin,
-providing sample-accurate playback of the actual SC-55 sound engine --- as
-close to the real hardware as you can get without owning one.
+DOSBox Staging emulates the SC-55 via the [Nuked SC55
+CLAP](https://github.com/johnnovak/Nuked-SC55-CLAP) audio plugin (bundled with
+the release packages), providing sample-accurate playback of the actual SC-55
+sound engine --- as close to the real hardware as you can get without owning
+one.
 
 
-## Setup
+## Setting up the Sound Canvas ROM images
 
 To enable Sound Canvas emulation, set the MIDI device and place the required
 ROM files:
@@ -136,6 +138,38 @@ rely on CTF.
 
 Sound Canvas outputs to the **SOUNDCANVAS** [mixer
 channel](../mixer.md#list-of-mixer-channels).
+
+## Legal notes
+
+!!! warning "Important"
+
+    By providing an easy-to-use Roland Sound Canvas emulation feature, we aim
+    to preserve an important part of DOS gaming history for all to freely
+    enjoy for posterity. The feature is **only intended** for personal use
+    (e.g., retro gaming, or writing music as a hobby) and research purposes.
+
+    The Roland Sound Canvas ROM images are copyrighted by Roland Corporation,
+    therefore they cannot be bundled with DOSBox.
+
+    As per the original [Nuked SC-55](https://github.com/nukeykt/Nuked-SC55)
+    license, the use of the feature is **strictly prohibited** for creating
+    commercial Roland Sound Canvas emulation hardware boxes or for use in
+    commercial music production.
+
+    Moreover, you are **not** allowed to include the bundled `Nuked-SC55.clap`
+    plugin in any commercial software package without both Roland's and
+    nukeykt's express permissions. If you delete the plugin from your
+    commercial package, you're fine --- DOSBox Staging will continue to work,
+    just without Sound Canvas support.
+
+
+!!! note "License notes"
+
+    Please see [this detailed
+    description](https://github.com/dosbox-staging/dosbox-staging/pull/4090)
+    on how we bridged the license incompatibility between DOSBox Staging and
+    Nuked-SC55 while fully complying with both the GPL v2 and the MAME license
+    and respecting nukeykt's wishes.
 
 
 ## Configuration settings
