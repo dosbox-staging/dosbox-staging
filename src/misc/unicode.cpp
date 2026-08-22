@@ -2076,8 +2076,12 @@ std::string fs_utf8_to_dos_437(const std::string& str)
 	std::string str_out = {};
 	for (const auto code_point : utf8_to_wide(str)) {
 		if (is_control_code(code_point)) {
-			// Not valid for file/directory name
-			return {};
+			// Not valid for file/directory name; substitute a
+			// placeholder instead of dropping the whole name, as
+			// callers rely on a non-empty result (e.g. the drive
+			// cache uses this as a sorted shortname key).
+			str_out.push_back(static_cast<char>(UnknownCharacter));
+			continue;
 		}
 
 		if (code_point < ThresholdNonAscii) {
@@ -2087,8 +2091,10 @@ std::string fs_utf8_to_dos_437(const std::string& str)
 		}
 
 		if (!mapping.contains(code_point)) {
-			// Not a valid character for our code page
-			return {};
+			// Not a valid character for our code page; substitute
+			// a placeholder instead of dropping the whole name.
+			str_out.push_back(static_cast<char>(UnknownCharacter));
+			continue;
 		}
 
 		str_out.push_back(mapping.at(code_point));
