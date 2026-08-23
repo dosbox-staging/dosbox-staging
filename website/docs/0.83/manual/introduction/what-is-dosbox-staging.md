@@ -30,7 +30,7 @@ the optional surround module), [Gravis
 UltraSound](../sound/sound-devices/gravis-ultrasound.md), [Tandy 3 Voice
 audio](../sound/sound-devices/tandy.md), [Roland
 MT-32](../sound/sound-devices/roland-mt-32.md), and [Roland Sound Canvas
-SC-55](../sound/sound-devices/sound-canvas.md) among a few others.
+SC-55](../sound/sound-devices/roland-sound-canvas.md) among a few others.
 
 Just imagine how expensive and impractical it would be to collect all this
 hardware and keep them in working order! Besides the convenience factor, old

@@ -1,12 +1,12 @@
 # FluidSynth
 
 **FluidSynth** is a built-in software MIDI synthesiser that uses **SoundFont**
-(`.sf2`) sample banks to generate audio. Unlike [Sound Canvas](sound-canvas.md)
-emulation, it does not attempt to replicate any specific hardware device ---
-instead, the character of the music depends entirely on which SoundFont you
-load. This makes it very flexible but also means results vary: a good SoundFont
-can sound close to an SC-55 on many games, while a poor one can sound
-noticeably wrong.
+(`.sf2`) sample banks to generate audio. Unlike [Sound
+Canvas](roland-sound-canvas.md) emulation, it does not attempt to replicate
+any specific hardware device --- instead, the character of the music depends
+entirely on which SoundFont you load. This makes it very flexible but also
+means results vary: a good SoundFont can sound close to an SC-55 on many
+games, while a poor one can sound noticeably wrong.
 
 FluidSynth is lighter on CPU than Sound Canvas emulation and is a good
 option when you don't have SC-55 ROMs or when you prefer a particular

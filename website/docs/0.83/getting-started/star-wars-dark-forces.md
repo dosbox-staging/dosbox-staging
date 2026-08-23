@@ -447,10 +447,10 @@ learn more about the history and differences between these standards, see the
 
 DOSBox Staging offers two ways to get General MIDI playback:
 
-- **[Sound Canvas](../manual/sound/sound-devices/sound-canvas.md) emulation**
-  --- sample-accurate emulation of the Roland SC-55, the de facto standard
-  General MIDI sound module for DOS games. This is the most authentic option
-  but requires SC-55 ROM files and a reasonably powerful CPU.
+- **[Sound Canvas](../manual/sound/sound-devices/roland-sound-canvas.md)
+  emulation** --- sample-accurate emulation of the Roland SC-55, the de facto
+  standard General MIDI sound module for DOS games. This is the most authentic
+  option but requires SC-55 ROM files and a reasonably powerful CPU.
 
 - **[FluidSynth](../manual/sound/sound-devices/fluidsynth.md)** --- a built-in
   software MIDI synthesiser that uses SoundFont files (`.sf2`) to generate

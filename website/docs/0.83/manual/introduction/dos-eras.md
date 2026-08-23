@@ -224,12 +224,12 @@ capabilities. Hard drives became affordable for home users, and games grew to
 fill them.
 
 The [Roland Sound Canvas
-SC-55](../sound/sound-devices/sound-canvas.md), released
+SC-55](../sound/sound-devices/roland-sound-canvas.md), released
 in 1991, became the reference device for [General
 MIDI](../sound/midi.md#the-general-midi-standard) game music, offering a standardised
 set of 128 realistic-sounding instruments. Many games from this era supported
 both General MIDI and the MT-32. The [Roland
-CM-32L](../sound/sound-devices/roland-mt-32.md#the-cm-32l), a cost-reduced MT-32
+CM-32L](../sound/sound-devices/roland-mt-32.md#cm-32l), a cost-reduced MT-32
 variant with extra sound effects, was also popular and many games took
 advantage of it (typically LucasArts games).
 
@@ -290,7 +290,7 @@ model = cm32l
 Alternatively, use `sbtype = sb16` to emulate the [Sound Blaster
 16](../sound/sound-devices/sound-blaster.md#sound-blaster-16), and
 `mididevice = soundcanvas` to emulate the [Roland Sound Canvas
-SC-55](../sound/sound-devices/sound-canvas.md).
+SC-55](../sound/sound-devices/roland-sound-canvas.md).
 
 
 ## The Pentium era (1993--1996)
@@ -306,7 +306,7 @@ gaming, the period that produced many of the platform's most celebrated titles
 that served as blueprints for the modern gaming industry.
 
 By this point, General MIDI via the [Roland Sound Canvas
-SC-55](../sound/sound-devices/sound-canvas.md) had become
+SC-55](../sound/sound-devices/roland-sound-canvas.md) had become
 the dominant standard for game music, gradually displacing the MT-32.
 Most Pentium-era games with MIDI support target General MIDI as their primary
 music option, and the SC-55 remains the best way to hear these soundtracks as

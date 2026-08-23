@@ -173,7 +173,7 @@ sections of the manual where they're described in detail.
 | **PS1DAC**      | [IBM PS/1 Audio digital audio](sound-devices/ibm-ps1audio.md)                                  | No
 | **REELMAGIC**   | [ReelMagic MPEG audio](../graphics/reelmagic.md)                                               | Yes
 | **SB**          | [Sound Blaster digital audio](sound-devices/sound-blaster.md)                                  | Yes[^stereo]
-| **SOUNDCANVAS** | [Roland Sound Canvas synthesiser](sound-devices/sound-canvas.md)                               | Yes
+| **SOUNDCANVAS** | [Roland Sound Canvas synthesiser](sound-devices/roland-sound-canvas.md)                               | Yes
 | **STON1**       | [Stereo-on-1 digital audio](sound-devices/covox-variants.md#stereo-on-1-dac)                   | Yes
 | **TANDY**       | [Tandy 1000 synthesiser](sound-devices/tandy.md)                                               | No
 | **TANDYDAC**    | [Tandy 1000 digital audio](sound-devices/tandy.md)                                             | No
@@ -186,7 +186,7 @@ sections of the manual where they're described in detail.
 ## Denoiser
 
 The [OPL synth](sound-devices/adlib.md) and the original SC-55 mk1 [Sound
-Canvas](sound-devices/sound-canvas.md) models produce very low-level residual
+Canvas](sound-devices/roland-sound-canvas.md) models produce very low-level residual
 noise as part of their faithful hardware emulation. This noise is authentic
 --- real hardware behaved the same way --- but it can be slightly annoying on
 good-quality headphones or in quiet passages.

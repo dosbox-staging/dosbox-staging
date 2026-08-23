@@ -133,7 +133,7 @@ demoscene, but never achieved the Sound Blaster's market dominance.
 [General MIDI](../sound/midi.md#the-general-midi-standard) standardised a common set
 of 128 instrument sounds, allowing games to sound consistent across different
 MIDI-compatible devices. The [Roland Sound Canvas
-SC-55](../sound/sound-devices/sound-canvas.md), released
+SC-55](../sound/sound-devices/roland-sound-canvas.md), released
 in 1991, became the de facto reference device for General MIDI game music and
 is still considered the gold standard for many DOS game soundtracks.
 
