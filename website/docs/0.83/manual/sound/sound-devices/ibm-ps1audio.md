@@ -17,7 +17,7 @@ games detect the card automatically.
     - [BattleTech: The Crescent Hawks' Revenge (1990)](https://www.mobygames.com/game/233/battletech-the-crescent-hawks-revenge/)
     - [Castle of Dr. Brain (1991)](https://www.mobygames.com/game/1523/castle-of-dr-brain/)
     - [Conquests of the Longbow (1991)](https://www.mobygames.com/game/1967/conquests-of-the-longbow-the-legend-of-robin-hood/)
-    - [The Dagger of Amon Ra (1992)](https://www.mobygames.com/game/462/the-dagger-of-amon-ra/)
+    - [Dagger of Amon Ra, The (1992)](https://www.mobygames.com/game/462/the-dagger-of-amon-ra/)
     - [Freddy Pharkas: Frontier Pharmacist (1993)](https://www.mobygames.com/game/1785/freddy-pharkas-frontier-pharmacist/)
     - [Hoyle Classic Card Games (1991)](https://www.mobygames.com/game/30264/hoyle-classic-card-games/)
     - [King's Quest V (1990)](https://www.mobygames.com/game/130/kings-quest-v-absence-makes-the-heart-go-yonder/)
@@ -39,7 +39,7 @@ games detect the card automatically.
     - [Silpheed (1988)](https://www.mobygames.com/game/167/silpheed/)
     - [Space Quest I (VGA remake) (1991)](https://www.mobygames.com/game/187/space-quest-i-roger-wilco-in-the-sarien-encounter/)
     - [Space Quest IV (1991)](https://www.mobygames.com/game/143/space-quest-iv-roger-wilco-and-the-time-rippers/)
-    - [The Treehouse (1991)](https://www.mobygames.com/game/11866/the-treehouse/)
+    - [Treehouse, The (1991)](https://www.mobygames.com/game/11866/the-treehouse/)
 
     </div>
 

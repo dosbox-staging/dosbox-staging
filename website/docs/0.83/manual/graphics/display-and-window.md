@@ -47,7 +47,7 @@ The default **`auto`** mode selects `dos-rate` when vsync is off and
 `host-rate` when vsync is on, which is the right choice for most setups. For a
 practical example of configuring vsync and presentation modes for a specific
 game, see the [Star Wars: Dark Forces](../../getting-started/star-wars-dark-forces.md#display-refresh-rate)
-chapter of the getting started guide.
+chapter of the Getting Started guide.
 
 In practice, most users fall into one of three categories:
 

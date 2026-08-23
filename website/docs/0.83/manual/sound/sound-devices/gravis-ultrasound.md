@@ -120,6 +120,7 @@ C:\ULTRASND\ULTRAMID.EXE
 
     <div class="compact" markdown>
 
+    - [7th Guest, The (1993)](https://www.mobygames.com/game/561/the-7th-guest/)
     - [Betrayal at Krondor (1993)](https://www.mobygames.com/game/236/betrayal-at-krondor/)
     - [Eye of the Beholder (1991)](https://www.mobygames.com/game/1441/eye-of-the-beholder/)
     - [Hocus Pocus (1994)](https://www.mobygames.com/game/1237/hocus-pocus/)
@@ -127,7 +128,6 @@ C:\ULTRASND\ULTRAMID.EXE
     - [Master of Orion (1993)](https://www.mobygames.com/game/466/master-of-orion/)
     - [Monkey Island 2: LeChuck's Revenge (1991)](https://www.mobygames.com/game/616/monkey-island-2-lechucks-revenge/)
     - [Sam & Max Hit the Road (1993)](https://www.mobygames.com/game/373/sam-max-hit-the-road/)
-    - [The 7th Guest (1993)](https://www.mobygames.com/game/561/the-7th-guest/)
     - [Ultima Underworld: The Stygian Abyss (1992)](https://www.mobygames.com/game/690/ultima-underworld-the-stygian-abyss/)
     - [X-COM: UFO Defense (1994)](https://www.mobygames.com/game/1358/x-com-ufo-defense/)
 

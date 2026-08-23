@@ -32,16 +32,16 @@ from the floppy and did not require a hard drive or even an operating system.
 
 <div class="compact" markdown>
 
-- [Wizardry (1981)](https://www.mobygames.com/game/1209/wizardry-proving-grounds-of-the-mad-overlord/) --- the granddaddy of dungeon crawler RPGs with forced ironman
-- [Castle Wolfenstein (1981)](https://www.mobygames.com/game/3115/castle-wolfenstein/) --- stealth action pioneer
-- [Microsoft Flight Simulator (1982)](https://www.mobygames.com/game/4003/microsoft-flight-simulator-v10/) --- one of the first major PC games
-- [Zork (1982)](https://www.mobygames.com/game/50/zork-the-great-underground-empire/) --- the first Infocom text adventure
-- [Ultima III: Exodus (1983)](https://www.mobygames.com/game/878/exodus-ultima-iii/) --- foundational RPG by the one and only Richard Garriot
-- [Lode Runner (1983)](https://www.mobygames.com/game/243/lode-runner/) --- highly addictive puzzle-action-platformer
-- [The Hitchhiker's Guide to the Galaxy (1984)](https://www.mobygames.com/game/88/the-hitchhikers-guide-to-the-galaxy/) --- legendary Infocom text adventure
 - [Alley Cat (1984)](https://www.mobygames.com/game/190/alley-cat/) --- beloved CGA platformer
+- [Castle Wolfenstein (1981)](https://www.mobygames.com/game/3115/castle-wolfenstein/) --- stealth action pioneer
+- [Hitchhiker's Guide to the Galaxy, The (1984)](https://www.mobygames.com/game/88/the-hitchhikers-guide-to-the-galaxy/) --- legendary Infocom text adventure
 - [King's Quest (1984)](https://www.mobygames.com/game/122/kings-quest/) --- first animated adventure game of the iconic Sierra On-Line
+- [Lode Runner (1983)](https://www.mobygames.com/game/243/lode-runner/) --- highly addictive puzzle-action-platformer
+- [Microsoft Flight Simulator (1982)](https://www.mobygames.com/game/4003/microsoft-flight-simulator-v10/) --- one of the first major PC games
 - [Rogue (1984)](https://www.mobygames.com/game/1743/rogue/) --- the original textmode roguelike
+- [Ultima III: Exodus (1983)](https://www.mobygames.com/game/878/exodus-ultima-iii/) --- foundational RPG by the one and only Richard Garriot
+- [Wizardry (1981)](https://www.mobygames.com/game/1209/wizardry-proving-grounds-of-the-mad-overlord/) --- the granddaddy of dungeon crawler RPGs with forced ironman
+- [Zork (1982)](https://www.mobygames.com/game/50/zork-the-great-underground-empire/) --- the first Infocom text adventure
 
 </div>
 
@@ -93,16 +93,16 @@ on non-Tandy machines, though the [AdLib](../sound/sound-devices/adlib.md) card 
 
 <div class="compact" markdown>
 
-- [Ultima IV: Quest of the Avatar (1985)](https://www.mobygames.com/game/884/ultima-iv-quest-of-the-avatar/) --- pioneering RPG with a moral system
-- [The Bard's Tale (1985)](https://www.mobygames.com/game/819/tales-of-the-unknown-volume-i-the-bards-tale/) --- classic party-based RPG
-- [Where in the World Is Carmen Sandiego? (1985)](https://www.mobygames.com/game/163/where-in-the-world-is-carmen-sandiego/) --- educational classic
-- [Starflight (1986)](https://www.mobygames.com/game/115/starflight/) --- open-world space exploration
-- [Might and Magic: Book One (1986)](https://www.mobygames.com/game/1619/might-and-magic-book-one-secret-of-the-inner-sanctum/) --- sprawling first-person RPG
-- [Space Quest (1986)](https://www.mobygames.com/game/114/space-quest-chapter-i-the-sarien-encounter/) --- humorous sci-fi adventure
-- [Sid Meier's Pirates! (1987)](https://www.mobygames.com/game/214/sid-meiers-pirates/) --- genre-defining open-world adventure
+- [Bard's Tale (1985), The](https://www.mobygames.com/game/819/tales-of-the-unknown-volume-i-the-bards-tale/) --- classic party-based RPG
+- [Dungeon Master (1987)](https://www.mobygames.com/game/834/dungeon-master/) --- real-time dungeon crawling pioneer
 - [Leisure Suit Larry (1987)](https://www.mobygames.com/game/379/leisure-suit-larry-in-the-land-of-the-lounge-lizards/) --- adult comedy adventure
 - [Maniac Mansion (1987)](https://www.mobygames.com/game/714/maniac-mansion/) --- SCUMM engine debut
-- [Dungeon Master (1987)](https://www.mobygames.com/game/834/dungeon-master/) --- real-time dungeon crawling pioneer
+- [Might and Magic: Book One (1986)](https://www.mobygames.com/game/1619/might-and-magic-book-one-secret-of-the-inner-sanctum/) --- sprawling first-person RPG
+- [Sid Meier's Pirates! (1987)](https://www.mobygames.com/game/214/sid-meiers-pirates/) --- genre-defining open-world adventure
+- [Space Quest (1986)](https://www.mobygames.com/game/114/space-quest-chapter-i-the-sarien-encounter/) --- humorous sci-fi adventure
+- [Starflight (1986)](https://www.mobygames.com/game/115/starflight/) --- open-world space exploration
+- [Ultima IV: Quest of the Avatar (1985)](https://www.mobygames.com/game/884/ultima-iv-quest-of-the-avatar/) --- pioneering RPG with a moral system
+- [Where in the World Is Carmen Sandiego? (1985)](https://www.mobygames.com/game/163/where-in-the-world-is-carmen-sandiego/) --- educational classic
 
 </div>
 
@@ -164,16 +164,16 @@ from this period.
 
 <div class="compact" markdown>
 
-- [Wasteland (1988)](https://www.mobygames.com/game/287/wasteland/) --- post-apocalyptic RPG that inspired Fallout
 - [Pool of Radiance (1988)](https://www.mobygames.com/game/502/pool-of-radiance/) --- first Gold Box D&D RPG
-- [Ultima V: Warriors of Destiny (1988)](https://www.mobygames.com/game/808/ultima-v-warriors-of-destiny/) --- deep narrative RPG
-- [SimCity (1989)](https://www.mobygames.com/game/848/simcity/) --- city-building pioneer
+- [Populous (1989)](https://www.mobygames.com/game/613/populous/) --- the original god simulator
 - [Prince of Persia (1989)](https://www.mobygames.com/game/196/prince-of-persia/) --- rotoscoped animation breakthrough
 - [Quest for Glory: So You Want to Be a Hero (1989)](https://www.mobygames.com/game/168/heros-quest-so-you-want-to-be-a-hero/) --- adventure-RPG hybrid
-- [Populous (1989)](https://www.mobygames.com/game/613/populous/) --- the original god simulator
-- [The Secret of Monkey Island (1990)](https://www.mobygames.com/game/616/the-secret-of-monkey-island/) --- peak LucasArts adventure blockbuster
-- [Wing Commander (1990)](https://www.mobygames.com/game/3/wing-commander/) --- cinematic space combat
 - [Railroad Tycoon (1990)](https://www.mobygames.com/game/70/sid-meiers-railroad-tycoon/) --- business simulation classic
+- [Secret of Monkey Island, The (1990)](https://www.mobygames.com/game/616/the-secret-of-monkey-island/) --- peak LucasArts adventure blockbuster
+- [SimCity (1989)](https://www.mobygames.com/game/848/simcity/) --- city-building pioneer
+- [Ultima V: Warriors of Destiny (1988)](https://www.mobygames.com/game/808/ultima-v-warriors-of-destiny/) --- deep narrative RPG
+- [Wasteland (1988)](https://www.mobygames.com/game/287/wasteland/) --- post-apocalyptic RPG that inspired Fallout
+- [Wing Commander (1990)](https://www.mobygames.com/game/3/wing-commander/) --- cinematic space combat
 
 </div>
 
@@ -238,16 +238,16 @@ advantage of it (typically LucasArts games).
 <div class="compact" markdown>
 
 - [Civilization (1991)](https://www.mobygames.com/game/585/sid-meiers-civilization/) --- the strategy game by which all others are measured
-- [Eye of the Beholder (1991)](https://www.mobygames.com/game/835/eye-of-the-beholder/) --- stone-cold dungeon crawler classic
-- [Lemmings (1991)](https://www.mobygames.com/game/683/lemmings/) --- genre-defying addictive puzzle game
-- [Wolfenstein 3D (1992)](https://www.mobygames.com/game/306/wolfenstein-3d/) --- the first-person shooter prototype
+- [Day of the Tentacle (1993)](https://www.mobygames.com/game/719/maniac-mansion-day-of-the-tentacle/) --- pinnacle of point-and-click adventures
 - [Dune II (1992)](https://www.mobygames.com/game/241/dune-ii-the-building-of-a-dynasty/) --- a forerunner of the real-time strategy genre
-- [Ultima Underworld (1992)](https://www.mobygames.com/game/690/ultima-underworld-the-stygian-abyss/) --- the first true 3D RPG
+- [Eye of the Beholder (1991)](https://www.mobygames.com/game/835/eye-of-the-beholder/) --- stone-cold dungeon crawler classic
 - [Indiana Jones and the Fate of Atlantis (1992)](https://www.mobygames.com/game/316/indiana-jones-and-the-fate-of-atlantis/) --- LucasArts adventure masterpiece
-- [Ultima VII: The Black Gate (1992)](https://www.mobygames.com/game/608/ultima-vii-the-black-gate/) --- one of the greatest RPGs ever made
+- [Lemmings (1991)](https://www.mobygames.com/game/683/lemmings/) --- genre-defying addictive puzzle game
 - [Star Control II (1992)](https://www.mobygames.com/game/179/star-control-ii/) --- epic space adventure
 - [Syndicate (1993)](https://www.mobygames.com/game/281/syndicate/) --- cyberpunk real-time tactics
-- [Day of the Tentacle (1993)](https://www.mobygames.com/game/719/maniac-mansion-day-of-the-tentacle/) --- pinnacle of point-and-click adventures
+- [Ultima Underworld (1992)](https://www.mobygames.com/game/690/ultima-underworld-the-stygian-abyss/) --- the first true 3D RPG
+- [Ultima VII: The Black Gate (1992)](https://www.mobygames.com/game/608/ultima-vii-the-black-gate/) --- one of the greatest RPGs ever made
+- [Wolfenstein 3D (1992)](https://www.mobygames.com/game/306/wolfenstein-3d/) --- the first-person shooter prototype
 
 </div>
 
@@ -316,19 +316,19 @@ intended.
 
 <div class="compact" markdown>
 
-- [Master of Orion (1993)](https://www.mobygames.com/game/212/master-of-orion/) --- definitive 4X space strategy
+- [Command & Conquer (1995)](https://www.mobygames.com/game/338/command-conquer/) --- popularised real-time strategy
 - [DOOM (1993)](https://www.mobygames.com/game/1068/doom/) --- defined the FPS genre
-- [X-COM: UFO Defense (1994)](https://www.mobygames.com/game/521/x-com-ufo-defense/) --- tactical strategy masterpiece
+- [Discworld (1995)](https://www.mobygames.com/game/184/discworld/) --- Terry Pratchett point-and-click adventure
+- [Elder Scrolls: Daggerfall, The (1996)](https://www.mobygames.com/game/778/the-elder-scrolls-chapter-ii-daggerfall/) --- massive open-world RPG
+- [Heroes of Might and Magic (1995)](https://www.mobygames.com/game/668/heroes-of-might-and-magic/) --- turn-based strategy gem
+- [Jagged Alliance (1995)](https://www.mobygames.com/game/1038/jagged-alliance/) --- tactical mercenary RPG
+- [Master of Orion (1993)](https://www.mobygames.com/game/212/master-of-orion/) --- definitive 4X space strategy
 - [Panzer General (1994)](https://www.mobygames.com/game/1021/panzer-general/) --- accessible wargaming classic
 - [Star Wars: TIE Fighter (1994)](https://www.mobygames.com/game/240/star-wars-tie-fighter/) --- best Star Wars space sim
 - [System Shock (1994)](https://www.mobygames.com/game/681/system-shock/) --- cyberpunk immersive sim cult classic
 - [Tex Murphy: Under a Killing Moon (1994)](https://www.mobygames.com/game/850/under-a-killing-moon/) --- FMV detective adventure
-- [Command & Conquer (1995)](https://www.mobygames.com/game/338/command-conquer/) --- popularised real-time strategy
 - [Warcraft II: Tides of Darkness (1995)](https://www.mobygames.com/game/1339/warcraft-ii-tides-of-darkness/) --- landmark RTS
-- [Jagged Alliance (1995)](https://www.mobygames.com/game/1038/jagged-alliance/) --- tactical mercenary RPG
-- [Heroes of Might and Magic (1995)](https://www.mobygames.com/game/668/heroes-of-might-and-magic/) --- turn-based strategy gem
-- [Discworld (1995)](https://www.mobygames.com/game/184/discworld/) --- Terry Pratchett point-and-click adventure
-- [The Elder Scrolls: Daggerfall (1996)](https://www.mobygames.com/game/778/the-elder-scrolls-chapter-ii-daggerfall/) --- massive open-world RPG
+- [X-COM: UFO Defense (1994)](https://www.mobygames.com/game/521/x-com-ufo-defense/) --- tactical strategy masterpiece
 
 </div>
 
@@ -384,15 +384,15 @@ the ecosystem was transitioning to Windows.
 
 <div class="compact" markdown>
 
-- [Quake (1996)](https://www.mobygames.com/game/374/quake/) --- true 3D engine revolution
-- [Duke Nukem 3D (1996)](https://www.mobygames.com/game/365/duke-nukem-3d/) --- interactive environments and humour
-- [Heroes of Might and Magic II (1996)](https://www.mobygames.com/game/1513/heroes-of-might-and-magic-ii-the-succession-wars/) --- turn-based strategy classic
-- [Tomb Raider (1996)](https://www.mobygames.com/game/348/tomb-raider/) --- landmark 3D action-adventure
 - [Broken Sword (1996)](https://www.mobygames.com/game/499/circle-of-blood/) --- acclaimed point-and-click adventure
 - [Descent II (1996)](https://www.mobygames.com/game/694/descent-ii/) --- six-degrees-of-freedom shooter
+- [Duke Nukem 3D (1996)](https://www.mobygames.com/game/365/duke-nukem-3d/) --- interactive environments and humour
 - [Dungeon Keeper (1997)](https://www.mobygames.com/game/156/dungeon-keeper/) --- play the villain strategy classic
 - [Fallout (1997)](https://www.mobygames.com/game/223/fallout/) --- post-apocalyptic RPG masterpiece
+- [Heroes of Might and Magic II (1996)](https://www.mobygames.com/game/1513/heroes-of-might-and-magic-ii-the-succession-wars/) --- turn-based strategy classic
+- [Quake (1996)](https://www.mobygames.com/game/374/quake/) --- true 3D engine revolution
 - [Theme Hospital (1997)](https://www.mobygames.com/game/674/theme-hospital/) --- Bullfrog management sim
+- [Tomb Raider (1996)](https://www.mobygames.com/game/348/tomb-raider/) --- landmark 3D action-adventure
 
 </div>
 
@@ -448,16 +448,16 @@ classics well worth rediscovering.
 
 <div class="compact" markdown>
 
-- [Myst (1993)](https://www.mobygames.com/game/1223/myst/) --- landmark first-person adventure
-- [The Journeyman Project (1993)](https://www.mobygames.com/game/22007/the-journeyman-project/) --- time-travel sci-fi puzzle adventure
-- [The Dark Eye (1995)](https://www.mobygames.com/game/1782/the-dark-eye/) --- surreal Edgar Allan Poe horror adventure
-- [Shivers (1995)](https://www.mobygames.com/game/663/shivers/) --- horror-themed first-person adventure
-- [Dust: A Tale of the Wired West (1995)](https://www.mobygames.com/game/3990/dust-a-tale-of-the-wired-west/) --- FMV western adventure
+- [9: The Last Resort (1996)](https://www.mobygames.com/game/2176/9-the-last-resort/) --- surreal FMV puzzle adventure
+- [Blue Heat (1997)](https://www.mobygames.com/game/4954/blue-heat/) --- mature-themed video adventure
 - [Burn:Cycle (1995)](https://www.mobygames.com/game/3962/burncycle/) --- cyberpunk FMV adventure
 - [Civilization II (1996)](https://www.mobygames.com/game/15/sid-meiers-civilization-ii/) --- definitive Windows 3.1 strategy game
-- [9: The Last Resort (1996)](https://www.mobygames.com/game/2176/9-the-last-resort/) --- surreal FMV puzzle adventure
+- [Dark Eye, The (1995)](https://www.mobygames.com/game/1782/the-dark-eye/) --- surreal Edgar Allan Poe horror adventure
+- [Dust: A Tale of the Wired West (1995)](https://www.mobygames.com/game/3990/dust-a-tale-of-the-wired-west/) --- FMV western adventure
+- [Journeyman Project, The (1993)](https://www.mobygames.com/game/22007/the-journeyman-project/) --- time-travel sci-fi puzzle adventure
+- [Myst (1993)](https://www.mobygames.com/game/1223/myst/) --- landmark first-person adventure
+- [Shivers (1995)](https://www.mobygames.com/game/663/shivers/) --- horror-themed first-person adventure
 - [Titanic: Adventure Out of Time (1996)](https://www.mobygames.com/game/2892/titanic-adventure-out-of-time/) --- historical FMV adventure
-- [Blue Heat (1997)](https://www.mobygames.com/game/4954/blue-heat/) --- mature-themed video adventure
 
 </div>
 

@@ -1,45 +1,72 @@
 # Roland MT-32
 
-The **Roland MT-32** multi-timbre sound module was released in 1987 by Roland
-Corporation, the iconic Japanese manufacturer of electronic musical
-instruments. It featured Roland's novel, patented Linear Arithmetic (LA)
-Synthesis which combined sample playback with digital synthesis, capable of
-producing a wide range of realistic and synthesised sounds. As the little
-brother of Roland's flagship Roland D-50 synthesiser released in the same
-year, it was aimed at the hobbyist musician market.
+!!! tip "New to MIDI in DOS games?"
 
-Around the same time, Sierra On-Line, the company most famous for pioneering
-the graphic adventure genre, was looking for ways to push PC audio to the next
-level. They took an interest in the MT-32, which lead to Sierra adding support
-for the module to most of their games from 1988 onwards. Other companies soon
-started following Sierra's lead, which turned the Roland MT-32 into a de facto
-standard for high-end audio in DOS gaming.
+    If you're not familiar with how MIDI works in DOS games, read the overview
+    in the [MIDI](../midi.md) section first --- it explains how DOS games use
+    MIDI and the difference between the **Roland MT-32** family of devices and
+    [Roland Sound Canvas / General MIDI](roland-sound-canvas.md).
 
-As the Roland MT-32 was considerably more expensive than other options, such
-as the [AdLib](adlib.md#adlib-music-synthesizer-card), it remained out of
-reach for most computer users. The golden era of MT-32 was in the 1988 --1992
-period until [General MIDI](../midi.md#the-general-midi-standard) and [CD
-Audio](cd-da.md) took over.
+The **Roland MT-32** is a multi-timbre sound module released by Roland in
+1987, the little sibling of the flagship Roland D-50 synthesiser released the
+same year. It uses Roland's patented Linear Arithmetic (LA) synthesis,
+blending sample playback with digital synthesis. From 1988 onwards, starting
+with Sierra On-Line, it became the de facto high-end audio standard in DOS
+gaming --- an era covered in more detail in the
+[MIDI](../midi.md#roland-mt-32) section.
+
+Don't confuse the MT-32 with General MIDI devices like the [Sound
+Canvas](roland-sound-canvas.md) --- they use incompatible instrument sets, and
+music written for one usually sounds wrong on the other. See [MT-32 vs
+General MIDI](../midi.md#mt-32-vs-general-midi) for details.
 
 ??? note "Notable games with MT-32 support"
 
     <div class="compact" markdown>
 
-    - [Indiana Jones and the Last Crusade (1989)](https://www.mobygames.com/game/197/indiana-jones-and-the-last-crusade-the-graphic-adventure/)
-    - [King's Quest IV (1988)](https://www.mobygames.com/game/133/kings-quest-iv-the-perils-of-rosella/)
-    - [King's Quest V (1990)](https://www.mobygames.com/game/134/kings-quest-v-absence-makes-the-heart-go-yonder/)
-    - [King's Quest VI (1992)](https://www.mobygames.com/game/135/kings-quest-vi-heir-today-gone-tomorrow/)
-    - [Leisure Suit Larry 3 (1989)](https://www.mobygames.com/game/146/leisure-suit-larry-iii-passionate-patti-in-pursuit-of-the-pulsating-pectorals/)
+    - [Conquests of Camelot: The Search for the Grail (1990)](https://www.mobygames.com/game/1408/conquests-of-camelot-the-search-for-the-grail/)
+    - [Curse of Enchantia (1992)](https://www.mobygames.com/game/2409/curse-of-enchantia/)
+    - [Dagger of Amon Ra, The (1992)](https://www.mobygames.com/game/462/the-dagger-of-amon-ra/)
+    - [Dark Queen of Krynn, The (1992)](https://www.mobygames.com/game/2757/the-dark-queen-of-krynn/)
+    - [Darklands (1992)](https://www.mobygames.com/game/258/darklands/)
+    - [Elvira: Mistress of the Dark (1990)](https://www.mobygames.com/game/4050/elvira/)
+    - [Eric the Unready (1993)](https://www.mobygames.com/game/431/eric-the-unready/)
+    - [Eye of the Beholder III: Assault on Myth Drannor (1993)](https://www.mobygames.com/game/859/eye-of-the-beholder-iii-assault-on-myth-drannor/)
+    - [F-19 Stealth Fighter (1988)](https://www.mobygames.com/game/512/f-19-stealth-fighter/)
+    - [Flight of the Amazon Queen (1995)](https://www.mobygames.com/game/352/flight-of-the-amazon-queen/)
+    - [Future Wars: Time Travelers (1989)](https://www.mobygames.com/game/2205/future-wars-adventures-in-time/)
+    - [Indiana Jones and the Fate of Atlantis (1992)](https://www.mobygames.com/game/316/indiana-jones-and-the-fate-of-atlantis/)
+    - [Indiana Jones and the Last Crusade (1989)](https://www.mobygames.com/game/534/indiana-jones-and-the-last-crusade-the-graphic-adventure/)
+    - [Inherit the Earth: Quest for the Orb (1994)](https://www.mobygames.com/game/4008/inherit-the-earth-quest-for-the-orb/)
+    - [Jagged Alliance (1995)](https://www.mobygames.com/game/1038/jagged-alliance/)
+    - [King's Quest IV: The Perils of Rosella (1988)](https://www.mobygames.com/game/129/kings-quest-iv-the-perils-of-rosella/)
+    - [King's Quest V: Absence Makes the Heart Go Yonder! (1990)](https://www.mobygames.com/game/130/kings-quest-v-absence-makes-the-heart-go-yonder/)
+    - [King's Quest VI: Heir Today, Gone Tomorrow (1992)](https://www.mobygames.com/game/131/kings-quest-vi-heir-today-gone-tomorrow/)
+    - [Legacy: Realm of Terror, The (1992)](https://www.mobygames.com/game/697/the-legacy-realm-of-terror/)
+    - [Legend of Kyrandia, The (1992)](https://www.mobygames.com/game/394/fables-fiends-the-legend-of-kyrandia-book-one/)
+    - [Leisure Suit Larry III: Passionate Patti in Pursuit of the Pulsating Pectorals (1989)](https://www.mobygames.com/game/412/leisure-suit-larry-iii-passionate-patti-in-pursuit-of-the-pulsat/)
     - [Loom (1990)](https://www.mobygames.com/game/176/loom/)
-    - [Monkey Island (1990)](https://www.mobygames.com/game/616/the-secret-of-monkey-island/)
-    - [Monkey Island 2 (1991)](https://www.mobygames.com/game/289/monkey-island-2-lechucks-revenge/)
-    - [Police Quest II (1988)](https://www.mobygames.com/game/142/police-quest-2-the-vengeance/)
-    - [Quest for Glory I (1989)](https://www.mobygames.com/game/148/quest-for-glory-i-so-you-want-to-be-a-hero/)
-    - [Space Quest III (1989)](https://www.mobygames.com/game/139/space-quest-iii-the-pirates-of-pestulon/)
-    - [Space Quest IV (1991)](https://www.mobygames.com/game/140/space-quest-iv-roger-wilco-and-the-time-rippers/)
+    - [Lost Files of Sherlock Holmes, The (1992)](https://www.mobygames.com/game/3441/the-lost-files-of-sherlock-holmes/)
+    - [Lure of the Temptress (1992)](https://www.mobygames.com/game/1134/lure-of-the-temptress/)
+    - [Might and Magic III: Isles of Terra (1991)](https://www.mobygames.com/game/1621/might-and-magic-iii-isles-of-terra/)
+    - [Monkey Island 2: LeChuck's Revenge (1991)](https://www.mobygames.com/game/289/monkey-island-2-lechucks-revenge/)
+    - [Police Quest 2: The Vengeance (1988)](https://www.mobygames.com/game/147/police-quest-2-the-vengeance/)
+    - [Populous (1989)](https://www.mobygames.com/game/613/populous/)
+    - [Prince of Persia (1990)](https://www.mobygames.com/game/196/prince-of-persia/)
+    - [Quest for Glory I: So You Want To Be A Hero (1989)](https://www.mobygames.com/game/16075/quest-for-glory-i-so-you-want-to-be-a-hero/)
+    - [Realms of Arkania: Blade of Destiny (1992)](https://www.mobygames.com/game/3437/realms-of-arkania-blade-of-destiny/)
+    - [Rome: A.D. 92 (1992)](https://www.mobygames.com/game/2232/rome-pathway-to-power/)
+    - [Rules of Engagement (1991)](https://www.mobygames.com/game/24516/rules-of-engagement/)
+    - [Secret of Monkey Island, The (1990)](https://www.mobygames.com/game/616/the-secret-of-monkey-island/)
+    - [Sid Meier's Civilization (1991)](https://www.mobygames.com/game/585/sid-meiers-civilization/)
+    - [Space Quest III: The Pirates of Pestulon (1989)](https://www.mobygames.com/game/142/space-quest-iii-the-pirates-of-pestulon/)
+    - [Space Quest IV: Roger Wilco and the Time Rippers (1991)](https://www.mobygames.com/game/143/space-quest-iv-roger-wilco-and-the-time-rippers/)
+    - [Spellcasting 101: Sorcerers Get All the Girls (1990)](https://www.mobygames.com/game/1027/spellcasting-101-sorcerers-get-all-the-girls/)
+    - [Spirit of Excalibur (1990)](https://www.mobygames.com/game/2539/spirit-of-excalibur/)
+    - [Star Trek: 25th Anniversary (1992)](https://www.mobygames.com/game/952/star-trek-25th-anniversary/)
     - [Ultima VI (1990)](https://www.mobygames.com/game/372/ultima-vi-the-false-prophet/)
-    - [Wing Commander (1990)](https://www.mobygames.com/game/1509/wing-commander/)
-    - [Wing Commander II (1991)](https://www.mobygames.com/game/377/wing-commander-ii-vengeance-of-the-kilrathi/)
+    - [Wing Commander (1990)](https://www.mobygames.com/game/3/wing-commander/)
+    - [Wing Commander II: Vengeance of the Kilrathi (1991)](https://www.mobygames.com/game/823/wing-commander-ii-vengeance-of-the-kilrathi/)
 
     </div>
 
@@ -48,7 +75,7 @@ Audio](cd-da.md) took over.
 !!! warning
 
     Emulating the Roland MT-32 requires the original ROM data from the
-    hardware itself --- the MT-32 MIDI device cannot function without these
+    hardware itself --- the MT-32 MIDI device **cannot** function without these
     files. We can't bundle the ROM files with our release packages due to
     copyright restrictions, so you'll need to obtain and install them
     yourself.
@@ -94,8 +121,9 @@ mididevice = mt32
 ```
 
 For a step-by-step walkthrough of setting up the MT-32 with a specific game,
-see the [Beneath a Steel Sky](../../../getting-started/beneath-a-steel-sky.md#setting-up-roland-mt-32-sound)
-chapter of the getting started guide.
+see the [Beneath a Steel
+Sky](../../../getting-started/beneath-a-steel-sky.md#setting-up-roland-mt-32-sound)
+chapter of the Getting Started guide.
 
 
 ## Listing the available models
@@ -118,13 +146,12 @@ you'll see the name of the active model and the location of the ROM file.
 ## Configuring games for the MT-32
 
 DOSBox Staging emulates both the MT-32 sound module and the [MPU-401 MIDI
-interface](../midi.md#roland-mpu-401-midi-interface) needed to communicate
-with it. The emulated MPU-401 supports the so-called **Intelligent Mode**,
-which most older games require (e.g., all older Sierra adventures). Most
-later games only need the much simpler **UART Mode**.
-
-Since Intelligent Mode fully supports UART Mode, it's generally safe to leave
-[`mpu401`](../midi.md#mpu401) at its default `intelligent` setting for MT-32 games.
+interface](../midi.md#roland-mpu-401-midi-interface) that connected the PC and
+the sound module. Most MT-32 games --- including all older Sierra and Legend
+Entertainment adventures --- need the interface's **Intelligent Mode**. Since
+Intelligent Mode fully supports **UART Mode** too, it's safe to leave
+[`mpu401`](../midi.md#mpu401) at its default `intelligent` setting for most
+MT-32 games.
 
 Not all games that list "Roland MT-32" in their setup utility actually support
 it properly, and many games with excellent MT-32 music don't advertise it
@@ -151,12 +178,13 @@ each title.
 
 ### Old vs new MT-32
 
-The MT-32 was revised within its first year. The "new" revision (ROM v2.0x)
-has a faster CPU and lower background noise, but Roland also reorganised some
-of the instrument samples. Games composed on the original "old" hardware (ROM
-v1.0x) may sound subtly different on the "new" revision --- certain
-instruments have a different timbre, and a few games exploit firmware quirks
-that were fixed in the newer ROMs.
+Roland released several revisions of the MT-32 hardware over the years. Games
+composed on the original **old revision** (ROM v1.0x) may sound different on
+the **new revision** (ROM v2.0x) --- certain instruments might have a
+different timbre, some might sound distorted, and in the worst case the game
+might even lock up or crash. The opposite can also be true --- certain games
+composed for the new v2.0x revision don't work correctly with the old v1.0x
+ROM sets.
 
 As a rule of thumb:
 
@@ -175,39 +203,61 @@ As a rule of thumb:
   [compatibility list](https://www.vogonswiki.com/index.php/List_of_MT-32-compatible_computer_games)
   notes the recommended revision for each game.
 
+For most games, you only need to set [`model`](#model) to `mt32_old` or
+`mt32_new` in the `[mt32]` section. These will pick the best available v1.0x or v2.0x ROM set,
+respectively. The minor ROM revision rarely matters at all.
+
+``` ini
+[mt32]
+# Early MT-32 games need this (e.g., older Sierra adventures)
+model = mt32_old
+
+# Later MT-32 games need this
+model = mt32_new
+```
+
+!!! tip
+
+    You can pick a specific MT-32 model per game by taking advantage of
+    per-game [local
+    configurations](../../using-dosbox-staging/configuration.md#local-configuration)
+    and [configuration
+    layering](../../using-dosbox-staging/configuration.md#configuration-layering).
+
+
 ### CM-32L
 
-The **Roland CM-32L**, released in 1989, is an MT-32 variant tailored for
+The **Roland CM-32L** released in 1989 is an MT-32 variant tailored for
 gaming and is generally the best overall choice. It is fully compatible with
-MT-32 "new" games and adds 33 extra sound effects (gunshots, explosions, dog
-barks, footsteps, etc.) that a handful of games use for enhanced audio. A few
+games that need the new MT-32 revision and adds 33 extra sound effects (gunshots, explosions, dog
+barks, footsteps, etc.). Some games use these for enhanced audio --- a few
 titles only sound complete on a CM-32L (e.g., [Curse of
 Enchantia](https://www.mobygames.com/game/740/curse-of-enchantia/) and [Fire &
 Ice](https://www.mobygames.com/game/7386/fire-ice/)). LucasArts was one of the
 main game studios that typically took advantage of the extra sound effects of
 the module.
 
-DOSBox Staging's `model = auto` setting prefers the CM-32L when its ROMs are
-available, falling back to the best available MT-32 model otherwise. For
-early Sierra titles that sound best on "old" hardware, override with
-`model = mt32_old` in a per-game config:
+The default `auto` value of the [`model`](#model) setting prefers the CM-32L
+when its ROMs are available, falling back to the best available MT-32 model
+otherwise. You can also use `cm32l` to explicitly request the CM-32L without
+fallback.
 
 ``` ini
 [mt32]
-romdir = /path/to/mt32-roms
-
-# Picks the CM-32L if available; best overall model except for old games
+# Picks the CM-32L if available, otherwise MT-32 new or old
 model = auto
 
-# Early MT-32 games need this (e.g., older Sierra adventures)
-model = mt32_old
+# Set the CM-32L
+model = cm32l
 ```
 
 !!! tip
 
-    Using the layering approach of DOSBox [configuration
-    files](../../using-dosbox-staging/configuration.md#configuration-layering),
-    you can pick one specific MT-32 model per game.
+    You can pick a specific MT-32 model per game by taking advantage of
+    per-game [local
+    configurations](../../using-dosbox-staging/configuration.md#local-configuration)
+    and [configuration
+    layering](../../using-dosbox-staging/configuration.md#configuration-layering).
 
 
 ## Supported MT-32 models
@@ -219,18 +269,15 @@ project and cover the whole MT-32 hardware family:
 
 <div class="compact" markdown>
 
-| Hardware               | Year | `model` value(s)                                            | Notes
-| ---------------------- | ---- | ----------------------------------------------------------  | ---------------------------------------------------------------------
-| MT-32 "old" (v1.0x)    | 1987 | `mt32_104`, `mt32_105`, `mt32_106`, `mt32_107` (`mt32_old`) | Original hardware; some games rely on firmware quirks present only in these early versions
-| MT-32 "new" (v2.0x)    | 1987 | `mt32_203`, `mt32_204` (`mt32_new`), `mt32_206`, `mt32_207` | Faster CPU, lower noise floor, revised instrument samples
-| MT-32 BlueRidge        | ---  | `mt32_bluer`                                                | Third-party clone board
-| MT-100                 | 1988 | ---                                                         | MT-32 "new" with a built-in sequencer; uses the "new" ROMs
-| CM-32L / LAPC-I        | 1989 | `cm32l_100`, `cm32l_102`                                    | MT-32 "new"-compatible, plus 33 extra sound effects; LAPC-I is the same hardware on an ISA card
-| CM-32LN                | ---  | `cm32ln_100`                                                | ---
-| CM-64                  | 1989 | ---                                                         | CM-32L combined with the CM-32P PCM instrument bank; uses the CM-32L ROM |
+| Hardware               | Year | `model` value(s)                                               | Notes
+| ---------------------- | ---- | ----------------------------------------------------------     | ---------------------------------------------------------------------
+| MT-32 "old" (v1.0x)    | 1987 | `mt32_104`, `mt32_105`, `mt32_106`, `mt32_107`, **`mt32_old`** | Original hardware; some games rely on firmware quirks present only in these early versions
+| MT-32 "new" (v2.0x)    | 1987 | `mt32_203`, `mt32_204`  `mt32_206`, `mt32_207`, **`mt32_new`** | Revised version with some firmware bugs and quirks removed
+| MT-32 BlueRidge        | 1988 | `mt32_bluer`                                                   | Third-party clone board
+| CM-32L / LAPC-I        | 1989 | `cm32l_100`, `cm32l_102`, **`cm32l`**                          | MT-32 "new"-compatible, plus 33 extra sound effects; LAPC-I is the same hardware on an ISA card
+| CM-32LN                | 1992 | `cm32ln_100`                                                   | Japan-only CM-32L release for NEC PC-98 laptops; has a faster vibrato than the CM-32LN (break compatibility with some games)
 
 </div>
-
 
 
 ## ROM lookup paths
@@ -241,15 +288,23 @@ subfolder inside the game's working folder.
 
 **Windows**
 
+<div class="compact" markdown>
+
 1. `C:\Users\<USERNAME>\AppData\Local\DOSBox\mt32-roms\`
 2. `C:\mt32-rom-data\`
 
+</div>
+
 **macOS**
+
+<div class="compact" markdown>
 
 1. `/Users/<USERNAME>/Library/Preferences/DOSBox/mt32-roms/`
 2. `/Users/<USERNAME>/Library/Audio/Sounds/MT32-Roms/`
 3. `/usr/local/share/mt32-rom-data/`
 4. `/usr/share/mt32-rom-data/`
+
+</div>
 
 **Linux**
 

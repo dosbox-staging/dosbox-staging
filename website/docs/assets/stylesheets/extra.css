@@ -62,7 +62,7 @@ small {
 .md-content ul {
   list-style: square;
 }
-.md-content .compact ul li {
+.md-content .compact ol li, .md-content .compact ul li {
   margin-bottom: 0.1rem;
 }
 
@@ -183,6 +183,60 @@ small {
   /*------------------------------------------------------------------------*/
   /* Headings                                                               */
   /*------------------------------------------------------------------------*/
+  /*------------------------------------------------------------------------*/
+  /* Admonitions                                                            */
+  /*------------------------------------------------------------------------*/
+  /*------------------------------------------------------------------------*/
+  /* Tables                                                                 */
+  /*------------------------------------------------------------------------*/
+  /*------------------------------------------------------------------------*/
+  /* Images                                                                 */
+  /*------------------------------------------------------------------------*/
+  /*------------------------------------------------------------------------*/
+  /* Misc                                                                   */
+  /*------------------------------------------------------------------------*/
+  /*
+  dl {
+    dd {
+      p {
+        margin-top: 0.7em;
+        margin-bottom: 0.7em;
+      }
+      ul {
+        margin-top: 0.8em;
+        margin-bottom: 0.8em;
+      }
+    }
+    dt {
+      a {
+        font-size: 1.15em;
+        font-family: Titillium Web;
+        color: var(--md-default-fg-color);
+
+        &:hover {
+          color: var(--md-default-fg-color);
+          text-decoration: none;
+        }
+      }
+    }
+  }
+  */
+  /*
+  // External links
+  a[external]:after {
+    font-family: "icons" !important;
+    speak: never;
+    font-style: normal;
+    font-weight: normal;
+    font-variant: normal;
+    text-transform: none;
+    line-height: 1;
+    font-size: 65%;
+    content: "  \e900 ";
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  */
 }
 .md-typeset h1 {
   font: 1.84rem/1.2 Titillium Web;
@@ -218,11 +272,6 @@ small {
   letter-spacing: 0;
   clear: both;
   background-color: rgba(0, 0, 0, 0.04);
-}
-.md-typeset {
-  /*------------------------------------------------------------------------*/
-  /* Admonitions                                                            */
-  /*------------------------------------------------------------------------*/
 }
 .md-typeset .admonition,
 .md-typeset details {
@@ -358,11 +407,6 @@ small {
 .md-typeset :is(.question, .help, .faq) > :is(.admonition-title, summary):before {
   background-color: #00b070;
 }
-.md-typeset {
-  /*------------------------------------------------------------------------*/
-  /* Tables                                                                 */
-  /*------------------------------------------------------------------------*/
-}
 .md-typeset .center-table {
   text-align: center;
 }
@@ -388,11 +432,6 @@ small {
 .md-typeset .compact table:not([class]) th, .md-typeset .compact table:not([class]) td {
   padding-top: 0.3rem;
   padding-bottom: 0.3rem;
-}
-.md-typeset {
-  /*------------------------------------------------------------------------*/
-  /* Images                                                                 */
-  /*------------------------------------------------------------------------*/
 }
 .md-typeset figure {
   max-width: 756px;
@@ -420,11 +459,6 @@ small {
   height: 2.1rem;
   margin-right: 0.4rem;
 }
-.md-typeset {
-  /*------------------------------------------------------------------------*/
-  /* Misc                                                                   */
-  /*------------------------------------------------------------------------*/
-}
 .md-typeset kbd {
   display: inline-block;
   padding: 0 6px;
@@ -437,34 +471,6 @@ small {
 }
 .md-typeset dl dd {
   margin-top: 0.25rem;
-}
-.md-typeset {
-  /*
-  dl {
-    dd {
-      p {
-        margin-top: 0.7em;
-        margin-bottom: 0.7em;
-      }
-      ul {
-        margin-top: 0.8em;
-        margin-bottom: 0.8em;
-      }
-    }
-    dt {
-      a {
-        font-size: 1.15em;
-        font-family: Titillium Web;
-        color: var(--md-default-fg-color);
-
-        &:hover {
-          color: var(--md-default-fg-color);
-          text-decoration: none;
-        }
-      }
-    }
-  }
-  */
 }
 .md-typeset em.default {
   position: relative;
@@ -485,24 +491,6 @@ small {
   font: 1rem IBM VGA;
   background: #000;
   color: #aaa;
-}
-.md-typeset {
-  /*
-  // External links
-  a[external]:after {
-    font-family: "icons" !important;
-    speak: never;
-    font-style: normal;
-    font-weight: normal;
-    font-variant: normal;
-    text-transform: none;
-    line-height: 1;
-    font-size: 65%;
-    content: "  \e900 ";
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
-  */
 }
 
 @media screen and (min-width: 30em) {
@@ -748,16 +736,6 @@ small {
   justify-content: center;
   gap: 0 1.2rem;
 }
-@media screen and (min-width: 45em) {
-  .front-page .image-grid figure {
-    flex-basis: calc((100% - 1.2rem) / 2);
-  }
-}
-@media screen and (min-width: 60em) {
-  .front-page .image-grid figure {
-    flex-basis: calc((100% - 2.4rem) / 3);
-  }
-}
 .front-page .image-grid figure {
   margin-bottom: 0;
 }
@@ -780,6 +758,16 @@ small {
 @media screen and (min-width: 30rem) {
   .front-page .image-grid figure figcaption p {
     margin-bottom: 0.8rem;
+  }
+}
+@media screen and (min-width: 45em) {
+  .front-page .image-grid figure {
+    flex-basis: calc((100% - 1.2rem) / 2);
+  }
+}
+@media screen and (min-width: 60em) {
+  .front-page .image-grid figure {
+    flex-basis: calc((100% - 2.4rem) / 3);
   }
 }
 .front-page .screenshots h2 {

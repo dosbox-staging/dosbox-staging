@@ -1,5 +1,13 @@
 # FluidSynth
 
+!!! tip "New to MIDI in DOS games?"
+
+    If you're not familiar with how MIDI works in DOS games, read the overview
+    in the [MIDI](../midi.md) section first --- it explains how DOS games use
+    MIDI and the difference between the [Roland MT-32](roland-mt-32.md) family
+    of devices and [Roland Sound Canvas / General
+    MIDI](roland-sound-canvas.md).
+
 **FluidSynth** is a built-in software MIDI synthesiser that uses **SoundFont**
 (`.sf2`) sample banks to generate audio. Unlike [Sound
 Canvas](roland-sound-canvas.md) emulation, it does not attempt to replicate
@@ -13,7 +21,8 @@ option when you don't have SC-55 ROMs or when you prefer a particular
 SoundFont's character.
 
 For background on the General MIDI standard and help deciding which MIDI
-device to use for a particular game, see the [MIDI overview](../midi.md#which-midi-device-should-i-use).
+device to use for a particular game, see the
+[MIDI](../midi.md#which-midi-device-should-i-use) section.
 
 
 ## SoundFont setup
@@ -75,7 +84,7 @@ Other options worth trying:
 For a hands-on walkthrough of setting up FluidSynth with a specific game,
 see the [Star Wars: Dark
 Forces](../../../getting-started/star-wars-dark-forces.md#fluidsynth)
-chapter of the getting started guide.
+chapter of the Getting Started guide.
 
 
 ## SoundFont locations
@@ -86,13 +95,21 @@ folder first. Otherwise, it searches the following folders for SoundFont files
 
 **Windows**
 
+<div class="compact" markdown>
+
 1. `C:\Users\<USERNAME>\AppData\Local\DOSBox\soundfonts\`
 2. `C:\soundfonts\`
 
+</div>
+
 **macOS**
+
+<div class="compact" markdown>
 
 1. `/Users/<USERNAME>/Library/Preferences/DOSBox/soundfonts/`
 2. `/Users/<USERNAME>/Library/Audio/Sounds/Banks/`
+
+</div>
 
 **Linux**
 
@@ -107,11 +124,11 @@ folder first. Otherwise, it searches the following folders for SoundFont files
 ## Reverb and chorus
 
 The [`fsynth_reverb`](#fsynth_reverb) and [`fsynth_chorus`](#fsynth_chorus)
-settings apply reverb and chorus effects *within the FluidSynth synthesiser
-engine itself*, before the audio reaches the DOSBox mixer. This is separate
-from the mixer-level [`reverb`](../mixer-effects.md#reverb) and
-[`chorus`](../mixer-effects.md#chorus) effects, which are applied after
-mixing to all audio channels. The FluidSynth effects only affect MIDI
+settings apply reverb and chorus effects *within* the FluidSynth synthesiser
+engine, *before* the audio reaches the DOSBox mixer. This is separate from the
+mixer-level [`reverb`](../mixer-effects.md#reverb) and
+[`chorus`](../mixer-effects.md#chorus) effects, which are applied to the
+output of the emulated sound devices. So these effects only affect MIDI
 playback through FluidSynth.
 
 The default `auto` mode applies optimised reverb and chorus settings for the

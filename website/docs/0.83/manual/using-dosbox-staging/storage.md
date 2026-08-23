@@ -273,16 +273,16 @@ on four CDs and could run with all four drives mounted at once.
 
     <div class="compact" markdown>
 
-    - [Wing Commander (1990)](https://www.mobygames.com/game/3/wing-commander/) --- multiple 5.25" or 3.5" floppies
-    - [The Secret of Monkey Island (1990)](https://www.mobygames.com/game/616/the-secret-of-monkey-island/) --- 4 or 8 floppies depending on disk size
-    - [Indiana Jones and the Fate of Atlantis (1992)](https://www.mobygames.com/game/316/indiana-jones-and-the-fate-of-atlantis/) --- 11 HD floppies
-    - [Day of the Tentacle (1993)](https://www.mobygames.com/game/719/maniac-mansion-day-of-the-tentacle/) --- 6 HD floppies
-    - [Sam & Max Hit the Road (1993)](https://www.mobygames.com/game/745/sam-max-hit-the-road/) --- 6 HD floppies
-    - [Phantasmagoria (1995)](https://www.mobygames.com/game/1164/roberta-williams-phantasmagoria/) --- 7 CDs
-    - [The Beast Within: A Gabriel Knight Mystery (1995)](https://www.mobygames.com/game/118/the-beast-within-a-gabriel-knight-mystery/) --- 6 CDs
-    - [Wing Commander IV: The Price of Freedom (1996)](https://www.mobygames.com/game/343/wing-commander-iv-the-price-of-freedom/) --- 6 CDs
-    - [Riven: The Sequel to Myst (1997)](https://www.mobygames.com/game/1262/riven-the-sequel-to-myst/) --- 5 CDs
     - [Baldur's Gate (1998)](https://www.mobygames.com/game/712/baldurs-gate/) --- 5 CDs
+    - [Beast Within: A Gabriel Knight Mystery, The (1995)](https://www.mobygames.com/game/118/the-beast-within-a-gabriel-knight-mystery/) --- 6 CDs
+    - [Day of the Tentacle (1993)](https://www.mobygames.com/game/719/maniac-mansion-day-of-the-tentacle/) --- 6 HD floppies
+    - [Indiana Jones and the Fate of Atlantis (1992)](https://www.mobygames.com/game/316/indiana-jones-and-the-fate-of-atlantis/) --- 11 HD floppies
+    - [Phantasmagoria (1995)](https://www.mobygames.com/game/1164/roberta-williams-phantasmagoria/) --- 7 CDs
+    - [Riven: The Sequel to Myst (1997)](https://www.mobygames.com/game/1262/riven-the-sequel-to-myst/) --- 5 CDs
+    - [Sam & Max Hit the Road (1993)](https://www.mobygames.com/game/745/sam-max-hit-the-road/) --- 6 HD floppies
+    - [Secret of Monkey Island, The (1990)](https://www.mobygames.com/game/616/the-secret-of-monkey-island/) --- 4 or 8 floppies depending on disk size
+    - [Wing Commander (1990)](https://www.mobygames.com/game/3/wing-commander/) --- multiple 5.25" or 3.5" floppies
+    - [Wing Commander IV: The Price of Freedom (1996)](https://www.mobygames.com/game/343/wing-commander-iv-the-price-of-freedom/) --- 6 CDs
 
     </div>
 

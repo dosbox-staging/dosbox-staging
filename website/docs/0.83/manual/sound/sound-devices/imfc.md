@@ -16,7 +16,7 @@ ports.
     <div class="compact" markdown>
 
     - [Codename: Iceman (1989)](https://www.mobygames.com/game/436/code-name-iceman/)
-    - [The Colonel's Bequest (1989)](https://www.mobygames.com/game/461/the-colonels-bequest/)
+    - [Colonel's Bequest, The (1989)](https://www.mobygames.com/game/461/the-colonels-bequest/)
     - [Conquests of Camelot (1989)](https://www.mobygames.com/game/1408/conquests-of-camelot-the-search-for-the-grail/)
     - [Hoyle's Official Book of Games (1989)](https://www.mobygames.com/game/759/hoyle-official-book-of-games-volume-1/)
     - [Jones in the Fast Lane (1990)](https://www.mobygames.com/game/370/jones-in-the-fast-lane/)

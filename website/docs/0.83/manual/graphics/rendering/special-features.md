@@ -83,14 +83,14 @@ EGA, VGA, Hercules) and any resolution, and can be combined with any shader.
 
     <div class="compact" markdown>
 
+    - [Gateway (1992)](https://www.mobygames.com/game/317/frederik-pohls-gateway/)
     - [Leisure Suit Larry 2 (1988)](https://www.mobygames.com/game/409/leisure-suit-larry-goes-looking-for-love-in-several-wrong-places/) & [3](https://www.mobygames.com/game/412/leisure-suit-larry-iii-passionate-patti-in-pursuit-of-the-pulsat/)
-    - [Quest for Glory I (1989)](https://www.mobygames.com/game/168/heros-quest-so-you-want-to-be-a-hero/) & [II](https://www.mobygames.com/game/169/quest-for-glory-ii-trial-by-fire/)
-    - [Space Quest III (1989)](https://www.mobygames.com/game/142/space-quest-iii-the-pirates-of-pestulon/)
-    - [The Secret of Monkey Island (1990)](https://www.mobygames.com/game/616/the-secret-of-monkey-island/) (EGA version)
     - [Loom (1990)](https://www.mobygames.com/game/176/loom/)
+    - [Quest for Glory I (1989)](https://www.mobygames.com/game/168/heros-quest-so-you-want-to-be-a-hero/) & [II](https://www.mobygames.com/game/169/quest-for-glory-ii-trial-by-fire/)
+    - [Secret of Monkey Island, The (1990)](https://www.mobygames.com/game/616/the-secret-of-monkey-island/) (EGA version)
+    - [Space Quest III (1989)](https://www.mobygames.com/game/142/space-quest-iii-the-pirates-of-pestulon/)
     - [Spellcasting 101 (1990)](https://www.mobygames.com/game/1027/spellcasting-101-sorcerers-get-all-the-girls/)
     - [Timequest (1991)](https://www.mobygames.com/game/1026/timequest/)
-    - [Gateway (1992)](https://www.mobygames.com/game/317/frederik-pohls-gateway/)
 
     </div>
 

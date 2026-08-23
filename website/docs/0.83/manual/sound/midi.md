@@ -10,7 +10,7 @@ experience MIDI music nirvana in its full glory!
 Because MIDI plays such a pivotal role in DOS gaming history, it is important
 to understand its origins and how it works at a basic level.
 
-## A brief introduction to MIDI
+## What is MIDI?
 
 The **MIDI standard (Musical Instrument Digital Interface)** was created in
 the early 1980s to allow audio equipment from different manufacturers to
@@ -30,11 +30,10 @@ music --- a MIDI score only contains note data and abstract descriptions of
 the instruments, while the sound module is responsible for generating the
 actual sounds using its on-board samples or synthesis capabilities.
 
-
 ## MIDI in DOS gaming
 
 In the beginning, all DOS games came on floppies. Even if a game came on 10
-floppies or more, therep/as simply not enough space for long musical pieces
+floppies or more, there was simply not enough space for long musical pieces
 stored as digital audio. Given that MIDI scores take very little disk space
 compared to digital audio (generally, just a few tens of kilobytes per
 composition), MIDI music was an ideal match for DOS games before the
@@ -52,21 +51,35 @@ MIDI sound in DOS games evolved through three distinct periods:
   was the only MIDI option. Sierra On-Line, LucasArts, and Origin Systems led
   the way with dedicated MT-32 music.
 
-**1991--1993 --- Transition era**
-: The [Roland SC-55](sound-devices/roland-sound-canvas.md)
+**1991--1993 --- MT-32 / Sound Canvas transition era**
+: The [Roland Sound Canvas SC-55](sound-devices/roland-sound-canvas.md)
   and General MIDI standard arrived. Many games supported both MT-32 and GM,
   giving players a choice.
 
-**1993 onwards --- General MIDI dominance**
+**1993 onwards --- Sound Canvas dominance**
 : General MIDI became the standard. MT-32 support faded as the SC-55 was
   cheaper, more widely available, and standardised. By 1995, very few new
   games included MT-32 support.
 
 ### Roland MT-32
 
-TODO
+The **Roland MT-32**, released in 1987, used Roland's novel Linear Arithmetic
+(LA) synthesis, blending sampled and synthesised sounds to produce a range far
+more realistic than the FM synthesis of cards like the AdLib. Sierra On-Line
+adopted it for most of their games from 1988 onwards, and LucasArts and Origin
+Systems soon followed suit, turning the MT-32 into the de facto high-end audio
+standard for several years despite its steep price tag. Classic games with
+dedicated MT-32 support include [King's Quest
+IV](https://www.mobygames.com/game/133/kings-quest-iv-the-perils-of-rosella/),
+[The Secret of Monkey
+Island](https://www.mobygames.com/game/616/the-secret-of-monkey-island/),
+[Wing Commander](https://www.mobygames.com/game/1509/wing-commander/), and
+[Ultima VI](https://www.mobygames.com/game/372/ultima-vi-the-false-prophet/).
 
-### Sound Canvas / General MIDI
+See the [Roland MT-32](sound-devices/roland-mt-32.md) page for setup
+instructions and further details.
+
+### Roland Sound Canvas SC-55
 
 **General MIDI (GM)** was introduced in 1991 to solve a simple but annoying
 problem: MIDI could tell a synthesiser *what notes to play*, but not *which
@@ -95,23 +108,15 @@ manufacturers recorded their own instrument samples, playback can sound
 noticeably different from one device to another --- the SC-55 is the gold
 standard for hearing the music as the composer intended.
 
-The **Yamaha DB50XG** and **MU-series** (MU50, MU80, MU100, etc.) are
-alternative MIDI modules that offer excellent SC-55 compatibility with a more
-modern and punchy sonic character. Many enthusiasts prefer them to the SC-55
-in certain games. For a detailed comparison of how these modules stack up
-against the SC-55, see [this
-article](https://blog.johnnovak.net/2023/03/05/grand-ms-dos-gaming-general-midi-showdown/).
-These modules are currently not emulated in DOSBox Staging, but can use them
-as [external MIDI synthesizers](#virtual-midi-devices).
+See the [Roland Sound Canvas](sound-devices/roland-sound-canvas.md) page for
+setup instructions and further details.
 
+### MT-32 vs General MIDI
 
-### The MT-32 to General MIDI transition
+!!! warning
 
-
-!!! warning "Roland MT-32 is not General MIDI"
-
-    Do not confuse the Roland MT-32 family of MIDI sound modules with General
-    MIDI modules! Music composed for the MT-32 often sounds *utterly wrong* on a
+    Do not confuse the Roland MT-32 family of MIDI sound modules with General MIDI
+    modules! Music composed for the MT-32 often sounds *utterly wrong* on a
     General MIDI device, and vice versa. Yes, they both have "MIDI" in their
     names, but that only refers to the MIDI communication protocol. The MT-32
     range of devices are programmable synthesisers, and most MT-32 supporting
@@ -120,10 +125,21 @@ as [external MIDI synthesizers](#virtual-midi-devices).
     standardised sound set.
 
     Quite confusingly, there is a large list of games that claim MT-32
-    compatibility but only sound correct on a General MIDI module. Make sure
-    to check the [List of games that falsely claim MT-32
+    compatibility but only sound correct on a General MIDI module. Make sure to
+    check the [List of games that falsely claim MT-32
     compatibility](https://www.vogonswiki.com/index.php/List_of_MT-32-compatible_computer_games#Games_that_falsely_claim_MT-32_compatibility)
     as well before configuring a game for MT-32 sound.
+
+### Alternative General MIDI devices
+
+The **Yamaha DB50XG** and **MU-series** (MU50, MU80, MU100, etc.) are
+alternative GM/GS MIDI modules that offer excellent Roland SC-55 compatibility
+with a more modern and punchy sonic character. Many enthusiasts prefer them to
+the SC-55 in certain games. For a detailed comparison of how these modules
+stack up against the SC-55, see [this
+article](https://blog.johnnovak.net/2023/03/05/grand-ms-dos-gaming-general-midi-showdown/).
+These modules are currently not emulated in DOSBox Staging, but can use them
+as [external MIDI synthesizers](#virtual-midi-devices).
 
 
 ## Built-in MIDI devices
@@ -139,9 +155,15 @@ DOSBox Staging offers three main ways for MIDI playback:
 - [FluidSynth](sound-devices/fluidsynth.md) --- a built-in software MIDI
   synthesiser (General MIDI only) using SoundFont files.
 
-Determining whether a game supports the [Sound Canvas](sound-devices/roland-sound-canvas.md) (General MIDI), the [Roland MT-32](sound-devices/roland-mt-32.md), or both
-is not always obvious from the setup utility alone. The community-maintained
-[List of MT-32-compatible computer games](https://www.vogonswiki.com/index.php/List_of_MT-32-compatible_computer_games)
+
+## Which MIDI device should I use?
+
+Determining whether a game supports the [Sound
+Canvas](sound-devices/roland-sound-canvas.md) (General MIDI), the [Roland
+MT-32](sound-devices/roland-mt-32.md), or both is not always obvious from the
+setup utility alone. The community-maintained [List of MT-32-compatible
+computer
+games](https://www.vogonswiki.com/index.php/List_of_MT-32-compatible_computer_games)
 on the VOGONS Wiki is the most comprehensive reference for which MIDI devices
 each game supports and which produces the best results. This information is
 often found out from interviews with the original composers. There is no other
@@ -152,12 +174,15 @@ As a rough rule of thumb:
 
 - **Pre-1992 games** (especially Sierra and LucasArts adventures) --- try
   [Roland MT-32](sound-devices/roland-mt-32.md) first.
+
 - **1992--1993 games** --- check the VOGONS list; many sound excellent on
   either the MT-32 or General MIDI.
+
 - **Post-1993 games** --- almost always General MIDI. Use [Sound
   Canvas](sound-devices/roland-sound-canvas.md) emulation for the most authentic
   results, or [FluidSynth](sound-devices/fluidsynth.md) as a lighter
   alternative.
+
 
 ## Roland MPU-401 MIDI interface
 
