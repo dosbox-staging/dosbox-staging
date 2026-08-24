@@ -7,7 +7,7 @@ All good things must come to an end, and this guide is no different!
 Congratulations --- now you should be able to use DOSBox Staging fairly
 confidently at a basic level, and we've actually touched on quite a few
 intermediate topics as well. Armed with the basics, now you have a much
-greater chance to figure things out on your own, and you'll be able  to ask
+greater chance to figure things out on your own, and you'll be able to ask
 more specific, directed questions from the more experienced members of the
 community when seeking help.
 
@@ -95,4 +95,3 @@ compatibles and DOSBox-related things. The combined knowledge of the community
 on all things DOS and retro-PC is next to none --- try asking any obscure
 question, and there's a good chance you'll get a very detailed (and correct!)
 answer within a few hours.
-

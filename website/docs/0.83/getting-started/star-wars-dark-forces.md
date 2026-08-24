@@ -86,7 +86,7 @@ you should always check out the included text files):
 
 We actually don't need that `DFDEMO` folder, and we've already extracted the
 contents of the three ZIP archives to our root directory on drive C, so just
-follow the instructions in step 3. Choose the *Express Setup* option in the
+follow the instructions in step 3. Choose the **Express Setup** option in the
 sound configuration utility by pressing ++e++, and the rest should be
 straightforward. The setup program will detect the Sound Blaster 16 correctly
 and will even play some test sounds.
@@ -184,30 +184,8 @@ by DOSBox Staging:
 | CGA, PCjr, Tandy, EGA | 60 Hz                                                                            |
 | Hercules              | 50 Hz                                                                            |
 
-See [Presentation modes](../manual/graphics/display-and-window.md#frame-presentation)
-in the manual for the full reference on refresh rates and vsync.
-
-!!! tip "Creating custom 60 and 70 Hz screen modes"
-
-    "Custom resolution" is a bit of a misnomer because what we're after is
-    creating a new screen mode that uses your monitor's native resolution but
-    with a custom *refresh rate*.
-
-    You can create such custom resolutions using the Nvidia Control Panel or
-    with the [Custom Resolution Utility
-    (CRU)](https://www.monitortests.com/forum/Thread-Custom-Resolution-Utility-CRU)
-    on Windows. You'll probably need to enable *CVT reduced blanking* (CVT-RB
-    or CVT-RBv2) to be able to go up to 70 Hz. For the best results, it's
-    recommended to use the exact fractional **59.713 Hz** and **70.086 Hz**
-    refresh rates for the nominal "60 Hz" and "70 Hz" DOS rates, respectively.
-
-    The drawback of this approach is that you need to set the appropriate
-    custom resolution before starting DOSBox Staging, and if a game switches
-    between different refresh rates, well, you're out of luck. These games
-    can only work 100% correctly on a true VRR display or a real old-school
-    CRT monitor. However, most games only use a single fixed refresh rate,
-    which is usually the standard 70 Hz VGA rate, so this technique still has
-    a lot of practical utility.
+See [Frame presentation](../manual/graphics/display-and-window.md#frame-presentation) in
+the manual for the full reference on refresh rates and vsync.
 
 
 ## Vertical syncing
@@ -327,18 +305,6 @@ To recap, the following variations are possible when it comes to vsync:
     full control over frame pacing and vsync without any external "help".
 
 
-!!! note "Here be dragons"
-
-    Manually configuring vsync is an advanced topic for power users only, so
-    it's beyond the scope of this beginner's guide. If you're feeling brave,
-    look into the `presentation_mode`, `vsync`, `vsync_skip`, `host_rate`, and
-    `dos_rate` settings for further details, but it's unlikely you'll be able
-    to improve the automatically chosen settings unless you _really know_ what
-    you're doing. It's super easy to make the situation a lot worse by
-    misconfiguring things, so when in doubt, just reset these settings to
-    their "factory defaults".
-
-
 ## Setting the emulated CPU speed
 
 Hardware-accelerated 3D graphics only became widespread in the late 1990s
@@ -364,15 +330,15 @@ before moving on!
 
 As mentioned before, emulating a "too powerful" CPU can starve the audio
 emulation, leading to audible glitches, clicks, and pops. To avoid such
-issues, it's much preferable to emulate a CPU that is _just powerful enough_
+issues, it's much preferable to emulate a CPU that is just powerful enough
 to handle 70 FPS but not _more_ powerful.
 
-One way to come up
-with a good cycles number is to start the game with a relatively low cycles
-setting, say 10&thinsp;000, then keep increasing it with the ++ctrl+f12++
-shortcut (++cmd+f12++ on the Mac) while playing to arrive at the lowest value
-that results in adequate performance. As a reminder, you can decrease the
-current cycles value, too, with the ++ctrl+f11++ (++cmd+f11++) shortcut.
+One way to come up with a good cycles number is to start the game with a
+relatively low cycles setting, say 10&thinsp;000, then keep increasing it with
+the ++ctrl+f12++ shortcut (++cmd+f12++ on the Mac) while playing to arrive at
+the lowest value that results in adequate performance. As a reminder, you can
+decrease the current cycles value, too, with the ++ctrl+f11++ (++cmd+f11++)
+shortcut.
 
 So, let's add the following to our config:
 
@@ -443,7 +409,7 @@ for a newer family of MIDI sound modules that support the so-called **General
 MIDI standard**. By the time Dark Forces was released in 1995, General MIDI
 had largely replaced the MT-32 as the standard for high-end game music. To
 learn more about the history and differences between these standards, see the
-[MIDI](../manual/sound/midi.md#the-general-midi-standard) chapter.
+[MIDI](../manual/sound/midi.md) user manual section.
 
 DOSBox Staging offers two ways to get General MIDI playback:
 
@@ -528,12 +494,12 @@ Now let's reconfigure the game to use General MIDI for music. Comment out the
 - Press ++3++ in the startup menu to reconfigure the sound settings, then
   ++c++ to do a custom setup.
 
-- Enter the *Advanced Menu* (it's above *Quit* at the bottom).
+- Enter the **Advanced Menu** (it's above **Quit** at the bottom).
 
-- Select the *General MIDI* device for *Music* and the default `330`
-  value for the *Port* setting.
+- Select the **General MIDI** device for **Music** and the default `330`
+  value for the **Port** setting.
 
-- You don't need to change the *Digital Sound* settings as our Sound Blaster
+- You don't need to change the **Digital Sound** settings as our Sound Blaster
   16 has been auto-detected correctly.
 
 The final configuration should look like this:
@@ -545,17 +511,17 @@ The final configuration should look like this:
     width="80%"
 ) }}
 
-Press ++enter++ on the *Test Music* menu item and you should hear the start of
-the Imperial March playing with much more realistic instruments!
+Press ++enter++ on the **Test Music** menu item and you should hear the start
+of the Imperial March playing with much more realistic instruments!
 
 !!! important "How to drive a manual"
 
-    Note that if you try to use *Detect* in the *Music* section, the
-    auto-detection will fail, and the *Music* option will revert to *None*.
+    Note that if you try to use **Detect** in the *Music* section, the
+    auto-detection will fail, and the **Music** option will revert to **None**.
     This can happen with some setup utilities, therefore it's important to
     know that the port of the General MIDI device must be set to **330**,
-    should the auto-detection fail. This is sometimes called the *MPU-401
-    port*, *MPU port*, or just *MIDI port*.
+    should the auto-detection fail. This is sometimes called the **MPU-401
+    port**, **MPU port**, or just **MIDI port**.
 
     Similarly, most games can auto-detect the Sound Blaster settings, but
     sometimes you need to enter them manually. The default DOSBox settings are
@@ -621,7 +587,7 @@ soundfont = GeneralUser-GS
 ```
 
 The game configuration is the same as described in the previous section ---
-select *General MIDI* on port `330` in the sound setup utility.
+select **General MIDI** on port **330** in the sound setup utility.
 
 Of course, you can always try other GM or GS-compatible SoundFonts
 too --- that's the beauty of General MIDI!

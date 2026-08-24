@@ -7,7 +7,7 @@ toc_depth: 3
 The next game we're going to set up is [Beneath a Steel
 Sky](https://www.mobygames.com/game/386/beneath-a-steel-sky/), a cyberpunk
 sci-fi adventure game from 1994. It's one of the standout timeless classics of
-the adventure genre and best of all, Revolution Software released the game as
+the adventure genre, and best of all, Revolution Software released the game as
 freeware in 2003 (see their accompanying notes [here](bass-readme.txt)).
 
 
@@ -37,7 +37,7 @@ how we can skip this step:
 3. Right-click on the batch file icon and select **Send to --> Desktop (create
    shortcut)** in the context menu.
 
-4. Now you can double-click on the new **Prince of Persia.bat - Shortcut**
+4. Now you can double-click on the new **Prince of Persia.bat – Shortcut**
    icon on your desktop to start the game (of course, you can rename the icon
    to **Prince of Persia** or whatever you like; this won't change the name of
    the batch file it references).
@@ -74,94 +74,27 @@ using your desktop environment's preferred launcher.
 We will set up the liberated "talkie" CD-ROM version of the game that has full
 voice-acting. You know the drill: create a new `Beneath a Steel Sky` subfolder
 inside your `DOS Games` folder and then the usual `drives/c` subfolder within
-it. Download the [ISO CD-ROM image](https://archive.org/download/Beneath_a_Steel_Sky_1995_Virgin/Beneath%20a%20Steel%20Sky%20%281995%29%28Virgin%29.iso)
-from the [Beneath a Steel Sky](https://archive.org/details/Beneath_a_Steel_Sky_1995_Virgin)
-item at the Internet Archive and put it into a `cd` subfolder inside your
-`Beneath a Steel Sky` game folder. The name of the `cd` subfolder has no
-special significance; you could put the `.iso` image anywhere, but it's good
-to get into the habit of organising your game files systematically (e.g., you
-could create a `Manual` or `Extras` subfolder too for the scanned manuals and
-other extra files). It's a good idea to rename `Beneath a Steel Sky
-(1995)(Virgin).iso` to `cdrom1.iso`; our game folder has the game's full name
-anyway.
+it. Download the [ISO CD-ROM
+image](https://archive.org/download/Beneath_a_Steel_Sky_1995_Virgin/Beneath%20a%20Steel%20Sky%20%281995%29%28Virgin%29.iso)
+from the [Beneath a Steel
+Sky](https://archive.org/details/Beneath_a_Steel_Sky_1995_Virgin) item at the
+Internet Archive and put the file with the `.iso` extension into a new
+`drives/d` subfolder inside your `Beneath a Steel Sky` game folder.
 
-Speaking of manuals, make sure to get the scan of the
-[Security Manual](https://archive.org/details/beneath-a-steel-sky-security-manual/)
-and the [comic book](https://ia802200.us.archive.org/13/items/beneath-a-steel-sky-comic-book/Beneath_a_Steel_Sky.pdf)
-
+Also make sure to get the scan of the [Security
+Manual](https://archive.org/details/beneath-a-steel-sky-security-manual/) and
+the [comic
+book](https://ia802200.us.archive.org/13/items/beneath-a-steel-sky-comic-book/Beneath_a_Steel_Sky.pdf)
 included in the boxed version of the game.
 
 For the visually inclined, this is the structure we'll end up with:
 
 ![Beneath a Steel Sky folder structure](images/beneath-a-steel-sky-dirtree1.png){ .skip-lightbox style="width: 14rem; margin: 0.3rem max(calc((50% - 14rem/2) * 0.85), 0rem);" }
 
-We need to mount the CD image to use it. Our C: drive is the hard drive, so
-we'll mount the CD-ROM image using the following letter D by convention. This
-is equivalent to having a CD-ROM drive in our emulated computer assigned to
-the drive letter D and inserting the game CD into it.
-
-Mounting an image file, such as a floppy or CD-ROM image, is accomplished with
-the `MOUNT` command. It is pretty simple to use: the first argument is the
-drive letter (`d`), the second the path to the CD-ROM image (`cd/cdrom1.iso`),
-and the third the type of the image file (`-t iso`).
-
-So this is what we need to put into our config:
-
-
-```ini
-[autoexec]
-mount d cd/cdrom1.iso -t iso
-```
-
-!!! warning
-
-    If you've decided to keep the original name of the ISO, you'll need to
-    enclose it in double quotes because it contains spaces:
-
-        mount d "cd/Beneath a Steel Sky (1995)(Virgin).iso" -t iso
-
-    If you're on Linux, make sure to get the casing of the ISO file exactly
-    right. Commands that operate on emulated DOS drives are case-insensitive,
-    just like real MS-DOS, but `MOUNT` opens a file on your host directly,
-    so the casing rules of your host filesystem apply.
-
-!!! tip
-
-    By always putting your CD-ROM images into the `cd`
-    subfolder within your game folder and renaming the ISO files to `cdrom1.iso`,
-    `cdrom2.iso`, and so on, it's easier to reuse the mount commands between
-    configs.
-
-You can always run `MOUNT /?` or `HELP MOUNT` if you need a little
-reminder on how to use the command (although the full list of options can be a
-little overwhelming).
-
-This is what you should see in the DOSBox Staging window after startup if
-everything is set up correctly:
-
-``` { . .dos-prompt }
-Local directory drives/c/ mounted as C drive
-Z:\>mount d cd/cdrom1.iso -t iso
-MSCDEX installed.
-ISO image cd/cdrom1.iso mounted as D drive
-Z:\>_
-```
-
-MSCDEX is the name of the MS-DOS CD-ROM driver, and the following line just
-informs us that our CD image has been mounted as drive D. Time to get down to
-business then!
-
-!!! danger "Always mount CD-ROM images with `MOUNT`"
-
-    While you could mount CD-ROM images outside of DOSBox with other programs,
-    too (e.g., Daemon Tools, ImgDrive, WinCDEmu, or the built-in Windows 10/11
-    ISO mounting feature), these alternative approaches often lead to
-    compatibility problems. That's because these tools don't emulate the
-    MSCDEX MS-DOS driver that DOS games expect.
-
-    For a trouble-free life, always use the built-in `MOUNT` command.
-    There's nothing to gain from using these 3rd party mounting tools for
-    DOS games.
+Our C: drive is the hard drive, so the CD-ROM drive uses the letter D: by
+convention. Similarly to the `drives/c` auto-mounting mechanism we've seen
+before, the CD image in the `drives/d` folder will be auto-mounted as the D:
+drive. 
 
 
 ## Installing the game
@@ -171,8 +104,8 @@ first. Usually, there's an executable called `INSTALL.EXE` or `SETUP.EXE` in
 the root directory of the CD (the extension could be `.COM` or `.BAT` as
 well).
 
-Switch to the D: drive by executing `d:` then run the `dir` command to inspect
-the contents of the CD:
+Switch to the D: drive by executing `d:`, then run the `dir` command to
+inspect the contents of the CD:
 
 ``` { . .dos-prompt }
  Volume in drive D is BASS
@@ -233,7 +166,7 @@ dialog:
     width="80%"
 ) }}
 
-Here you need to press the *Save Setup* button to finalise the settings and
+Here you need to press the **Save Setup** button to finalise the settings and
 exit the installer.
 
 As you can see, this is not exactly a masterclass in user interface design,
@@ -242,7 +175,7 @@ similarly slightly illogical --- often, it's not completely obvious what to do,
 but it's not too hard to figure out either. Reading the manual or some trial
 and error might help, too.
 
-Anyway, after pressing *Save Setup*, the installer will exit and print out the
+Anyway, after pressing **Save Setup**, the installer will exit and print out the
 following instructions:
 
 ``` { . .dos-prompt }
@@ -267,7 +200,6 @@ don't want to start the game just yet:
 
 ```ini
 [autoexec]
-mount d cd/cdrom1.iso -t iso
 c:
 cd \sky
 #sky
@@ -416,7 +348,6 @@ startup script.
 
 ```ini
 [autoexec]
-mount D "cd/cdrom1.iso" -t iso
 c:
 cd sky
 mixer opl 50 sb 500 /noshow
@@ -425,30 +356,29 @@ sky
 
 ## Changing the emulated Sound Blaster model
 
-DOSBox emulates the Sound Blaster 16 by default (see the [Sound
-Blaster](../manual/sound/sound-devices/sound-blaster.md)
-page for all available models and settings). This card can emulate all
+DOSBox emulates the **Sound Blaster 16** by default. This card can emulate all
 earlier Sound Blaster models and offers the widest compatibility with DOS
 games.
 
-But back in the day, there were more Sound Blaster variants and clones you
-could shake a stick at, and many of them have quite different default volume
-levels. We don't know what particular model the developers this game used, so
-it's worth experimenting with a few different ones. Let's start with a
-first-revision Sound Blaster Pro! Add the following snippet to your config:
+But back in the day, there were more Sound Blaster variants and clones than
+you could shake a stick at, and many of them have quite different default
+volume levels. We don't know what particular model the developers of this
+game used, so it's worth experimenting with a few different ones. Let's
+start with a first-revision **Sound Blaster Pro**! Add the following snippet
+to your config:
 
 ```ini
 [sblaster]
 sbtype = sbpro2
 ```
 
-We want to hear how the Sound Blaster Pro 2 sounds with the default, unaltered
-volume levels, so make sure to comment out the previously added `mixer`
-command in the `[autoexec]` section by prefixing it with a `#` character:
+We want to hear how the **Sound Blaster Pro 2** sounds with the default,
+unaltered volume levels, so make sure to comment out the previously added
+`mixer` command in the `[autoexec]` section by prefixing it with a `#`
+character:
 
 ```ini
 [autoexec]
-mount D "cd/cdrom1.iso" -t iso
 c:
 cd sky
 #mixer opl 50 sb 500 /noshow
@@ -482,10 +412,10 @@ clear!
 
 But it's a bit too loud. While the balance between the music and speech was
 just perfect on the Sound Blaster Pro 2, the speech is now overpowering the
-music. Compensating for that by lowering the `SB` channels volume in the mixer
-is certainly an option, but we can conclude the developers must have tuned the
-volume levels for a Sound Blaser Pro, so setting `sbtype = sbpro2` is the best
-solution.
+music. Compensating for that by lowering the `SB` channel's volume in the
+mixer is certainly an option, but we can conclude the developers must have
+tuned the volume levels for a Sound Blaster Pro, so setting `sbtype = sbpro2`
+is the best solution.
 
 
 !!! warning "When the game knows best"
@@ -499,7 +429,7 @@ solution.
 ## Adjusting the emulated CPU speed
 
 If you *did* watch the intro video (which I told you to skip, but no hard
-feelings), you must have heard quite severe audio stutterings from the moment
+feelings), you must have heard quite severe audio stuttering from the moment
 the narrator starts speaking. Well, if you haven't, watch it now!
 
 What's happening here? DOS gaming spans almost two decades, and many different
@@ -516,15 +446,13 @@ It won't hurt too much, I promise!
 ### Real and protected mode
 
 DOS games can be divided into two categories: older games and newer games
-(who would've guessed?) Older games released before about 1993 use something
-called *real mode*, while newer games released from 1993 onwards use
-*protected mode*. The important distinction here is that most CPU-hungry games
-are protected mode games (e.g., FPS games and flight simulators), while older
-pre-1993 real mode games generally have much less demanding performance
-requirements. Figuring out what exact CPU speed a particular game needs is
-almost impossible at the emulator level, but detecting whether a game uses
-real or protected mode is trivial. Therefore, DOSBox does the following
-automatic speed calibration by default:
+(who would've guessed?). The important distinction here is that most
+CPU-hungry games are protected mode games (e.g., FPS games and flight
+simulators), while older pre-1993 real mode games generally have much less
+demanding performance requirements. Figuring out what exact CPU speed a
+particular game needs is almost impossible at the emulator level, but
+detecting whether a game uses real or protected mode is trivial. Therefore,
+DOSBox does the following automatic speed calibration by default:
 
 - For **real mode** games, it emulates **3000** CPU instructions
   per millisecond (roughly equivalent to a 386SX running at 20 MHz)
@@ -546,10 +474,10 @@ smooth, glitch-free audio emulation. There's zero point in emulating a faster
 CPU than the game needs as all that extra work could be put to better
 use --- such as smoother audio emulation.
 
-Beyond a Steel Sky is a protected mode game, but how we do know that? Let's
+Beneath a Steel Sky is a protected mode game, but how do we know that? Let's
 comment out the last `sky` command in the `[autoexec]` section to prevent the
 game from auto-starting, then launch DOSBox Staging in windowed mode. DOSBox
-itself *always* starts in real mode, and let's take a look at the text in the
+itself always starts in real mode, and let's take a look at the text in the
 DOSBox window's title bar! It starts with the following:
 
 ```ini
@@ -557,7 +485,7 @@ DOSBox Staging - 3000 cycles/ms - to capture the mouse press...
 ```
 
 Remember what we learned earlier: in real mode, DOSBox defaults to emulating
-3000 CPU instructions, or *cycles*, per millisecond. The text in the
+3000 CPU instructions, or **cycles**, per millisecond. The text in the
 title bar tells us the current cycles value, so indeed, we must be running in
 real mode now!
 
@@ -592,12 +520,12 @@ gone! Well done, time for a beer (or your beverage of choice)! :sunglasses:
 
 !!! info "Real and protected mode"
 
-    In very simple terms, *real mode* is a programming model that uses the
-    legacy 16-bit mode of an Intel 386 or later CPU, while *protected mode*
+    In very simple terms, **real mode** is a programming model that uses the
+    legacy 16-bit mode of an Intel 386 or later CPU, while **protected mode**
     takes full advantage of its capabilities and runs in 32-bit mode.
     Protected mode is the real deal, but it couldn't be universally utilised
     until 386 or better CPUs had gained widespread adoption. That happened
-    around the year 1993; games released from thereon use protected mode
+    around the year 1993; games released from then on use protected mode
     almost exclusively.
 
     You can easily spot protected mode games by the presence of so-called [DOS
@@ -617,7 +545,7 @@ gone! Well done, time for a beer (or your beverage of choice)! :sunglasses:
 
 ### Finding the correct speed for a game
 
-Ok, so why set `cpu_cycles_protected` to 25&thinsp;000 and not any other number? The game's manual states
+Okay, so why set `cpu_cycles_protected` to 25&thinsp;000 and not any other number? The game's manual states
 that a 386 or better processor is required. Indeed, the game works fine at
 6000 cycles, which approximates a 386DX CPU running at 33 MHz, but the loading
 times are a bit on the slow side. Setting the CPU cycles to
@@ -807,14 +735,14 @@ This particular game turns things up a notch and does *not* copy the
 combined installer-and-setup utility into `C:\SKY` as one would rightly expect. To
 reconfigure the game, you'll need to run `INSTALL.EXE` from the CD, so from the
 D: drive (I've told you --- setting up the game itself is often part of the
-adventure!)
+adventure!).
 
 So let's do that. As we've already installed the game on our C: drive, we'll
-need to press ++esc++ instead of ++enter++ in the first *Path Selection
-Window*. Not exactly intuitive, but whatever. Now we're in the *Setup Menu*
+need to press ++esc++ instead of ++enter++ in the first **Path Selection
+Window**. Not exactly intuitive, but whatever. Now we're in the **Setup Menu**
 screen, where we can change the language and configure the sound options.
-Select *Roland* sound, then press the *Exit Install* and *Save Setup* buttons
-to save your settings (don't even get me started...)
+Select **Roland** sound, then press the **Exit Install** and **Save Setup**
+buttons to save your settings (don't even get me started...).
 
 Okay, now the moment of truth: start the game with the `sky` command. If
 nothing went sideways, we should hear the much-improved, glorious MT-32
@@ -885,31 +813,30 @@ appear vertically stretched on-screen. In fact, they appear _exactly 20%
 taller_ than they should (just trust me on that for a moment).
 
 So, where's this magical 20% vertical stretch factor coming from? DOSBox
-Staging enables [aspect ratio
-correction](../manual/graphics/rendering/aspect-ratios-and-scaling.md#aspect)
-by default to make 320&times;200 graphics appear exactly as it would on a 4:3
-aspect ratio VGA monitor, which requires pixels to be drawn 20% taller. This
-is the most sensible default as aspect ratio correction is *absolutely needed*
-for the vast majority of DOS games to look correct, but there are exceptions
---- this game is one of those rare cases. One of the tell-tale signs is that
-the artwork in the intro was scanned using square pixels, and we need to
-disable aspect ratio correction for such games. With aspect ratio correction
-disabled, we'll *always* get square pixels, no matter what (1:1 pixel aspect
-ratio, or PAR). All this is explained in a lot more detail in the [Aspect
-ratios & scaling](../manual/graphics/rendering/aspect-ratios-and-scaling.md)
-section of the user manual.
+Staging enables **aspect ratio correction** by default to make 320&times;200
+graphics appear exactly as it would on a 4:3 aspect ratio VGA monitor, which
+requires pixels to be drawn 20% taller. This is the most sensible default as
+aspect ratio correction is *absolutely needed* for the vast majority of DOS
+games to look correct, but there are exceptions --- this game is one of those
+rare cases. One of the tell-tale signs is that the artwork in the intro was
+scanned using square pixels, and we need to disable aspect ratio correction
+for such games. With aspect ratio correction disabled, we'll *always* get
+square pixels, no matter what (1:1 pixel aspect ratio, or PAR). All this is
+explained in a lot more detail in the [Aspect ratios &
+scaling](../manual/graphics/rendering/aspect-ratios-and-scaling.md) section of
+the user manual.
 
 {{ figure(
     "https://www.dosbox-staging.org/static/images/getting-started/bass-aspect.jpg",
-    "Left: Screenshot from the intro with aspect ratio correction disabled (square pixels)<br>Right: The original image from the comic book included with the game",
+    alt="Left: Screenshot from the intro with aspect ratio correction disabled (square pixels)<br>Right: The original image from the comic book included with the game",
     small=False,
     width="90%"
 ) }}
 
 
-That's quite easy to do, and we're also setting the viewport resolution to 4x
-integer scaling, effectively, because the game would appear too blocky when
-fit to fullscreen:
+That's quite easy to do; we're also setting the viewport resolution for
+roughly 4x integer scaling, because the game would look too blocky if
+stretched to fullscreen:
 
 ```ini
 [render]
@@ -1089,8 +1016,6 @@ reverb = large
 chorus = strong
 
 [autoexec]
-mount d "cd/cdrom1.iso" -t iso
-
 # original game
 #c:
 #cd sky

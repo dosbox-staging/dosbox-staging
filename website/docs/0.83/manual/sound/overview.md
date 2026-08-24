@@ -65,13 +65,13 @@ simple synthesisers could only approximate the sound of realistic
 instruments, and the result always unmistakably sounded like early electronic
 music.
 
-[Roland MT-32](sound-devices/roland-mt-32.md) and [General
-MIDI](midi.md#the-general-midi-standard) music of later DOS era games followed
-the same basic principle, but utilising much more expensive external sound
-modules instead. These were the top-of-the-line sound devices of the day,
-capable of convincingly emulating the sound of real instruments, and producing
-CD-quality soundtracks in the right hands. The communication between the
-computer and these external modules was also standardised.
+[Roland MT-32](midi.md#roland-mt-32) and [General
+MIDI](midi.md#roland-sound-canvas-sc-55) music of later DOS era games
+followed the same basic principle, but utilising much more expensive external
+sound modules instead. These were the top-of-the-line sound devices of the
+day, capable of convincingly emulating the sound of real instruments, and
+producing CD-quality soundtracks in the right hands. The communication between
+the computer and these external modules was also standardised.
 
 
 ## Digital sound

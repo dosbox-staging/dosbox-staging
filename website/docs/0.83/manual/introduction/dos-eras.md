@@ -224,11 +224,11 @@ capabilities. Hard drives became affordable for home users, and games grew to
 fill them.
 
 The [Roland Sound Canvas
-SC-55](../sound/sound-devices/roland-sound-canvas.md), released
-in 1991, became the reference device for [General
-MIDI](../sound/midi.md#the-general-midi-standard) game music, offering a standardised
-set of 128 realistic-sounding instruments. Many games from this era supported
-both General MIDI and the MT-32. The [Roland
+SC-55](../sound/sound-devices/roland-sound-canvas.md), released in 1991,
+became the reference device for [General
+MIDI](../sound/midi.md#roland-sound-canvas-sc-55) game music, offering a
+standardised set of 128 realistic-sounding instruments. Many games from this
+era supported both General MIDI and the MT-32. The [Roland
 CM-32L](../sound/sound-devices/roland-mt-32.md#cm-32l), a cost-reduced MT-32
 variant with extra sound effects, was also popular and many games took
 advantage of it (typically LucasArts games).

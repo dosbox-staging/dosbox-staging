@@ -200,12 +200,12 @@ If really want to use vsync, you can create custom screen modes that match the
 DOS refresh rate exactly. Use the Nvidia Control Panel or [Custom Resolution
 Utility
 (CRU)](https://www.monitortests.com/forum/Thread-Custom-Resolution-Utility-CRU)
-on Windows. Enable *CVT reduced blanking* (CVT-RB or CVT-RBv2) to reach 70 Hz.
-For the best results, use the exact fractional **59.713 Hz** and **70.086 Hz**
-refresh rates for the nominal "60 Hz" and "70 Hz" DOS rates, respectively. The
-drawback is that you need to set the appropriate refresh rate before starting
-DOSBox Staging, and games that switch between different refresh rates cannot
-be fully accommodated this way.
+on Windows. Enable **CVT reduced blanking** (**CVT-RB** or **CVT-RBv2**) to
+reach 70 Hz. For the best results, use the exact fractional **59.713 Hz** and
+**70.086 Hz** refresh rates for the nominal "60 Hz" and "70 Hz" DOS rates,
+respectively. The drawback is that you need to set the appropriate refresh
+rate before starting DOSBox Staging, and games that switch between different
+refresh rates cannot be fully accommodated this way.
 
 You can also experiment with using `dos_rate = host` to force the emulated DOS
 video mode to present at your host display's refresh rate (e.g., forcing 60 Hz

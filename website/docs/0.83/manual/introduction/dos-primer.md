@@ -130,12 +130,12 @@ actual sampled sounds stored in its onboard RAM, producing much more realistic
 audio than FM synthesis. It gained a cult following, particularly in the
 demoscene, but never achieved the Sound Blaster's market dominance.
 
-[General MIDI](../sound/midi.md#the-general-midi-standard) standardised a common set
-of 128 instrument sounds, allowing games to sound consistent across different
-MIDI-compatible devices. The [Roland Sound Canvas
-SC-55](../sound/sound-devices/roland-sound-canvas.md), released
-in 1991, became the de facto reference device for General MIDI game music and
-is still considered the gold standard for many DOS game soundtracks.
+[General MIDI](../sound/midi.md#roland-sound-canvas-sc-55) standardised a
+common set of 128 instrument sounds, allowing games to sound consistent across
+different MIDI-compatible devices. The [Roland Sound Canvas
+SC-55](../sound/sound-devices/roland-sound-canvas.md), released in 1991,
+became the de facto reference device for General MIDI game music and is still
+considered the gold standard for many DOS game soundtracks.
 
 By the mid-1990s, [CD-ROM audio (CD-DA)](../sound/sound-devices/cd-da.md) gave
 games access to studio-quality 16-bit 44.1 kHz music played
