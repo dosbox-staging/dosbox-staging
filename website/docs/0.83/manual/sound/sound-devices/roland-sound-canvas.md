@@ -7,27 +7,41 @@
     MIDI and the difference between the [Roland MT-32](roland-mt-32.md) family
     of devices and **Roland Sound Canvas / General MIDI**.
 
+The **Roland Sound Canvas SC-55**, released in 1991, was a MIDI sound module
+that supported **General MIDI (GM)** and Roland's **GS** extension to GM. It
+quickly became the de facto standard for DOS game music.
 
-The **Roland Sound Canvas SC-55**, released in 1991, was the first General
-MIDI sound module and quickly became the de facto standard for DOS game music.
-Most composers wrote and tested their music on Sound Canvas hardware, so the
-same hardware was needed to hear the soundtrack as intended.
+This distinction is important: General MIDI is a **standard**, not a sound
+module. It defines standardised instrument assignments so that General MIDI
+music can be played on different GM-compatible synthesizers. The SC-55 is one
+particular GM-compatible sound module, with its own samples, synthesis, and
+effects. As a result, different GM-compatible devices can produce noticeably
+different sounds from the same music.
 
-For background on the General MIDI and GS standards, and help deciding which
-MIDI device to use for a particular game, see the [Which MIDI device should I
-use?](../midi.md#which-midi-device-should-i-use)
-
-Don't confuse the Sound Canvas with the [Roland MT-32](roland-mt-32.md) ---
-General MIDI and MT-32 use incompatible instrument sets, moreover the MT-32 is
-a fully programmable synthesizer, so music written for one usually sounds
-completely wrong on the other. See [MT-32 vs General
-MIDI](../midi.md#mt-32-vs-general-midi) for details.
+For DOS games, the SC-55 is especially important because it was the hardware
+many composers used when writing and testing their music. If you want to hear
+General MIDI soundtracks using the SC-55's characteristic sounds, Sound Canvas
+emulation is the appropriate choice.
 
 DOSBox Staging emulates the SC-55 via the [Nuked SC55
 CLAP](https://github.com/johnnovak/Nuked-SC55-CLAP) audio plugin (bundled with
 the release packages), providing sample-accurate playback of the actual SC-55
 sound engine --- as close to the real hardware as you can get without owning
 one.
+
+For background on the General MIDI and GS standards, and help deciding which
+MIDI device to use for a particular game, see the [Which MIDI device should I
+use?](../midi.md#which-midi-device-should-i-use) section.
+
+!!! warning "Roland MT-32 is not General MIDI"
+
+    Don't confuse the Sound Canvas with the [Roland MT-32](roland-mt-32.md).
+    Although both are MIDI sound modules, the MT-32 is a programmable synthesiser
+    with a very different sound engine, while the Sound Canvas supports
+    General MIDI. Music written for one often sounds completely wrong on the
+    other. See [MT-32 vs General MIDI](../midi.md#mt-32-vs-general-midi) for
+    details.
+
 
 ??? note "Notable games with Sound Canvas / General MIDI support"
 

@@ -170,7 +170,7 @@ For Sound Blaster startup-pop mitigation, see [Sound Blaster](sound-blaster.md#a
 
 ## Mixer channel
 
-The AdLib (OPL) synthesizer and its variants all output to the **OPL** [mixer
+The AdLib (OPL) synthesiser and its variants all output to the **OPL** [mixer
 channel](../mixer.md#list-of-mixer-channels).
 
 

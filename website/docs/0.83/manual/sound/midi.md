@@ -1,14 +1,33 @@
 # MIDI
 
-Between about 1988 and 1994, **MIDI music** was *the* ultimate high-end audio
-option in DOS gaming, offering never-heard-before realism and CD quality audio
-fidelity. Not many could afford the high price tag of MIDI sound modules back
-in the day --- they often cost 3 to 5 times as much as a Sound Blaster
-card. But thanks to the wonders of emulation, now all DOS enthusiasts can
-experience MIDI music nirvana in its full glory!
+Between about 1988 and 1994, **MIDI music** was the ultimate high-end audio
+option in DOS gaming, offering never-heard-before realism and audio fidelity.
+Not many could afford the high price tag of MIDI sound modules back in the day
+--- they often cost 3 to 5 times as much as a Sound Blaster card. But thanks
+to the wonders of emulation, now all DOS enthusiasts can experience MIDI music
+nirvana in its full glory!
 
-Because MIDI plays such a pivotal role in DOS gaming history, it is important
-to understand its origins and how it works at a basic level.
+Before getting into the different MIDI devices used by DOS games, it is worth
+clearing up some terminology:
+
+- **MIDI** is the communication protocol ---
+  it defines how computers and MIDI devices communicate with each other
+
+- A **MIDI sound module** or synthesiser is the device that turns those MIDI
+  messages into audible sounds (it's usually a little box sitting next to your
+  computer)
+
+- **General MIDI (GM)** is a standard that defines how certain MIDI data is
+  interpreted by the sound module
+
+- The **Roland Sound Canvas SC-55** is one particular MIDI sound module that
+  supports General MIDI, as well as Roland's GS extensions to GM
+
+These terms are related, but they are not interchangeable. In particular,
+General MIDI is **not** a sound device, and the SC-55 is **not** the same
+thing as General MIDI. This distinction is important when choosing a MIDI
+device for a DOS game.
+
 
 ## What is MIDI?
 
@@ -26,9 +45,15 @@ send thousands of precisely timed messages, controlling a full orchestra's
 worth of instruments.
 
 MIDI compositions are best viewed as the computer music equivalent of sheet
-music --- a MIDI score only contains note data and abstract descriptions of
-the instruments, while the sound module is responsible for generating the
-actual sounds using its on-board samples or synthesis capabilities.
+music --- a MIDI score contains note data and instructions describing how
+those notes should be played, while the sound module is responsible for
+generating the actual sounds using its on-board samples or synthesis
+capabilities.
+
+This separation between **music data** and the **device that plays it** is
+the key to understanding the rest of this chapter. The same MIDI music can
+sound quite different depending on which synthesiser or sound module receives
+it.
 
 ## MIDI in DOS gaming
 
@@ -40,9 +65,8 @@ composition), MIDI music was an ideal match for DOS games before the
 wide-spread adoption of the CD-ROM with its huge 650 to 700 megabytes of
 capacity on a single CD. This is similar in principle to how the [Creative
 Music System](sound-devices/cms.md) and [AdLib](sound-devices/cms.md)
-synthesisers were used in games, only these MIDI sound modules were capable of
-producing much higher quality music using sampled sounds of real-world
-instruments.
+synthesisers were used in games, except that MIDI sound modules could produce
+much higher-quality music using sampled sounds of real-world instruments.
 
 MIDI sound in DOS games evolved through three distinct periods:
 
@@ -53,13 +77,21 @@ MIDI sound in DOS games evolved through three distinct periods:
 
 **1991--1993 --- MT-32 / Sound Canvas transition era**
 : The [Roland Sound Canvas SC-55](sound-devices/roland-sound-canvas.md)
-  and General MIDI standard arrived. Many games supported both MT-32 and GM,
-  giving players a choice.
+  appeared alongside the General MIDI standard. Many games supported both
+  MT-32 and General MIDI, giving players a choice between different MIDI
+  sound systems.
 
 **1993 onwards --- Sound Canvas dominance**
 : General MIDI became the standard. MT-32 support faded as the SC-55 was
-  cheaper, more widely available, and standardised. By 1995, very few new
-  games included MT-32 support.
+  cheaper and more widely available, while General MIDI provided a
+  standardised way of specifying instruments. By 1995, very few new games
+  included MT-32 support.
+
+The important distinction is that the periods above describe both **music
+formats** and the **hardware** used to play them. A game supporting General
+MIDI could use a variety of GM-compatible synthesisers; the SC-55 became
+especially important because it was the dominant hardware used for DOS game
+music.
 
 ### Roland MT-32
 
@@ -76,37 +108,56 @@ Island](https://www.mobygames.com/game/616/the-secret-of-monkey-island/),
 [Wing Commander](https://www.mobygames.com/game/1509/wing-commander/), and
 [Ultima VI](https://www.mobygames.com/game/372/ultima-vi-the-false-prophet/).
 
+The MT-32 is a MIDI sound module, but it is **not** a General MIDI
+module. MT-32 music therefore needs to be treated separately from General
+MIDI music; see [MT-32 vs General MIDI](#mt-32-vs-general-midi) below.
+
 See the [Roland MT-32](sound-devices/roland-mt-32.md) page for setup
 instructions and further details.
 
 ### Roland Sound Canvas SC-55
 
 **General MIDI (GM)** was introduced in 1991 to solve a simple but annoying
-problem: MIDI could tell a synthesiser *what notes to play*, but not *which
-instruments to use*. GM standardised the instrument assignments --- program
+problem: MIDI could tell a synthesiser what notes to play, but not which
+instruments to use. GM standardised the instrument assignments --- program
 number 1 is always an acoustic grand piano, program 41 is always a violin, and
-so on --- so that music written for one GM device would sound recognisable on
-any other.
+so on --- so that music written for GM-compatible equipment would use the same
+basic instrument assignments on different devices.
 
-The **Roland SC-55**, released the same year, was the first [Sound
-Canvas](sound-devices/roland-sound-canvas.md) module and quickly became the de facto
-standard for DOS game music. Roland's own **GS
-(General Standard)** extension sat on top of GM, adding extra instruments,
-percussion kits, and digital effects while remaining fully
-backwards-compatible with the core GM specification.
+GM is therefore a standard for MIDI sound modules and music data, **not** a
+particular sound module. A GM-compatible synthesiser can play General MIDI
+music, and different GM-compatible devices can produce noticeably different
+sounds because their actual samples, synthesis, and effects are different.
 
-Most DOS game composers wrote and tested their music on Roland Sound Canvas
-hardware. Games like
-[Gabriel Knight](https://www.mobygames.com/game/665/gabriel-knight-sins-of-the-fathers/),
-[Star Wars: Dark Forces](https://www.mobygames.com/game/379/star-wars-dark-forces/),
-[Day of the Tentacle](https://www.mobygames.com/game/659/maniac-mansion-day-of-the-tentacle/),
+The [Roland Sound Canvas SC-55](sound-devices/roland-sound-canvas.md),
+released in 1991 (the same year as the General MIDI standard), was the world's
+first General MIDI sound module and it quickly became the de facto standard
+for DOS game music. In addition to GM, the SC-55 also supports Roland's own
+**GS (General Standard)** extension that adds extra instruments, percussion
+kits, and sound effects while remaining fully compatible with the core GM
+specification. 
+
+This distinction matters when discussing DOS game music. A game can support
+**General MIDI** without specifically requiring an **SC-55**. The SC-55 is
+important because it was the hardware many DOS game composers wrote and tested
+their music on, so its particular sounds are often the reference for how that
+music was intended to sound.
+
+Many games use the SC-55 specific GS extensions and may not sound correct on a
+generic General MIDI synthesiser such as
+[FluidSynth](sound-devices/fluidsynth.md). Games like [Gabriel
+Knight](https://www.mobygames.com/game/665/gabriel-knight-sins-of-the-fathers/),
+[Star Wars: Dark
+Forces](https://www.mobygames.com/game/379/star-wars-dark-forces/), [Day of
+the
+Tentacle](https://www.mobygames.com/game/659/maniac-mansion-day-of-the-tentacle/),
 [Ultima VII](https://www.mobygames.com/game/608/ultima-vii-the-black-gate/),
 [Doom](https://www.mobygames.com/game/1068/doom/), and [Duke Nukem
-3D](https://www.mobygames.com/game/365/duke-nukem-3d/) all sound their best
-on the Roland SC-55 or a compatible device. Since different GM
-manufacturers recorded their own instrument samples, playback can sound
-noticeably different from one device to another --- the SC-55 is the gold
-standard for hearing the music as the composer intended.
+3D](https://www.mobygames.com/game/365/duke-nukem-3d/) all sound their best on
+the Roland SC-55 or a compatible device. Since different GM manufacturers
+recorded their own instrument samples, playback can sound noticeably different
+from one device to another --- the SC-55 is the gold standard for hearing the
+music as the composer intended.
 
 See the [Roland Sound Canvas](sound-devices/roland-sound-canvas.md) page for
 setup instructions and further details.
@@ -115,14 +166,24 @@ setup instructions and further details.
 
 !!! warning
 
-    Do not confuse the Roland MT-32 family of MIDI sound modules with General MIDI
-    modules! Music composed for the MT-32 often sounds *utterly wrong* on a
-    General MIDI device, and vice versa. Yes, they both have "MIDI" in their
-    names, but that only refers to the MIDI communication protocol. The MT-32
-    range of devices are programmable synthesisers, and most MT-32 supporting
-    games take advantage of that to create custom sounds. In contrast, General
-    MIDI modules feature more realistic-sounding real-world instruments with a
-    standardised sound set.
+    Do not confuse the Roland MT-32 family of MIDI sound modules with General
+    MIDI-compatible modules. MIDI is the **common communication protocol**,
+    but the **sound generation** aspects (how they MIDI synthesiser respond to
+    MIDI messages) of MT-32, SC-55 and other General MIDI modules are very
+    different.
+
+    The MT-32 is a programmable synthesiser, and most MT-32 supporting games
+    take advantage of that to create custom sounds. General MIDI, by contrast,
+    defines a fixed standard set of instruments so that General MIDI music can
+    be played on different GM sound generators. This ensures a grand piano
+    will always sound like a grand piano, a flute always like a flute, but the
+    **timbre** of these sounds will often vary significantly between GM sound
+    modules created by different manufacturers.
+
+    Music composed for the MT-32 often sounds **utterly wrong** on a General
+    MIDI device, and vice versa. Yes, they both use MIDI, but that only refers
+    to the communication protocol. A game designed for one system should
+    therefore be configured for the corresponding MIDI device.
 
     Quite confusingly, there is a large list of games that claim MT-32
     compatibility but only sound correct on a General MIDI module. Make sure to
@@ -130,45 +191,69 @@ setup instructions and further details.
     compatibility](https://www.vogonswiki.com/index.php/List_of_MT-32-compatible_computer_games#Games_that_falsely_claim_MT-32_compatibility)
     as well before configuring a game for MT-32 sound.
 
+
 ### Alternative General MIDI devices
 
 The **Yamaha DB50XG** and **MU-series** (MU50, MU80, MU100, etc.) are
 alternative GM/GS MIDI modules that offer excellent Roland SC-55 compatibility
-with a more modern and punchy sonic character. Many enthusiasts prefer them to
-the SC-55 in certain games. For a detailed comparison of how these modules
-stack up against the SC-55, see [this
+with a more modern and punchy sonic character. They are alternative
+**hardware MIDI modules**, not alternative versions of the General MIDI
+standard. Many enthusiasts prefer them to the SC-55 in certain games. For a
+detailed comparison of how these modules stack up against the SC-55, see [this
 article](https://blog.johnnovak.net/2023/03/05/grand-ms-dos-gaming-general-midi-showdown/).
 These modules are currently not emulated in DOSBox Staging, but can use them
-as [external MIDI synthesizers](#virtual-midi-devices).
+as [external MIDI synthesisers](#virtual-midi-devices).
 
 
 ## Built-in MIDI devices
 
 DOSBox Staging offers three main ways for MIDI playback:
 
-- [Roland MT-32 emulation](sound-devices/roland-mt-32.md) --- built-in
+- [Roland MT-32 emulation](sound-devices/roland-mt-32.md) --- Built-in
   emulation of the MT-32 and CM-32L.
 
 - [Sound Canvas emulation](sound-devices/roland-sound-canvas.md) ---
-  bit-identical SC-55 emulation via the Nuked SC55 CLAP plugin.
+  Authentic Roland SC-55 emulation via the Nuked SC55 CLAP plugin. This
+  emulates a specific General MIDI-compatible MIDI sound module, rather than
+  "General MIDI" itself.
 
-- [FluidSynth](sound-devices/fluidsynth.md) --- a built-in software MIDI
-  synthesiser (General MIDI only) using SoundFont files.
+- [FluidSynth](sound-devices/fluidsynth.md) --- Built-in generic General MIDI
+  synthesiser that uses SoundFont files and emulates no particular DOS-era
+  hardware.
+
+In other words, the built-in choices can be thought of as different MIDI
+playback devices or systems:
+
+- **MT-32** --- Authentic emulation of the Roland MT-32 sound module
+
+- **Sound Canvas** --- Authentic emulation of the Roland SC-55 sound module,
+  supporting General MIDI and Roland GS. Most "General MIDI" DOS soundtracks
+  were composed specifically for the SC-55.
+
+- **FluidSynth** --- General MIDI synthesiser that uses SoundFont files. It
+  cannot provide authentic results for DOS games; it can be thought of as an
+  alternative experience (e.g. by trying different SoundFonts for the same
+  game).
+
+This distinction is useful throughout the rest of the chapter: when a game
+supports **General MIDI**, you must choose a GM-compatible MIDI playback
+device; when it supports the **MT-32**, you **need** the MT-32 --- nothing
+else will usually suffice.
 
 
 ## Which MIDI device should I use?
 
 Determining whether a game supports the [Sound
-Canvas](sound-devices/roland-sound-canvas.md) (General MIDI), the [Roland
-MT-32](sound-devices/roland-mt-32.md), or both is not always obvious from the
-setup utility alone. The community-maintained [List of MT-32-compatible
-computer
+Canvas](sound-devices/roland-sound-canvas.md) (that is, General MIDI through
+the SC-55), the [Roland MT-32](sound-devices/roland-mt-32.md), or both is not
+always obvious from the setup utility alone. The community-maintained [List of
+MT-32-compatible computer
 games](https://www.vogonswiki.com/index.php/List_of_MT-32-compatible_computer_games)
 on the VOGONS Wiki is the most comprehensive reference for which MIDI devices
 each game supports and which produces the best results. This information is
 often found out from interviews with the original composers. There is no other
 reliable way to know for sure --- game manuals and setup utilities often omit
-or misrepresent MIDI support.
+or misrepresent this information.
 
 As a rough rule of thumb:
 
@@ -176,12 +261,25 @@ As a rough rule of thumb:
   [Roland MT-32](sound-devices/roland-mt-32.md) first.
 
 - **1992--1993 games** --- check the VOGONS list; many sound excellent on
-  either the MT-32 or General MIDI.
+  either the MT-32 or General MIDI. For General MIDI music, [Sound
+  Canvas](sound-devices/roland-sound-canvas.md) emulation provides authentic
+  SC-55 experience (what the composer intended), while
+  [FluidSynth](sound-devices/fluidsynth.md) provides an alternative GM
+  synthesiser.
 
-- **Post-1993 games** --- almost always General MIDI. Use [Sound
-  Canvas](sound-devices/roland-sound-canvas.md) emulation for the most authentic
-  results, or [FluidSynth](sound-devices/fluidsynth.md) as a lighter
+- **Post-1993 games** --- almost always support General MIDI. Use [Sound
+  Canvas](sound-devices/roland-sound-canvas.md) emulation for the most
+  authentic results, or [FluidSynth](sound-devices/fluidsynth.md) as a lighter
   alternative.
+
+!!! note
+
+    Remember that General MIDI describes the supported MIDI format, while
+    Sound Canvas describes a particular MIDI sound module. Thus, when a game
+    is listed as supporting General MIDI, that does not mean it specifically
+    requires an SC-55. The SC-55 is therefore the best choice when you want to
+    reproduce the sound of the hardware most commonly used by DOS game
+    composers.
 
 
 ## Roland MPU-401 MIDI interface
@@ -223,8 +321,8 @@ external MIDI devices.
     (typically between the built-in MT-32 emulation and Roland's Sound Canvas
     VA running in an external MIDI host program), you can use the [layered
     configuration
-    approach](../using-dosbox-staging/configuration.md#configuration-layering) to
-    your advantage.
+    approach](../using-dosbox-staging/configuration.md#configuration-layering)
+    to your advantage.
 
     As an example, to easily switch between the built-in MT-32 emulation and
     an external MIDI device that contains "loopMIDI" in its name, put this
@@ -237,8 +335,8 @@ external MIDI devices.
     ```
 
     Without any further MIDI configuration in your local DOSBox config, this
-    will default to using the built-in Roland MT-32 emulation. To switch to
-    the external MIDI device, set `mididevice` to `auto` in your local config:
+    will default to using the built-in Roland MT-32 emulation. To switch to the
+    external MIDI device, set `mididevice` to `auto` in your local config:
 
     ```ini
     [midi]

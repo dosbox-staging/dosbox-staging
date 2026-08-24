@@ -15,10 +15,15 @@ with Sierra On-Line, it became the de facto high-end audio standard in DOS
 gaming --- an era covered in more detail in the
 [MIDI](../midi.md#roland-mt-32) section.
 
-Don't confuse the MT-32 with General MIDI devices like the [Sound
-Canvas](roland-sound-canvas.md) --- they use incompatible instrument sets, and
-music written for one usually sounds wrong on the other. See [MT-32 vs
-General MIDI](../midi.md#mt-32-vs-general-midi) for details.
+!!! warning "Roland MT-32 is not General MIDI"
+
+    Don't confuse the Sound Canvas with the [Roland MT-32](roland-mt-32.md).
+    Although both are MIDI sound modules, the MT-32 is a programmable synthesiser
+    with a very different sound engine, while the Sound Canvas supports
+    General MIDI. Music written for one often sounds completely wrong on the
+    other. See [MT-32 vs General MIDI](../midi.md#mt-32-vs-general-midi) for
+    details.
+
 
 ??? note "Notable games with MT-32 support"
 

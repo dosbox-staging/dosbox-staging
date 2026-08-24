@@ -9,20 +9,37 @@
     MIDI](roland-sound-canvas.md).
 
 **FluidSynth** is a built-in software MIDI synthesiser that uses **SoundFont**
-(`.sf2`) sample banks to generate audio. Unlike [Sound
-Canvas](roland-sound-canvas.md) emulation, it does not attempt to replicate
-any specific hardware device --- instead, the character of the music depends
-entirely on which SoundFont you load. This makes it very flexible but also
-means results vary: a good SoundFont can sound close to an SC-55 on many
-games, while a poor one can sound noticeably wrong.
+(`.sf2`) sample banks to generate audio. It can play **General MIDI (GM)**
+music, but it does not emulate any particular MIDI sound module.
 
-FluidSynth is lighter on CPU than Sound Canvas emulation and is a good
-option when you don't have SC-55 ROMs or when you prefer a particular
-SoundFont's character.
+This distinction is important: General MIDI is a **standard**, not a sound
+module. The [Roland Sound Canvas](roland-sound-canvas.md), for example, is a
+specific MIDI sound module that supports General MIDI. Its particular samples,
+synthesis, and effects give it a characteristic sound. FluidSynth instead
+generates its sounds from whichever SoundFont you select, so two SoundFonts
+can produce noticeably different results when playing back the same General
+MIDI music.
 
-For background on the General MIDI standard and help deciding which MIDI
-device to use for a particular game, see the
-[MIDI](../midi.md#which-midi-device-should-i-use) section.
+This makes FluidSynth very flexible, but it also means that it does not
+reproduce the sound of a particular DOS-era MIDI module. If you want the
+authentic sound of the Roland SC-55 (the MIDI module most game composers
+used), use [Sound Canvas emulation](roland-sound-canvas.md) instead.
+
+FluidSynth is lighter on CPU than Sound Canvas emulation and is a good option
+when you don't have SC-55 ROMs or when you prefer a particular SoundFont's
+character.
+
+For more background on MIDI and General MIDI, and for help deciding which MIDI
+device to use for a particular game, see the [MIDI](../midi.md) section.
+
+!!! warning "Roland MT-32 is not General MIDI"
+
+    Don't confuse the Sound Canvas with the [Roland MT-32](roland-mt-32.md).
+    Although both are MIDI sound modules, the MT-32 is a programmable synthesiser
+    with a very different sound engine, while the Sound Canvas supports
+    General MIDI. Music written for one often sounds completely wrong on the
+    other. See [MT-32 vs General MIDI](../midi.md#mt-32-vs-general-midi) for
+    details.
 
 
 ## SoundFont setup
