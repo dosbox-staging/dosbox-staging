@@ -323,7 +323,7 @@ command with the `*.exe` wildcard search pattern!
 
 But instead of typing in `dir *.exe`, press ++up++ a few times until `dir`
 appears in the command line, then type in the rest (++space++ character
-followed by `*.exe`). This handy feature is called **[command history](../manual/using-dosbox-staging/shell.md#command-history)** --- you
+followed by `*.exe`). This handy feature is called **command history** --- you
 can move forward and backward in the list of previously executed commands with
 the ++down++ and ++up++ keys, respectively. Best of all, the command history
 is preserved across DOSBox Staging restarts.

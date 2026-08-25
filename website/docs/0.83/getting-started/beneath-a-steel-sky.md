@@ -665,9 +665,8 @@ output similar to this:
 ### Selecting the MT-32 version
 
 As you might have guessed already, you can tell DOSBox Staging to emulate an
-MT-32 model of a specific revision; you can read all about that [on our
-wiki](https://github.com/dosbox-staging/dosbox-staging/wiki/MIDI#mt32emu). But
-in practice, these two models will cover 99% of your gaming needs:
+MT-32 model of a specific revision. In practice, these two models will cover
+99% of your gaming needs:
 
 `cm32l`
 : Unless a specific MT-32 model is requested, DOSBox Staging emulates the

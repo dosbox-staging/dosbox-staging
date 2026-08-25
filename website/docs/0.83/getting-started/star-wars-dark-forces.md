@@ -2,9 +2,9 @@
 
 We will continue our trend of featuring a disproportionate amount of LucasArts
 games in our guide. The game we'll tackle next is the [Star Wars: Dark
-Forces](https://en.wikipedia.org/wiki/Star_Wars:_Dark_Forces) demo from 1995,
-an example of the first-person shooter (FPS) genre that has fast
-software-rendered 3D graphics.
+Forces](https://www.mobygames.com/game/500/star-wars-dark-forces/), an example
+of the first-person shooter (FPS) genre that has fast software-rendered 3D
+graphics.
 
 
 ## Global config tweaks
@@ -58,7 +58,7 @@ three ZIP archives,
 [dforces2.zip](https://archive.org/download/StarWarsDarkForces/dforces2.zip),
 and [dforces3.zip](https://archive.org/download/StarWarsDarkForces/dforces3.zip);
 we'll need to copy their contents to our virtual C: drive. Make sure to
-download the [manual](https://archive.org/details/dark-forces-manual) as well.
+download the [manual](https://archive.org/details/LucasArts_Star_Wars_Dark_Forces_MSDOS_1995_Eng/) as well.
 
 There's a `README.TXT` included with the demo; it's recommended to read at
 least the installation and the keyboard shortcuts sections (use `more
@@ -589,14 +589,16 @@ soundfont = GeneralUser-GS
 The game configuration is the same as described in the previous section ---
 select **General MIDI** on port **330** in the sound setup utility.
 
-Of course, you can always try other GM or GS-compatible SoundFonts
-too --- that's the beauty of General MIDI!
-[FluidR3_GM_GS](https://github.com/musescore/MuseScore/tree/master/share/sound) and
-[Creative Labs 4M GM_4gmgsmt](https://archive.org/download/free-soundfonts-sf2-2019-04/Creative%20Labs%204M%20GM_4gmgsmt.sf2)
+Of course, you can always try other GM or GS-compatible SoundFonts too ---
+that's the beauty of General MIDI!
+[FluidR3_GM_GS](https://github.com/musescore/MuseScore/tree/master/share/sound)
+and [Creative Labs 4M
+GM_4gmgsmt](https://archive.org/download/free-soundfonts-sf2-2019-04/Creative%20Labs%204M%20GM_4gmgsmt.sf2)
 are good candidates as they sound fairly close to the SC-55 sound set. The
-[list of recommended SoundFonts](https://github.com/dosbox-staging/dosbox-staging/wiki/MIDI#soundfonts)
-on our wiki should also give you some further pointers on which SoundFonts
-are worth trying and where to find them.
+[list of recommended
+SoundFonts](../manual/sound/sound-devices/fluidsynth/#recommended-soundfonts)
+on our wiki should also give you some further pointers on which SoundFonts are
+worth trying and where to find them.
 
 Note that while some SoundFonts, such as GeneralUser GS, give you overall good
 results in most games, other SoundFonts might excel in a handful of titles and
