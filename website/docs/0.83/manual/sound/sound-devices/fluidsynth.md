@@ -68,6 +68,15 @@ mididevice = fluidsynth
 soundfont = GeneralUser-GS
 ```
 
+## Listing the available SoundFonts
+
+Run the `MIXER /LISTMIDI` command to see the list of available SoundFonts:
+
+![DOSBox Staging mixer showing the active SoundFonts](https://www.dosbox-staging.org/static/images/manual/mixer-listmidi-fluidsynth.png){ loading=lazy }
+
+If FluidSynth is active, the selected SoundFont is highlighted.
+
+
 ## Recommended SoundFonts
 
 **[GeneralUser GS](https://schristiancollins.com/generaluser.php)** is the

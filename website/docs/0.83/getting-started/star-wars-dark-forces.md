@@ -472,7 +472,7 @@ Now start up DOSBox Staging and verify that the Sound Canvas plugin is
 functional by running `MIXER /LISTMIDI`. The Sound Canvas section should look
 like this:
 
-![Sound Canvas models listed by MIXER /LISTMIDI](images/soundcanvas-models.png)
+![DOSBox Staging mixer -- Listing available MIDI devices](https://www.dosbox-staging.org/static/images/getting-started/mixer-listmidi.png){ loading=lazy }
 
 DOSBox Staging will prefer the **SC-55 v1.21** firmware when available, which
 is the best overall choice for DOS gaming.
@@ -486,7 +486,8 @@ mididevice = soundcanvas
 
 Re-run `MIXER /LISTMIDI` to confirm the Sound Canvas is now active:
 
-![Sound Canvas active in MIXER /LISTMIDI](images/soundcanvas-models-active.png)
+![DOSBox Staging mixer showing the active Sound Canvas model](https://www.dosbox-staging.org/static/images/getting-started/mixer-listmidi-sound-canvas.png){ loading=lazy }
+
 
 Now let's reconfigure the game to use General MIDI for music. Comment out the
 `autotype` command in the `[autoexec]` section and restart DOSBox, then:

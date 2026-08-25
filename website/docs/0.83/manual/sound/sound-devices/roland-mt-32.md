@@ -135,10 +135,9 @@ chapter of the Getting Started guide.
 
 Run the `MIXER /LISTMIDI` command to see the list of available MT-32 models:
 
-TODO
+![DOSBox Staging mixer showing the active MT-32 model](https://www.dosbox-staging.org/static/images/manual/mixer-listmidi-mt32.png){ loading=lazy }
 
-In the above screenshot, `mt32_107` is the currently active model. Below that,
-you'll see the name of the active model and the location of the ROM file.
+If the MT-32 is active, the selected model is highlighted.
 
 !!! warning
 

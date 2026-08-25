@@ -165,7 +165,10 @@ chapter of the Getting Started guide.
 Run the `MIXER /LISTMIDI` command to see the list of available Sound Canvas
 models:
 
-TODO
+![DOSBox Staging mixer showing the active Sound Canvas model](https://www.dosbox-staging.org/static/images/manual/mixer-listmidi-sound-canvas.png){ loading=lazy }
+
+If the Sound Canvas is active, the selected model is highlighted.
+
 
 ## Choosing a Sound Canvas model
 

@@ -313,7 +313,9 @@ MIDI related settings are to be configured in the `[midi]` section. Set the
   [`midiconfig`](#midiconfig).
 
 You can use the `MIXER /LISTMIDI` DOS command to see the list of available
-external MIDI devices.
+external MIDI devices:
+
+![DOSBox Staging mixer listing the available MIDI devices](https://www.dosbox-staging.org/static/images/manual/mixer-listmidi.png){ loading=lazy }
 
 !!! tip
 

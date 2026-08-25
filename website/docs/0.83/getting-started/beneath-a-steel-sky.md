@@ -579,12 +579,10 @@ If the above download link doesn't work, search for *"mt32 roms mame"* and
 *"cm32l roms mame"* in your favourite search engine and you'll figure out the
 rest...
 
-After copying the ROM files, start DOSBox Staging and run `mixer /listmidi`.
-This verifies your ROM files and prints a **`y`** below each detected MT-32
-version, with the currently selected one shown in green:
+After copying the ROM files, start DOSBox Staging and run `MIXER /LISTMIDI`.
+This verifies your ROM files and prints the available MT-32 models:
 
 ![DOSBox Staging mixer -- Listing available MIDI devices](https://www.dosbox-staging.org/static/images/getting-started/mixer-listmidi.png){ loading=lazy }
-
 
 ### Selecting the MT-32 version
 
@@ -611,6 +609,12 @@ mididevice = mt32
 [mt32]
 model = cm32l
 ```
+
+Once you've enabled the MT-32, `MIXER /LISTMIDI` will show the active MT-32
+model:
+
+![DOSBox Staging mixer showing the active MT-32 model](https://www.dosbox-staging.org/static/images/getting-started/mixer-listmidi-mt32.png){ loading=lazy }
+
 
 How do you figure out which model a particular game needs? You can't easily
 do that without research and trial and error, but thanks to some dedicated
