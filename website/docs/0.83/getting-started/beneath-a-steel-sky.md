@@ -13,10 +13,10 @@ freeware in 2003 (see their accompanying notes [here](bass-readme.txt)).
 
 ## Launching games more easily
 
-Before we delve into the setup instructions, here are a few words about
-launching our growing collection of games more easily. Having to navigate to
-the game's folder whenever we want to launch gets old really fast. Here's
-how we can skip this step:
+Before we delve into the setup instructions, a few words about launching our
+growing collection of games more easily. Having to navigate to the game's
+folder every time we want to launch gets old fast. Here's how to skip this
+step:
 
 #### Windows
 
@@ -28,8 +28,8 @@ how we can skip this step:
     ```
 
     That's the default installation path chosen by the installer. `%USERNAME%`
-    is your Windows user name. Of course, if you have installed DOSBox Staging
-    to a different folder, you should adjust the path accordingly.
+    is your Windows user name. If you installed DOSBox Staging to a different
+    folder, adjust the path accordingly.
 
 2. Copy this batch file into your individual game folders and rename them to
    the names of the games (e.g., `Prince of Persia.bat`).
@@ -37,51 +37,49 @@ how we can skip this step:
 3. Right-click on the batch file icon and select **Send to --> Desktop (create
    shortcut)** in the context menu.
 
-4. Now you can double-click on the new **Prince of Persia.bat – Shortcut**
-   icon on your desktop to start the game (of course, you can rename the icon
-   to **Prince of Persia** or whatever you like; this won't change the name of
-   the batch file it references).
+4. Now you can double-click the new **Prince of Persia.bat – Shortcut** icon
+   on your desktop to start the game (you can rename the icon to whatever you
+   like; this won't change the name of the batch file it references).
 
 
 #### macOS
 
-You can rename the **Start DOSBox Staging** icons in the individual game folders
-to the names of the games; then, you can use Spotlight Search to start a game.
+You can rename the **Start DOSBox Staging** icons in the individual game
+folders to the names of the games, then use Spotlight Search to start a game.
 
-For example, rename **Start DOSBox Staging** in the `Prince of Persia` folder to
-**Prince of Persia**. Start Spotlight Search by pressing ++cmd+space++, then
-type in "Prince". The **Prince of Persia** icon will show up in the search
-results --- you can simply press ++enter++ on it to launch the game.
+For example, rename **Start DOSBox Staging** in the `Prince of Persia` folder
+to **Prince of Persia**. Start Spotlight Search with ++cmd+space++, type in
+"Prince", and press ++enter++ on the result to launch the game.
 
 
 #### Linux
 
-The easiest way is to create a shell script with the following content (of
-course, modify the path passed in with the `--working-dir` option so it points
-to your game directory):
+The easiest way is to create a shell script with the following content
+(modify the path passed to `--working-dir` so it points to your game
+directory):
 
 ```bash
 #!/bin/bash
 dosbox --working-dir "$HOME/Documents/DOS Games/Prince of Persia"
 ```
 
-Then, create an icon on your desktop that launches this script, or start it
-using your desktop environment's preferred launcher.
+Then create a desktop icon that launches this script, or start it using your
+desktop environment's preferred launcher.
 
 
 ## Mounting a CD-ROM image
 
-We will set up the liberated "talkie" CD-ROM version of the game that has full
-voice-acting. You know the drill: create a new `Beneath a Steel Sky` subfolder
-inside your `DOS Games` folder and then the usual `drives/c` subfolder within
-it. Download the [ISO CD-ROM
+We will set up the liberated "talkie" CD-ROM version of the game that has
+full voice-acting. Create a new `Beneath a Steel Sky` subfolder inside your
+`DOS Games` folder, then the usual `drives/c` subfolder within it. Download
+the [ISO CD-ROM
 image](https://archive.org/download/Beneath_a_Steel_Sky_1995_Virgin/Beneath%20a%20Steel%20Sky%20%281995%29%28Virgin%29.iso)
 from the [Beneath a Steel
 Sky](https://archive.org/details/Beneath_a_Steel_Sky_1995_Virgin) item at the
-Internet Archive and put the file with the `.iso` extension into a new
-`drives/d` subfolder inside your `Beneath a Steel Sky` game folder.
+Internet Archive and put the `.iso` file into a new `drives/d` subfolder
+inside your `Beneath a Steel Sky` game folder.
 
-Also make sure to get the scan of the [Security
+Also grab the scan of the [Security
 Manual](https://archive.org/details/beneath-a-steel-sky-security-manual/) and
 the [comic
 book](https://ia802200.us.archive.org/13/items/beneath-a-steel-sky-comic-book/Beneath_a_Steel_Sky.pdf)
@@ -89,23 +87,21 @@ included in the boxed version of the game.
 
 For the visually inclined, this is the structure we'll end up with:
 
-![Beneath a Steel Sky folder structure](images/beneath-a-steel-sky-dirtree1.png){ .skip-lightbox style="width: 14rem; margin: 0.3rem max(calc((50% - 14rem/2) * 0.85), 0rem);" }
+![Beneath a Steel Sky folder structure](images/beneath-a-steel-sky-dirtree1.png){ .skip-lightbox style="width: 28rem; margin: 0.3rem max(calc((50% - 28rem/2) * 0.85), 0rem);" }
 
 Our C: drive is the hard drive, so the CD-ROM drive uses the letter D: by
-convention. Similarly to the `drives/c` auto-mounting mechanism we've seen
-before, the CD image in the `drives/d` folder will be auto-mounted as the D:
-drive. 
+convention. Just like the `drives/c` auto-mounting mechanism we've seen
+before, the CD image in the `drives/d` folder auto-mounts as the D: drive.
 
 
 ## Installing the game
 
-Most games that come on CD images must be installed on the hard drive
-first. Usually, there's an executable called `INSTALL.EXE` or `SETUP.EXE` in
-the root directory of the CD (the extension could be `.COM` or `.BAT` as
-well).
+Most games that come on CD images must be installed on the hard drive first.
+Usually there's an executable called `INSTALL.EXE` or `SETUP.EXE` in the root
+directory of the CD (the extension could be `.COM` or `.BAT` as well).
 
-Switch to the D: drive by executing `d:`, then run the `dir` command to
-inspect the contents of the CD:
+Switch to the D: drive with `d:`, then run `dir` to inspect the contents of
+the CD:
 
 ``` { . .dos-prompt }
  Volume in drive D is BASS
@@ -121,14 +117,13 @@ SKY      RST                  53,720 07/07/1994  7:19a
                 0 dir(s)                      0 bytes free
 ```
 
-Okay, so we have two executables with the `.EXE` extension and one text
-file. View `README.TXT` using the `more` command (run `more README.TXT`). It
-turns out it only contains some legal notice we don't really care about.
-`INSTALL.EXE` is what we're after, so let's run that!
+We have two `.EXE` files and one text file. `README.TXT` just contains some
+legal notice we don't need to worry about (view it with `more README.TXT` if
+you're curious). `INSTALL.EXE` is what we're after, so run that.
 
 We're greeted by a pretty standard-looking text-mode installer. Either press
-any key or wait a few seconds to progress to the second screen, where you'll
-need to select the installation path:
+any key or wait a few seconds to progress to the second screen, where you
+select the installation path:
 
 {{ figure(
     "https://www.dosbox-staging.org/static/images/getting-started/bass-setup1.png",
@@ -138,12 +133,11 @@ need to select the installation path:
 ) }}
 
 You can navigate the interface with the cursor keys, ++esc++, ++enter++, and
-the mouse. The default `C:\SKY` install location is perfectly fine, so just
-accept that by pressing ++enter++.
+the mouse. The default `C:\SKY` install location is fine, so just accept it
+with ++enter++.
 
-The installer will take us now to the setup screen where we can select the
-language of the in-game text (the voice-acting is English-only), and the sound
-settings:
+The installer then takes us to the setup screen, where we choose the language
+of the in-game text (voice-acting is English-only) and the sound settings:
 
 {{ figure(
     "https://www.dosbox-staging.org/static/images/getting-started/bass-setup2.png",
@@ -153,11 +147,10 @@ settings:
 ) }}
 
 English is fine, and the game has auto-detected our sound card correctly
-(Sound Blaster 16 --- this is the sound card DOSBox emulates by default), so
-accept these settings for now. And now, the counterintuitive part: to
-finish the installation and save the settings, we need to press the *Exit
-Install* button, which will take us to the (guess what?) *Exit Install*
-dialog:
+(Sound Blaster 16 --- the card DOSBox emulates by default), so accept these
+settings. Now the counterintuitive part: to finish the installation and save
+the settings, we need to press the *Exit Install* button, which takes us to
+the (guess what?) *Exit Install* dialog:
 
 {{ figure(
     "https://www.dosbox-staging.org/static/images/getting-started/bass-setup3.png",
@@ -166,8 +159,8 @@ dialog:
     width="80%"
 ) }}
 
-Here you need to press the **Save Setup** button to finalise the settings and
-exit the installer.
+Here you need to press **Save Setup** to finalise the settings and exit the
+installer.
 
 As you can see, this is not exactly a masterclass in user interface design,
 but it does the job. Expect many DOS-era install and setup utilities to be
@@ -207,98 +200,83 @@ cd \sky
 
 ## Changing the current directory
 
-So before we run the game, what is this `cd \sky` command? Does it have
-something to do with the `cd` subfolder where we put our CD-ROM image,
-perhaps?
+So what is this `cd \sky` command? Does it have something to do with the `cd`
+subfolder where we put our CD-ROM image?
 
-No, that's just a coincidence. The `cd` command stands for **change
-directory** --- you use it to change the current directory, which is displayed
-as part of the DOS prompt. So let's analyse what these lines we put into the
-`[autoexec]` section do:
+No, that's just a coincidence. `cd` stands for **change directory** --- it
+changes the current directory, which is displayed as part of the DOS prompt.
+Let's break down these lines:
 
 ```
 c:
 cd \sky
 ```
 
-The first command `c:` switches to the C: drive (remember, the current drive is
-the special built-in Z: drive when DOSBox starts).
+The first command `c:` switches to the C: drive (the current drive is the
+special built-in Z: drive when DOSBox starts). The second, `cd \sky`, changes
+the current directory to the `sky` directory at the root of C:. `cd sky`
+would also work, since the current directory is already root right after
+switching drives.
 
-Then, the second `cd \sky` command changes the current directory to the `sky`
-directory at the root level of the C: drive. `cd sky` would also work because
-the current directory is the root directory when we switch to the C: drive
-right after startup.
-
-How do you go up one level to the parent directory? With the `cd ..` command
-(two dots means "parent directory", and a single dot means "current
-directory").
+How do you go up a level? `cd ..` (two dots for "parent directory", one dot
+for "current directory").
 
 ``` { . .dos-prompt }
 C:\SKY>cd ..
 C:\>_
 ```
 
-How do you go straight to the root directory? By executing `cd \` (the `\`
-backslash character means "root directory").
+Straight to root? `cd \` (the backslash means "root directory").
 
 ``` { . .dos-prompt }
 C:\SKY>cd \
 C:\>_
 ```
 
-You can also switch to a nested subdirectory with a single `cd` command, e.g.
-if you have a directory called `one` at the root level which contains a
-subdirectory `two`, which in turn contains another subdirectory `three`, you
-can switch to `three` from any directory with the  `cd \one\two\three`
-command. Note this is an imaginary example:
+You can also jump straight to a nested subdirectory in one command, e.g. if
+you have `one\two\three`, you can go there directly from anywhere with `cd
+\one\two\three` (imaginary example):
 
 ``` { . .dos-prompt }
 C:\SKY>cd \one\two\three
 C:\ONE\TWO\THREE>_
 ```
 
-Play around a bit with the drive and directory switching commands, then when
-you've had enough, uncomment the last `sky` command in the `[autoexec]` section
-(remove the `#` character).
+Play around with the drive and directory commands, then uncomment the last
+`sky` command in `[autoexec]` (remove the `#`).
 
 !!! warning
 
-    You cannot switch to a different drive with the `cd` command (e.g., `cd
-    z:` or `cd z` won't work); you must use the drive letter followed by a
-    colon (`z:` in this example).
-
-    If you run `cd z`, DOS will attempt to enter a directory called `z` in the
-    current folder and will display an error if it doesn't exist.
+    You cannot switch drives with `cd` (e.g. `cd z:` or `cd z` won't work) ---
+    you must use the drive letter followed by a colon (`z:`). If you run `cd
+    z`, DOS will try to enter a folder called `z` in the current directory and
+    error out if it doesn't exist.
 
 
 ## Adjusting volume levels
 
-After starting the game, don't watch the intro just yet; press ++esc++ to jump
-straight to the opening scene. There's music playing --- so far so good. Move
-the cursor over the door on the right side of the screen, and when it turns
-into a crosshair and the word "Door" appears next to it, press the left mouse
-button to inspect it. Lo and behold, you'll hear our protagonist speak! But
-it's barely audible; the music is just too loud.
+After starting the game, don't watch the intro yet --- press ++esc++ to jump
+straight to the opening scene. There's music playing, so far so good. Move
+the cursor over the door on the right, and when it turns into a crosshair and
+"Door" appears, click it. You'll hear our protagonist speak --- but barely
+audible, since the music is too loud.
 
 There are a couple of ways to fix that. You can press ++f5++ to bring up the
 game's options dialog where you can lower the music volume, but that would
 make the total audio output too quiet. Worse yet, the setting doesn't get
 saved, so you'd need to do this every single time when starting up the game.
 
-As we've [learned
-before](passport-to-adventure.md#sound-blaster-adlib-sound), games with Sound
-Blaster support tend to use the sound card's OPL synthesiser for the music and
-its digital audio capabilities for the speech. As the OPL synth and the
-digital audio have their dedicated mixer channels, their volumes can be
-adjusted independently.
+As we've [learned before](passport-to-adventure.md#sound-blaster-adlib-sound),
+Sound Blaster games tend to use the card's OPL synthesiser for music and its
+digital audio capabilities for speech. Since the OPL synth and digital audio
+have their own dedicated mixer channels, their volumes can be adjusted
+independently.
 
 *"Wait a minute, what mixer channels now?!"*
 
-Okay, so DOSBox has an integrated audio mixer. All emulated sound cards have
-their own channels in the mixer, and certain "composite" audio devices may
-have multiple channels. The Sound Blaster is such a composite device; it
-has two mixer channels: one for the OPL synthesiser and one for digital
-audio.
+DOSBox has an integrated audio mixer. Every emulated sound card has its own
+channel(s), and "composite" devices like the Sound Blaster have two: one for
+the OPL synthesiser, one for digital audio.
 
 Execute the `mixer` command at the DOS prompt to view the current state of the
 mixer:
@@ -315,36 +293,29 @@ The Sound Blaster card and PC speaker are enabled by default, which is why their
 channels appear in the mixer. The `CDAUDIO` channel is added automatically
 whenever we mount a CD-ROM image (as the CD image might contain audio tracks).
 
-To adjust the volume of any mixer channel, we use the `mixer` command and pass
-in the channel's name as the first argument and the volume as the second,
-expressed as a percentage value. So, to raise the volume of the `SB` channel
-to 500%, we need to execute the following:
+To adjust a channel's volume, use `mixer <channel> <percentage>`. To raise
+`SB` to 500%:
 
 ``` { . .dos-prompt }
 mixer sb 500
 ```
 
-By default, the command prints out the new state of the mixer after the
-adjustment:
+By default the command prints the new mixer state after the adjustment:
 
 ![DOSBox Staging mixer -- Adjusting channel volumes](https://www.dosbox-staging.org/static/images/getting-started/bass-mixer2.png){ loading=lazy }
 
-You can combine multiple mixer commands in a single line, e.g., in the below
-example, we're setting the `OPL` channel's volume to 50% and the `SB`
-channel's to 500%:
+You can combine multiple channels in one line, e.g. setting `OPL` to 50% and
+`SB` to 500%:
 
 ``` { . .dos-prompt }
 mixer opl 50 sb 500
 ```
 
-You can run `mixer /?` or `help mixer` to see the full list of available mixer
-commands.
+Run `mixer /?` or `help mixer` for the full list of commands.
 
-Do we need to perform these mixer adjustments manually every single time
-before running the game? Of course not! We can simply include them in our
-`[autoexec]` section. The extra `/noshow` argument prevents the mixer from
-displaying its current state; there's no need for that in our automated
-startup script.
+Do we need to run these adjustments manually every time? Of course not ---
+put them in `[autoexec]`. The `/noshow` argument suppresses the mixer state
+printout, which we don't need in an automated startup script.
 
 ```ini
 [autoexec]
@@ -360,12 +331,10 @@ DOSBox emulates the **Sound Blaster 16** by default. This card can emulate all
 earlier Sound Blaster models and offers the widest compatibility with DOS
 games.
 
-But back in the day, there were more Sound Blaster variants and clones than
-you could shake a stick at, and many of them have quite different default
-volume levels. We don't know what particular model the developers of this
-game used, so it's worth experimenting with a few different ones. Let's
-start with a first-revision **Sound Blaster Pro**! Add the following snippet
-to your config:
+But back in the day there were more Sound Blaster variants and clones than
+you could shake a stick at, many with quite different default volume levels.
+We don't know which model this game's developers used, so it's worth trying
+a few. Let's start with a first-revision **Sound Blaster Pro**:
 
 ```ini
 [sblaster]
@@ -385,21 +354,18 @@ cd sky
 sky
 ```
 
-It seems this simple change alone does the trick; now the speech can be heard
-clearly over the music, and the overall volume level is good too! Of course,
-you can still fine-tune the individual channel volumes with the `mixer`
-command if you wish to do so.
+This simple change alone does the trick: the speech can now be heard clearly
+over the music, and the overall volume is good too! You can still fine-tune
+individual channel volumes with `mixer` if you like.
 
 
 ## Disabling the Sound Blaster mixer
 
-Another option we can try is not letting the game mess around with the OPL and
-digital audio volumes. Starting from the Sound Blaster Pro 1, programs can
-alter the volume levels of the Sound Blaster card's internal mixer, but we can
-disallow that by turning off the `sbmixer` setting. Comment out the `sbtype`
-setting because we want to experiment with our default Sound Blaster 16 model
-and leave the `mixer` command in the `[autoexec]` section commented out, too,
-of course.
+Another option: don't let the game mess with the OPL and digital audio
+volumes at all. Starting from the Sound Blaster Pro 1, programs can alter the
+card's internal mixer levels, but we can disable that with `sbmixer`.
+Comment out `sbtype` (back to the default SB16) and keep the `mixer` command
+in `[autoexec]` commented out too:
 
 ```ini
 [sblaster]
@@ -420,127 +386,94 @@ is the best solution.
 
 !!! warning "When the game knows best"
 
-    Not letting a game adjust volume levels can sometimes backfire, e.g., in a
-    game that intelligently lowers the OPL music level whenever speech is
-    playing. But it's worth a shot; some games benefit from wrestling the
-    control from them and putting the mixer into "manual mode".
+    Not letting a game adjust volume levels can sometimes backfire, e.g. in a
+    game that intelligently lowers OPL music whenever speech is playing. But
+    it's worth a shot --- some games benefit from wrestling control from them
+    and putting the mixer into "manual mode".
 
 
 ## Adjusting the emulated CPU speed
 
-If you *did* watch the intro video (which I told you to skip, but no hard
-feelings), you must have heard quite severe audio stuttering from the moment
-the narrator starts speaking. Well, if you haven't, watch it now!
+If you *did* watch the intro (which I told you to skip, but no hard
+feelings), you'll have heard severe audio stuttering from the moment the
+narrator starts speaking. If you haven't, watch it now!
 
-What's happening here? DOS gaming spans almost two decades, and many different
-CPUs were in use during that period, all having wildly different performance
-or *clock speeds* (see [CPU](../manual/system/cpu.md) for the full
-reference). DOSBox doesn't emulate any specific CPU but a "generic" one. So
-how does it know the speed at which to run a particular game then?
+What's happening? DOS gaming spans almost two decades, with wildly different
+CPU speeds in use throughout (see [CPU](../manual/system/cpu.md) for the full
+reference). DOSBox doesn't emulate a specific CPU, just a "generic" one --- so
+how does it know what speed to run a given game at?
 
 It doesn't.
 
-To explain what's going on, we'll need to understand a few technical details.
-It won't hurt too much, I promise!
+DOS games fall into two categories: older, real-mode games and newer,
+protected-mode games. CPU-hungry games (FPS titles, flight sims) tend to be
+protected mode, while pre-1993 real-mode games are generally much less
+demanding. Figuring out the exact CPU speed a game needs is nearly
+impossible, but detecting real vs. protected mode is trivial, so DOSBox does
+automatic speed calibration by default:
 
-### Real and protected mode
+- **Real mode** games: **3000** CPU instructions per millisecond (roughly a
+  386SX at 20 MHz)
+- **Protected mode** games: **60,000** instructions per millisecond (roughly
+  a Pentium at 90 MHz)
 
-DOS games can be divided into two categories: older games and newer games
-(who would've guessed?). The important distinction here is that most
-CPU-hungry games are protected mode games (e.g., FPS games and flight
-simulators), while older pre-1993 real mode games generally have much less
-demanding performance requirements. Figuring out what exact CPU speed a
-particular game needs is almost impossible at the emulator level, but
-detecting whether a game uses real or protected mode is trivial. Therefore,
-DOSBox does the following automatic speed calibration by default:
+The reasoning: older games are often sensitive to CPU speed and might
+misbehave if it's too fast, hence the conservative default; newer games
+benefit from extra speed and generally tolerate faster processors fine.
 
-- For **real mode** games, it emulates **3000** CPU instructions
-  per millisecond (roughly equivalent to a 386SX running at 20 MHz)
+This gets all games *running*, but manual tweaking is often needed to make a
+particular game run *smoothly*. Protected-mode games at "too high" cycle
+counts are especially problematic since there's not enough headroom left for
+glitch-free audio --- there's no point emulating a faster CPU than the game
+needs, since that extra power could go toward smoother audio instead.
 
-- For **protected mode** games, it emulates **60&thinsp;000** CPU instructions
-  per millisecond (roughly equivalent to a Pentium running at 90 MHz).
-
-The reasoning here is that older games are often sensitive to CPU speed; they
-might run too fast or misbehave if the CPU is too performant, hence the more
-conservative setting. Newer, more demanding games, however, benefit from the
-extra speed advantage and can generally handle faster processors without
-negative side effects.
-
-While this approach generally gets all games *running*, manual tweaking of the
-emulated CPU speed is often required to make any particular game run
-*smoothly*. Protected mode games running at "too high" CPU speeds are
-particularly problematic because there might not be enough power left for
-smooth, glitch-free audio emulation. There's zero point in emulating a faster
-CPU than the game needs as all that extra work could be put to better
-use --- such as smoother audio emulation.
-
-Beneath a Steel Sky is a protected mode game, but how do we know that? Let's
-comment out the last `sky` command in the `[autoexec]` section to prevent the
-game from auto-starting, then launch DOSBox Staging in windowed mode. DOSBox
-itself always starts in real mode, and let's take a look at the text in the
-DOSBox window's title bar! It starts with the following:
+Beneath a Steel Sky is a protected-mode game --- how do we know? Comment out
+the `sky` command in `[autoexec]`, launch DOSBox Staging windowed, and check
+the title bar. DOSBox itself always starts in real mode:
 
 ```ini
 DOSBox Staging - 3000 cycles/ms - to capture the mouse press...
 ```
 
-Remember what we learned earlier: in real mode, DOSBox defaults to emulating
-3000 CPU instructions, or **cycles**, per millisecond. The text in the
-title bar tells us the current cycles value, so indeed, we must be running in
-real mode now!
-
-Now start the game with the `sky` command and keep your eyes peeled on the
-title bar. The text will soon change to the following:
+That matches the real-mode default of 3000 cycles/ms. Now run `sky` and watch
+the title bar change:
 
 ```ini
 SKY.EXE - 60000 cycles/ms - to capture the mouse press...
 ```
 
-`SKY.EXE` is the name of the currently running program, and what do we see
-right after that? `60000 cycles/ms`! That's the tell-tale sign of a protected mode game
-because 60&thinsp;000 cycles is our protected mode default.
+`SKY.EXE` is now running, and it's at 60,000 cycles/ms --- our protected-mode
+default, confirming this is a protected-mode game.
 
-And that's the crux of the problem --- there's not enough horsepower left to
-emulate the time-critical audio output without stuttering and glitches. The
-solution is kind of obvious: instead of letting DOSBox run amok with the CPU
-emulation, we'll restrict it to a reasonable speed. `cpu_cycles` sets the
-cycles value for real mode, and `cpu_cycles_protected` for protected mode.
-
-Let's insert the following snippet into our config:
-
+That's the crux of the stuttering: not enough horsepower left for
+time-critical audio. The fix is to cap the cycle count instead of letting
+DOSBox run wild. `cpu_cycles` sets real-mode cycles, `cpu_cycles_protected`
+sets protected-mode cycles:
 
 ```ini
 [cpu]
 cpu_cycles_protected = 25000
 ```
 
-Restart DOSBox Staging and watch the intro again. The audio glitches are now
-gone! Well done, time for a beer (or your beverage of choice)! :sunglasses:
-:beer:
+Restart DOSBox Staging and watch the intro again --- the audio glitches
+should be gone. Well done, time for a beer (or your beverage of choice)!
+:sunglasses: :beer:
 
 !!! info "Real and protected mode"
 
-    In very simple terms, **real mode** is a programming model that uses the
-    legacy 16-bit mode of an Intel 386 or later CPU, while **protected mode**
-    takes full advantage of its capabilities and runs in 32-bit mode.
-    Protected mode is the real deal, but it couldn't be universally utilised
-    until 386 or better CPUs had gained widespread adoption. That happened
-    around the year 1993; games released from then on use protected mode
-    almost exclusively.
+    In simple terms, **real mode** is the legacy 16-bit mode of a 386 or
+    later CPU, while **protected mode** takes full advantage of its
+    capabilities in 32-bit mode. Protected mode couldn't be widely used until
+    386+ CPUs became common, around 1993; games from then on use it almost
+    exclusively.
 
-    You can easily spot protected mode games by the presence of so-called [DOS
-    extenders](https://en.wikipedia.org/wiki/DOS_extender) in their main game
-    directories. `DOS4GW.EXE`, `PMODEW.EXE`, and `CWSDPMI.EXE` were the most
-    popular ones. These extenders also print out some fairly characteristic
-    messages as they start up when launching the game, so they're easy to
-    recognise.
-
-    But you don't need to worry about all that detail as DOSBox will indicate
-    with 100% accuracy whether a game runs in real or protected mode. Just
-    leave `cpu_cycles` and `cpu_cycles_protected` at their default 3000 and
-    60&thinsp;000 cycles values, respectively (or set some different custom values
-    of your choosing), then watch the title bar of the DOSBox Staging window
-    while running the game.
+    You can spot protected-mode games by the presence of [DOS
+    extenders](https://en.wikipedia.org/wiki/DOS_extender) like
+    `DOS4GW.EXE`, `PMODEW.EXE`, or `CWSDPMI.EXE` in their game directories,
+    and by characteristic startup messages. But you don't need to worry about
+    any of that --- DOSBox tells you with 100% accuracy via the title bar, so
+    just leave `cpu_cycles`/`cpu_cycles_protected` at their defaults (or set
+    custom values) and watch the title as the game runs.
 
 
 ### Finding the correct speed for a game
@@ -584,35 +517,29 @@ popular processors:
 
 </div>
 
-You can look up this handy table in the online help as well with the
-`cpu_cycles /?` command.
+You can also look this table up in the online help via `cpu_cycles /?`.
 
-Always treat these values only as starting points; as explained
-previously, accurately emulating the speed of any given processor is not
-possible due to the "abstract" nature of DOSBox's CPU emulation approach. But
-from a practical point of view, this does not matter much --- you just need to find
-the optimal cycles value the game works well with.
+Treat these values as starting points only --- accurately emulating any given
+processor's speed isn't really possible, given the "abstract" nature of
+DOSBox's CPU emulation. In practice, though, that doesn't matter much: you
+just need to find the cycles value the game works well with.
 
-If you're playing 2D games from the 90s, an emulated 486DX2/66 will handle
-anything you throw at it. For 3D games, however, you'll probably need to go up
-to Pentium or Pentium MMX levels, and Pentium II speeds are a must for 3D SVGA
-gaming at 640&times;480 or higher resolutions. For older real mode games, the
-default 3000 cycles is a good starting point, but try the 300 to 10&thinsp;000
-range and see if that improves anything.
+For 2D games from the 90s, an emulated 486DX2/66 handles anything you throw
+at it. For 3D games you'll likely need Pentium or Pentium MMX levels, and
+Pentium II speeds for 3D SVGA gaming at 640×480 or higher. For older
+real-mode games, the default 3000 cycles is a good starting point, but try
+the 300–10,000 range if it needs improvement.
 
-You can fine-tune the cycles setting while playing the game with the
-++ctrl+f11++ and ++ctrl+f12++ shortcuts (++cmd+f11++ and ++cmd+f12++ on the
-Mac); these will increase the cycles value by 10%, or decrease it by 20%,
-respectively. Once you've arrived at a good setting, just update your config
-according to the cycles value displayed in the DOSBox Staging window's title
-bar.
+You can fine-tune cycles live with ++ctrl+f11++/++ctrl+f12++ (++cmd+f11++/
+++cmd+f12++ on Mac) --- these increase cycles by 10% or decrease by 20%
+respectively. Once you land on a good setting, update your config with the
+value shown in the title bar.
 
-Always try to find the minimum cycles value for each game that gives you an
-adequate performance to conserve host CPU power and reduce the likelihood of
-audio glitches --- overdoing it only makes things worse. Here's a
-[List of CPU speed sensitive games](https://www.vogonswiki.com/index.php/List_of_CPU_speed_sensitive_games)
-that should give you further tips and pointers.
-
+Always aim for the minimum cycles value that gives adequate performance, to
+conserve host CPU power and reduce the odds of audio glitches --- overdoing
+it only makes things worse. See also this [list of CPU speed sensitive
+games](https://www.vogonswiki.com/index.php/List_of_CPU_speed_sensitive_games)
+for further tips.
 
 
 ## Setting up Roland MT-32 sound
@@ -652,12 +579,9 @@ If the above download link doesn't work, search for *"mt32 roms mame"* and
 *"cm32l roms mame"* in your favourite search engine and you'll figure out the
 rest...
 
-After you've copied the ROM files into the appropriate location for your
-platform, start up DOSBox Staging again and run the `mixer /listmidi` command.
-This will verify your MT-32 ROM files and print a **`y`** character below the
-MT-32 ROM versions that have been successfully detected. The green **`y`**
-character indicates the currently selected MT-32 version. You should get an
-output similar to this:
+After copying the ROM files, start DOSBox Staging and run `mixer /listmidi`.
+This verifies your ROM files and prints a **`y`** below each detected MT-32
+version, with the currently selected one shown in green:
 
 ![DOSBox Staging mixer -- Listing available MIDI devices](https://www.dosbox-staging.org/static/images/getting-started/mixer-listmidi.png){ loading=lazy }
 
@@ -669,19 +593,16 @@ MT-32 model of a specific revision. In practice, these two models will cover
 99% of your gaming needs:
 
 `cm32l`
-: Unless a specific MT-32 model is requested, DOSBox Staging emulates the
-  Roland CM-32L by default, which gives you the best overall compatibility.
-  This is a 2nd generation MT-32 with 32 additional sound effects that many
-  games make good use of. Some studios, such as LucasArts, tended to favour
-  the CM-32L, so their games sound a little bit better on this module.
+: Unless a specific model is requested, DOSBox Staging emulates the Roland
+  CM-32L by default, for the best overall compatibility. This is a 2nd-gen
+  MT-32 with 32 additional sound effects many games use. Studios like
+  LucasArts tended to favour the CM-32L, so their games sound a bit better on
+  it.
 
 `mt32_old`
-: Most older games, most notably the entire early Sierra adventure catalogue,
-  absolutely need a 1st generation MT-32; they will refuse to work correctly on
-  any other model or at least sound incorrect. For those games, use `mt32_old`.
-
-To enable MT-32 emulation and specify the model you wish to use, insert the
-following into your config:
+: Most older games --- notably the entire early Sierra adventure catalogue ---
+  need a 1st-gen MT-32 and will refuse to work correctly, or sound wrong, on
+  anything else. Use `mt32_old` for those.
 
 ```ini
 [midi]
@@ -691,15 +612,16 @@ mididevice = mt32
 model = cm32l
 ```
 
-How do you figure out which MT-32 model to use for a particular game? Well,
-you can't do that easily without a lot of research and trial and error, but
-thanks to the tireless work of certain prestigious individuals, you can simply
-refer to the [list of MT-32-compatible computer games](https://www.vogonswiki.com/index.php/List_of_MT-32-compatible_computer_games)
-that tells you the correct model to use for most well-known games.
+How do you figure out which model a particular game needs? You can't easily
+do that without research and trial and error, but thanks to some dedicated
+individuals, there's a [list of MT-32-compatible computer
+games](https://www.vogonswiki.com/index.php/List_of_MT-32-compatible_computer_games)
+that tells you the correct model for most well-known titles.
 
 Let's consult the list and see what it says about Beneath a Steel Sky!
 
-> Requires CM-series/LAPC-I for proper MT-32 output. Buffer overflows on MT-32 'old'. Combined MT-32/SB output only possible using ScummVM
+> Requires CM-series/LAPC-I for proper MT-32 output. Buffer overflows on
+> MT-32 'old'. Combined MT-32/SB output only possible using ScummVM
 
 Well, the list knows best, so we'll use the CM-32L for our game (as we've done
 in the above config example).
@@ -801,29 +723,23 @@ speech at the same time! Yikes! :sunglasses: Best put this into our
 
 ## Aspect ratio correction
 
-We're on a roll here; the game seems to provide us with endless education
-opportunities. We'll divert our eyes (ears?) from the audio to the graphics
-next!
+We're on a roll --- from audio to graphics next! If you've checked out the
+included comic book (you should!) and have a keen eye, you might notice the
+images in the intro sequence, scanned from the comics, appear vertically
+stretched on-screen --- exactly 20% taller than they should be (trust me on
+this for a moment).
 
-If you've checked out the comic book included with the game (and you
-definitely should!) and you have a keen eye for detail, you might have noticed
-that the images in the intro sequence are scanned from the comics, and they
-appear vertically stretched on-screen. In fact, they appear _exactly 20%
-taller_ than they should (just trust me on that for a moment).
-
-So, where's this magical 20% vertical stretch factor coming from? DOSBox
-Staging enables **aspect ratio correction** by default to make 320&times;200
-graphics appear exactly as it would on a 4:3 aspect ratio VGA monitor, which
-requires pixels to be drawn 20% taller. This is the most sensible default as
-aspect ratio correction is *absolutely needed* for the vast majority of DOS
-games to look correct, but there are exceptions --- this game is one of those
-rare cases. One of the tell-tale signs is that the artwork in the intro was
-scanned using square pixels, and we need to disable aspect ratio correction
-for such games. With aspect ratio correction disabled, we'll *always* get
-square pixels, no matter what (1:1 pixel aspect ratio, or PAR). All this is
-explained in a lot more detail in the [Aspect ratios &
-scaling](../manual/graphics/rendering/aspect-ratios-and-scaling.md) section of
-the user manual.
+Where's this 20% stretch coming from? DOSBox Staging enables **aspect ratio
+correction** by default, making 320×200 graphics appear as they would on a
+4:3 aspect ratio VGA monitor, which requires pixels drawn 20% taller. That's
+the sensible default, since correction is *absolutely needed* for most DOS
+games to look right --- but this game is one of the exceptions. The tell-tale
+sign is that the intro artwork was scanned using square pixels, so we need to
+disable correction for such games; with it off, we always get square pixels
+(1:1 pixel aspect ratio). This is explained in more detail in the [Aspect
+ratios &
+scaling](../manual/graphics/rendering/aspect-ratios-and-scaling.md) section
+of the manual.
 
 {{ figure(
     "https://www.dosbox-staging.org/static/images/getting-started/bass-aspect.jpg",
@@ -832,10 +748,9 @@ the user manual.
     width="90%"
 ) }}
 
-
-That's quite easy to do; we're also setting the viewport resolution for
-roughly 4x integer scaling, because the game would look too blocky if
-stretched to fullscreen:
+That's easy to fix; we'll also set the viewport resolution for roughly 4x
+integer scaling, since the game would look too blocky stretched to
+fullscreen:
 
 ```ini
 [render]
@@ -854,131 +769,101 @@ viewport = 1280x800
 ) }}
 </div>
 
-Of course, this would've been a very misguided effort if it had only fixed the
-intro graphics but not the in-game visuals. Fortunately, it turns out both the
-intro and the in-game content had been drawn assuming square pixels. For
-example, note how the floppy icon looks like a tallish rectangle with aspect
-ratio correction enabled; that's wrong; floppies should appear as perfect
-squares. Human figures and circular objects would also appear slightly
-elongated vertically with aspect ratio correction enabled. Ultimately, we know
-the game was developed by Revolution, a European studio, and they also
-released the game for PAL Amigas that have square pixels. We also know that
-Revolution was very fond of the Amiga and thus can be considered an
-Amiga-first developer. For such games, disabling aspect ratio correction is
-almost always the correct answer.
+This would've been a misguided effort if it only fixed the intro but not the
+in-game visuals --- fortunately, both were drawn assuming square pixels. The
+floppy disk icon, for instance, looks like a tallish rectangle with aspect
+correction enabled, when it should be a perfect square; human figures and
+circular objects appear slightly elongated too. Revolution was a European
+studio, released the game for PAL Amigas (which have square pixels), and was
+generally Amiga-first --- for such games, disabling aspect ratio correction
+is almost always correct.
 
-So, the rules of thumb:
+Rules of thumb:
 
 **`aspect = on`**
 
-- For most games primarily developed for DOS. This is the DOSBox
-  Staging default, and it ensures the overwhelming majority of DOS games
-  appear correctly out of the box.
-
+- For most games primarily developed for DOS --- the DOSBox Staging default,
+  and correct for the overwhelming majority of DOS games out of the box.
 - For games primarily developed for the Amiga or Atari ST by a North American
-  studio for the NTSC standard. (Note that even if the work was *performed* by
-  a European studio but was *commissioned* by North Americans, that
-  usually means the game was primarily intended for the NTSC-only North
-  American market, so you need aspect ratio correction.)
+  studio for the NTSC standard (even if made by a European studio but
+  commissioned for the North American market).
 
 **`aspect = square-pixels`**
 
-- For most games primarily developed by European studios for the Amiga
-  or Atari ST.
+- For most games primarily developed by European studios for the Amiga or
+  Atari ST.
 
-Here's a non-exclusive list of the most important European studios:
-
-*Bitmap Brothers, Bullfrog, Coktel Vision, Core Design, DMA Design, Delphine,
-Digital Illusions, Firebird, Horror Soft / Adventure Soft, Infogrames, Level
-9, Magnetic Scrolls, Ocean, Psygnosis, Revolution, Sensible Software,
-Silmarils, Team 17, Thalamus, Thalion, Ubisoft*
+Notable European studios: *Bitmap Brothers, Bullfrog, Coktel Vision, Core
+Design, DMA Design, Delphine, Digital Illusions, Firebird, Horror Soft /
+Adventure Soft, Infogrames, Level 9, Magnetic Scrolls, Ocean, Psygnosis,
+Revolution, Sensible Software, Silmarils, Team 17, Thalamus, Thalion,
+Ubisoft*
 
 !!! info "From squares to rectangles"
 
-    For the vast majority of computer games from the 1980s and '90s featuring
-    2D graphics, the art was created *once* for the "leading platform" and
-    then reused in the various other platform conversions. It was just not
-    economical to draw the graphics multiple times in different aspect ratios
-    and resolutions, hence this was done extremely rarely.
+    For most 1980s/'90s games with 2D graphics, art was created once for the
+    "leading platform" and reused across conversions --- drawing it multiple
+    times in different aspect ratios wasn't economical.
 
-    We've explained earlier that CRT monitors in the DOS era had a 4:3 aspect
-    ratio, so in 320&times;200 mode the pixels had to be 20% taller for the
-    image to completely fill the screen. DOSBox Staging does this aspect ratio
-    correction by default, which results in games primarily developed for DOS
-    PCs assuming 1:1.2 pixel aspect ratio to look correct (as the artist
-    intended). The detailed mathematical derivation of the 1:1.2 PAR is
-    explained in the [Aspect ratios &
-    scaling](../manual/graphics/rendering/aspect-ratios-and-scaling.md)
-    section of the user manual.
+    CRT monitors in the DOS era had a 4:3 aspect ratio, so in 320×200 mode
+    pixels had to be 20% taller to fill the screen. DOSBox Staging does this
+    correction by default, meaning DOS games assume a 1:1.2 pixel aspect
+    ratio to look correct as intended. The full derivation is in [Aspect
+    ratios &
+    scaling](../manual/graphics/rendering/aspect-ratios-and-scaling.md).
 
-    But what about games where the leading platform was the Amiga or the Atari
-    ST, and the game was developed by a European studio? The analog TV
-    standard in Europe was PAL. Therefore, Amigas sold in Europe were PAL
-    machines that had square pixels in the 320&times;256 screen mode, the
-    resolution most commonly used by PAL Amiga games. So what these European
-    studios usually did was to draw the art assuming square pixels, but using
-    only a 320&times;200 portion of the 320&times;256 total available area. On
-    PAL Amigas, the art appeared in the correct aspect ratio but letterboxed;
-    on NTSC Amigas and DOS PCs that had the 320&times;200 low-res screen mode,
-    the art filled the whole screen but appeared slightly stretched vertically
-    (by 20%). No one seemed to complain about this, and they saved a lot of
-    money by not having to draw the art twice, so this economically motivated
-    compromise became a common practice.
-
-    However, now you have the option to enjoy these games in their correct
-    aspect ratio, as per the artists' *original intention*, by simply
-    disabling DOSBox Staging's default aspect ratio correction.
-
+    For games where the leading platform was Amiga/Atari ST and the studio
+    was European, the analog TV standard was PAL. European Amigas were PAL
+    machines with square pixels in the 320×256 mode most PAL Amiga games
+    used. Studios drew art assuming square pixels but used only a 320×200
+    portion of that 320×256 area. On PAL Amigas the art appeared correct but
+    letterboxed; on NTSC Amigas and DOS PCs with 320×200 mode, it filled the
+    screen but appeared stretched 20% vertically. No one complained, and it
+    saved money, so this became common practice. Now you can enjoy these
+    games in their intended aspect ratio by disabling DOSBox Staging's
+    default correction.
 
 !!! warning "Don't trust the circles!"
 
-    Even keener observers might notice the image from the intro on the left
-    features a circle that only appears perfect with aspect ratio correction
-    *enabled*, in which case the image from the comics is stretched. However,
-    with aspect ratio correction *disabled* (as shown above), the circle
-    appears to be a squashed oval, but the image from the comics looks
-    perfect.
+    Keener observers might notice the intro image on the left features a
+    circle that only looks perfect with aspect correction *enabled*, in
+    which case the comic-scanned image is stretched. With correction
+    *disabled* the circle looks like a squashed oval, but the comic image
+    looks right.
 
-    The explanation is simple: the person who drew the circle around the
-    scanned image did it assuming 1:1.2 pixel aspect ratio, so it looked
-    like a perfect circle to him on his PC VGA monitor.
+    The explanation: whoever drew that circle around the scanned image did
+    so assuming 1:1.2 pixel aspect ratio, so it looked perfectly round to him
+    on his VGA monitor.
 
-    That's a common theme: some games end up with assets added to them during
-    the porting process, which can sometimes result in mixed aspect ratio
-    assets in a single game. Sometimes, it's just impossible to make the game
-    appear correctly using a single fixed pixel aspect ratio, especially if
-    such mixed aspect ratio assets are being displayed on screen at the same
-    time.
+    This is a common theme --- some games get assets added during porting,
+    resulting in mixed aspect ratio assets within a single game, sometimes
+    impossible to fully reconcile with one fixed pixel aspect ratio.
 
-    Generally, you cannot trust the circles. *Sometimes*, they will appear
-    perfect when the correct aspect ratio is used; sometimes, they won't. It's
-    much more reliable to judge aspect ratio correctness by looking at common
-    objects, human bodies, and human faces.
+    Generally, you cannot trust the circles. Sometimes they'll look right
+    with the correct settings, sometimes not. It's more reliable to judge
+    aspect ratio by common objects, human bodies, and faces.
 
 
 ## Arcade monitor emulation
 
-Now that we have brought up the Amiga, it's worthwhile mentioning a special
-feature of the CRT emulation, which is not quite authentic but still a lot of
-fun!
+Now that we've brought up the Amiga, it's worth mentioning a fun, if not
+quite authentic, feature of the CRT emulation!
 
-Home computer and arcade monitors (also known as 15 kHz monitors), such as the
-Commodore monitors typically used with Amiga computers, were quite different
-from VGA CRTs. They displayed low-resolution content with thick scanlines,
-similar to EGA monitors, and were a lot less sharp. While this wasn't
-great for displaying text and spreadsheets, it made low-resolution pixel art
-appear in a more favourable light.
+Home computer and arcade monitors (15 kHz monitors), like the Commodore
+monitors typically used with Amigas, were quite different from VGA CRTs.
+They displayed low-resolution content with thick scanlines, similar to EGA
+monitors, and were less sharp --- not great for text or spreadsheets, but it
+flatters low-resolution pixel art.
 
-We can enable this special fantasy mode with the following setting:
-
+Enable this fantasy mode with:
 
 ```ini
 [render]
 shader = crt-auto-arcade
 ```
 
-Now you can play the game with Amiga-like graphics and MT-32 or OPL sound from
-a strange parallel universe! 😎
+Now you can play with Amiga-like graphics and MT-32 or OPL sound from a
+strange parallel universe! 😎
 
 {{ figure(
     "https://www.dosbox-staging.org/static/images/getting-started/bass-amiga.jpg",
@@ -1027,21 +912,20 @@ c:\sky\skydrv cfg=c:\sky
 exit
 ```
 
-The patched game is clearly superior, but you can still run the original
-version: just uncomment the three lines below `# original game`,
-then comment out the two lines after `# patched game`. You can switch
-between Roland MT-32 and Sound Blaster & AdLib sound at will by only
-reconfiguring the game via `INSTALL.EXE` --- you won't need to make any further
-changes to the DOSBox config.
+The patched game is clearly superior, but you can still run the original:
+uncomment the three lines below `# original game`, then comment out the two
+lines after `# patched game`. You can switch between Roland MT-32 and Sound
+Blaster/AdLib sound at will by reconfiguring the game via `INSTALL.EXE` ---
+no further DOSBox config changes needed.
 
 !!! note "About reverb presets"
 
-    In case you're wondering, enabling reverb and chorus does not add these
-    effects to the output of the MT-32. That's undesirable as the MT-32 has
-    its own built-in reverb and chorus, so DOSBox Staging is intelligent enough
-    not to apply these effects twice on its output.
+    Enabling reverb and chorus does not add these effects to the MT-32's
+    output --- that's undesirable, since the MT-32 has its own built-in
+    reverb and chorus, and DOSBox Staging is smart enough not to double them
+    up.
 
-    The reverb presets add a tiny little bit of reverb to the digital audio
-    (PCM) outputs, such as the `SB` channel, mostly just to help the PCM
-    output blend better with the synthesiser's output (e.g., the `OPL`
-    channel), which features a prominent reverb.
+    The reverb presets add a small amount of reverb to the digital audio
+    (PCM) outputs, like the `SB` channel, mostly to help it blend better with
+    the synthesiser's output (e.g. the `OPL` channel), which has a more
+    prominent reverb.
