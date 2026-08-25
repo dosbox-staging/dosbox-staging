@@ -570,8 +570,7 @@ You can use the `mixer /listmidi` command to get the list of available
 SoundFonts. If you've copied the SF2 file into the correct folder, you
 should see the following:
 
-![MIXER /LISTMIDI showing the list of available SoundFonts](https://www.dosbox-staging.org/static/images/getting-started/fluidsynth-listmidi.png){ loading=lazy }
-
+![MIXER /LISTMIDI showing the list of available SoundFonts](https://www.dosbox-staging.org/static/images/getting-started/mixer-listmidi-fluidsynth.png){ loading=lazy }
 
 To configure FluidSynth, add the following to your config. The name of the
 SoundFont might be slightly different if a new version has been released since
