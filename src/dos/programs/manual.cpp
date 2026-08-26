@@ -27,7 +27,7 @@ void MANUAL::Run(void)
 	}
 
 	const auto path = get_resource_path(
-	        format_str("docs/%s/manual/about-this-manual.html",
+	        format_str("docs/%s/manual/introduction/about-this-manual.html",
 	                   DOSBOX_VERSION_SHORT));
 
 	if (std::filesystem::exists(path)) {
