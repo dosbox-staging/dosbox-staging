@@ -314,7 +314,7 @@ enough to reach the 70 FPS maximum the game supports.
 
 The game prints out the familiar message of the DOS/4GW DOS extender at
 startup, which means this is a
-[protected mode game](beneath-a-steel-sky.md#real-and-protected-mode):
+[protected mode game](beneath-a-steel-sky.md#adjusting-the-emulated-cpu-speed):
 
 ``` { . .dos-prompt }
 DOS/4GW Protected Mode Run-Time  Version 1.95
@@ -596,7 +596,7 @@ and [Creative Labs 4M
 GM_4gmgsmt](https://archive.org/download/free-soundfonts-sf2-2019-04/Creative%20Labs%204M%20GM_4gmgsmt.sf2)
 are good candidates as they sound fairly close to the SC-55 sound set. The
 [list of recommended
-SoundFonts](../manual/sound/sound-devices/fluidsynth/#recommended-soundfonts)
+SoundFonts](../manual/sound/sound-devices/fluidsynth.md#recommended-soundfonts)
 on our wiki should also give you some further pointers on which SoundFonts are
 worth trying and where to find them.
 
