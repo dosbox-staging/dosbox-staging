@@ -583,6 +583,48 @@ TEST_F(MountTest, FloppyMediaIdSetWhenTypeFloppyAndFstypeFat)
 	EXPECT_EQ(result->mediaid, MediaId::Floppy1_44MB);
 }
 
+TEST_F(MountTest, GeometryOptionsAreNotCollectedAsImagePaths)
+{
+	// Regression test for #5025: the geometry options are parsed after the
+	// image paths are collected, so they must still be removed from the
+	// command line beforehand. Otherwise "-size" and "512,63,16,81" are
+	// mounted as additional images and the mount fails with
+	// "Can't create drive from file".
+	const auto result = Mount("C " + P("image.img") + " -size 512,63,16,81");
+
+	ASSERT_TRUE(result.has_value());
+
+	ASSERT_EQ(result->paths.size(), 1);
+	EXPECT_NE(result->paths[0].find("image.img"), std::string::npos);
+
+	EXPECT_EQ(result->sizes[0], 512);
+	EXPECT_EQ(result->sizes[1], 63);
+	EXPECT_EQ(result->sizes[2], 16);
+	EXPECT_EQ(result->sizes[3], 81);
+}
+
+TEST_F(MountTest, ChsOptionIsNotCollectedAsImagePath)
+{
+	const auto result = Mount("C " + P("image.img") + " -chs 200,16,63");
+
+	ASSERT_TRUE(result.has_value());
+
+	ASSERT_EQ(result->paths.size(), 1);
+	EXPECT_NE(result->paths[0].find("image.img"), std::string::npos);
+
+	EXPECT_EQ(result->sizes[3], 200);
+}
+
+TEST_F(MountTest, FreesizeOptionIsNotCollectedAsImagePath)
+{
+	const auto result = Mount("C " + P("image.img") + " -t hdd -freesize 100");
+
+	ASSERT_TRUE(result.has_value());
+
+	ASSERT_EQ(result->paths.size(), 1);
+	EXPECT_NE(result->paths[0].find("image.img"), std::string::npos);
+}
+
 // ---------------------------------------------------------------------
 // Various edge cases
 // ---------------------------------------------------------------------

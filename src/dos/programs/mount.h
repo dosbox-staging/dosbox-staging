@@ -24,6 +24,16 @@ enum class MountType {
 
 enum class MountFileSystemType { Fat16, Iso, None };
 
+// Raw geometry option strings, as given on the command line. These are
+// extracted before the path arguments are processed so they are not mistaken
+// for image paths, but can only be interpreted afterwards because their
+// meaning depends on the auto-detected mount type.
+struct GeometryArgs {
+	std::optional<std::string> size     = {};
+	std::optional<std::string> freesize = {};
+	std::optional<std::string> chs      = {};
+};
+
 // Struct to hold all parameters required for a mount operation
 struct MountParameters {
 	char drive                 = '\0';
@@ -75,9 +85,9 @@ private:
 	void ShowUsage();
 
 	bool HandleUnmount();
-	bool ParseArguments(MountParameters& params, bool& explicit_fs,
-	                    bool& path_relative_to_last_config);
-	bool ParseGeometry(MountParameters& params);
+	bool ParseArguments(MountParameters& params, GeometryArgs& geometry,
+	                    bool& explicit_fs, bool& path_relative_to_last_config);
+	bool ParseGeometry(MountParameters& params, const GeometryArgs& geometry);
 	bool ParseDrive(MountParameters& params, bool explicit_fs);
 
 	std::string ApplyRelativePath(const std::string& path,
