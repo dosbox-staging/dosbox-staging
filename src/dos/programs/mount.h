@@ -88,6 +88,7 @@ private:
 	bool ParseArguments(MountParameters& params, GeometryArgs& geometry,
 	                    bool& explicit_fs, bool& path_relative_to_last_config);
 	bool ParseGeometry(MountParameters& params, const GeometryArgs& geometry);
+	bool HasUnknownOptions();
 	bool ParseDrive(MountParameters& params, bool explicit_fs);
 
 	std::string ApplyRelativePath(const std::string& path,

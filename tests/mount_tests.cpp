@@ -133,6 +133,60 @@ TEST_F(MountTest, RejectsMissingPath)
 	EXPECT_FALSE(result.has_value());
 }
 
+TEST_F(MountTest, RejectsUnknownOption)
+{
+	// Unrecognised options used to be collected as image paths and only
+	// failed later with a baffling "can't create drive from file".
+	const auto result = Mount("C " + P("image.img") + " -t hdd -bogus");
+	EXPECT_FALSE(result.has_value());
+}
+
+TEST_F(MountTest, RejectsMisspelledOption)
+{
+	const auto result = Mount("C " + P("image.img") + " -t hdd -siz 512,63,16,81");
+	EXPECT_FALSE(result.has_value());
+}
+
+TEST_F(MountTest, RejectsUnknownOptionBeforePath)
+{
+	const auto result = Mount("C -bogus " + P("image.img") + " -t hdd");
+	EXPECT_FALSE(result.has_value());
+}
+
+TEST_F(MountTest, RejectsUnknownOptionOnDirectoryMount)
+{
+	const auto result = Mount("C " + P("plain_dir") + " -bogus");
+	EXPECT_FALSE(result.has_value());
+}
+
+TEST_F(MountTest, AcceptsEveryKnownOptionTogether)
+{
+	// Guards the unknown-option check against false positives: every
+	// option MOUNT understands must be consumed by ParseArguments(), so
+	// adding one without consuming it fails here rather than surfacing as
+	// a mysterious mount failure. -ide goes last because it may be given
+	// without a value.
+	const auto result = Mount("C " + P("image.img") +
+	                          " -t hdd -fs fat -ro -label MYLABEL"
+	                          " -size 512,63,16,81 -freesize 10"
+	                          " -chs 100,16,63 -pr -ide");
+
+	ASSERT_TRUE(result.has_value());
+
+	ASSERT_EQ(result->paths.size(), 1);
+	EXPECT_EQ(result->type, MountType::HardDiskImage);
+	EXPECT_EQ(result->fstype, MountFileSystemType::Fat16);
+	EXPECT_EQ(result->label, "MYLABEL");
+	EXPECT_TRUE(result->roflag);
+	EXPECT_TRUE(result->is_ide);
+
+	// -chs takes precedence over -size and -freesize
+	EXPECT_EQ(result->sizes[0], 512);
+	EXPECT_EQ(result->sizes[1], 63);
+	EXPECT_EQ(result->sizes[2], 16);
+	EXPECT_EQ(result->sizes[3], 100);
+}
+
 TEST_F(MountTest, RejectsDriveTokenTooLong)
 {
 	const auto result = Mount("WWW " + P("plain_dir"));
@@ -1191,6 +1245,9 @@ TEST_F(MountTest, DuplicateLabelFirstWins)
 
 	ASSERT_TRUE(result.has_value());
 
+	// Repeats must not be left behind as image paths
+	ASSERT_EQ(result->paths.size(), 1);
+
 	EXPECT_EQ(result->label, "FIRST");
 }
 
@@ -1201,6 +1258,9 @@ TEST_F(MountTest, DuplicateSizeFirstWins)
 	                          " -size 5,6,7,8");
 
 	ASSERT_TRUE(result.has_value());
+
+	// Repeats must not be left behind as image paths
+	ASSERT_EQ(result->paths.size(), 1);
 
 	EXPECT_EQ(result->sizes[0], 1);
 	EXPECT_EQ(result->sizes[1], 2);
@@ -1215,6 +1275,9 @@ TEST_F(MountTest, DuplicateChsFirstWins)
 	                          " -chs 200,63,16");
 
 	ASSERT_TRUE(result.has_value());
+
+	// Repeats must not be left behind as image paths
+	ASSERT_EQ(result->paths.size(), 1);
 
 	// CHS is normalized into the size array:
 	// sector size, sectors/track, heads, cylinders.
@@ -1232,6 +1295,9 @@ TEST_F(MountTest, DuplicateFilesystemFirstWins)
 
 	ASSERT_TRUE(result.has_value());
 
+	// Repeats must not be left behind as image paths
+	ASSERT_EQ(result->paths.size(), 1);
+
 	EXPECT_EQ(result->fstype, MountFileSystemType::Fat16);
 }
 
@@ -1242,6 +1308,9 @@ TEST_F(MountTest, DuplicateTypeFirstWins)
 	                          " -t iso");
 
 	ASSERT_TRUE(result.has_value());
+
+	// Repeats must not be left behind as image paths
+	ASSERT_EQ(result->paths.size(), 1);
 
 	EXPECT_EQ(result->type, MountType::FloppyImage);
 	EXPECT_EQ(result->fstype, MountFileSystemType::Fat16);
