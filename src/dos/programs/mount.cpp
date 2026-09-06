@@ -602,16 +602,39 @@ static std::optional<MountFileSystemType> parse_file_system_type(const std::stri
 //
 //   params.label  (from the -label option)
 //
-bool MOUNT::ParseArguments(MountParameters& params, bool& explicit_fs,
-                           bool& path_relative_to_last_config)
+// Also extracts the raw geometry option strings into `geometry` (from the
+// -size, -freesize and -chs options). Every option must be consumed here,
+// including repeated ones, because ProcessPaths() collects whatever is left
+// on the command line as image paths.
+//
+bool MOUNT::ParseArguments(MountParameters& params, GeometryArgs& geometry,
+                           bool& explicit_fs, bool& path_relative_to_last_config)
 {
-	if (cmd->FindExist("-pr", true)) {
-		path_relative_to_last_config = true;
-	}
+	// Consumes all occurrences of an option that takes a value and returns
+	// the first one; repeats are dropped so they can't be picked up as
+	// image paths later on.
+	auto extract_option = [&](const std::string& option) {
+		std::optional<std::string> first_value = {};
+
+		std::string value = {};
+		while (cmd->FindString(option, value, true)) {
+			if (!first_value) {
+				first_value = value;
+			}
+		}
+		return first_value;
+	};
+
+	path_relative_to_last_config = cmd->FindExistRemoveAll("-pr");
+
+	// The geometry options can only be interpreted once the mount type is
+	// known, which ProcessPaths() may still auto-detect from the paths.
+	geometry.size     = extract_option("-size");
+	geometry.freesize = extract_option("-freesize");
+	geometry.chs      = extract_option("-chs");
 
 	// Default is "dir" if the -t option is not provided
-	std::string type_str = "dir";
-	cmd->FindString("-t", type_str, true);
+	const auto type_str = extract_option("-t").value_or("dir");
 
 	const auto maybe_mount_type = parse_mount_type(type_str);
 	if (!maybe_mount_type) {
@@ -623,13 +646,15 @@ bool MOUNT::ParseArguments(MountParameters& params, bool& explicit_fs,
 	}
 	params.type = *maybe_mount_type;
 
-	params.roflag = cmd->FindExist("-ro", true);
+	params.roflag = cmd->FindExistRemoveAll("-ro");
 
 	// Parse -fs (filesystem type)
 	// Default is "fat" if the -fs option is not provided
-	std::string fstype_str = "fat";
+	const auto maybe_fstype_str = extract_option("-fs");
 
-	explicit_fs = cmd->FindString("-fs", fstype_str, true);
+	explicit_fs = maybe_fstype_str.has_value();
+
+	const auto fstype_str = maybe_fstype_str.value_or("fat");
 
 	const auto maybe_fs_type = parse_file_system_type(fstype_str);
 	if (!maybe_fs_type) {
@@ -647,27 +672,48 @@ bool MOUNT::ParseArguments(MountParameters& params, bool& explicit_fs,
 		}
 	}
 
-	// Parse -ide
-	std::string ide_value = {};
+	// Parse -ide, which can be given with or without a value
+	const auto has_ide_value = extract_option("-ide").has_value();
 
-	params.is_ide = cmd->FindString("-ide", ide_value, true) ||
-	                cmd->FindExist("-ide", true);
+	params.is_ide = cmd->FindExistRemoveAll("-ide") || has_ide_value;
 
 	if (params.is_ide && (params.type == MountType::CdRomImage)) {
 		IDE_Get_Next_Cable_Slot(params.ide_index, params.is_second_cable_slot);
 	}
 
 	// Label
-	cmd->FindString("-label", params.label, true);
+	params.label = extract_option("-label").value_or("");
 
 	return true;
+}
+
+// Anything still starting with a dash once ParseArguments() has run is an
+// option we don't know about. Reporting it beats letting ProcessPaths()
+// collect it as an image path, which fails much later with a confusing
+// "can't create drive from file" message.
+//
+bool MOUNT::HasUnknownOptions()
+{
+	auto unknown_option_found = false;
+
+	std::string arg = {};
+	for (auto i = 1u; cmd->FindCommand(i, arg); ++i) {
+		if (arg.starts_with('-')) {
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "MOUNT",
+			                      "PROGRAM_MOUNT_UNKNOWN_OPTION",
+			                      arg.c_str());
+			unknown_option_found = true;
+		}
+	}
+	return unknown_option_found;
 }
 
 // Sets:
 //   params.mediaid
 //   params.sizes
 //
-bool MOUNT::ParseGeometry(MountParameters& params)
+bool MOUNT::ParseGeometry(MountParameters& params, const GeometryArgs& geometry)
 {
 	std::string str_size = "";
 	std::string str_chs  = "";
@@ -717,10 +763,11 @@ bool MOUNT::ParseGeometry(MountParameters& params)
 	// Parse the free space in mb (kb for floppies)
 	std::string mb_size;
 
-	if (cmd->FindString("-freesize", mb_size, true)) {
+	if (geometry.freesize) {
 
 		char teststr[1024];
-		uint16_t freesize = static_cast<uint16_t>(atoi(mb_size.c_str()));
+		auto freesize = static_cast<uint16_t>(
+		        atoi(geometry.freesize->c_str()));
 
 		if (params.type == MountType::FloppyImage) {
 			// freesize in kb
@@ -748,7 +795,9 @@ bool MOUNT::ParseGeometry(MountParameters& params)
 	}
 
 	// Parse -size
-	cmd->FindString("-size", str_size, true);
+	if (geometry.size) {
+		str_size = *geometry.size;
+	}
 
 	// Apply str_size string to sizes array
 	if (!str_size.empty()) {
@@ -778,7 +827,9 @@ bool MOUNT::ParseGeometry(MountParameters& params)
 	}
 
 	// Parse -chs C,H,S
-	if (cmd->FindString("-chs", str_chs, true)) {
+	if (geometry.chs) {
+		str_chs = *geometry.chs;
+
 		int cmd_cylinders = 0;
 		int cmd_heads     = 0;
 		int cmd_sectors   = 0;
@@ -1343,11 +1394,12 @@ std::optional<MountParameters> MOUNT::ProcessArguments(CommandLine* cmd)
 
 	MountParameters params;
 
+	GeometryArgs geometry             = {};
 	bool explicit_fs                  = false;
 	bool path_relative_to_last_config = false;
 
 	// Parse command line arguments
-	if (!ParseArguments(params, explicit_fs, path_relative_to_last_config)) {
+	if (!ParseArguments(params, geometry, explicit_fs, path_relative_to_last_config)) {
 		return {};
 	}
 
@@ -1358,13 +1410,17 @@ std::optional<MountParameters> MOUNT::ProcessArguments(CommandLine* cmd)
 		return {};
 	}
 
+	if (HasUnknownOptions()) {
+		return {};
+	}
+
 	// Resolve host paths, wildcard path arguments, auto-detect mount types,
 	// and determine whether we're dealing with image or directory/overlay
 	// mounts.
 	ProcessPaths(first_path, params, path_relative_to_last_config);
 
 	// Check drive geometry and types, abort if not valid
-	if (!ParseGeometry(params)) {
+	if (!ParseGeometry(params, geometry)) {
 		return {};
 	}
 
@@ -1474,6 +1530,7 @@ void MOUNT::AddMessages()
 	        "%s isn't a directory or valid image file.\n");
 
 	MSG_Add("PROGRAM_MOUNT_ILL_TYPE", "Illegal type %s");
+	MSG_Add("PROGRAM_MOUNT_UNKNOWN_OPTION", "Unknown option: %s\n");
 	MSG_Add("PROGRAM_MOUNT_ALREADY_MOUNTED", "Drive %c already mounted with %s\n");
 	MSG_Add("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED", "Drive %c isn't mounted.\n");
 
