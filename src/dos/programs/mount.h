@@ -6,6 +6,7 @@
 #define DOSBOX_PROGRAM_MOUNT_H
 
 #include "dos/dos.h"
+#include "dos/mount.h"
 #include "dos/programs.h"
 #include "shell/command_line.h"
 
@@ -13,14 +14,6 @@
 #include <optional>
 #include <string>
 #include <vector>
-
-enum class MountType {
-	FloppyImage,
-	HardDiskImage,
-	CdRomImage,
-	Directory,
-	Overlay
-};
 
 enum class MountFileSystemType { Fat16, Iso, None };
 
