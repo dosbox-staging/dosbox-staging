@@ -5,7 +5,6 @@
 #define DOSBOX_WEBSERVER_MEMORY_H
 
 #include "webserver/bridge.h"
-#include "cpu.h"
 
 #include <limits>
 
@@ -36,7 +35,6 @@ private:
 	// Memory is std::string to avoid ugly casts for httplib
 	std::string memory      = {};
 	uint32_t effective_addr = {};
-	Registers regs          = {};
 };
 
 class WriteMemoryCommand : public Command {

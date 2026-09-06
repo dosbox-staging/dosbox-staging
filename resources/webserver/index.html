@@ -45,9 +45,26 @@
         </p>
 
         <section id="docs">
-            <h2 class="single">GET /api/v1/cpu/state</h2>
-            <p>Read the state of the CPU. Returns the values of all CPU
-            registers.</p>
+            <div id="debugger-docs" hidden>
+                <h2 class="single">GET /api/v1/debug/status</h2>
+                <p>Read the current debugger running or paused state.</p>
+
+                <h2 class="single">POST /api/v1/debug/control/pause</h2>
+                <p>Pause DOSBox at the next safe debugger boundary.</p>
+
+                <h2 class="single">POST /api/v1/debug/control/continue</h2>
+                <p>Resume execution from a paused debugger state.</p>
+
+                <h2 class="single">POST /api/v1/debug/control/step</h2>
+                <p>Single-step execution while paused.</p>
+
+                <h2 class="single">GET /api/v1/debug/snapshot/registers</h2>
+                <p>Read the current CPU register snapshot.</p>
+            </div>
+
+            <p id="debugger-docs-note">
+                Debugger endpoints are only available in debugger-enabled builds.
+            </p>
 
             <h2 class="first">GET /api/v1/memory/:offset/:len</h2>
             <h2 class="last">GET /api/v1/memory/:segment/:offset/:len</h2>
@@ -61,6 +78,9 @@
             <p>By default this outputs the raw binary data; set <code>Accept:
               application/json</code> to request a JSON response with the data
             encoded in Base64.</p>
+
+            <p>The JSON response includes the resolved memory address and
+            Base64-encoded memory data only.</p>
 
             <h2 class="first">PUT /api/v1/memory/:offset</h2>
             <h2 class="last">PUT /api/v1/memory/:segment/:offset</h2>
@@ -119,7 +139,9 @@
             swappable area and list of lists.</p>
 
             <h2 class="single">GET /api/v1/dosbox/info</h2>
-            <p>Retrieve DOSBox version and relevant paths.</p>
+            <p>Retrieve DOSBox version, relevant paths, and whether debugger
+            endpoints are available in this build via
+            <code>debuggerEnabled</code>.</p>
 
             <h2 class="single">POST /api/v1/dosbox/shutdown</h2>
             <p>Request a graceful shutdown of DOSBox Staging.</p>
@@ -127,7 +149,7 @@
     </div>
 
     <script>
-        async function updateVersion() {
+        async function updatePageInfo() {
             try {
               const response = await fetch('/api/v1/dosbox/info');
               if (!response.ok) throw new Error('Fetch error');
@@ -136,11 +158,18 @@
               if (versionElement && data.version) {
                 versionElement.textContent = `Version: ${data.version}`;
               }
+              const debuggerDocs = document.getElementById('debugger-docs');
+              const debuggerDocsNote = document.getElementById('debugger-docs-note');
+              if (debuggerDocs && debuggerDocsNote) {
+                const debuggerEnabled = Boolean(data.debuggerEnabled);
+                debuggerDocs.hidden = !debuggerEnabled;
+                debuggerDocsNote.hidden = debuggerEnabled;
+              }
             } catch (error) {
               console.error('Failed to fetch version:', error);
             }
           }
-          document.addEventListener('DOMContentLoaded', updateVersion);
+          document.addEventListener('DOMContentLoaded', updatePageInfo);
     </script>
 </body>
 </html>
