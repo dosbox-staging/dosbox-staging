@@ -250,8 +250,6 @@ static void set_modern_cycles_config(const CpuMode mode)
 	}
 }
 
-static bool is_protected_mode_program = false;
-
 void CPU_RestoreRealModeCyclesConfig()
 {
 	if (cpu.pmode || (!last_auto_determine_mode.auto_core &&
@@ -272,7 +270,6 @@ void CPU_RestoreRealModeCyclesConfig()
 			set_modern_cycles_config(CpuMode::Real);
 		}
 
-		is_protected_mode_program = false;
 		TITLEBAR_NotifyCyclesChanged();
 	}
 #if C_DYNAMIC_X86 || C_DYNREC
@@ -2175,12 +2172,12 @@ void CPU_SET_CRX(Bitu cr, Bitu value)
 			LOG(LOG_CPU, LOG_NORMAL)("Protected mode");
 			PAGING_Enable((value & CR0_PAGING) > 0);
 
+			TITLEBAR_NotifyCyclesChanged();
+
 			if (!auto_determine_mode.auto_core &&
 			    !auto_determine_mode.auto_cycles) {
 				break;
 			}
-
-			is_protected_mode_program = true;
 
 #if C_DYNAMIC_X86
 			if (auto_determine_mode.auto_core) {
@@ -2226,6 +2223,8 @@ void CPU_SET_CRX(Bitu cr, Bitu value)
 
 			PAGING_Enable(false);
 			LOG(LOG_CPU, LOG_NORMAL)("Real mode");
+
+			TITLEBAR_NotifyCyclesChanged();
 		}
 		break;
 	}
@@ -3136,7 +3135,7 @@ std::string CPU_GetCyclesConfigAsString()
 			}
 		};
 
-		if (is_protected_mode_program) {
+		if (cpu.pmode) {
 			if (conf.protected_mode_auto) {
 				// 'cpu_cycles' controls both real and protected
 				// mode
