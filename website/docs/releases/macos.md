@@ -22,7 +22,7 @@ sha256: d8a771adfb8010fa6b5f7fb5351abfba<wbr>659273ad01c89f03675a92bdbdae8167
 
 </section>
 
-DOSBos Staging requires **macOS 14 (Sonoma) or later**, and supports both
+DOSBos Staging requires **macOS 12 (Monterey) or later**, and supports both
 Intel and Apple silicon Macs.
 
 Read our the [0.83.0 release notes](release-notes/0.83.0.md) to learn about
@@ -31,7 +31,7 @@ the changes and improvements introduced by this release.
 
 ## System requirements
 
-The latest release is compatible with **macOS 14 (Sonoma) or later** and
+The latest release is compatible with **macOS 12 (Monterey) or later** and
 supports both 64-bit Intel and Apple silicon Macs.
 
 
@@ -47,7 +47,7 @@ are designed with developers and testers in mind.
 
 For releases before 0.81.0 and the [development snapshot
 builds](development-builds.md), you'll need to do follow [these
-instructions]() when launching DOSBox Staging for the first time.
+instructions](../0.83/manual/using-dosbox-staging/starting.md#apple-gatekeeper) when launching DOSBox Staging for the first time.
 
 
 ## Older releases
