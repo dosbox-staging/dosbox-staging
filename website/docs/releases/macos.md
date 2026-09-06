@@ -52,7 +52,7 @@ instructions]() when launching DOSBox Staging for the first time.
 
 ## Older releases
 
-- [DOSBox Staging 0.82.2 Universal Binary (dmg)][0_82_2] (macOS 14 or newer)
+- [DOSBox Staging 0.82.2 Universal Binary (dmg)][0_82_2] (macOS 11 or newer)
   <br>
   <small>
   sha256: 3b83bb63a7314212b207ae19b82ffd15<wbr>bac6ddc3a2e96d65a425343b4e9bd4a2
