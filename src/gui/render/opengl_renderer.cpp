@@ -93,7 +93,7 @@ SDL_Window* OpenGlRenderer::CreateSdlWindow(const int x, const int y,
 	auto flags = sdl_window_flags;
 	flags |= SDL_WINDOW_OPENGL;
 
-#ifdef MACOSX
+#if defined(MACOSX) && defined(SDL_HINT_MAC_COLOR_SPACE)
 	SDL_SetHint(SDL_HINT_MAC_COLOR_SPACE, "displayp3");
 #endif
 

@@ -14,4 +14,8 @@ if(C_MANYMOUSE)
     $<IF:$<BOOL:${SUPPORT_XINPUT2}>,${X11_Xinput_LIB},>
   )
 
+  if (DOSBOX_PLATFORM_MACOS)
+    target_link_libraries(libmanymouse PRIVATE ${IOKit_LIBRARIES})
+  endif()
+
 endif()

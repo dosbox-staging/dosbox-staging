@@ -20,7 +20,7 @@ if(USE_SYSTEM_LIBS)
     libdecoders PRIVATE ${OPUSFILE_CFLAGS_OTHER}
   )
   target_link_libraries(
-    libdecoders PRIVATE ${OPUSFILE_LIBRARIES}
+    libdecoders PRIVATE PkgConfig::OPUSFILE
   )
 else()
   find_package(OpusFile REQUIRED)

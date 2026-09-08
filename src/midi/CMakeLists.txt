@@ -24,3 +24,7 @@ if (C_COREMIDI)
   target_link_libraries(libdosboxcommon PRIVATE "-framework CoreFoundation")
   target_link_libraries(libdosboxcommon PRIVATE "-framework CoreMIDI")
 endif()
+
+if (C_COREAUDIO)
+  target_link_libraries(libdosboxcommon PRIVATE "-framework AudioToolbox")
+endif()

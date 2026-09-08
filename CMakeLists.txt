@@ -539,6 +539,7 @@ if(LIBATOMIC)
 endif()
 
 target_link_libraries(libdosboxcommon PRIVATE
+  $<IF:$<TARGET_EXISTS:SDL2::SDL2>,SDL2::SDL2,SDL2::SDL2-static>
   $<IF:$<TARGET_EXISTS:iir::iir>,iir::iir,iir::iir_static>
   loguru
   libdecoders
