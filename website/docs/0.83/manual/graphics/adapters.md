@@ -357,6 +357,28 @@ colour needs 8 MB of video memory).
     the other `svga_*` and `vesa_*` machine types are not supported.
 
 
+## Video memory delay
+
+The [`vmem_delay`](#vmem_delay) setting emulates the CPU-throttling effect of
+accessing slow video memory via the ISA bus on old video cards. This can fix
+flashing graphics and speed issues in Hercules, CGA, EGA, and early VGA games.
+
+Enable it only on a per-game basis as it slows down emulation. The following
+games benefit from the enabling `vmem_delay` --- there are probably many others:
+
+<div class="compact" markdown>
+
+- [Corncob 3-D (1992)](https://www.mobygames.com/game/40284/corncob-3-d-the-other-worlds-campaign/)
+- [Corncob Deluxe (1993)](https://www.mobygames.com/game/3480/corncob-deluxe/)
+- **Crazy Brix** --- needs `vmem_delay = 2000` and `cpu_cycles = 70000`
+- [Future Wars (1989)](https://www.mobygames.com/game/2205/future-wars-adventures-in-time/) --- also needs `cpu_cycles = 1000`
+- [Gold of the Aztecs, The (1990)](https://www.mobygames.com/game/17245/the-gold-of-the-aztecs/)
+- [Hostages (1990)](https://www.mobygames.com/game/6939/hostage-rescue-mission/) --- also needs `cpu_cycles = 1500`
+- [Operation Stealth (1990)](https://www.mobygames.com/game/2236/007-james-bond-the-stealth-affair/) --- when VGA or EGA is selected in the game's setup
+- [Quest for Glory II (1990)](https://www.mobygames.com/game/169/quest-for-glory-ii-trial-by-fire/) --- fixes the too fast vertical scrolling in the intro
+
+</div>
+
 ## Summary
 
 <div class="compact" markdown>
