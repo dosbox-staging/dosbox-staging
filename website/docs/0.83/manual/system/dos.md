@@ -247,10 +247,10 @@ You can set these parameters in the `[dos]` configuration section.
 
     - `auto` *default*{ .default } -- Enable on AT-class machine types with
       the MS-DOS defaults (9 stacks of 128 bytes each). Disable on PC/XT-class
-      machine types (e.g., `cga`, `pcjr`, `tandy`).
+      [machine](machine-types.md) types (e.g., `cga`, `pcjr`, `tandy`).
 
     - `count,size` -- Allocate `count` private stacks of `size` bytes each,
-      e.g. 'stacks = 9,128'. Equivalent to the DOS 'STACKS=count,size' setting;
-      'count' must be 8-64, 'size' must be 32-512.
+      e.g. `stacks = 9,128`. Equivalent to the DOS `STACKS=count,size` setting;
+      `count` must be 8-64, 'size' must be 32-512.
 
     - `0,0` -- Disable; use the interrupted program's stack.
