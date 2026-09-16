@@ -48,9 +48,9 @@ You must use the version of DOSBox Staging this guide was written for (you can
 check the version in the navigation bar at the top of the page; it's the
 number to the right of the DOSBox Staging logo, e.g. **0.83**). A banner at
 the top of the page warns you if you're not viewing the latest version of the
-guide. We recommend using the latest stable version of our software; we just
-make the guide and the manual available for earlier versions too for people
-who haven't upgraded yet.
+guide. We recommend using the latest version of our software; we just make the
+guide and the manual available for earlier versions too for people who haven't
+upgraded yet.
 
 If you're a beginner and have previously installed DOSBox Staging on your
 machine, we highly recommend uninstalling it first, then installing the
