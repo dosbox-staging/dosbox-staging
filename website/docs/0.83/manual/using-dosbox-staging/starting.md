@@ -249,7 +249,7 @@ results --- you can simply press ++enter++ on it to launch the game.
 ### Apple Gatekeeper
 
 For releases before 0.81.0 and the [development snapshot
-builds](../../../releases/development-builds.md), you'll need to do the
+builds](../../../download/development-builds.md), you'll need to do the
 following when launching DOSBox Staging for the first time. Later releases are
 all notarized — they'll just work.
 
