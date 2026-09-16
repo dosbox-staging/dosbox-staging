@@ -47,14 +47,6 @@ The latest version is compatible with any Windows laptop or desktop running
 laptops.
 
 
-## Development snapshot builds
-
-You can always see what's cooking on the main branch! :sunglasses: :beer:
-
-These [snapshot builds](development-builds.md) might be slow or unstable as they
-are designed with developers and testers in mind.
-
-
 ## Older versions
 
 !!! warning
