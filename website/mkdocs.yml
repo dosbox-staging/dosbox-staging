@@ -88,23 +88,24 @@ plugins:
             - "index.md"
             - "0.83/getting-started/index.md"
             - "0.83/manual/index.md"
-            - "releases/*"
+            - "download/*"
             - "versions.json"
 
   - redirects:
         redirect_maps:
-          'releases/index.md': 'releases/windows.md'
+          # Section index redirects
+          'download/index.md': 'download/windows.md'
 
           # ---------------------------------------------------------------
           # UPDATE THESE REDIRECTS WHEN A NEW VERSION IS RELEASED
           # Change 0.83 to the new version number in all targets below.
           # ---------------------------------------------------------------
 
-          # Section index redirects (unversioned -> latest version)
+          # Section index redirects -- unversioned -> latest version
           'manual/index.md':          '0.83/manual/introduction/about-this-manual.md'
           'getting-started/index.md': '0.83/getting-started/introduction.md'
 
-          # Section index redirects (current version)
+          # Section index redirects -- current version
           '0.83/manual/index.md':          '0.83/manual/introduction/about-this-manual.md'
           '0.83/getting-started/index.md': '0.83/getting-started/introduction.md'
 
@@ -123,59 +124,88 @@ plugins:
           'getting-started/next-steps.md':                  '0.83/getting-started/next-steps.md'
 
           # Redirects for the old "downloads" pages
-          'downloads/windows.md': 'releases/windows.md'
-          'downloads/macos.md':   'releases/macos.md'
-          'downloads/linux.md':   'releases/linux.md'
+          'downloads/windows.md': 'download/windows.md'
+          'downloads/macos.md':   'download/macos.md'
+          'downloads/linux.md':   'download/linux.md'
 
-          'downloads/development-builds.md': 'releases/development-builds.md'
+          'downloads/development-builds.md': 'download/development-builds.md'
 
-          'downloads/release-notes/0.80.1.md': 'releases/release-notes/0.80.1.md'
-          'downloads/release-notes/0.80.0.md': 'releases/release-notes/0.80.0.md'
-          'downloads/release-notes/0.79.1.md': 'releases/release-notes/0.79.1.md'
-          'downloads/release-notes/0.79.0.md': 'releases/release-notes/0.79.0.md'
-          'downloads/release-notes/0.78.1.md': 'releases/release-notes/0.78.1.md'
-          'downloads/release-notes/0.78.0.md': 'releases/release-notes/0.78.0.md'
-          'downloads/release-notes/0.77.1.md': 'releases/release-notes/0.77.1.md'
-          'downloads/release-notes/0.77.0.md': 'releases/release-notes/0.77.0.md'
-          'downloads/release-notes/0.76.0.md': 'releases/release-notes/0.76.0.md'
-          'downloads/release-notes/0.75.2.md': 'releases/release-notes/0.75.2.md'
-          'downloads/release-notes/0.75.1.md': 'releases/release-notes/0.75.1.md'
-          'downloads/release-notes/0.75.0.md': 'releases/release-notes/0.75.0.md'
-          'downloads/release-notes/0.75.0-rc1.md': 'releases/release-notes/0.75.0-rc1.md'
+          'downloads/release-notes/0.80.1.md': 'download/release-notes/0.80.1.md'
+          'downloads/release-notes/0.80.0.md': 'download/release-notes/0.80.0.md'
+          'downloads/release-notes/0.79.1.md': 'download/release-notes/0.79.1.md'
+          'downloads/release-notes/0.79.0.md': 'download/release-notes/0.79.0.md'
+          'downloads/release-notes/0.78.1.md': 'download/release-notes/0.78.1.md'
+          'downloads/release-notes/0.78.0.md': 'download/release-notes/0.78.0.md'
+          'downloads/release-notes/0.77.1.md': 'download/release-notes/0.77.1.md'
+          'downloads/release-notes/0.77.0.md': 'download/release-notes/0.77.0.md'
+          'downloads/release-notes/0.76.0.md': 'download/release-notes/0.76.0.md'
+          'downloads/release-notes/0.75.2.md': 'download/release-notes/0.75.2.md'
+          'downloads/release-notes/0.75.1.md': 'download/release-notes/0.75.1.md'
+          'downloads/release-notes/0.75.0.md': 'download/release-notes/0.75.0.md'
+          'downloads/release-notes/0.75.0-rc1.md': 'download/release-notes/0.75.0-rc1.md'
+
+          # Redirects for the old "releases" pages
+          'releases/windows.md': 'download/windows.md'
+          'releases/macos.md':   'download/macos.md'
+          'releases/linux.md':   'download/linux.md'
+
+          'releases/development-builds.md': 'download/development-builds.md'
+
+          'releases/release-notes/0.83.0.md': 'download/release-notes/0.83.0.md'
+          'releases/release-notes/0.82.2.md': 'download/release-notes/0.82.2.md'
+          'releases/release-notes/0.82.1.md': 'download/release-notes/0.82.1.md'
+          'releases/release-notes/0.82.0.md': 'download/release-notes/0.82.0.md'
+          'releases/release-notes/0.81.2.md': 'download/release-notes/0.81.2.md'
+          'releases/release-notes/0.81.1.md': 'download/release-notes/0.81.1.md'
+          'releases/release-notes/0.81.0.md': 'download/release-notes/0.81.0.md'
+
+          'releases/release-notes/0.80.1.md': 'download/release-notes/0.80.1.md'
+          'releases/release-notes/0.80.0.md': 'download/release-notes/0.80.0.md'
+          'releases/release-notes/0.79.1.md': 'download/release-notes/0.79.1.md'
+          'releases/release-notes/0.79.0.md': 'download/release-notes/0.79.0.md'
+          'releases/release-notes/0.78.1.md': 'download/release-notes/0.78.1.md'
+          'releases/release-notes/0.78.0.md': 'download/release-notes/0.78.0.md'
+          'releases/release-notes/0.77.1.md': 'download/release-notes/0.77.1.md'
+          'releases/release-notes/0.77.0.md': 'download/release-notes/0.77.0.md'
+          'releases/release-notes/0.76.0.md': 'download/release-notes/0.76.0.md'
+          'releases/release-notes/0.75.2.md': 'download/release-notes/0.75.2.md'
+          'releases/release-notes/0.75.1.md': 'download/release-notes/0.75.1.md'
+          'releases/release-notes/0.75.0.md': 'download/release-notes/0.75.0.md'
+          'releases/release-notes/0.75.0-rc1.md': 'download/release-notes/0.75.0-rc1.md'
 
 
 # Page tree
 nav:
-  - Releases:
-    - releases/index.md   # dummy page for redirecting
+  - Download:
+    - download/index.md   # dummy page for redirecting
 
-    - Windows: releases/windows.md
-    - macOS: releases/macos.md
-    - Linux: releases/linux.md
+    - Windows: download/windows.md
+    - macOS: download/macos.md
+    - Linux: download/linux.md
 
     - Release notes:
-      - 0.83.0: releases/release-notes/0.83.0.md
-      - 0.82.2: releases/release-notes/0.82.2.md
-      - 0.82.1: releases/release-notes/0.82.1.md
-      - 0.82.0: releases/release-notes/0.82.0.md
-      - 0.81.2: releases/release-notes/0.81.2.md
-      - 0.81.1: releases/release-notes/0.81.1.md
-      - 0.81.0: releases/release-notes/0.81.0.md
-      - 0.80.1: releases/release-notes/0.80.1.md
-      - 0.80.0: releases/release-notes/0.80.0.md
-      - 0.79.1: releases/release-notes/0.79.1.md
-      - 0.79.0: releases/release-notes/0.79.0.md
-      - 0.78.1: releases/release-notes/0.78.1.md
-      - 0.78.0: releases/release-notes/0.78.0.md
-      - 0.77.1: releases/release-notes/0.77.1.md
-      - 0.77.0: releases/release-notes/0.77.0.md
-      - 0.76.0: releases/release-notes/0.76.0.md
-      - 0.75.2: releases/release-notes/0.75.2.md
-      - 0.75.1: releases/release-notes/0.75.1.md
-      - 0.75.0: releases/release-notes/0.75.0.md
-      - 0.75.0-RC1: releases/release-notes/0.75.0-rc1.md
+      - 0.83.0: download/release-notes/0.83.0.md
+      - 0.82.2: download/release-notes/0.82.2.md
+      - 0.82.1: download/release-notes/0.82.1.md
+      - 0.82.0: download/release-notes/0.82.0.md
+      - 0.81.2: download/release-notes/0.81.2.md
+      - 0.81.1: download/release-notes/0.81.1.md
+      - 0.81.0: download/release-notes/0.81.0.md
+      - 0.80.1: download/release-notes/0.80.1.md
+      - 0.80.0: download/release-notes/0.80.0.md
+      - 0.79.1: download/release-notes/0.79.1.md
+      - 0.79.0: download/release-notes/0.79.0.md
+      - 0.78.1: download/release-notes/0.78.1.md
+      - 0.78.0: download/release-notes/0.78.0.md
+      - 0.77.1: download/release-notes/0.77.1.md
+      - 0.77.0: download/release-notes/0.77.0.md
+      - 0.76.0: download/release-notes/0.76.0.md
+      - 0.75.2: download/release-notes/0.75.2.md
+      - 0.75.1: download/release-notes/0.75.1.md
+      - 0.75.0: download/release-notes/0.75.0.md
+      - 0.75.0-RC1: download/release-notes/0.75.0-rc1.md
 
-    - releases/development-builds.md
+    - download/development-builds.md
 
   - Getting started:
       - 0.83/getting-started/index.md   # dummy page for redirecting
