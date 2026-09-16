@@ -335,12 +335,3 @@ are designed with developers and testers in mind.
 [0_75_0_x86]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.75.0/dosbox-staging-windows-v0.75.0.zip
 [0_75_0_rc1_x86]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.75.0-rc1/dosbox-staging-windows-v0.75.0-rc1.zip
 
-
-## Building from source
-
-Of course, you can always [build DOSBox Staging straight from the source][4].
-
-Send us patches if you improve something! :smile:
-
-[4]:https://github.com/dosbox-staging/dosbox-staging
-
