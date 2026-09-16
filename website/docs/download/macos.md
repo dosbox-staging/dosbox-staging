@@ -201,12 +201,3 @@ instructions](../0.83/manual/using-dosbox-staging/starting.md#apple-gatekeeper) 
 [0_75_0]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.75.0/dosbox-staging-macOS-v0.75.0.dmg
 [0_75_0_rc1]:https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.75.0-rc1/dosbox-staging-macOS-v0.75.0-rc1.dmg
 
-
-## Building from source
-
-Of course, you can always [build DOSBox Staging straight from the source][1].
-
-Send us patches if you improve something! :smile:
-
-[1]:https://github.com/dosbox-staging/dosbox-staging
-
