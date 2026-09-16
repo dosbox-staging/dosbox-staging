@@ -70,14 +70,6 @@ repository owners.
     release!** If the problem is only present in the unofficial package, you
     should ask the person or team who did the repackaging for help.
 
-## Development snapshot builds
-
-You can always see what's cooking on the main branch! :sunglasses: :beer:
-
-These [snapshot builds](development-builds.md) might be slow or unstable as they
-are designed with developers and testers in mind.
-
-
 ## Older versions
 
 !!! warning
