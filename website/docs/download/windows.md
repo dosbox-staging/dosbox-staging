@@ -28,8 +28,6 @@ hide:
 
 </section>
 
-DOSBox Staging requires **64-bit Windows 8, 10, or 11**.
-
 Read the [0.83.0 release notes](release-notes/0.83.0.md) to learn about the
 changes and improvements introduced in this version.
 
@@ -43,7 +41,7 @@ changes and improvements introduced in this version.
 ## System requirements
 
 The latest version is compatible with any Windows laptop or desktop running
-64-bit Windows 8, 10 or 11. A dedicated graphics adapter is recommended for
+**64-bit Windows 8, 10 or 11**. A dedicated graphics adapter is recommended for
 laptops.
 
 
