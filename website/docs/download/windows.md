@@ -7,11 +7,6 @@ hide:
 
 ## Latest version
 
-!!! tip
-
-    If you're new to DOSBox Staging, we highly recommend reading the
-    [Getting Started guide](../getting-started/index.md) first.
-
 <section class="release-downloads" markdown>
 
 - [Download DOSBox Staging 0.83.0 (x86_64, Installer)][0_83_0-installer]
@@ -28,21 +23,23 @@ hide:
 
 </section>
 
+The latest version is compatible with any Windows laptop or desktop running
+**64-bit Windows 8, 10 or 11**. A dedicated graphics adapter is recommended for
+laptops.
+
 Read the [0.83.0 release notes](release-notes/0.83.0.md) to learn about the
 changes and improvements introduced in this version.
+
+!!! tip
+
+    If you're new to DOSBox Staging, we highly recommend reading the
+    [Getting Started guide](../getting-started/index.md) first.
 
 !!! warning "Important"
 
     If Windows Security prevents you from running DOSBox Staging via **Windows
     Defender** (the built-in Windows antivirus), please follow [these
     instructions](../0.83/manual/using-dosbox-staging/starting.md#windows-defender).
-
-
-## System requirements
-
-The latest version is compatible with any Windows laptop or desktop running
-**64-bit Windows 8, 10 or 11**. A dedicated graphics adapter is recommended for
-laptops.
 
 
 ## Older versions

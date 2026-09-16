@@ -7,11 +7,6 @@ hide:
 
 ## Latest version
 
-!!! tip
-
-    If you're new to DOSBox Staging, we highly recommend reading the
-    [Getting Started guide](../getting-started/index.md) first.
-
 <section class="release-downloads" markdown>
 
 [Download DOSBox Staging 0.83.0 Universal Binary (dmg)][0_83_0]
@@ -22,14 +17,16 @@ sha256: d8a771adfb8010fa6b5f7fb5351abfba<wbr>659273ad01c89f03675a92bdbdae8167
 
 </section>
 
+The latest version is compatible with **macOS 12 (Monterey) or later** and
+supports both 64-bit Intel and Apple silicon Macs.
+
 Read the [0.83.0 release notes](release-notes/0.83.0.md) to learn about the
 changes and improvements introduced in this version.
 
+!!! tip
 
-## System requirements
-
-The latest version is compatible with **macOS 12 (Monterey) or later** and
-supports both 64-bit Intel and Apple silicon Macs.
+    If you're new to DOSBox Staging, we highly recommend reading the
+    [Getting Started guide](../getting-started/index.md) first.
 
 
 ## Apple Gatekeeper
