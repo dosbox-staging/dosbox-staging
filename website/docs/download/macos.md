@@ -35,14 +35,6 @@ The latest version is compatible with **macOS 12 (Monterey) or later** and
 supports both 64-bit Intel and Apple silicon Macs.
 
 
-## Development snapshot builds
-
-You can always see what's cooking on the main branch! :sunglasses: :beer:
-
-These [snapshot builds](development-builds.md) might be slow or unstable as they
-are designed with developers and testers in mind.
-
-
 ## Apple Gatekeeper
 
 For releases before 0.81.0 and the [development snapshot
