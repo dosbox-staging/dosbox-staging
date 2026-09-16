@@ -22,22 +22,19 @@ sha256: d3a94f7f1c3e68a47ec88d61145506c7<wbr>904452adb0c9c5928cb8cfe2331d6c5c
 
 </section>
 
-Our official build runs on most desktop Linux distributions (x86\_64 only for
-now). It only depends on the C/C++, ALSA, and OpenGL system libraries; all
-other libraries are statically linked.
-
-Please run the `install-icons.sh` script included with the release to install
-the application icons.
-
 Read the [0.83.0 release notes](release-notes/0.83.0.md) to learn about the
 changes and improvements introduced in this version.
+
+Run the `install-icons.sh` script included with the release to install
+the application icons.
 
 
 ## System requirements
 
 The latest version is compatible with any laptop or desktop released after
-2010 running a modern x86_64 Linux distribution. A dedicated graphics adapter
-is recommended for laptops.
+2010 running a modern x86_64 Linux distribution. It only depends on the C/C++,
+ALSA, and OpenGL system libraries; all other libraries are statically linked.
+A dedicated graphics adapter is recommended for laptops.
 
 
 ## Unofficial repackaged releases
