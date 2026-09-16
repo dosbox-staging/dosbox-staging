@@ -60,12 +60,12 @@ free slot before invoking the handler, then restores the original stack on the
 way out.
 
 The default `auto` enables the feature on AT-class
-[`machine`](general.md#machine) types, using the same defaults MS-DOS used ---
-9 stacks of 128 bytes each. It is disabled automatically on PC/XT-class
-machines (e.g., `cga`, `pcjr`, `tandy`), since this was the default under DOS.
-You will rarely need to change this; it exists for the edge case where a
-specific program misbehaves with interrupt stacks enabled, or needs a
-different stack count or size.
+[`machine`](machine-types.md) types, using the same defaults MS-DOS used --- 9
+stacks of 128 bytes each. It is disabled automatically on PC/XT-class machines
+(e.g., `cga`, `pcjr`, `tandy`), since this was the default under DOS. You will
+rarely need to change this; it exists for the edge case where a specific
+program misbehaves with interrupt stacks enabled, or needs a different stack
+count or size.
 
 !!! note
 
