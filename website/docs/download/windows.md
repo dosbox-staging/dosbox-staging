@@ -56,32 +56,6 @@ issues. Our recommendation will always be to upgrade your Windows and use the
 latest version.
 
 
-### Windows 8/10 32-bit
-
-The official distribution packages only support 32-bit Windows 8 or 10 up to
-version 0.80.1:
-
-- For 32-bit Windows 8 or 10, use the [0.80.1 portable ZIP package][0_80_1_x32_ZIP].
-
-- For 64-bit Windows 8 or 10, use the [latest version](#latest-version).
-
-
-### Windows 7
-
-The official distribution packages only support Windows 7 up to version
-0.80.1:
-
-- For 64-bit Windows 7, use the [0.80.1 installer][0_80_1_x64_INSTALLER] and
-  select the MSVC build, or the [0.80.1 portable ZIP package][0_80_1_x64_ZIP].
-
-- For 32-bit Windows 7, use the [0.80.1 portable ZIP package][0_80_1_x32_ZIP].
-
-### Windows Vista
-
-The official distribution packages only support Windows Vista up to version
-0.78.1.
-
-
 ## Development snapshot builds
 
 You can always see what's cooking on the main branch! :sunglasses: :beer:
