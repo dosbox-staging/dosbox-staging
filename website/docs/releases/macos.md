@@ -25,8 +25,8 @@ sha256: d8a771adfb8010fa6b5f7fb5351abfba<wbr>659273ad01c89f03675a92bdbdae8167
 DOSBos Staging requires **macOS 12 (Monterey) or later**, and supports both
 Intel and Apple silicon Macs.
 
-Read our the [0.83.0 release notes](release-notes/0.83.0.md) to learn about
-the changes and improvements introduced by this release.
+Read the [0.83.0 release notes](release-notes/0.83.0.md) to learn about the
+changes and improvements introduced by this release.
 
 
 ## System requirements
