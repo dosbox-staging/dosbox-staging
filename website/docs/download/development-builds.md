@@ -261,7 +261,7 @@ We provide statically linked x86_64 Linux packages that only depend on C/C++,
 ALSA, and OpenGL system libraries.
 
 
-## How to upgrade your configuration
+## Upgrading your configuration
 
 Testing new features might require a manual reset of the configuration
 file.
