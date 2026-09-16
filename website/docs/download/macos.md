@@ -5,7 +5,7 @@ hide:
 
 # macOS releases
 
-## Current stable version
+## Latest version
 
 !!! tip
 
@@ -26,12 +26,12 @@ DOSBos Staging requires **macOS 12 (Monterey) or later**, and supports both
 Intel and Apple silicon Macs.
 
 Read the [0.83.0 release notes](release-notes/0.83.0.md) to learn about the
-changes and improvements introduced by this release.
+changes and improvements introduced in this version.
 
 
 ## System requirements
 
-The latest release is compatible with **macOS 12 (Monterey) or later** and
+The latest version is compatible with **macOS 12 (Monterey) or later** and
 supports both 64-bit Intel and Apple silicon Macs.
 
 
@@ -50,7 +50,7 @@ builds](development-builds.md), you'll need to do follow [these
 instructions](../0.83/manual/using-dosbox-staging/starting.md#apple-gatekeeper) when launching DOSBox Staging for the first time.
 
 
-## Older releases
+## Older versions
 
 - [DOSBox Staging 0.82.2 Universal Binary (dmg)][0_82_2] (macOS 11 or newer)
   <br>

@@ -5,7 +5,7 @@ hide:
 
 # Linux releases
 
-## Current stable version
+## Latest version
 
 !!! tip
 
@@ -30,12 +30,12 @@ Please run the `install-icons.sh` script included with the release to install
 the application icons.
 
 Read the [0.83.0 release notes](release-notes/0.83.0.md) to learn about the
-changes and improvements introduced in this release.
+changes and improvements introduced in this version.
 
 
 ## System requirements
 
-The latest release is compatible with any laptop or desktop released after
+The latest version is compatible with any laptop or desktop released after
 2010 running a modern x86_64 Linux distribution. A dedicated graphics adapter
 is recommended for laptops.
 
@@ -78,7 +78,7 @@ These [snapshot builds](development-builds.md) might be slow or unstable as they
 are designed with developers and testers in mind.
 
 
-## Older releases
+## Older versions
 
 - [DOSBox Staging 0.82.2 (x86_64)][0_82_2]
   <br>
