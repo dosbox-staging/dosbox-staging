@@ -208,12 +208,3 @@ are designed with developers and testers in mind.
 [0_75_0]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.75.0/dosbox-staging-linux-v0.75.0.tar.xz
 [0_75_0_rc1]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.75.0-rc1/dosbox-staging-linux-v0.75.0-rc1.tar.xz
 
-
-## Building from source
-
-Of course, you can always [build DOSBox Staging straight from the source][1].
-
-Send us patches if you improve something! :smile:
-
-[1]:https://github.com/dosbox-staging/dosbox-staging
-
