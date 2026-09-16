@@ -419,13 +419,6 @@ video adapter:
 These are independent of the [`machine`](#machine) setting
 and can be used with any adapter.
 
-<!-- TODO: general.md's config-settings block for machine/vmemsize/
-     vesa_modes/vga_8dot_font/vmem_delay is appended below as a new
-     "Configuration settings" section. This duplicates some info already
-     stated in prose above (e.g. default vmemsize per adapter, VESA mode
-     exclusions) — worth deciding whether to trim the prose or the
-     reference tables so we're not maintaining the same facts twice. -->
-
 ## Configuration settings
 
 You can set these in the `[dosbox]` configuration section.
