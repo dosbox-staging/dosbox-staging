@@ -34,8 +34,6 @@ Run the `install-icons.sh` script included with the release to install
 the application icons.
 
 
-## System requirements
-
 ## Unofficial repackaged releases
 
 DOSBox Staging is also repackaged by external teams as distribution-specific
