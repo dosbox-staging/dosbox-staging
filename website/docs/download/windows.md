@@ -47,15 +47,6 @@ The latest version is compatible with any Windows laptop or desktop running
 laptops.
 
 
-## Legacy Windows support
-
-If you're still on a legacy Windows version, you can use the [older
-releases](#older-versions). Note these earlier releases come with _zero
-official support_; the core team won't be able to help you if you run into
-issues. Our recommendation will always be to upgrade your Windows and use the
-latest version.
-
-
 ## Development snapshot builds
 
 You can always see what's cooking on the main branch! :sunglasses: :beer:
@@ -66,6 +57,13 @@ are designed with developers and testers in mind.
 
 ## Older versions
 
+!!! warning
+
+    These older versions are mainly provided for regression testing. You can also
+    use them if you're on a legacy operating system unsupported by the latest
+    release, but the core team doesn't offer any help with these earlier releases.
+    Our recommendation is to upgrade your operating system and use the latest
+    version.
 
 - [DOSBox Staging 0.82.2 (x86_64, Installer)][0_82_2_INSTALLER] (Windows 8 or newer)
   <br>
