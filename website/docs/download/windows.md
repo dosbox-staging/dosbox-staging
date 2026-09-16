@@ -5,7 +5,7 @@ hide:
 
 # Windows releases
 
-## Current stable version
+## Latest version
 
 !!! tip
 
@@ -31,7 +31,7 @@ hide:
 DOSBox Staging requires **64-bit Windows 8, 10, or 11**.
 
 Read the [0.83.0 release notes](release-notes/0.83.0.md) to learn about the
-changes and improvements introduced in this release.
+changes and improvements introduced in this version.
 
 !!! warning "Important"
 
@@ -42,17 +42,18 @@ changes and improvements introduced in this release.
 
 ## System requirements
 
-The latest release is compatible with any Windows laptop or desktop running
+The latest version is compatible with any Windows laptop or desktop running
 64-bit Windows 8, 10 or 11. A dedicated graphics adapter is recommended for
 laptops.
 
 
 ## Legacy Windows support
 
-If you're still on a legacy Windows version, you can use the following older
-releases. Note these earlier versions come with _zero official support_; the
-core team won't be able to help you if you run into issues. Our recommendation
-will always be to upgrade your Windows and use the latest stable version.
+If you're still on a legacy Windows version, you can use the [older
+releases](#older-versions). Note these earlier releases come with _zero
+official support_; the core team won't be able to help you if you run into
+issues. Our recommendation will always be to upgrade your Windows and use the
+latest version.
 
 
 ### Windows 8/10 32-bit
@@ -62,7 +63,7 @@ version 0.80.1:
 
 - For 32-bit Windows 8 or 10, use the [0.80.1 portable ZIP package][0_80_1_x32_ZIP].
 
-- For 64-bit Windows 8 or 10, use the [current stable version](#current-stable-version).
+- For 64-bit Windows 8 or 10, use the [latest version](#latest-version).
 
 
 ### Windows 7
@@ -89,7 +90,7 @@ These [snapshot builds](development-builds.md) might be slow or unstable as they
 are designed with developers and testers in mind.
 
 
-## Older releases
+## Older versions
 
 
 - [DOSBox Staging 0.82.2 (x86_64, Installer)][0_82_2_INSTALLER] (Windows 8 or newer)
