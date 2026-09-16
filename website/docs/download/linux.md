@@ -80,6 +80,14 @@ are designed with developers and testers in mind.
 
 ## Older versions
 
+!!! warning
+
+    These older versions are mainly provided for regression testing. You can also
+    use them if you're on a legacy operating system unsupported by the latest
+    release, but the core team doesn't offer any help with these earlier releases.
+    Our recommendation is to upgrade your operating system and use the latest
+    version.
+
 - [DOSBox Staging 0.82.2 (x86_64)][0_82_2]
   <br>
   <small>

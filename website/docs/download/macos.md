@@ -52,6 +52,14 @@ instructions](../0.83/manual/using-dosbox-staging/starting.md#apple-gatekeeper) 
 
 ## Older versions
 
+!!! warning
+
+    These older versions are mainly provided for regression testing. You can also
+    use them if you're on a legacy operating system unsupported by the latest
+    release, but the core team doesn't offer any help with these earlier releases.
+    Our recommendation is to upgrade your operating system and use the latest
+    version.
+
 - [DOSBox Staging 0.82.2 Universal Binary (dmg)][0_82_2] (macOS 11 or newer)
   <br>
   <small>
