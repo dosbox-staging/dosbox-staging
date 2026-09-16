@@ -230,6 +230,10 @@ extensions, the VESA BIOS Extensions (VBE) standard was created to provide a
 uniform programming interface. DOSBox Staging emulates four SVGA chipsets,
 ranging from late 1980s designs to the mid-1990s [S3 Trio64](#s3-trio64).
 
+On most VGA and SVGA adapters, text modes use 9-pixel-wide character cells. A
+few early adapters used 8-pixel-wide characters --- enable
+[`vga_8dot_font`](#vga_8dot_font) if you want this.
+
 {{ figure(
     "https://www.dosbox-staging.org/static/images/getting-started/pop-vga.jpg",
     "Prince of Persia in VGA mode --- VGA adapters line-double 200-line modes, resulting in \"chunky\" looking pixels"
