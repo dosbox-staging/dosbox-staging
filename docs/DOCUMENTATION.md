@@ -400,7 +400,7 @@ After these steps, the deploy website action should run without errors.
 
 The user manual and the Getting Started guide live under a version prefix
 (e.g., `website/docs/0.83/manual/`, `website/docs/0.83/getting-started/`).
-Other sections (`about/`, `releases/`, `get-involved/`) are unversioned.
+Other sections (`about/`, `download/`, `get-involved/`) are unversioned.
 
 A custom version selector in the site header lets users switch between
 versions. It reads `website/docs/versions.json` to know which versions

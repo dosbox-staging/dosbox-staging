@@ -36,9 +36,9 @@ First-time users and people migrating from other DOSBox variants should start by
 
 Regular users should use our stable release builds available on our project website:
 
-- [Windows](https://www.dosbox-staging.org/releases/windows/)
-- [macOS](https://www.dosbox-staging.org/releases/macos/)
-- [Linux](https://www.dosbox-staging.org/releases/linux/)
+- [Windows](https://www.dosbox-staging.org/download/windows/)
+- [macOS](https://www.dosbox-staging.org/download/macos/)
+- [Linux](https://www.dosbox-staging.org/download/linux/)
 
 
 ## Development builds
@@ -67,7 +67,7 @@ Development builds are automatically created on every commit merged to the `main
 [2]: https://github.com/dosbox-staging/dosbox-staging/actions/workflows/pvs-studio.yml
 [3]: https://github.com/emilk/loguru
 [4]: https://github.com/dosbox-staging/dosbox-staging/tree/main/tests
-[Development builds]: https://www.dosbox-staging.org/releases/development-builds/
+[Development builds]: https://www.dosbox-staging.org/download/development-builds/
 
 ## Source code analysis tools
 
