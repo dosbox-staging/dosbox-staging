@@ -232,18 +232,15 @@ You can set these parameters in the `[dos]` configuration section.
 
 ##### stacks
 
-:   Use DOS-style private stacks for hardware interrupts ('auto' by default).
-    When a wrapped hardware interrupt fires, DOSBox Staging switches to one
-    stack from a private pool before invoking the previous handler. Disabling
-    this means each running program must have enough stack space for hardware
-    interrupts (and any chained handlers) itself. Most programs work correctly
-    without it; a few legacy programs depend on it to avoid corrupting their
-    own stack.
+:   Use DOS-style private stacks for hardware interrupts. When a wrapped
+    hardware interrupt fires, DOSBox Staging switches to one stack from a
+    private pool before invoking the previous handler. Disabling this means
+    each running program must have enough stack space for hardware interrupts
+    (and any chained handlers) itself. Most programs work correctly without
+    it; a few legacy programs depend on it to avoid corrupting their own
+    stack.
 
-    Note: the current implementation wraps the timer interrupt (INT 08h, IRQ0)
-    and the keyboard interrupt (INT 09h, IRQ1). MS-DOS's STACKS feature wraps
-    additional hardware-IRQ vectors; coverage may be expanded in future
-    versions.
+    Possible values:
 
     - `auto` *default*{ .default } -- Enable on AT-class machine types with
       the MS-DOS defaults (9 stacks of 128 bytes each). Disable on PC/XT-class
@@ -254,3 +251,11 @@ You can set these parameters in the `[dos]` configuration section.
       `count` must be 8-64, 'size' must be 32-512.
 
     - `0,0` -- Disable; use the interrupted program's stack.
+
+    !!! note
+
+        The current implementation wraps the timer interrupt (INT 08h, IRQ0)
+        and the keyboard interrupt (INT 09h, IRQ1). MS-DOS's STACKS feature wraps
+        additional hardware-IRQ vectors; coverage may be expanded in future
+        versions.
+
