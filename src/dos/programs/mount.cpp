@@ -643,6 +643,25 @@ static std::optional<std::string> find_option_missing_value(const CommandLine& c
 	return {};
 }
 
+// Returns true for DOSBox-X IDE slot values: `auto`, `none`, or a controller
+// number with an optional master/slave suffix (e.g., `1`, `2m`, `1s`).
+static bool is_ide_slot_value(const std::string& value)
+{
+	if (iequals(value, "auto") || iequals(value, "none")) {
+		return true;
+	}
+
+	const auto has_controller = !value.empty() && value[0] >= '1' &&
+	                            value[0] <= '9';
+
+	const auto has_valid_suffix = value.size() == 1 ||
+	                              (value.size() == 2 &&
+	                               (iequals(value.substr(1), "m") ||
+	                                iequals(value.substr(1), "s")));
+
+	return has_controller && has_valid_suffix;
+}
+
 // Sets:
 //   params.type   (from the -t option)
 //   params.roflag (from the -ro option)
@@ -710,10 +729,11 @@ bool MOUNT::ParseArguments(MountParameters& params, bool& explicit_fs,
 	}
 
 	// Parse -ide. The optional IDE slot value (e.g., `-ide 2m`) is only
-	// accepted for DOSBox-X compatibility and is ignored.
+	// accepted for DOSBox-X compatibility and is ignored. Anything else
+	// following -ide (e.g., a path) is left on the command line.
 	std::string ide_value = {};
 
-	if (cmd->FindString("-ide", ide_value) && !ide_value.starts_with('-')) {
+	if (cmd->FindString("-ide", ide_value) && is_ide_slot_value(ide_value)) {
 		params.is_ide = cmd->FindString("-ide", ide_value, true);
 	} else {
 		params.is_ide = cmd->FindExist("-ide", true);

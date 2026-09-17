@@ -1126,6 +1126,41 @@ TEST_F(MountTest, IdeFlagDoesNotConsumeFollowingOption)
 	EXPECT_EQ(result->sizes[3], 100);
 }
 
+TEST_F(MountTest, IdeFlagDoesNotConsumeFollowingPath)
+{
+	const auto result = Mount("3 -t hdd -size 512,63,16,100 -ide " +
+	                          P("bootable.img"));
+
+	ASSERT_TRUE(result.has_value());
+
+	EXPECT_TRUE(result->is_ide);
+
+	ASSERT_EQ(result->paths.size(), 1);
+	EXPECT_NE(result->paths[0].find("bootable.img"), std::string::npos);
+}
+
+TEST_F(MountTest, IdeFlagConsumesMasterSlaveSlotValue)
+{
+	const auto result = Mount("3 " + P("bootable.img") +
+	                          " -t hdd -size 512,63,16,100 -ide 2S");
+
+	ASSERT_TRUE(result.has_value());
+
+	EXPECT_TRUE(result->is_ide);
+	EXPECT_EQ(result->paths.size(), 1);
+}
+
+TEST_F(MountTest, IdeFlagConsumesAutoSlotValue)
+{
+	const auto result = Mount("3 " + P("bootable.img") +
+	                          " -t hdd -size 512,63,16,100 -ide auto");
+
+	ASSERT_TRUE(result.has_value());
+
+	EXPECT_TRUE(result->is_ide);
+	EXPECT_EQ(result->paths.size(), 1);
+}
+
 // ---------------------------------------------------------------------
 // Geometry precedence with ISO images
 // ---------------------------------------------------------------------
