@@ -139,6 +139,12 @@ TEST_F(MountTest, RejectsOptionValueThatIsAFlag)
 	EXPECT_FALSE(result.has_value());
 }
 
+TEST_F(MountTest, RejectsOptionValueThatIsTheIdeFlag)
+{
+	const auto result = Mount("N " + P("plain_dir") + " -label -ide");
+	EXPECT_FALSE(result.has_value());
+}
+
 TEST_F(MountTest, RejectsOptionMissingValueAtEnd)
 {
 	const auto result = Mount("N " + P("plain_dir") + " -label");
@@ -1199,6 +1205,16 @@ TEST_F(MountTest, LabelPreservedForIsoMount)
 	ASSERT_TRUE(result.has_value());
 
 	EXPECT_EQ(result->label, "MYDISC");
+}
+
+TEST_F(MountTest, LabelCanStartWithDash)
+{
+	const auto result = Mount("D " + P("image.iso") + " -label -MYDISC-");
+
+	ASSERT_TRUE(result.has_value());
+
+	EXPECT_EQ(result->label, "-MYDISC-");
+	EXPECT_EQ(result->paths.size(), 1);
 }
 
 TEST_F(MountTest, ReadOnlyPreservedForIsoMount)

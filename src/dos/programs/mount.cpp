@@ -620,23 +620,33 @@ static std::optional<MountFileSystemType> parse_file_system_type(const std::stri
 }
 
 // Returns the first option that requires a value but is either the last
-// argument or is followed by another option.
+// argument or is followed by another MOUNT option. Values can otherwise start
+// with a dash (e.g., `-label -DISK-`).
 static std::optional<std::string> find_option_missing_value(const CommandLine& cmd)
 {
 	constexpr std::array OptionsWithValue = {
 	        "-t", "-fs", "-label", "-freesize", "-size", "-chs"};
 
+	constexpr std::array Flags = {"-pr", "-ro", "-ide"};
+
+	const auto is_one_of = [](const std::string& arg, const auto& options) {
+		return std::ranges::any_of(options, [&arg](const auto option) {
+			return iequals(arg, option);
+		});
+	};
+
 	std::string arg      = {};
 	std::string next_arg = {};
 
 	for (auto i = 1; cmd.FindCommand(i, arg); ++i) {
-		const auto requires_value = std::ranges::any_of(
-		        OptionsWithValue, [&arg](const auto option) {
-			        return iequals(arg, option);
-		        });
+		if (!is_one_of(arg, OptionsWithValue)) {
+			continue;
+		}
 
-		if (requires_value && (!cmd.FindCommand(i + 1, next_arg) ||
-		                       next_arg.starts_with('-'))) {
+		const auto is_missing = !cmd.FindCommand(i + 1, next_arg) ||
+		                        is_one_of(next_arg, OptionsWithValue) ||
+		                        is_one_of(next_arg, Flags);
+		if (is_missing) {
 			return arg;
 		}
 	}
