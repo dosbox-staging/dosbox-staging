@@ -68,7 +68,7 @@ To elaborate on the differences between the two approaches, let's delve
 into a bit more detail!
 
 
-### Complete computer emulation
+## Complete computer emulation
 
 To play a DOS game in an IBM PC compatible emulator such as
 [PCem](https://pcem-emulator.co.uk/) or [86Box](https://86box.net/), you would
@@ -86,7 +86,7 @@ dozen of virtual machines for all the different hardware combinations you want
 to use.
 
 
-### The DOSBox Staging way
+## The DOSBox Staging way
 
 With DOSBox Staging, it's a lot simpler: in most cases, you'll only need to copy the
 game files into a folder and possibly write a few lines of configuration. No

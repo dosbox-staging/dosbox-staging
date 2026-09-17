@@ -1,3 +1,7 @@
+---
+toc_depth: 2
+---
+
 # About this manual
 
 Welcome to the **DOSBox Staging 0.83 user manual** --- your complete guide
