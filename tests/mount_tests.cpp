@@ -658,15 +658,6 @@ TEST_F(MountTest, ResolvesPathThroughAlreadyMountedDosDrive)
 	EXPECT_EQ(via_dos_path->drive, 'J');
 }
 
-TEST_F(MountTest, IdeFlagAsStringValueAlsoSetsIsIde)
-{
-	const auto result = Mount("3 " + P("bootable.img") +
-	                          " -t hdd -size 512,63,16,100 -ide 1");
-	ASSERT_TRUE(result.has_value());
-	EXPECT_TRUE(result->is_ide);
-	EXPECT_EQ(result->paths.size(), 1);
-}
-
 // ---------------------------------------------------------------------
 // Extension-based auto-detection when no -t is given
 // ---------------------------------------------------------------------
@@ -1124,6 +1115,19 @@ TEST_F(MountTest, IdeFlagDoesNotConsumeFollowingOption)
 	EXPECT_EQ(result->sizes[1], 63);
 	EXPECT_EQ(result->sizes[2], 16);
 	EXPECT_EQ(result->sizes[3], 100);
+}
+
+TEST_F(MountTest, IdeFlagDoesNotConsumeFollowingPath)
+{
+	const auto result = Mount("3 -t hdd -size 512,63,16,100 -ide " +
+	                          P("bootable.img"));
+
+	ASSERT_TRUE(result.has_value());
+
+	EXPECT_TRUE(result->is_ide);
+
+	ASSERT_EQ(result->paths.size(), 1);
+	EXPECT_NE(result->paths[0].find("bootable.img"), std::string::npos);
 }
 
 // ---------------------------------------------------------------------
