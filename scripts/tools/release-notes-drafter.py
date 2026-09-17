@@ -512,7 +512,7 @@ MARKDOWN_HEADER = """> [!WARNING]
 > **These are the automatically generated release notes of the latest development snapshot builds!** This is not a stable release; things might blow up! 💣 🔥 💀
 >
 > You can download the latest development builds from here:
-> https://www.dosbox-staging.org/releases/development-builds/
+> https://www.dosbox-staging.org/download/development-builds/
 
 """
 
@@ -522,7 +522,7 @@ HTML_HEADER = """
 snapshot build!</strong><br>This is not a stable release; things might blow
 up! 💣 🔥 💀</p>
 
-<p>You can download the latest stable builds <a href="https://www.dosbox-staging.org/releases/">from our
+<p>You can download the latest stable builds <a href="https://www.dosbox-staging.org/download/">from our
 website</a>.</p>
 </div>
 """
