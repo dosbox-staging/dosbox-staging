@@ -619,6 +619,30 @@ static std::optional<MountFileSystemType> parse_file_system_type(const std::stri
 	}
 }
 
+// Returns the first option that requires a value but is either the last
+// argument or is followed by another option.
+static std::optional<std::string> find_option_missing_value(const CommandLine& cmd)
+{
+	constexpr std::array OptionsWithValue = {
+	        "-t", "-fs", "-label", "-freesize", "-size", "-chs"};
+
+	std::string arg      = {};
+	std::string next_arg = {};
+
+	for (auto i = 1; cmd.FindCommand(i, arg); ++i) {
+		const auto requires_value = std::ranges::any_of(
+		        OptionsWithValue, [&arg](const auto option) {
+			        return iequals(arg, option);
+		        });
+
+		if (requires_value && (!cmd.FindCommand(i + 1, next_arg) ||
+		                       next_arg.starts_with('-'))) {
+			return arg;
+		}
+	}
+	return {};
+}
+
 // Sets:
 //   params.type   (from the -t option)
 //   params.roflag (from the -ro option)
@@ -633,6 +657,16 @@ static std::optional<MountFileSystemType> parse_file_system_type(const std::stri
 bool MOUNT::ParseArguments(MountParameters& params, bool& explicit_fs,
                            bool& path_relative_to_last_config)
 {
+	// Reject missing values up front so an option never consumes the next
+	// option as its value
+	if (const auto option = find_option_missing_value(*cmd); option) {
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "MOUNT",
+		                      "PROGRAM_MOUNT_MISSING_VALUE",
+		                      option->c_str());
+		return false;
+	}
+
 	if (cmd->FindExist("-pr", true)) {
 		path_relative_to_last_config = true;
 	}
@@ -675,11 +709,15 @@ bool MOUNT::ParseArguments(MountParameters& params, bool& explicit_fs,
 		}
 	}
 
-	// Parse -ide
+	// Parse -ide. The optional IDE slot value (e.g., `-ide 2m`) is only
+	// accepted for DOSBox-X compatibility and is ignored.
 	std::string ide_value = {};
 
-	params.is_ide = cmd->FindString("-ide", ide_value, true) ||
-	                cmd->FindExist("-ide", true);
+	if (cmd->FindString("-ide", ide_value) && !ide_value.starts_with('-')) {
+		params.is_ide = cmd->FindString("-ide", ide_value, true);
+	} else {
+		params.is_ide = cmd->FindExist("-ide", true);
+	}
 
 	if (params.is_ide && (params.type == MountType::CdRomImage)) {
 		IDE_Get_Next_Cable_Slot(params.ide_index, params.is_second_cable_slot);
@@ -691,14 +729,30 @@ bool MOUNT::ParseArguments(MountParameters& params, bool& explicit_fs,
 	return true;
 }
 
+MOUNT::GeometryOptions MOUNT::ParseGeometryOptions()
+{
+	GeometryOptions options = {};
+	std::string value       = {};
+
+	if (cmd->FindString("-freesize", value, true)) {
+		options.freesize = value;
+	}
+	if (cmd->FindString("-size", value, true)) {
+		options.size = value;
+	}
+	if (cmd->FindString("-chs", value, true)) {
+		options.chs = value;
+	}
+	return options;
+}
+
 // Sets:
 //   params.mediaid
 //   params.sizes
 //
-bool MOUNT::ParseGeometry(MountParameters& params)
+bool MOUNT::ParseGeometry(MountParameters& params, const GeometryOptions& options)
 {
 	std::string str_size = "";
-	std::string str_chs  = "";
 
 	// Default sizing logic based on type
 	switch (params.type) {
@@ -744,12 +798,11 @@ bool MOUNT::ParseGeometry(MountParameters& params)
 	}
 
 	// Parse the free space in mb (kb for floppies)
-	std::string mb_size;
-
-	if (cmd->FindString("-freesize", mb_size, true)) {
+	if (options.freesize) {
 
 		char teststr[1024];
-		uint16_t freesize = static_cast<uint16_t>(atoi(mb_size.c_str()));
+		uint16_t freesize = static_cast<uint16_t>(
+		        atoi(options.freesize->c_str()));
 
 		if (params.type == MountType::FloppyImage) {
 			// freesize in kb
@@ -777,7 +830,9 @@ bool MOUNT::ParseGeometry(MountParameters& params)
 	}
 
 	// Parse -size
-	cmd->FindString("-size", str_size, true);
+	if (options.size) {
+		str_size = *options.size;
+	}
 
 	// Apply str_size string to sizes array
 	if (!str_size.empty()) {
@@ -808,13 +863,16 @@ bool MOUNT::ParseGeometry(MountParameters& params)
 	}
 
 	// Parse -chs C,H,S
-	if (cmd->FindString("-chs", str_chs, true)) {
+	if (options.chs) {
 		int cmd_cylinders = 0;
 		int cmd_heads     = 0;
 		int cmd_sectors   = 0;
 
-		if (sscanf(str_chs.c_str(), "%d,%d,%d", &cmd_cylinders, &cmd_heads, &cmd_sectors) ==
-		    3) {
+		if (sscanf(options.chs->c_str(),
+		           "%d,%d,%d",
+		           &cmd_cylinders,
+		           &cmd_heads,
+		           &cmd_sectors) == 3) {
 
 			params.sizes[0] = 512;
 			params.sizes[1] = static_cast<uint16_t>(cmd_sectors);
@@ -1416,6 +1474,10 @@ std::optional<MountParameters> MOUNT::ProcessArguments(CommandLine* cmd)
 		return {};
 	}
 
+	// Remove the geometry options first, otherwise they would be treated as
+	// path arguments
+	const auto geometry_options = ParseGeometryOptions();
+
 	// Get the first path argument
 	std::string first_path = {};
 	if (!cmd->FindCommand(2, first_path) || first_path.empty()) {
@@ -1429,7 +1491,7 @@ std::optional<MountParameters> MOUNT::ProcessArguments(CommandLine* cmd)
 	ProcessPaths(first_path, params, path_relative_to_last_config);
 
 	// Check drive geometry and types, abort if not valid
-	if (!ParseGeometry(params)) {
+	if (!ParseGeometry(params, geometry_options)) {
 		return {};
 	}
 
@@ -1539,6 +1601,7 @@ void MOUNT::AddMessages()
 	        "%s isn't a directory or valid image file.\n");
 
 	MSG_Add("PROGRAM_MOUNT_ILL_TYPE", "Illegal type %s");
+	MSG_Add("PROGRAM_MOUNT_MISSING_VALUE", "Option '%s' requires a value.\n");
 	MSG_Add("PROGRAM_MOUNT_ALREADY_MOUNTED", "Drive %c already mounted with %s\n");
 	MSG_Add("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED", "Drive %c isn't mounted.\n");
 

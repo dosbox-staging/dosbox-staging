@@ -127,6 +127,24 @@ TEST_F(MountTest, RejectsInvalidChsFormat)
 	EXPECT_FALSE(result.has_value());
 }
 
+TEST_F(MountTest, RejectsOptionValueThatIsAnotherOption)
+{
+	const auto result = Mount("1 " + P("bootable.img") + " -size -t hdd");
+	EXPECT_FALSE(result.has_value());
+}
+
+TEST_F(MountTest, RejectsOptionValueThatIsAFlag)
+{
+	const auto result = Mount("N " + P("plain_dir") + " -label -ro");
+	EXPECT_FALSE(result.has_value());
+}
+
+TEST_F(MountTest, RejectsOptionMissingValueAtEnd)
+{
+	const auto result = Mount("N " + P("plain_dir") + " -label");
+	EXPECT_FALSE(result.has_value());
+}
+
 TEST_F(MountTest, RejectsMissingPath)
 {
 	const auto result = Mount("C");
@@ -544,6 +562,18 @@ TEST_F(MountTest, ExplicitTypeOverridesExtensionAutoDetection)
 	EXPECT_EQ(result->type, MountType::CdRomImage);
 }
 
+TEST_F(MountTest, GeometryOptionsAreNotCollectedAsPaths)
+{
+	const auto result = Mount("2 " + P("bootable.img") +
+	                          " -t hdd -freesize 100 -size 512,63,16,50"
+	                          " -chs 200,16,63");
+
+	ASSERT_TRUE(result.has_value());
+
+	ASSERT_EQ(result->paths.size(), 1);
+	EXPECT_NE(result->paths[0].find("bootable.img"), std::string::npos);
+}
+
 TEST_F(MountTest, MultipleExplicitPathsArePreservedInOrder)
 {
 	const auto result = Mount("W " + P("disk03.img") + " " + P("disk1.img") +
@@ -634,6 +664,7 @@ TEST_F(MountTest, IdeFlagAsStringValueAlsoSetsIsIde)
 	                          " -t hdd -size 512,63,16,100 -ide 1");
 	ASSERT_TRUE(result.has_value());
 	EXPECT_TRUE(result->is_ide);
+	EXPECT_EQ(result->paths.size(), 1);
 }
 
 // ---------------------------------------------------------------------
@@ -1077,6 +1108,22 @@ TEST_F(MountTest, IdeFlagDoesNotAllocateControllerForNonIsoType)
 	EXPECT_TRUE(result->is_ide);
 	EXPECT_EQ(result->ide_index, -1);
 	EXPECT_FALSE(result->is_second_cable_slot);
+}
+
+TEST_F(MountTest, IdeFlagDoesNotConsumeFollowingOption)
+{
+	const auto result = Mount("3 " + P("bootable.img") +
+	                          " -t hdd -ide -size 512,63,16,100");
+
+	ASSERT_TRUE(result.has_value());
+
+	EXPECT_TRUE(result->is_ide);
+	EXPECT_EQ(result->paths.size(), 1);
+
+	EXPECT_EQ(result->sizes[0], 512);
+	EXPECT_EQ(result->sizes[1], 63);
+	EXPECT_EQ(result->sizes[2], 16);
+	EXPECT_EQ(result->sizes[3], 100);
 }
 
 // ---------------------------------------------------------------------
