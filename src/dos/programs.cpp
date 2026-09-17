@@ -1085,6 +1085,8 @@ void PROGRAMS_AddMessages()
 
 	MSG_Add("PROGRAM_CONFIG_MISSINGPARAM", "Missing parameter.\n");
 
+	MSG_Add("PROGRAM_MISSING_OPTION_VALUE", "Option '%s' requires a value.\n");
+
 	MSG_Add("PROGRAM_PATH_TOO_LONG",
 	        "The path '%s' exceeds the DOS limit of %d characters.\n");
 
