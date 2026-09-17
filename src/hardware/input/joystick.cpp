@@ -616,6 +616,7 @@ void JOYSTICK_Destroy()
 
 static void notify_joystick_setting_updated(SectionProp& section, [[maybe_unused]] const std::string& prop_name)
 {
+	joystick.reset();
 	joystick = std::make_unique<JOYSTICK>(section);
 }
 
