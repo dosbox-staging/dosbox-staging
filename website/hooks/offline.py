@@ -6,19 +6,19 @@ Problem
 -------
 
 When OFFLINE=true, the 'exclude' plugin (inside the offline group block
-in mkdocs.yml) removes all releases/* pages and dummy section-index
+in mkdocs.yml) removes all download/* pages and dummy section-index
 pages from the build. However, several other parts of the config/content
 still reference those now-missing files:
 
-  1. The 'nav' section lists ~25 releases/*.md entries and dummy index
+  1. The 'nav' section lists ~25 download/*.md entries and dummy index
      pages (getting-started/index.md, manual/index.md) used for section
      redirects.
 
   2. The 'redirects' plugin has ~20 redirect_maps entries whose targets
-     are releases/* or index.md pages (also excluded).
+     are download/* or index.md pages (also excluded).
 
   3. Markdown content in some pages contains relative links to release
-     pages (e.g., [Windows releases](../releases/windows.md)).
+     pages (e.g., [Windows versions](../download/windows.md)).
 
 MkDocs warns loudly about every single one of these dangling references.
 
@@ -34,7 +34,7 @@ Solution
 
 'on_config' (runs before nav resolution and redirect processing):
 
-  1. Replaces the entire "Releases" nav subtree with a single external
+  1. Replaces the entire "Download" nav subtree with a single external
      link to the live website. Offline users get a clickable link to the
      full release information online, and MkDocs has nothing to resolve.
 
@@ -43,7 +43,7 @@ Solution
      redirects are cleared and the pages are excluded.
 
   3. Clears all redirect_maps. Every current redirect targets either a
-     releases/* page or an index.md page -- all excluded in offline
+     download/* page or an index.md page -- all excluded in offline
      builds. Redirects are also meaningless offline (no web server to
      issue 301s; the generated <meta http-equiv="refresh"> HTML pages
      would never be navigated to because the source URLs don't exist
@@ -57,14 +57,14 @@ Solution
 'on_page_markdown' (runs for each page before MkDocs validates links):
 
   5. Rewrites relative markdown links that target excluded pages
-     (releases/* and index.md) into absolute URLs pointing to the live
+     (download/* and index.md) into absolute URLs pointing to the live
      website. For example:
 
-       [Windows releases](../releases/windows.md)
+       [Windows releases](../download/windows.md)
 
      becomes:
 
-       [Windows releases](https://www.dosbox-staging.org/releases/windows/)
+       [Windows releases](https://www.dosbox-staging.org/download/windows/)
 """
 
 import logging
@@ -99,23 +99,23 @@ def on_config(config):
 
     _use_system_ssl_certs()
 
-    # --- Nav: replace "Releases" subtree with an external link --------
+    # --- Nav: replace "Download" subtree with an external link --------
     #
-    # The nav is a list of dicts. The Releases entry looks like:
-    #   {"Releases": [{"Windows": "releases/windows.md"}, ...]}
+    # The nav is a list of dicts. The Download entry looks like:
+    #   {"Download": [{"Windows": "download/windows.md"}, ...]}
     #
     # We replace it with an external link in the same format MkDocs uses
     # for the existing Wiki entry (see mkdocs.yml):
 
-    #   {"Releases": "https://www.dosbox-staging.org/releases/"}
+    #   {"Download": "https://www.dosbox-staging.org/download/"}
     #
-    # This way the nav sidebar shows "Releases" as a clickable link to
+    # This way the nav sidebar shows "Download" as a clickable link to
     # the live website instead of a section with broken child pages.
     #
     for i, item in enumerate(config["nav"]):
-        if isinstance(item, dict) and "Releases" in item:
-            config["nav"][i] = {"Releases": f"{WEBSITE_URL}/releases/"}
-            log.debug("Replaced 'Releases' nav section with external link")
+        if isinstance(item, dict) and "Download" in item:
+            config["nav"][i] = {"Download": f"{WEBSITE_URL}/download/"}
+            log.debug("Replaced 'Download' nav section with external link")
             break
 
     # --- Nav: strip dummy index pages ---------------------------------
@@ -143,11 +143,11 @@ def on_config(config):
     #
     # The redirects plugin is loaded outside the offline group block, so
     # it is active in both online and offline builds. Its redirect_maps
-    # all target pages that are excluded in offline mode (releases/* or
+    # all target pages that are excluded in offline mode (download/* or
     # index.md pages). Clearing them prevents "Redirect target does not
     # exist!" warnings.
     #
-    # If someone adds non-releases redirects in the future, this will
+    # If someone adds non-download redirects in the future, this will
     # need a filter instead of a blanket clear.
     #
     try:
@@ -165,8 +165,8 @@ def on_page_markdown(markdown, page, config, files):
 
     Some pages contain relative markdown links to excluded pages like:
 
-        [Windows releases](../releases/windows.md)
-        [SmartScreen](../releases/windows.md#windows-defender)
+        [Windows releases](../download/windows.md)
+        [SmartScreen](../download/windows.md#windows-defender)
         [Feature highlights](../index.md)
         [Getting Started](../getting-started/index.md)
 
@@ -179,15 +179,15 @@ def on_page_markdown(markdown, page, config, files):
 
     # Pattern: match standard markdown links [text](path) We only care
     # about relative links (starting with ../) whose resolved path lands
-    # on an excluded page: releases/*, or any index.md (top-level or
+    # on an excluded page: download/*, or any index.md (top-level or
     # section-level like getting-started/index.md).
     #
     # Capture groups:
     #   1: link text    e.g. "Windows releases"
-    #   2: full path    e.g. "../releases/windows.md#windows-defender"
-    #   3: normalised   e.g. "releases/windows.md#windows-defender"
+    #   2: full path    e.g. "../download/windows.md#windows-defender"
+    #   3: normalised   e.g. "download/windows.md#windows-defender"
     return re.sub(
-        r"\[([^\]]*)\]\(((?:\.\./)+(releases/[^)]+|(?:[\w-]+/)*index\.md))\)",
+        r"\[([^\]]*)\]\(((?:\.\./)+(download/[^)]+|(?:[\w-]+/)*index\.md))\)",
         _rewrite_excluded_link,
         markdown,
     )
@@ -198,8 +198,8 @@ def _rewrite_excluded_link(match):
 
     Handles the .md → directory URL conversion that MkDocs uses with
     use_directory_urls=true (the default):
-      releases/windows.md              → /releases/windows/
-      releases/windows.md#anchor       → /releases/windows/#anchor
+      download/windows.md              → /download/windows/
+      download/windows.md#anchor       → /download/windows/#anchor
       index.md                         → /
       getting-started/index.md         → /getting-started/
     """
@@ -207,7 +207,7 @@ def _rewrite_excluded_link(match):
 
     # Group 3 is the path without the ../ prefixes (from the inner
     # capture group in the regex). Examples:
-    #   releases/windows.md#windows-defender
+    #   download/windows.md#windows-defender
     #   getting-started/index.md
     #   index.md
     path = match.group(3)
@@ -222,7 +222,7 @@ def _rewrite_excluded_link(match):
     # parent directory (MkDocs use_directory_urls convention):
     #   index.md                  -> "" (site root)
     #   getting-started/index.md  -> "getting-started"
-    #   releases/foo.md           -> "releases/foo"
+    #   download/foo.md           -> "download/foo"
     url_path = path.removesuffix(".md")
     if url_path == "index":
         url_path = ""

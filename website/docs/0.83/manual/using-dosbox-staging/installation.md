@@ -47,7 +47,7 @@ the first time.
 
     If you're still on a legacy Windows version, you can try one of our [older
     unsupported
-    releases](../../../download/windows.md#legacy-windows-support). Note that
+    releases](../../../download/windows.md#older-versions). Note that
     these older versions are provided as-is --- we don't provide any support
     for them. Also note they don't come with a manual; many things from the
     current manual and [Getting Started
