@@ -60,7 +60,7 @@ type via [`ems`](#ems), [`xms`](#xms), or [`umb`](#umb) is a quick fix.
 
 ## Configuration settings
 
-### Total machine memory
+### Total memory
 
 This setting is configured in the `[dosbox]` section.
 
@@ -71,7 +71,7 @@ This setting is configured in the `[dosbox]` section.
     advantage when raising this value.
 
 
-### DOS memory management
+### Memory management
 
 These settings are configured in the `[dos]` section.
 
