@@ -709,15 +709,9 @@ bool MOUNT::ParseArguments(MountParameters& params, bool& explicit_fs,
 		}
 	}
 
-	// Parse -ide. The optional IDE slot value (e.g., `-ide 2m`) is only
-	// accepted for DOSBox-X compatibility and is ignored.
-	std::string ide_value = {};
-
-	if (cmd->FindString("-ide", ide_value) && !ide_value.starts_with('-')) {
-		params.is_ide = cmd->FindString("-ide", ide_value, true);
-	} else {
-		params.is_ide = cmd->FindExist("-ide", true);
-	}
+	// Parse -ide. It is a flag, so anything following it is left on the
+	// command line.
+	params.is_ide = cmd->FindExist("-ide", true);
 
 	if (params.is_ide && (params.type == MountType::CdRomImage)) {
 		IDE_Get_Next_Cable_Slot(params.ide_index, params.is_second_cable_slot);
