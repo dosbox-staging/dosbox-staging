@@ -1931,9 +1931,23 @@ static void init_dos_settings(SectionProp& section)
 	auto pstring = section.AddString("ems", WhenIdle, "on");
 	pstring->SetValues({"on", "emsboard", "emm386", "off"});
 	pstring->SetHelp(
-	        "Enable EMS support ('on' by default). Enabled provides the best compatibility\n"
-	        "but certain applications may run better with other choices, or require EMS\n"
-	        "support to be disabled to work at all.");
+	        "Enable EMS memory support ('on' by default). Possible values:\n"
+	        "\n"
+	        "  off:       Disable EMS entirely. INT 67h is not installed, so programs that\n"
+	        "             probe for it correctly detect it as absent.\n"
+	        "\n"
+	        "  on:        Standard LIM EMS via the INT 67h page-frame interface, without\n"
+	        "             emulating a protected-mode memory manager (default). Provides the\n"
+	        "             best compatibility with most software.\n"
+	        "\n"
+	        "  emsboard:  Emulates a physical EMS expansion board rather than a software\n"
+	        "             manager: real mode only, no VCPI. Useful for software that expects\n"
+	        "             board-style EMS behavior, or on pre-386 CPU types where EMM386-\n"
+	        "             style emulation isn't possible.\n"
+	        "\n"
+	        "  emm386:    Emulates EMS the way loading EMM386.EXE under real DOS would,\n"
+	        "             including VCPI support for DOS extenders that switch to protected\n"
+	        "             mode, and matching its DMA-wrapping behavior.");
 
 	pbool = section.AddBool("umb", WhenIdle, true);
 	pbool->SetHelp("Enable UMB memory support ('on' by default).");
