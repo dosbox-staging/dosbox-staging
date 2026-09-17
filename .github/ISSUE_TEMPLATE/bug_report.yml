@@ -21,7 +21,7 @@ body:
     attributes:
       label: Are you using the latest DOSBox Staging version?
       description: |
-        Look up the latest release version [on our website](https://www.dosbox-staging.org/) or the [releases page](https://github.com/dosbox-staging/dosbox-staging/releases).
+        Look up the latest version [on our website](https://www.dosbox-staging.org/) or the [download page](https://github.com/dosbox-staging/dosbox-staging/download).
         To check your version, run `dosbox --version` or execute the `VER` command inside DOSBox Staging. If the version is reported as `git` (meaning you compiled it yourself), put the result of `git describe` in the version field below.
       options:
         - label: I have checked and I'm using the latest release.
@@ -76,7 +76,7 @@ body:
     id: official-linux-release
     attributes:
       label: Are you able to trigger the issue with our official DOSBox Staging release?
-      description: We only support our official releases downloaded from our [website](https://www.dosbox-staging.org/releases/). We do not support repackaged versions of our software; see [this note](https://www.dosbox-staging.org/releases/linux/#non-official-repackaged-releases) for further info.
+      description: We only support our official releases downloaded from our [website](https://www.dosbox-staging.org/download/). We do not support repackaged versions of our software; see [this note](https://www.dosbox-staging.org/download/linux/#unofficial-repackaged-releases) for further info.
       options:
         - label: I am running an official Staging release, not a release installed by my operating system's package manager, or a version repackaged by an external team.
           required: true

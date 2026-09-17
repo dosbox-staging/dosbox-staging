@@ -20,7 +20,7 @@ body:
     attributes:
       label: Are you using the latest DOSBox Staging version?
       description: |
-        Look up the latest release version [on our website](https://www.dosbox-staging.org/) or the [releases page](https://github.com/dosbox-staging/dosbox-staging/releases).
+        Look up the latest version [on our website](https://www.dosbox-staging.org/) or the [download page](https://github.com/dosbox-staging/dosbox-staging/download).
         To check your version, run `dosbox --version` or execute the `VER` command inside DOSBox Staging. If the version is reported as `git` (meaning you compiled it yourself), put the result of `git describe` in the version field below.
       options:
         - label: I have checked and I'm using the latest release.
