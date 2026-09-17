@@ -1961,10 +1961,12 @@ static void init_dos_settings(SectionProp& section)
 	        "\n"
 	        "  auto:        Enable on AT-class machine types with the MS-DOS defaults\n"
 	        "               (9 stacks of 128 bytes each). Disable on PC/XT-class machine\n"
-			"               types (e.g., cga, pcjr, tandy).\n"
+	        "               types (e.g., cga, pcjr, tandy).\n"
+	        "\n"
 	        "  count,size:  Allocate `count` private stacks of `size` bytes each, e.g.\n"
 	        "               'stacks = 9,128'. Equivalent to the DOS 'STACKS=count,size'\n"
 	        "               setting; 'count' must be 8-64, 'size' must be 32-512.\n"
+	        "\n"
 	        "  0,0:         Disable; use the interrupted program's stack.");
 
 	pstring = section.AddString("pcjr_memory_config", OnlyAtStart, "expanded");
