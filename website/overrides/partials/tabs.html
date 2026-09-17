@@ -3,9 +3,9 @@
   <div class="md-grid">
     <ul class="md-tabs__list">
       {% for nav_item in nav.items %}
-        {% if config.extra.offline_mode and nav_item.title == "Releases" %}
+        {% if config.extra.offline_mode and nav_item.title == "Download" %}
           <li class="md-tabs__item">
-            <a href="http://www.dosbox-staging.org/releases/" class="md-tabs__link">Releases</a>
+            <a href="http://www.dosbox-staging.org/download/" class="md-tabs__link">Download</a>
           </li>
         {% else %}
           {{ item.render(nav_item) }}
