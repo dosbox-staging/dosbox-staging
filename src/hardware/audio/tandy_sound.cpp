@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2019-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2019-2026 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2002-2018 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -754,6 +754,18 @@ void TANDYSOUND_Destroy()
 
 		tandy_psg.reset();
 	}
+}
+
+// Called when the secondary DMA controller takes over the 0xc0 IO ports:
+// shut down the Tandy device and sync the `tandy` setting.
+void TANDYSOUND_Evict()
+{
+	if (!tandy_psg && !tandy_dac) {
+		return;
+	}
+
+	TANDYSOUND_Destroy();
+	set_section_property_value("speaker", "tandy", "off");
 }
 
 void TANDYSOUND_NotifySettingUpdated(SectionProp& section,
