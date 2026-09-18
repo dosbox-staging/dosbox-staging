@@ -62,8 +62,8 @@ the first time.
 
 ## macOS
 
-The latest version of DOSBox Staging requires **macOS 11 (Big Sur)** or later,
-and supports both Intel and Apple silicon Macs.
+The latest version of DOSBox Staging requires **macOS 12 (Monterey)** or
+later, and supports both Intel and Apple silicon Macs.
 
 Download the [latest version](../../../download/macos.md#latest-version) from
 our macOS releases page, then simply drag the DOSBox Staging icon into your
