@@ -819,6 +819,13 @@ public:
 
 		LOG_MSG("MPU-401: Shutting down");
 
+		// Remove queued events; MPU401_Event re-arms itself, so a
+		// leftover event would keep firing against the stale 'mpu'
+		// state after the device is gone.
+		PIC_RemoveEvents(MPU401_Event);
+		PIC_RemoveEvents(MPU401_EOIHandler);
+		PIC_RemoveEvents(MPU401_ResetDone);
+
 		if (mpu.is_intelligent) {
 			PIC_SetIRQMask(mpu.irq, true);
 		}
@@ -849,5 +856,8 @@ void MPU401_Destroy()
 
 void MPU401_Init()
 {
+	// Destroy the old instance first so its destructor cannot uninstall
+	// the IO port handlers the new instance has just installed
+	mpu401.reset();
 	mpu401 = std::make_unique<MPU401>(get_midi_section());
 }
