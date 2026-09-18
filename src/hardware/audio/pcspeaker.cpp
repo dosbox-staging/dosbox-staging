@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2022-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2022-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 // NOTE: a lot of this code assumes that the callback is called every emulated
@@ -114,16 +114,17 @@ void PCSPEAKER_Init(SectionProp& section)
 {
 	const std::string pcspeaker_pref = section.GetString("pcspeaker");
 
-	if (has_false(pcspeaker_pref)) {
-		return;
-
-	} else if (pcspeaker_pref == "discrete") {
+	if (pcspeaker_pref == "discrete") {
 		MIXER_LockMixerThread();
 		pc_speaker = std::make_unique<PcSpeakerDiscrete>();
 
 	} else if (pcspeaker_pref == "impulse") {
 		MIXER_LockMixerThread();
 		pc_speaker = std::make_unique<PcSpeakerImpulse>();
+
+	} else {
+		assert(has_false(pcspeaker_pref));
+		return;
 	}
 
 	set_filter(section);
