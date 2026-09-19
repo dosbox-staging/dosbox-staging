@@ -345,8 +345,8 @@ public:
 		float fadeout_decrement_per_ms = {};
 		int fadeout_or_sleep_after_ms  = {};
 
-		bool wants_fadeout = false;
-		bool had_signal    = false;
+		bool fadeout_enabled = false;
+		bool had_signal      = false;
 	};
 
 	Sleeper sleeper;

@@ -2017,9 +2017,9 @@ bool MixerChannel::Sleeper::ConfigureFadeOut(const std::string& prefs)
 
 	// Disable fade-out
 	if (has_false(prefs)) {
-		if (wants_fadeout) {
+		if (fadeout_enabled) {
 			LOG_MSG("%s: Fade-out disabled", channel.GetName().c_str());
-			wants_fadeout = false;
+			fadeout_enabled = false;
 		}
 		return true;
 	}
@@ -2027,7 +2027,7 @@ bool MixerChannel::Sleeper::ConfigureFadeOut(const std::string& prefs)
 	// Enable fade-out with defaults
 	if (has_true(prefs)) {
 		set_wait_and_fade(DefaultWaitMs, DefaultWaitMs);
-		wants_fadeout = true;
+		fadeout_enabled = true;
 		return true;
 	}
 
@@ -2039,6 +2039,7 @@ bool MixerChannel::Sleeper::ConfigureFadeOut(const std::string& prefs)
 	if (auto prefs_vec = split(prefs); prefs_vec.size() == 2) {
 		const auto wait_ms = parse_int(prefs_vec[0]);
 		const auto fade_ms = parse_int(prefs_vec[1]);
+
 		if (wait_ms && fade_ms) {
 			const auto wait_is_valid = (*wait_ms >= MinWaitMs &&
 			                            *wait_ms <= MaxWaitMs);
@@ -2048,11 +2049,12 @@ bool MixerChannel::Sleeper::ConfigureFadeOut(const std::string& prefs)
 
 			if (wait_is_valid && fade_is_valid) {
 				set_wait_and_fade(*wait_ms, *fade_ms);
-				wants_fadeout = true;
+				fadeout_enabled = true;
 				return true;
 			}
 		}
 	}
+
 	// Otherwise inform the user and disable the fade
 	NOTIFY_DisplayWarning(Notification::Source::Console,
 	                      channel.GetName(),
@@ -2063,7 +2065,7 @@ bool MixerChannel::Sleeper::ConfigureFadeOut(const std::string& prefs)
 	                      MinFadeMs,
 	                      MaxFadeMs);
 
-	wants_fadeout = false;
+	fadeout_enabled = false;
 	return false;
 }
 
@@ -2095,7 +2097,7 @@ MixerChannel::Sleeper::Sleeper(MixerChannel& c, const int sleep_after_ms)
 // Either fades the frame or checks if the channel had any signal output.
 AudioFrame MixerChannel::Sleeper::MaybeFadeOrListen(const AudioFrame& frame)
 {
-	if (wants_fadeout) {
+	if (fadeout_enabled) {
 		// When fading, we actively drive down the channel level
 		return frame * fadeout_level;
 	}
@@ -2122,7 +2124,8 @@ void MixerChannel::Sleeper::MaybeSleep()
 	if (awake_for_ms < fadeout_or_sleep_after_ms) {
 		return;
 	}
-	if (wants_fadeout) {
+
+	if (fadeout_enabled) {
 		// The channel is still fading out.. try to sleep later
 		if (fadeout_level > 0.0f) {
 			DecrementFadeLevel(awake_for_ms);
@@ -2133,6 +2136,7 @@ void MixerChannel::Sleeper::MaybeSleep()
 		WakeUp();
 		return;
 	}
+
 	if (channel.is_enabled) {
 		channel.Enable(false);
 		// LOG_INFO("MIXER: %s fell asleep", channel.name.c_str());
