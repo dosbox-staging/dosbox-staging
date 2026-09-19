@@ -635,10 +635,22 @@ static void tandy_dac_destroy([[maybe_unused]] Section* section)
 	}
 }
 
+static void sync_tandy_config_to_state()
+{
+	auto value = "off";
+
+	if (tandy_psg && tandy_dac) {
+		value = "on";
+	} else if (tandy_psg) {
+		value = "psg";
+	}
+	set_section_property_value("speaker", "tandy", value);
+}
+
 static void tandy_dac_evict(Section* section)
 {
 	tandy_dac_destroy(section);
-	set_section_property_value("speaker", "tandy", "off");
+	sync_tandy_config_to_state();
 }
 
 void TANDYSOUND_PicCallback()
@@ -769,7 +781,7 @@ void TANDYSOUND_Evict()
 	}
 
 	TANDYSOUND_Destroy();
-	set_section_property_value("speaker", "tandy", "off");
+	sync_tandy_config_to_state();
 }
 
 void TANDYSOUND_NotifySettingUpdated(SectionProp& section,
