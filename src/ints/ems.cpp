@@ -2216,6 +2216,8 @@ public:
 		// Allocate OS-dedicated handle (EMS handle zero, 384kb)
 		EMM_AllocateSystemHandle(24);
 
+		LOG_MSG("EMS: Initialised");
+
 		if (ems_type == 3) {
 			// emm386-bug that disables dma wrapping
 			DMA_SetWrapping(0xffffffff);
@@ -2299,6 +2301,8 @@ public:
 		if (ems_type <= 0) {
 			return;
 		}
+
+		LOG_MSG("EMS: Shutting down");
 
 		// Undo BIOS clearing
 		BIOS_ZeroExtendedSize(false);
