@@ -5,3 +5,10 @@ set(VCPKG_LIBRARY_LINKAGE static)
 set(VCPKG_CMAKE_SYSTEM_NAME Darwin)
 set(VCPKG_OSX_ARCHITECTURES arm64)
 set(VCPKG_OSX_DEPLOYMENT_TARGET 12.0)
+
+# SDL_SetWindowKeyboardGrab() only works on macOS if SDL_MAC_NO_SANDBOX
+# is defined
+if(PORT STREQUAL "sdl3")
+    set(VCPKG_C_FLAGS   "-DSDL_MAC_NO_SANDBOX")
+    set(VCPKG_CXX_FLAGS "-DSDL_MAC_NO_SANDBOX")
+endif()
