@@ -1295,9 +1295,9 @@ void MixerChannel::AddSilence()
 	last_samples_were_silence = true;
 }
 
-static void log_filter_settings(const std::string& channel_name,
-                                const std::string& filter_name, const int order,
-                                const int cutoff_freq_hz)
+static void log_enabled_filter_state(const std::string& channel_name,
+                                     const std::string& filter_name,
+                                     const int order, const int cutoff_freq_hz)
 {
 	assert(order > 0);
 	assert(cutoff_freq_hz > 0);
@@ -1311,38 +1311,46 @@ static void log_filter_settings(const std::string& channel_name,
 	        cutoff_freq_hz);
 }
 
-void MixerChannel::SetHighPassFilter(const FilterState state)
+void MixerChannel::SetHighPassFilter(const FilterState new_state)
 {
 	std::lock_guard lock(mutex);
 
-	filters.highpass.state = state;
-
-	if (filters.highpass.state == FilterState::On) {
+	if (new_state == FilterState::On) {
 		assert(filters.highpass.order > 0);
 		assert(filters.highpass.cutoff_freq_hz > 0);
 
-		log_filter_settings(name,
-		                    "High-pass",
-		                    filters.highpass.order,
-		                    filters.highpass.cutoff_freq_hz);
+		log_enabled_filter_state(name,
+		                         "High-pass",
+		                         filters.highpass.order,
+		                         filters.highpass.cutoff_freq_hz);
+	} else {
+		if (filters.highpass.state == FilterState::On) {
+			LOG_MSG("%s: High-pass filter disabled", name.c_str());
+		}
 	}
+
+	filters.highpass.state = new_state;
 }
 
-void MixerChannel::SetLowPassFilter(const FilterState state)
+void MixerChannel::SetLowPassFilter(const FilterState new_state)
 {
 	std::lock_guard lock(mutex);
 
-	filters.lowpass.state = state;
-
-	if (filters.lowpass.state == FilterState::On) {
+	if (new_state == FilterState::On) {
 		assert(filters.lowpass.order > 0);
 		assert(filters.lowpass.cutoff_freq_hz > 0);
 
-		log_filter_settings(name,
-		                    "Low-pass",
-		                    filters.lowpass.order,
-		                    filters.lowpass.cutoff_freq_hz);
+		log_enabled_filter_state(name,
+		                         "Low-pass",
+		                         filters.lowpass.order,
+		                         filters.lowpass.cutoff_freq_hz);
+	} else {
+		if (filters.lowpass.state == FilterState::On) {
+			LOG_MSG("%s: Low-pass filter disabled", name.c_str());
+		}
 	}
+
+	filters.lowpass.state = new_state;
 }
 
 void MixerChannel::ConfigureNoiseGate(const float threshold_db,

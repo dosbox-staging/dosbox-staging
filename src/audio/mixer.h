@@ -254,8 +254,8 @@ public:
 	                        const float release_time_ms);
 	void EnableNoiseGate(const bool enabled);
 
-	void SetHighPassFilter(const FilterState state);
-	void SetLowPassFilter(const FilterState state);
+	void SetHighPassFilter(const FilterState new_state);
+	void SetLowPassFilter(const FilterState new_state);
 	FilterState GetHighPassFilterState();
 	FilterState GetLowPassFilterState();
 	void ConfigureHighPassFilter(const int order, const int cutoff_freq_hz);
