@@ -9,6 +9,11 @@ The `keyboard_capture` setting lets you override this, so DOSBox gets first
 dibs on those keys. This is especially useful in fullscreen mode or when a
 game relies on key combinations that collide with OS shortcuts.
 
+The keyboard follows the mouse: system shortcuts are only captured while the
+[mouse is captured](mouse.md#mouse_capture). Releasing the mouse (++ctrl+f10++
+on Windows/Linux, ++cmd+f10++ on macOS) hands the shortcuts back to your
+operating system, so there's a single way out.
+
 All key bindings can be customised through the [key mapper](keymapper.md)
 (++ctrl+f1++ on Windows/Linux, ++cmd+f1++ on macOS). See
 [Keyboard shortcuts](../appendices/shortcuts.md) for the full list of
@@ -44,8 +49,9 @@ section.
 ##### keyboard_capture
 
 :   Capture system keyboard shortcuts. When enabled, most system shortcuts
-    are captured and sent to DOSBox Staging instead of being intercepted by
-    the host OS. Examples of captured shortcuts:
+    such as ++alt+tab++ are sent to DOSBox Staging instead of the host OS
+    while the mouse is captured. Releasing the mouse gives the shortcuts back
+    to the host OS. Examples of captured shortcuts:
 
     - ++alt+tab++ (task switching on all platforms)
     - ++ctrl+esc++ (Start menu on Windows)
