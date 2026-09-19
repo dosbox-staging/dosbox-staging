@@ -3,6 +3,7 @@
 
 #include "dos/mount.h"
 #include "misc/support.h"
+#include "utils/string_utils.h"
 
 #include <optional>
 #include <string>
@@ -21,19 +22,19 @@ std::string to_string(const MountType& mount_type)
 
 std::optional<MountType> parse_mount_type(const std::string& s)
 {
-	if (s == "floppy" || s == "fdd") {
+	if (iequals(s, "floppy") || iequals(s, "fdd")) {
 		return MountType::FloppyImage;
 
-	} else if (s == "hdd") {
+	} else if (iequals(s, "hdd")) {
 		return MountType::HardDiskImage;
 
-	} else if (s == "iso" || s == "cdrom") {
+	} else if (iequals(s, "iso") || iequals(s, "cdrom")) {
 		return MountType::CdRomImage;
 
-	} else if (s == "dir") {
+	} else if (iequals(s, "dir")) {
 		return MountType::Directory;
 
-	} else if (s == "overlay") {
+	} else if (iequals(s, "overlay")) {
 		return MountType::Overlay;
 
 	} else {
