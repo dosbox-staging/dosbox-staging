@@ -124,10 +124,14 @@ TandyDAC::TandyDAC(const ConfigProfile config_profile, const std::string& filter
 	MIXER_LockMixerThread();
 
 	// Run the audio channel at the mixer's native rate
-	constexpr bool Stereo = false;
-	constexpr bool SignedData = false;
+	constexpr bool Stereo      = false;
+	constexpr bool SignedData  = false;
 	constexpr bool NativeOrder = true;
-	const auto callback = std::bind(MIXER_PullFromQueueCallback<TandyDAC, uint8_t, Stereo, SignedData, NativeOrder>, _1, this);
+
+	const auto callback = std::bind(
+	        MIXER_PullFromQueueCallback<TandyDAC, uint8_t, Stereo, SignedData, NativeOrder>,
+	        _1,
+	        this);
 
 	channel = MIXER_AddChannel(callback,
 	                           UseMixerRate,
@@ -386,8 +390,7 @@ void TandyDAC::PicCallback(const int requested)
 		return;
 	}
 
-	const bool should_read = ((regs.mode & 0x0c) == 0x0c) &&
-	                         !dma.is_done;
+	const bool should_read = ((regs.mode & 0x0c) == 0x0c) && !dma.is_done;
 
 	const auto buf       = dma.fifo.data();
 	const auto buf_size  = check_cast<int>(dma.fifo.size());
@@ -409,7 +412,8 @@ void TandyDAC::PicCallback(const int requested)
 		memset(buf + actual, 128, bytes_to_read - actual);
 
 		// Always write the requested quantity regardless of read status
-		std::vector<uint8_t> temp(dma.fifo.begin(), dma.fifo.begin() + bytes_to_read);
+		std::vector<uint8_t> temp(dma.fifo.begin(),
+		                          dma.fifo.begin() + bytes_to_read);
 		output_queue.NonblockingBulkEnqueue(temp, bytes_to_read);
 		bytes_remaining -= bytes_to_read;
 	}
