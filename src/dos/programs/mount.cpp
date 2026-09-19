@@ -556,13 +556,13 @@ bool MOUNT::HandleUnmount()
 
 static std::optional<MountFileSystemType> parse_file_system_type(const std::string s)
 {
-	if (s == "fat") {
+	if (iequals(s, "fat")) {
 		return MountFileSystemType::Fat16;
 
-	} else if (s == "iso") {
+	} else if (iequals(s, "iso")) {
 		return MountFileSystemType::Iso;
 
-	} else if (s == "none") {
+	} else if (iequals(s, "none")) {
 		return MountFileSystemType::None;
 
 	} else {
