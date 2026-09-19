@@ -6,13 +6,22 @@
 #include <gtest/gtest.h>
 
 #include <algorithm>
+#include <array>
+#include <cstdint>
+#include <cstdlib>
 #include <filesystem>
 #include <fstream>
 #include <optional>
 #include <string>
+#include <string_view>
 #include <vector>
 
+#include "dos/drives.h"
 #include "dosbox_test_fixture.h"
+#include "hardware/ide.h"
+#include "ints/bios_disk.h"
+#include "misc/cross.h"
+#include "utils/env_utils.h"
 
 namespace {
 
@@ -98,9 +107,11 @@ protected:
 		return names;
 	}
 
-	static std::optional<MountParameters> Mount(const std::string& command_params)
+	static std::optional<MountParameters> Mount(
+	        const std::string& command_params,
+	        const std::string& program_path = "Z:\\MOUNT.COM")
 	{
-		auto cmd     = new CommandLine("Z:\\MOUNT.COM", command_params);
+		auto cmd     = new CommandLine(program_path, command_params);
 		auto program = new MOUNT();
 		return program->ProcessArguments(cmd);
 	}
@@ -1621,6 +1632,698 @@ TEST_F(MountTest, DuplicateOptionsWithMultipleImages)
 
 	EXPECT_EQ(result->type, MountType::FloppyImage);
 	EXPECT_EQ(result->label, "ONE");
+}
+
+// ---------------------------------------------------------------------
+// Real-world command lines mounting actual disk images
+//
+// These tests build minimal but valid disk images (boot sectors, empty FATs
+// and root directories, ISO 9660 volume descriptors), so they can check the
+// mounted drives themselves, not just the parsed parameters. Most of each
+// image is left sparse to keep the tests fast.
+// ---------------------------------------------------------------------
+
+constexpr int SectorSize    = 512;
+constexpr int IsoSectorSize = 2048;
+
+// 20 MB hard disk image, the smallest MAKEIMG preset
+constexpr int HddCylinders       = 40;
+constexpr int HddHeads           = 16;
+constexpr int HddSectorsPerTrack = 63;
+constexpr int HddTotalSectors    = HddCylinders * HddHeads * HddSectorsPerTrack;
+
+const std::string HddSizeOption = "-size 512,63,16,40";
+const std::string HddChsOption  = "-chs 40,16,63";
+
+using Bytes = std::vector<uint8_t>;
+
+void put_le16(Bytes& bytes, const size_t pos, const int value)
+{
+	bytes.at(pos)     = static_cast<uint8_t>(value & 0xff);
+	bytes.at(pos + 1) = static_cast<uint8_t>((value >> 8) & 0xff);
+}
+
+void put_le32(Bytes& bytes, const size_t pos, const int value)
+{
+	put_le16(bytes, pos, value & 0xffff);
+	put_le16(bytes, pos + 2, (value >> 16) & 0xffff);
+}
+
+void put_be16(Bytes& bytes, const size_t pos, const int value)
+{
+	bytes.at(pos)     = static_cast<uint8_t>((value >> 8) & 0xff);
+	bytes.at(pos + 1) = static_cast<uint8_t>(value & 0xff);
+}
+
+void put_be32(Bytes& bytes, const size_t pos, const int value)
+{
+	put_be16(bytes, pos, (value >> 16) & 0xffff);
+	put_be16(bytes, pos + 2, value & 0xffff);
+}
+
+// ISO 9660 stores numbers in both little and big-endian byte order
+void put_both16(Bytes& bytes, const size_t pos, const int value)
+{
+	put_le16(bytes, pos, value);
+	put_be16(bytes, pos + 2, value);
+}
+
+void put_both32(Bytes& bytes, const size_t pos, const int value)
+{
+	put_le32(bytes, pos, value);
+	put_be32(bytes, pos + 4, value);
+}
+
+// Writes the text into a fixed-length field padded with spaces
+void put_text(Bytes& bytes, const size_t pos, const std::string_view text,
+              const size_t field_length)
+{
+	for (size_t i = 0; i < field_length; ++i) {
+		bytes.at(pos + i) = (i < text.size())
+		                          ? static_cast<uint8_t>(text[i])
+		                          : ' ';
+	}
+}
+
+void create_blank_file(const std_fs::path& path, const uintmax_t size_bytes)
+{
+	std_fs::create_directories(path.parent_path());
+	std::ofstream(path, std::ios::binary | std::ios::trunc).close();
+	std_fs::resize_file(path, size_bytes);
+}
+
+void write_bytes(const std_fs::path& path, const int64_t offset, const Bytes& bytes)
+{
+	std::fstream file(path, std::ios::binary | std::ios::in | std::ios::out);
+	file.seekp(offset);
+	file.write(reinterpret_cast<const char*>(bytes.data()),
+	           static_cast<std::streamsize>(bytes.size()));
+}
+
+Bytes read_bytes(const std_fs::path& path, const int64_t offset, const size_t num_bytes)
+{
+	Bytes bytes(num_bytes, 0);
+	std::ifstream file(path, std::ios::binary);
+	file.seekg(offset);
+	file.read(reinterpret_cast<char*>(bytes.data()),
+	          static_cast<std::streamsize>(bytes.size()));
+	return bytes;
+}
+
+struct FatVolume {
+	int first_sector         = 0;
+	int total_sectors        = 0;
+	int sectors_per_cluster  = 0;
+	int root_entries         = 0;
+	int sectors_per_fat      = 0;
+	int sectors_per_track    = 0;
+	int heads                = 0;
+	uint8_t media_descriptor = 0;
+	bool is_fat16            = false;
+};
+
+// Writes an empty FAT volume containing only a volume label
+void write_fat_volume(const std_fs::path& path, const FatVolume& volume,
+                      const std::string_view label)
+{
+	Bytes boot_sector(SectorSize, 0);
+
+	// Short jump over the BIOS parameter block
+	boot_sector[0] = 0xeb;
+	boot_sector[1] = 0x3c;
+	boot_sector[2] = 0x90;
+
+	put_text(boot_sector, 3, "MSDOS5.0", 8);
+	put_le16(boot_sector, 11, SectorSize);
+	boot_sector[13] = static_cast<uint8_t>(volume.sectors_per_cluster);
+	put_le16(boot_sector, 14, 1); // reserved sectors
+	boot_sector[16] = 2;          // number of FATs
+	put_le16(boot_sector, 17, volume.root_entries);
+	put_le16(boot_sector, 19, volume.total_sectors);
+	boot_sector[21] = volume.media_descriptor;
+	put_le16(boot_sector, 22, volume.sectors_per_fat);
+	put_le16(boot_sector, 24, volume.sectors_per_track);
+	put_le16(boot_sector, 26, volume.heads);
+	put_le32(boot_sector, 28, volume.first_sector); // hidden sectors
+	boot_sector[38] = 0x29; // extended boot signature
+	put_text(boot_sector, 43, label, 11);
+	put_text(boot_sector, 54, volume.is_fat16 ? "FAT16" : "FAT12", 8);
+	boot_sector[510] = 0x55;
+	boot_sector[511] = 0xaa;
+
+	write_bytes(path, int64_t{volume.first_sector} * SectorSize, boot_sector);
+
+	// The first two FAT entries hold the media descriptor and an
+	// end-of-chain marker
+	Bytes fat_start = {volume.media_descriptor, 0xff, 0xff};
+	if (volume.is_fat16) {
+		fat_start.push_back(0xff);
+	}
+
+	const auto first_fat_sector = volume.first_sector + 1;
+	for (auto i = 0; i < 2; ++i) {
+		const auto sector = first_fat_sector + i * volume.sectors_per_fat;
+		write_bytes(path, int64_t{sector} * SectorSize, fat_start);
+	}
+
+	Bytes label_entry(32, 0);
+	put_text(label_entry, 0, label, 11);
+	label_entry[11] = 0x08; // volume label attribute
+
+	const auto root_dir_sector = first_fat_sector + 2 * volume.sectors_per_fat;
+	write_bytes(path, int64_t{root_dir_sector} * SectorSize, label_entry);
+}
+
+// 1.44 MB FAT12 floppy image
+void write_floppy_image(const std_fs::path& path, const std::string_view label)
+{
+	constexpr auto TotalSectors = 2880;
+
+	create_blank_file(path, TotalSectors * SectorSize);
+
+	write_fat_volume(path,
+	                 {.first_sector        = 0,
+	                  .total_sectors       = TotalSectors,
+	                  .sectors_per_cluster = 1,
+	                  .root_entries        = 224,
+	                  .sectors_per_fat     = 9,
+	                  .sectors_per_track   = 18,
+	                  .heads               = 2,
+	                  .media_descriptor    = 0xf0,
+	                  .is_fat16            = false},
+	                 label);
+}
+
+// Hard disk image with a bootable MBR and a single FAT16 partition
+void write_hdd_image(const std_fs::path& path, const std::string_view label)
+{
+	create_blank_file(path, int64_t{HddTotalSectors} * SectorSize);
+
+	const auto first_sector      = HddSectorsPerTrack;
+	const auto partition_sectors = HddTotalSectors - first_sector;
+
+	constexpr auto PartitionEntry = 446;
+
+	Bytes mbr(SectorSize, 0);
+	mbr[PartitionEntry]     = 0x80; // active partition
+	mbr[PartitionEntry + 4] = 0x04; // FAT16 smaller than 32 MB
+	put_le32(mbr, PartitionEntry + 8, first_sector);
+	put_le32(mbr, PartitionEntry + 12, partition_sectors);
+	mbr[510] = 0x55;
+	mbr[511] = 0xaa;
+
+	write_bytes(path, 0, mbr);
+
+	write_fat_volume(path,
+	                 {.first_sector        = first_sector,
+	                  .total_sectors       = partition_sectors,
+	                  .sectors_per_cluster = 4,
+	                  .root_entries        = 512,
+	                  .sectors_per_fat     = 40,
+	                  .sectors_per_track   = HddSectorsPerTrack,
+	                  .heads               = HddHeads,
+	                  .media_descriptor    = 0xf8,
+	                  .is_fat16            = true},
+	                 label);
+}
+
+Bytes make_iso_directory_record(const int extent_sector, const uint8_t identifier)
+{
+	Bytes record(34, 0);
+	record[0] = 34; // record length
+	put_both32(record, 2, extent_sector);
+	put_both32(record, 10, IsoSectorSize); // data length
+	record[25] = 0x02;                     // directory flag
+	put_both16(record, 28, 1);             // volume sequence number
+	record[32] = 1;                        // identifier length
+	record[33] = identifier;
+	return record;
+}
+
+// ISO 9660 image with an empty root directory
+void write_iso_image(const std_fs::path& path, const std::string_view volume_id)
+{
+	constexpr auto PrimaryDescriptorSector = 16;
+	constexpr auto TerminatorSector        = 17;
+	constexpr auto RootDirectorySector     = 18;
+	constexpr auto TotalSectors            = 19;
+
+	create_blank_file(path, TotalSectors * IsoSectorSize);
+
+	const auto root_record = make_iso_directory_record(RootDirectorySector, 0x00);
+
+	Bytes primary_descriptor(IsoSectorSize, 0);
+	primary_descriptor[0] = 1;
+	put_text(primary_descriptor, 1, "CD001", 5);
+	primary_descriptor[6] = 1;
+	put_text(primary_descriptor, 8, "", 32); // system identifier
+	put_text(primary_descriptor, 40, volume_id, 32);
+	put_both32(primary_descriptor, 80, TotalSectors);
+	put_both16(primary_descriptor, 120, 1); // volume set size
+	put_both16(primary_descriptor, 124, 1); // volume sequence number
+	put_both16(primary_descriptor, 128, IsoSectorSize);
+	std::ranges::copy(root_record, primary_descriptor.begin() + 156);
+	primary_descriptor[881] = 1; // file structure version
+
+	write_bytes(path, PrimaryDescriptorSector * IsoSectorSize, primary_descriptor);
+
+	Bytes terminator(IsoSectorSize, 0);
+	terminator[0] = 255;
+	put_text(terminator, 1, "CD001", 5);
+	terminator[6] = 1;
+
+	write_bytes(path, TerminatorSector * IsoSectorSize, terminator);
+
+	// The root directory only contains the "." and ".." entries
+	auto root_directory = root_record;
+	const auto parent_record = make_iso_directory_record(RootDirectorySector,
+	                                                     0x01);
+	root_directory.insert(root_directory.end(),
+	                      parent_record.begin(),
+	                      parent_record.end());
+
+	write_bytes(path, RootDirectorySector * IsoSectorSize, root_directory);
+}
+
+// CUE sheet referencing a single data track stored in a BIN file next to it
+void write_cue_image(const std_fs::path& cue_path, const std::string& bin_filename,
+                     const std::string_view volume_id)
+{
+	write_iso_image(cue_path.parent_path() / bin_filename, volume_id);
+
+	std::ofstream cue(cue_path, std::ios::trunc);
+	cue << "FILE \"" << bin_filename << "\" BINARY\n"
+	    << "  TRACK 01 MODE1/2048\n"
+	    << "    INDEX 01 00:00:00\n";
+}
+
+class MountDiskImageTest : public MountTest {
+protected:
+	void SetUp() override
+	{
+		MountTest::SetUp();
+
+		// The drive manager outlives the DOS module, so drop any drives
+		// left behind by other tests to keep the tests independent
+		UnmountAllDrives();
+	}
+
+	void TearDown() override
+	{
+		UnmountAllDrives();
+
+		if (original_home) {
+			SetEnvVar("HOME", *original_home);
+		}
+
+		MountTest::TearDown();
+	}
+
+	static void UnmountAllDrives()
+	{
+		for (auto drive = 0; drive < DOS_DRIVES; ++drive) {
+			if (!DriveManager::GetFilesystemImages(drive).empty()) {
+				DriveManager::UnmountDrive(drive);
+			}
+		}
+	}
+
+	// Points the home directory (~) to the test files directory
+	void SetHomeToTestFiles()
+	{
+		original_home = get_env_var("HOME");
+		SetEnvVar("HOME", test_file_path.string());
+	}
+
+	// Returns `~/<name>` using the host's path separator
+	static std::string HomePath(const std::string& name)
+	{
+		return std::string("~") + CROSS_FILESPLIT + name;
+	}
+
+	static std::shared_ptr<DOS_Drive> DriveAt(const char drive_letter)
+	{
+		return Drives.at(drive_index(drive_letter));
+	}
+
+	static std::shared_ptr<imageDisk> BiosDiskAt(const char drive_letter)
+	{
+		return imageDiskList.at(drive_index(drive_letter));
+	}
+
+	static void ExpectHddGeometry(imageDisk& disk)
+	{
+		uint32_t heads       = 0;
+		uint32_t cylinders   = 0;
+		uint32_t sectors     = 0;
+		uint32_t sector_size = 0;
+		disk.Get_Geometry(&heads, &cylinders, &sectors, &sector_size);
+
+		EXPECT_EQ(heads, HddHeads);
+		EXPECT_EQ(cylinders, HddCylinders);
+		EXPECT_EQ(sectors, HddSectorsPerTrack);
+		EXPECT_EQ(sector_size, SectorSize);
+	}
+
+	// Checks what the BOOT command relies on: a BIOS hard disk for the
+	// drive with a bootable first sector
+	static void ExpectBootableHdd(const char drive_letter)
+	{
+		const auto disk = BiosDiskAt(drive_letter);
+		ASSERT_TRUE(disk);
+
+		EXPECT_TRUE(disk->hardDrive);
+		ExpectHddGeometry(*disk);
+
+		std::array<uint8_t, SectorSize> first_sector = {};
+		EXPECT_EQ(disk->Read_Sector(0, 0, 1, first_sector.data()), 0);
+		EXPECT_EQ(first_sector[510], 0x55);
+		EXPECT_EQ(first_sector[511], 0xaa);
+	}
+
+	static void ExpectFatHddMountedAsDriveC(const std::optional<MountParameters>& result)
+	{
+		ASSERT_TRUE(result.has_value());
+
+		EXPECT_EQ(result->type, MountType::HardDiskImage);
+		EXPECT_EQ(result->fstype, MountFileSystemType::Fat16);
+		EXPECT_FALSE(result->roflag);
+
+		const auto drive = DriveAt('C');
+		ASSERT_TRUE(drive);
+		EXPECT_EQ(drive->GetType(), DosDriveType::Fat);
+		EXPECT_FALSE(drive->IsReadOnly());
+		EXPECT_STREQ(drive->GetLabel(), "HDDLABEL");
+
+		ExpectBootableHdd('C');
+	}
+
+	static void SetEnvVar(const char* name, const std::string& value)
+	{
+#if defined(WIN32)
+		_putenv_s(name, value.c_str());
+#else
+		setenv(name, value.c_str(), 1);
+#endif
+	}
+
+	std::optional<std::string> original_home = {};
+};
+
+// Bootable images
+// ---------------------------------------------------------------------
+
+TEST_F(MountDiskImageTest, BootableHddImageOnDriveNumberCanBeBootedAsDriveC)
+{
+	// mount 2 hd20.img -fs none -t hdd -size 512,63,16,40 -ro
+	// boot c:
+	write_hdd_image(P("hd20.img"), "HDDLABEL");
+
+	// IMGMOUNT is a deprecated alias that must behave the same as MOUNT
+	for (const auto* program : {"Z:\\MOUNT.COM", "Z:\\IMGMOUNT.COM"}) {
+		SCOPED_TRACE(program);
+
+		const auto result = Mount("2 " + P("hd20.img") + " -fs none -t hdd " +
+		                                  HddSizeOption + " -ro",
+		                          program);
+
+		ASSERT_TRUE(result.has_value());
+
+		EXPECT_EQ(result->drive, '2');
+		EXPECT_TRUE(result->is_drive_number);
+		EXPECT_EQ(result->type, MountType::HardDiskImage);
+		EXPECT_EQ(result->fstype, MountFileSystemType::None);
+		EXPECT_TRUE(result->roflag);
+
+		// Raw mounts only attach a BIOS disk, not a DOS drive
+		EXPECT_FALSE(DriveAt('C'));
+
+		ExpectBootableHdd('C');
+
+		// Writes to the read-only image must fail and leave it intact
+		const auto disk = BiosDiskAt('C');
+		ASSERT_TRUE(disk);
+
+		std::array<uint8_t, SectorSize> zeroes = {};
+		EXPECT_NE(disk->Write_AbsoluteSector(0, zeroes.data()), 0);
+
+		const auto mbr_signature = read_bytes(P("hd20.img"), 510, 2);
+		EXPECT_EQ(mbr_signature, (Bytes{0x55, 0xaa}));
+	}
+}
+
+// Directory mounts
+// ---------------------------------------------------------------------
+
+TEST_F(MountDiskImageTest, DirectoryMountedAsDriveC)
+{
+	// mount c /home/user/DOS
+	std_fs::create_directories(test_file_path / "DOS");
+
+	const auto result = Mount("C " + P("DOS"));
+	ASSERT_TRUE(result.has_value());
+
+	const auto drive = DriveAt('C');
+	ASSERT_TRUE(drive);
+
+	EXPECT_EQ(drive->GetType(), DosDriveType::Local);
+	EXPECT_EQ(drive->GetMediaByte(), MediaId::HardDisk);
+	EXPECT_FALSE(drive->IsReadOnly());
+	EXPECT_STREQ(drive->GetLabel(), "C_DRIVE");
+}
+
+TEST_F(MountDiskImageTest, DirectoryInHomeMountedAsDriveC)
+{
+	// mount c ~/DOS
+	std_fs::create_directories(test_file_path / "DOS");
+	SetHomeToTestFiles();
+
+	const auto result = Mount("C " + HomePath("DOS"));
+	ASSERT_TRUE(result.has_value());
+
+	ASSERT_EQ(result->paths.size(), 1);
+	EXPECT_TRUE(std_fs::equivalent(result->paths[0], test_file_path / "DOS"));
+
+	const auto drive = std::dynamic_pointer_cast<localDrive>(DriveAt('C'));
+	ASSERT_TRUE(drive);
+	EXPECT_TRUE(std_fs::equivalent(drive->GetBasedir(), test_file_path / "DOS"));
+}
+
+TEST_F(MountDiskImageTest, DirectoryMountedAsFloppyDriveA)
+{
+	// mount a /home/user/floppydir
+	std_fs::create_directories(test_file_path / "floppydir");
+
+	const auto result = Mount("A " + P("floppydir"));
+	ASSERT_TRUE(result.has_value());
+
+	EXPECT_EQ(result->type, MountType::Directory);
+
+	const auto drive = DriveAt('A');
+	ASSERT_TRUE(drive);
+
+	EXPECT_EQ(drive->GetType(), DosDriveType::Local);
+	EXPECT_EQ(drive->GetMediaByte(), MediaId::Floppy1_44MB);
+	EXPECT_STREQ(drive->GetLabel(), "A_DRIVE");
+}
+
+TEST_F(MountDiskImageTest, DirectoryMountedAsFloppyDriveAWithFloppyType)
+{
+	// mount a /home/user/floppydir -t floppy
+	std_fs::create_directories(test_file_path / "floppydir");
+
+	const auto result = Mount("A " + P("floppydir") + " -t floppy");
+	ASSERT_TRUE(result.has_value());
+
+	// The floppy type is kept, but the directory itself is mounted (not
+	// an image)
+	EXPECT_EQ(result->type, MountType::FloppyImage);
+	EXPECT_FALSE(result->is_image_mode);
+
+	const auto drive = DriveAt('A');
+	ASSERT_TRUE(drive);
+
+	EXPECT_EQ(drive->GetType(), DosDriveType::Local);
+	EXPECT_EQ(drive->GetMediaByte(), MediaId::Floppy1_44MB);
+	EXPECT_STREQ(drive->GetLabel(), "A_FLOPPY");
+
+	// Directory mounts provide no BIOS disk, so they can't be booted
+	EXPECT_FALSE(BiosDiskAt('A'));
+}
+
+// Hard disk images
+// ---------------------------------------------------------------------
+
+TEST_F(MountDiskImageTest, HddImageWithSizeGeometryMountedAsDriveC)
+{
+	// mount c hd20.img -t hdd -size 512,63,16,40
+	write_hdd_image(P("hd20.img"), "HDDLABEL");
+
+	ExpectFatHddMountedAsDriveC(
+	        Mount("C " + P("hd20.img") + " -t hdd " + HddSizeOption));
+}
+
+TEST_F(MountDiskImageTest, HddImageWithChsGeometryMountedAsDriveC)
+{
+	// mount c hd20.img -t hdd -chs 40,16,63
+	write_hdd_image(P("hd20.img"), "HDDLABEL");
+
+	ExpectFatHddMountedAsDriveC(
+	        Mount("C " + P("hd20.img") + " -t hdd " + HddChsOption));
+}
+
+// CD-ROM images
+// ---------------------------------------------------------------------
+
+TEST_F(MountDiskImageTest, IsoImageAttachedToIdeController)
+{
+	// mount d cdrom.img -t iso -ide
+	write_iso_image(P("cdrom.img"), "MYCDROM");
+
+	const auto result = Mount("D " + P("cdrom.img") + " -t iso -ide");
+	ASSERT_TRUE(result.has_value());
+
+	EXPECT_EQ(result->type, MountType::CdRomImage);
+	EXPECT_EQ(result->fstype, MountFileSystemType::Iso);
+	EXPECT_TRUE(result->is_ide);
+	EXPECT_GE(result->ide_index, 0);
+
+	const auto drive = DriveAt('D');
+	ASSERT_TRUE(drive);
+	EXPECT_EQ(drive->GetType(), DosDriveType::Iso);
+	EXPECT_TRUE(drive->IsReadOnly());
+
+	// The CD-ROM must be attached to the IDE cable slot MOUNT picked
+	int8_t attached_index = -1;
+	bool attached_slave   = false;
+	IDE_CDROM_Detach_Ret(attached_index, attached_slave, drive_index('D'));
+
+	EXPECT_EQ(attached_index, result->ide_index);
+	EXPECT_EQ(attached_slave, result->is_second_cable_slot);
+}
+
+TEST_F(MountDiskImageTest, CueImageInCurrentDosDirectory)
+{
+	// cd TIECD
+	// mount e SWTIECD.CUE -t cdrom
+	write_cue_image(test_file_path / "TIECD" / "SWTIECD.CUE",
+	                "SWTIECD.BIN",
+	                "SWTIECD");
+
+	ASSERT_TRUE(Mount("C " + P("")).has_value());
+	ASSERT_TRUE(DOS_SetDrive(drive_index('C')));
+	ASSERT_TRUE(DOS_ChangeDir("TIECD"));
+
+	const auto result = Mount("E SWTIECD.CUE -t cdrom");
+	ASSERT_TRUE(result.has_value());
+
+	EXPECT_EQ(result->type, MountType::CdRomImage);
+
+	ASSERT_EQ(result->paths.size(), 1);
+	EXPECT_TRUE(std_fs::equivalent(result->paths[0],
+	                               test_file_path / "TIECD" / "SWTIECD.CUE"));
+
+	const auto drive = DriveAt('E');
+	ASSERT_TRUE(drive);
+	EXPECT_EQ(drive->GetType(), DosDriveType::Iso);
+}
+
+// Floppy images
+// ---------------------------------------------------------------------
+
+TEST_F(MountDiskImageTest, FloppyImageInHomeMountedAsDriveA)
+{
+	// mount a ~/DOS/disk01.img -t floppy
+	write_floppy_image(test_file_path / "DOS" / "disk01.img", "MYDISK");
+	SetHomeToTestFiles();
+
+	const auto result = Mount("A " + HomePath("DOS") + CROSS_FILESPLIT +
+	                          "disk01.img -t floppy");
+	ASSERT_TRUE(result.has_value());
+
+	EXPECT_EQ(result->type, MountType::FloppyImage);
+	EXPECT_EQ(FileNames(*result), (std::vector<std::string>{"disk01.img"}));
+
+	const auto drive = std::dynamic_pointer_cast<fatDrive>(DriveAt('A'));
+	ASSERT_TRUE(drive);
+	EXPECT_FALSE(drive->IsReadOnly());
+	EXPECT_EQ(drive->GetMediaByte(), MediaId::Floppy1_44MB);
+	EXPECT_STREQ(drive->GetLabel(), "MYDISK");
+
+	// The image is also available as the first BIOS floppy disk (for BOOT)
+	ASSERT_TRUE(BiosDiskAt('A'));
+	EXPECT_EQ(BiosDiskAt('A'), drive->loadedDisk);
+	EXPECT_FALSE(BiosDiskAt('A')->hardDrive);
+}
+
+TEST_F(MountDiskImageTest, FloppyImageInHomeMountedAsDriveAWithLabel)
+{
+	// mount a ~/DOS/disk01.img -t floppy -label TEST
+	write_floppy_image(test_file_path / "DOS" / "disk01.img", "MYDISK");
+	SetHomeToTestFiles();
+
+	const auto result = Mount("A " + HomePath("DOS") + CROSS_FILESPLIT +
+	                          "disk01.img -t floppy -label TEST");
+	ASSERT_TRUE(result.has_value());
+
+	EXPECT_EQ(result->label, "TEST");
+
+	const auto drive = DriveAt('A');
+	ASSERT_TRUE(drive);
+	EXPECT_EQ(drive->GetType(), DosDriveType::Fat);
+
+	// TODO -label is only applied to directory mounts; FAT images keep
+	// the volume label stored in the image
+	EXPECT_STREQ(drive->GetLabel(), "MYDISK");
+}
+
+TEST_F(MountDiskImageTest, FloppyImageRelativeToConfigFile)
+{
+	// mount a subdir/disk01.img -t floppy -pr
+	write_floppy_image(test_file_path / "subdir" / "disk01.img", "MYDISK");
+
+	control->config_files = {(test_file_path / "dosbox.conf").string()};
+
+	const auto result = Mount(std::string("A subdir") + CROSS_FILESPLIT +
+	                          "disk01.img -t floppy -pr");
+	ASSERT_TRUE(result.has_value());
+
+	ASSERT_EQ(result->paths.size(), 1);
+	EXPECT_TRUE(std_fs::equivalent(result->paths[0],
+	                               test_file_path / "subdir" / "disk01.img"));
+
+	const auto drive = DriveAt('A');
+	ASSERT_TRUE(drive);
+	EXPECT_EQ(drive->GetType(), DosDriveType::Fat);
+}
+
+// Overlays
+// ---------------------------------------------------------------------
+
+TEST_F(MountDiskImageTest, OverlayOnReadOnlyFloppyImageIsRefused)
+{
+	// mount a ~/DOS/disk01.img -t floppy -ro
+	// mount a ~/DOS/floppyoverlay -t overlay
+	write_floppy_image(test_file_path / "DOS" / "disk01.img", "MYDISK");
+	std_fs::create_directories(test_file_path / "DOS" / "floppyoverlay");
+	SetHomeToTestFiles();
+
+	const auto base = Mount("A " + HomePath("DOS") + CROSS_FILESPLIT +
+	                        "disk01.img -t floppy -ro");
+	ASSERT_TRUE(base.has_value());
+	EXPECT_TRUE(base->roflag);
+
+	const auto base_drive = DriveAt('A');
+	ASSERT_TRUE(base_drive);
+	EXPECT_EQ(base_drive->GetType(), DosDriveType::Fat);
+	EXPECT_TRUE(base_drive->IsReadOnly());
+
+	Mount("A " + HomePath("DOS") + CROSS_FILESPLIT + "floppyoverlay -t overlay");
+
+	// Overlays need a directory mount as their base, so the overlay is
+	// refused and the read-only floppy image stays mounted
+	EXPECT_EQ(DriveAt('A'), base_drive);
+	EXPECT_TRUE(DriveAt('A')->IsReadOnly());
 }
 
 } // namespace
