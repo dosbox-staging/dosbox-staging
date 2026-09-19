@@ -1171,6 +1171,12 @@ private:
 	static uint16_t dospage;
 	SectionProp& section;
 
+	// True only if this instance actually installed the IPX interface (i.e.
+	// the constructor did not take the disabled early-return). The destructor
+	// must tear down based on what this instance installed, not on the live
+	// 'ipx' setting, which may already reflect a pending runtime change.
+	bool installed = false;
+
 public:
 	IPX(SectionProp& _section) : section(_section)
 	{
@@ -1235,12 +1241,14 @@ public:
 		IO_WriteB(0xa1,IO_ReadB(0xa1)&(~8));			// enable IRQ11
 
 		PROGRAMS_MakeFile("IPXNET.COM",ProgramCreate<IPXNET>);
+
+		installed = true;
 	}
 
 	~IPX()
 	{
 		PIC_RemoveEvents(IPX_AES_EventHandler);
-		if (!section.GetBool("ipx")) {
+		if (!installed) {
 			return;
 		}
 
@@ -1280,6 +1288,11 @@ void IPX_Destroy()
 void notify_ipx_setting_updated(SectionProp& section,
                                 [[maybe_unused]] const std::string& prop_name)
 {
+	// Destroy the old instance before constructing the replacement.
+	// Assignment alone would construct the new IPX first, then run the old
+	// destructor, which would tear down the interface the new instance just
+	// installed (same bug class as the joysticktype issue fixed in #5055).
+	ipx.reset();
 	ipx = std::make_unique<IPX>(section);
 }
 
