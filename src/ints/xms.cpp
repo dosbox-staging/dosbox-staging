@@ -790,6 +790,8 @@ XMS::XMS(SectionProp& section) : callbackhandler{}
 
 	// TODO: If implementing CP/M compatibility, mirror the JMP
 	//       instruction in HMA
+
+	LOG_MSG("XMS: Initialised");
 }
 
 XMS::~XMS()
@@ -804,6 +806,8 @@ XMS::~XMS()
 	if (!xms.is_available) {
 		return;
 	}
+
+	LOG_MSG("XMS: Shutting down");
 
 	// Undo biosclearing
 	BIOS_ZeroExtendedSize(false);
