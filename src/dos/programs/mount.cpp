@@ -653,6 +653,23 @@ static std::optional<std::string> find_option_missing_value(const CommandLine& c
 	return {};
 }
 
+// Finds and removes a value-taking option and its value. Only the first
+// occurrence is used, but all of them are removed so that repeated options are
+// not mistaken for paths.
+static std::optional<std::string> find_remove_option_value(CommandLine& cmd,
+                                                           const std::string& option)
+{
+	std::string value = {};
+	if (!cmd.FindString(option, value, true)) {
+		return {};
+	}
+
+	std::string ignored_value = {};
+	while (cmd.FindString(option, ignored_value, true)) {
+	}
+	return value;
+}
+
 // Sets:
 //   params.type   (from the -t option)
 //   params.roflag (from the -ro option)
@@ -677,13 +694,12 @@ bool MOUNT::ParseArguments(MountParameters& params, bool& explicit_fs,
 		return false;
 	}
 
-	if (cmd->FindExist("-pr", true)) {
+	if (cmd->FindExistRemoveAll("-pr")) {
 		path_relative_to_last_config = true;
 	}
 
 	// Default is "dir" if the -t option is not provided
-	std::string type_str = "dir";
-	cmd->FindString("-t", type_str, true);
+	const auto type_str = find_remove_option_value(*cmd, "-t").value_or("dir");
 
 	const auto maybe_mount_type = parse_mount_type(type_str);
 	if (!maybe_mount_type) {
@@ -695,13 +711,14 @@ bool MOUNT::ParseArguments(MountParameters& params, bool& explicit_fs,
 	}
 	params.type = *maybe_mount_type;
 
-	params.roflag = cmd->FindExist("-ro", true);
+	params.roflag = cmd->FindExistRemoveAll("-ro");
 
 	// Parse -fs (filesystem type)
 	// Default is "fat" if the -fs option is not provided
-	std::string fstype_str = "fat";
+	const auto fs_value = find_remove_option_value(*cmd, "-fs");
 
-	explicit_fs = cmd->FindString("-fs", fstype_str, true);
+	explicit_fs           = fs_value.has_value();
+	const auto fstype_str = fs_value.value_or("fat");
 
 	const auto maybe_fs_type = parse_file_system_type(fstype_str);
 	if (!maybe_fs_type) {
@@ -721,33 +738,23 @@ bool MOUNT::ParseArguments(MountParameters& params, bool& explicit_fs,
 
 	// Parse -ide. It is a flag, so anything following it is left on the
 	// command line.
-	params.is_ide = cmd->FindExist("-ide", true);
+	params.is_ide = cmd->FindExistRemoveAll("-ide");
 
 	if (params.is_ide && (params.type == MountType::CdRomImage)) {
 		IDE_Get_Next_Cable_Slot(params.ide_index, params.is_second_cable_slot);
 	}
 
 	// Label
-	cmd->FindString("-label", params.label, true);
+	params.label = find_remove_option_value(*cmd, "-label").value_or("");
 
 	return true;
 }
 
 MOUNT::GeometryOptions MOUNT::ParseGeometryOptions()
 {
-	GeometryOptions options = {};
-	std::string value       = {};
-
-	if (cmd->FindString("-freesize", value, true)) {
-		options.freesize = value;
-	}
-	if (cmd->FindString("-size", value, true)) {
-		options.size = value;
-	}
-	if (cmd->FindString("-chs", value, true)) {
-		options.chs = value;
-	}
-	return options;
+	return {.freesize = find_remove_option_value(*cmd, "-freesize"),
+	        .size     = find_remove_option_value(*cmd, "-size"),
+	        .chs      = find_remove_option_value(*cmd, "-chs")};
 }
 
 // Sets:
