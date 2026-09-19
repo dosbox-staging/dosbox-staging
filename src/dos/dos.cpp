@@ -1901,16 +1901,35 @@ void DOS_Destroy()
 static void notify_dos_setting_updated(SectionProp& section,
                                        [[maybe_unused]] const std::string& prop_name)
 {
-	DOS_Locale_Destroy();
-	DOS_Locale_Init(section);
+	// Only restart the modules affected by the changed setting; every
+	// EMS & XMS restart permanently burns a few paragraphs of the DOS
+	// private memory pool and reinstalls the XMS & EMS interfaces.
+	//
+	if (prop_name == "locale_period" || prop_name == "country") {
+		DOS_Locale_Destroy();
+		DOS_Locale_Init(section);
 
-	DOS_Files_Init(section);
+	} else if (prop_name == "file_locking") {
+		DOS_Files_Init(section);
 
-	EMS_Destroy();
-	EMS_Init(section);
+	} else if (prop_name == "ems") {
+		EMS_Destroy();
+		EMS_Init(section);
 
-	XMS_Destroy();
-	XMS_Init(section);
+		// The UMB chain built by the XMS module depends on EMS
+		// availability
+		XMS_Destroy();
+		XMS_Init(section);
+
+	} else if (prop_name == "xms" || prop_name == "umb") {
+		XMS_Destroy();
+		XMS_Init(section);
+	}
+
+	// 'ver' only takes effect at startup (the VER command handles runtime
+	// changes) and 'expand_shell_variable' is evaluated on command
+	// execution.
+	//
 
 	// The MSCDEX, DRIVES, and CDROM_Image modules are only initalised
 	// once at startup.
