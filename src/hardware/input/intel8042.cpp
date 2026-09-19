@@ -901,14 +901,34 @@ static void execute_command(const Command command, const uint8_t param)
 // I/O port handlers
 // ***************************************************************************
 
-static uint32_t read_data_port(io_port_t, io_width_t width)
+// The VMware interface requires the port 0x60/0x64 handlers to be registered
+// for dword width, which bypasses the IO layer's fallback of composing wide
+// accesses from byte accesses of adjacent ports (mimicking the ISA bus).
+// Unless the VMware takeover is active, restore that legacy behaviour here so
+// pure DOS software sees no difference to byte-width registered handlers.
+//
+static uint32_t compose_wide_read(const uint8_t low_byte, const io_port_t port,
+                                  const io_width_t width)
 {
-	// Port 0x60 read handler
+	assert(width == io_width_t::word || width == io_width_t::dword);
 
-	if (width == WidthVmWare && VMWARE_I8042_ReadTakeover()) {
-		return VMWARE_I8042_ReadDataPort();
+	auto read_byte = [&](const io_port_t offset) {
+		return static_cast<uint32_t>(
+		        IO_ReadB(check_cast<io_port_t>(port + offset)));
+	};
+
+	uint32_t ret_val = low_byte;
+	ret_val |= read_byte(1) << 8;
+
+	if (width == io_width_t::dword) {
+		ret_val |= read_byte(2) << 16;
+		ret_val |= read_byte(3) << 24;
 	}
+	return ret_val;
+}
 
+static uint8_t read_data_port_byte()
+{
 	if (!is_data_new) {
 		// Byte already read - just return the previous one
 		return data_byte;
@@ -955,7 +975,22 @@ static uint32_t read_data_port(io_port_t, io_width_t width)
 	return ret_val;
 }
 
-static uint32_t read_status_register(io_port_t, io_width_t width)
+static uint32_t read_data_port(io_port_t port, io_width_t width)
+{
+	// Port 0x60 read handler
+
+	if (width == WidthVmWare && VMWARE_I8042_ReadTakeover()) {
+		return VMWARE_I8042_ReadDataPort();
+	}
+
+	const auto data = read_data_port_byte();
+	if (width == io_width_t::byte) {
+		return data;
+	}
+	return compose_wide_read(data, port, width);
+}
+
+static uint32_t read_status_register(io_port_t port, io_width_t width)
 {
 	// Port 0x64 read handler
 
@@ -963,7 +998,10 @@ static uint32_t read_status_register(io_port_t, io_width_t width)
 		return VMWARE_I8042_ReadStatusRegister();
 	}
 
-	return status_byte.data;
+	if (width == io_width_t::byte) {
+		return status_byte.data;
+	}
+	return compose_wide_read(status_byte.data, port, width);
 }
 
 static void write_data_port(io_port_t, io_val_t value, io_width_t)
@@ -1003,7 +1041,7 @@ static void write_data_port(io_port_t, io_val_t value, io_width_t)
 	}
 }
 
-static void write_command_port(io_port_t, io_val_t value, io_width_t width)
+static void write_command_port(io_port_t port, io_val_t value, io_width_t width)
 {
 	// Port 0x64 write handler
 
@@ -1039,6 +1077,23 @@ static void write_command_port(io_port_t, io_val_t value, io_width_t width)
 	}
 	if (should_notify_kbd && I8042_IsReadyForKbdFrame()) {
 		KEYBOARD_NotifyReadyForFrame();
+	}
+
+	// Forward the high bytes of wide writes to the adjacent ports, as the
+	// IO layer used to do for byte-width registered handlers (see the
+	// comment at 'compose_wide_read()')
+	//
+	if (width != io_width_t::byte) {
+		auto write_byte = [&](const io_port_t offset) {
+			IO_WriteB(check_cast<io_port_t>(port + offset),
+			          static_cast<uint8_t>(value >> (offset * 8)));
+		};
+
+		write_byte(1);
+		if (width == io_width_t::dword) {
+			write_byte(2);
+			write_byte(3);
+		}
 	}
 }
 
