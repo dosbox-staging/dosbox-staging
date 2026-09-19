@@ -41,6 +41,7 @@
 #include "hardware/port.h"
 #include "hardware/timer.h"
 #include "ints/bios.h"
+#include "misc/notifications.h"
 #include "utils/checks.h"
 #include "utils/math_utils.h"
 #include "utils/rwqueue.h"
@@ -59,6 +60,9 @@ public:
 	         const std::string& fadeout_choice,
 	         const std::string& filter_choice);
 	~TandyPSG();
+
+	void SetFadeOut(const std::string& fadeout_choice);
+	void SetFilter(const std::string& filter_choice);
 
 private:
 	TandyPSG()                           = delete;
@@ -115,6 +119,27 @@ static void setup_filter(MixerChannelPtr& channel, const bool filter_enabled)
 	}
 }
 
+static void apply_filter_setting(MixerChannelPtr& channel,
+                                 const std::string& filter_choice,
+                                 const char* channel_name, const char* setting_name)
+{
+	if (const auto maybe_bool = parse_bool_setting(filter_choice)) {
+		setup_filter(channel, *maybe_bool);
+
+	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      channel_name,
+		                      "PROGRAM_CONFIG_INVALID_SETTING",
+		                      setting_name,
+		                      filter_choice.c_str(),
+		                      "on");
+
+		constexpr auto FilterEnabled = true;
+		setup_filter(channel, FilterEnabled);
+		set_section_property_value("speaker", setting_name, "on");
+	}
+}
+
 TandyDAC::TandyDAC(const ConfigProfile config_profile, const std::string& filter_choice)
 {
 	using namespace std::placeholders;
@@ -152,21 +177,7 @@ TandyDAC::TandyDAC(const ConfigProfile config_profile, const std::string& filter
 	channel->SetResampleMethod(ResampleMethod::ZeroOrderHoldAndResample);
 
 	// Set up DAC filters
-	if (const auto maybe_bool = parse_bool_setting(filter_choice)) {
-		const auto filter_enabled = *maybe_bool;
-		setup_filter(channel, filter_enabled);
-
-	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
-		LOG_WARNING(
-		        "%s: Invalid 'tandy_dac_filter' setting: '%s', "
-		        "using 'on'",
-		        ChannelName::TandyDac,
-		        filter_choice.c_str());
-
-		const auto filter_enabled = true;
-		setup_filter(channel, filter_enabled);
-		set_section_property_value("speaker", "tandy_dac_filter", "on");
-	}
+	SetFilter(filter_choice);
 
 	// Register DAC per-port read handlers
 	const auto reader = std::bind(&TandyDAC::ReadFromPort, this, _1, _2);
@@ -193,6 +204,11 @@ TandyDAC::TandyDAC(const ConfigProfile config_profile, const std::string& filter
 	output_queue.Resize(iceil(channel->GetFramesPerBlock() * 2.0f));
 
 	MIXER_UnlockMixerThread();
+}
+
+void TandyDAC::SetFilter(const std::string& filter_choice)
+{
+	apply_filter_setting(channel, filter_choice, ChannelName::TandyDac, "tandy_dac_filter");
 }
 
 TandyDAC::~TandyDAC()
@@ -467,26 +483,10 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile,
 	                            ChannelFeature::Synthesizer});
 
 	// Setup fadeout
-	if (!channel->ConfigureFadeOut(fadeout_choice)) {
-		set_section_property_value("speaker", "tandy_fadeout", "off");
-	}
+	SetFadeOut(fadeout_choice);
 
 	// Set up PSG filters
-	if (const auto maybe_bool = parse_bool_setting(filter_choice)) {
-		const auto filter_enabled = *maybe_bool;
-		setup_filter(channel, filter_enabled);
-
-	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
-		LOG_WARNING(
-		        "%s: Invalid 'tandy_filter' value: '%s', "
-		        "using 'on'",
-		        ChannelName::TandyPsg,
-		        filter_choice.c_str());
-
-		const auto filter_enabled = true;
-		setup_filter(channel, filter_enabled);
-		set_section_property_value("speaker", "tandy_filter", "on");
-	}
+	SetFilter(filter_choice);
 
 	// Configure and start the MAME device
 	dsi = static_cast<device_sound_interface*>(device.get());
@@ -501,6 +501,20 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile,
 	        base_device->shortName);
 
 	MIXER_UnlockMixerThread();
+}
+
+void TandyPSG::SetFadeOut(const std::string& fadeout_choice)
+{
+	// On failure the channel has already disabled the fade-out and
+	// notified the user
+	if (!channel->ConfigureFadeOut(fadeout_choice)) {
+		set_section_property_value("speaker", "tandy_fadeout", "off");
+	}
+}
+
+void TandyPSG::SetFilter(const std::string& filter_choice)
+{
+	apply_filter_setting(channel, filter_choice, ChannelName::TandyPsg, "tandy_filter");
 }
 
 TandyPSG::~TandyPSG()
@@ -788,20 +802,30 @@ void TANDYSOUND_Evict()
 	sync_tandy_config_to_state();
 }
 
-void TANDYSOUND_NotifySettingUpdated(SectionProp& section,
-                                     [[maybe_unused]] const std::string& prop_name)
+void TANDYSOUND_NotifySettingUpdated(SectionProp& section, const std::string& prop_name)
 {
 	// The [speaker] section controls multiple audio devices, so we want to
-	// make sure to only restart the device affected by the setting.
+	// make sure to only restart the device affected by the setting. The
+	// fadeout and filter settings are applied in place without restarting
+	// the device.
 	//
-	if (prop_name == "tandy" || prop_name == "tandy_fadeout" ||
-	    prop_name == "tandy_filter" || prop_name == "tandy_dac_filter") {
-
+	if (prop_name == "tandy") {
 		TANDYSOUND_Destroy();
 		TANDYSOUND_Init(section);
-	}
 
-	// TODO support changing filter params without restarting the device
+	} else if (prop_name == "tandy_fadeout") {
+		if (tandy_psg) {
+			tandy_psg->SetFadeOut(section.GetString("tandy_fadeout"));
+		}
+	} else if (prop_name == "tandy_filter") {
+		if (tandy_psg) {
+			tandy_psg->SetFilter(section.GetString("tandy_filter"));
+		}
+	} else if (prop_name == "tandy_dac_filter") {
+		if (tandy_dac) {
+			tandy_dac->SetFilter(section.GetString("tandy_dac_filter"));
+		}
+	}
 }
 
 void TANDYSOUND_AddConfigSection(Section* sec)
