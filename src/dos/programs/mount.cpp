@@ -653,6 +653,23 @@ static std::optional<std::string> find_option_missing_value(const CommandLine& c
 	return {};
 }
 
+// Finds and removes a value-taking option and its value. Only the first
+// occurrence is used, but all of them are removed so that repeated options are
+// not mistaken for paths.
+static std::optional<std::string> find_remove_option_value(CommandLine& cmd,
+                                                           const std::string& option)
+{
+	std::string value = {};
+	if (!cmd.FindString(option, value, true)) {
+		return {};
+	}
+
+	std::string ignored_value = {};
+	while (cmd.FindString(option, ignored_value, true)) {
+	}
+	return value;
+}
+
 // Returns true for DOSBox-X IDE slot values: `auto`, `none`, or a controller
 // number with an optional master/slave suffix (e.g., `1`, `2m`, `1s`).
 static bool is_ide_slot_value(const std::string& value)
@@ -696,13 +713,12 @@ bool MOUNT::ParseArguments(MountParameters& params, bool& explicit_fs,
 		return false;
 	}
 
-	if (cmd->FindExist("-pr", true)) {
+	if (cmd->FindExistRemoveAll("-pr")) {
 		path_relative_to_last_config = true;
 	}
 
 	// Default is "dir" if the -t option is not provided
-	std::string type_str = "dir";
-	cmd->FindString("-t", type_str, true);
+	const auto type_str = find_remove_option_value(*cmd, "-t").value_or("dir");
 
 	const auto maybe_mount_type = parse_mount_type(type_str);
 	if (!maybe_mount_type) {
@@ -714,13 +730,14 @@ bool MOUNT::ParseArguments(MountParameters& params, bool& explicit_fs,
 	}
 	params.type = *maybe_mount_type;
 
-	params.roflag = cmd->FindExist("-ro", true);
+	params.roflag = cmd->FindExistRemoveAll("-ro");
 
 	// Parse -fs (filesystem type)
 	// Default is "fat" if the -fs option is not provided
-	std::string fstype_str = "fat";
+	const auto fs_value = find_remove_option_value(*cmd, "-fs");
 
-	explicit_fs = cmd->FindString("-fs", fstype_str, true);
+	explicit_fs           = fs_value.has_value();
+	const auto fstype_str = fs_value.value_or("fat");
 
 	const auto maybe_fs_type = parse_file_system_type(fstype_str);
 	if (!maybe_fs_type) {
@@ -743,10 +760,15 @@ bool MOUNT::ParseArguments(MountParameters& params, bool& explicit_fs,
 	// following -ide (e.g., a path) is left on the command line.
 	std::string ide_value = {};
 
-	if (cmd->FindString("-ide", ide_value) && is_ide_slot_value(ide_value)) {
-		params.is_ide = cmd->FindString("-ide", ide_value, true);
-	} else {
-		params.is_ide = cmd->FindExist("-ide", true);
+	while (cmd->FindExist("-ide")) {
+		params.is_ide = true;
+
+		if (cmd->FindString("-ide", ide_value) &&
+		    is_ide_slot_value(ide_value)) {
+			cmd->FindString("-ide", ide_value, true);
+		} else {
+			cmd->FindExist("-ide", true);
+		}
 	}
 
 	if (params.is_ide && (params.type == MountType::CdRomImage)) {
@@ -754,26 +776,16 @@ bool MOUNT::ParseArguments(MountParameters& params, bool& explicit_fs,
 	}
 
 	// Label
-	cmd->FindString("-label", params.label, true);
+	params.label = find_remove_option_value(*cmd, "-label").value_or("");
 
 	return true;
 }
 
 MOUNT::GeometryOptions MOUNT::ParseGeometryOptions()
 {
-	GeometryOptions options = {};
-	std::string value       = {};
-
-	if (cmd->FindString("-freesize", value, true)) {
-		options.freesize = value;
-	}
-	if (cmd->FindString("-size", value, true)) {
-		options.size = value;
-	}
-	if (cmd->FindString("-chs", value, true)) {
-		options.chs = value;
-	}
-	return options;
+	return {.freesize = find_remove_option_value(*cmd, "-freesize"),
+	        .size     = find_remove_option_value(*cmd, "-size"),
+	        .chs      = find_remove_option_value(*cmd, "-chs")};
 }
 
 // Sets:

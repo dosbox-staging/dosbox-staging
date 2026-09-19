@@ -1495,6 +1495,9 @@ TEST_F(MountTest, DuplicateLabelFirstWins)
 
 	ASSERT_TRUE(result.has_value());
 
+	// The repeated option must not be collected as an image path
+	EXPECT_EQ(FileNames(*result), (std::vector<std::string>{"image.img"}));
+
 	EXPECT_EQ(result->label, "FIRST");
 }
 
@@ -1505,6 +1508,9 @@ TEST_F(MountTest, DuplicateSizeFirstWins)
 	                          " -size 5,6,7,8");
 
 	ASSERT_TRUE(result.has_value());
+
+	// The repeated option must not be collected as an image path
+	EXPECT_EQ(FileNames(*result), (std::vector<std::string>{"image.img"}));
 
 	EXPECT_EQ(result->sizes[0], 1);
 	EXPECT_EQ(result->sizes[1], 2);
@@ -1519,6 +1525,9 @@ TEST_F(MountTest, DuplicateChsFirstWins)
 	                          " -chs 200,63,16");
 
 	ASSERT_TRUE(result.has_value());
+
+	// The repeated option must not be collected as an image path
+	EXPECT_EQ(FileNames(*result), (std::vector<std::string>{"image.img"}));
 
 	// CHS is normalized into the size array:
 	// sector size, sectors/track, heads, cylinders.
@@ -1536,6 +1545,9 @@ TEST_F(MountTest, DuplicateFilesystemFirstWins)
 
 	ASSERT_TRUE(result.has_value());
 
+	// The repeated option must not be collected as an image path
+	EXPECT_EQ(FileNames(*result), (std::vector<std::string>{"image.img"}));
+
 	EXPECT_EQ(result->fstype, MountFileSystemType::Fat16);
 }
 
@@ -1547,9 +1559,54 @@ TEST_F(MountTest, DuplicateTypeFirstWins)
 
 	ASSERT_TRUE(result.has_value());
 
+	// The repeated option must not be collected as an image path
+	EXPECT_EQ(FileNames(*result), (std::vector<std::string>{"image.img"}));
+
 	EXPECT_EQ(result->type, MountType::FloppyImage);
 	EXPECT_EQ(result->fstype, MountFileSystemType::Fat16);
 	EXPECT_EQ(result->mediaid, MediaId::Floppy1_44MB);
+}
+
+TEST_F(MountTest, DuplicateFreesizeFirstWins)
+{
+	const auto result = Mount("X " + P("plain_dir") +
+	                          " -freesize 100"
+	                          " -freesize 200");
+
+	ASSERT_TRUE(result.has_value());
+
+	EXPECT_EQ(result->sizes[0], 512);
+	EXPECT_EQ(result->sizes[1], 32);
+	EXPECT_EQ(result->sizes[2], 32765);
+	EXPECT_EQ(result->sizes[3], 6400);
+}
+
+TEST_F(MountTest, DuplicateFlagsAreNotCollectedAsPaths)
+{
+	const auto result = Mount("3 " + P("bootable.img") +
+	                          " -t hdd -size 512,63,16,100"
+	                          " -ro -ro -pr -pr -ide 2m -ide -ide auto");
+
+	ASSERT_TRUE(result.has_value());
+
+	EXPECT_TRUE(result->roflag);
+	EXPECT_TRUE(result->is_ide);
+	EXPECT_EQ(FileNames(*result), (std::vector<std::string>{"bootable.img"}));
+}
+
+TEST_F(MountTest, DuplicateOptionsWithMultipleImages)
+{
+	const auto result = Mount("W " + P("disk1.img") + " -label ONE " +
+	                          P("disk02.img") + " -t floppy -label TWO " +
+	                          P("disk03.img") + " -t hdd");
+
+	ASSERT_TRUE(result.has_value());
+
+	EXPECT_EQ(FileNames(*result),
+	          (std::vector<std::string>{"disk1.img", "disk02.img", "disk03.img"}));
+
+	EXPECT_EQ(result->type, MountType::FloppyImage);
+	EXPECT_EQ(result->label, "ONE");
 }
 
 } // namespace
