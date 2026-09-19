@@ -32,6 +32,19 @@ TEST(PathExists, ExistingPathAsString)
 	EXPECT_TRUE(path_exists(path));
 }
 
+#if defined(WIN32)
+TEST(NativeFile, OpenDirectory)
+{
+	const auto handle = open_native_file("tests/files/paths", false);
+	ASSERT_NE(handle, InvalidNativeFileHandle);
+
+	const auto date_time = get_dos_file_time(handle);
+	EXPECT_TRUE(date_time.date != 1 || date_time.time != 1);
+
+	close_native_file(handle);
+}
+#endif // WIN32
+
 TEST(PathExists, MissingPathAsString)
 {
 	const std::string path = "barbaz";
