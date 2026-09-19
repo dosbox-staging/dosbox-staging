@@ -88,6 +88,16 @@ protected:
 		return (test_file_path / name).string();
 	}
 
+	// File names of the collected image paths, in order
+	static std::vector<std::string> FileNames(const MountParameters& params)
+	{
+		std::vector<std::string> names = {};
+		for (const auto& path : params.paths) {
+			names.push_back(std_fs::path(path).filename().string());
+		}
+		return names;
+	}
+
 	static std::optional<MountParameters> Mount(const std::string& command_params)
 	{
 		auto cmd     = new CommandLine("Z:\\MOUNT.COM", command_params);
@@ -149,6 +159,37 @@ TEST_F(MountTest, RejectsOptionMissingValueAtEnd)
 {
 	const auto result = Mount("N " + P("plain_dir") + " -label");
 	EXPECT_FALSE(result.has_value());
+}
+
+TEST_F(MountTest, RejectsEveryValueOptionMissingValueAtEnd)
+{
+	for (const auto* option :
+	     {"-t", "-fs", "-label", "-freesize", "-size", "-chs"}) {
+		SCOPED_TRACE(option);
+
+		const auto result = Mount("N " + P("plain_dir") + " " + option);
+		EXPECT_FALSE(result.has_value());
+	}
+}
+
+TEST_F(MountTest, RejectsOptionValueThatIsAnotherValueOption)
+{
+	EXPECT_FALSE(Mount("C " + P("bootable.img") + " -t -fs none").has_value());
+
+	EXPECT_FALSE(Mount("Q " + P("plain_dir") + " -freesize -size 512,63,16,42")
+	                     .has_value());
+}
+
+TEST_F(MountTest, RejectsOptionValueThatIsThePathRelativeFlag)
+{
+	const auto result = Mount("N " + P("plain_dir") + " -label -pr");
+	EXPECT_FALSE(result.has_value());
+}
+
+TEST_F(MountTest, RejectsMissingValueRegardlessOfCase)
+{
+	EXPECT_FALSE(Mount("N " + P("plain_dir") + " -LABEL -RO").has_value());
+	EXPECT_FALSE(Mount("1 " + P("bootable.img") + " -Size -T hdd").has_value());
 }
 
 TEST_F(MountTest, RejectsMissingPath)
@@ -1087,6 +1128,137 @@ TEST_F(MountTest, FirstIsoImageControlsAutoDetection)
 	ASSERT_EQ(result->paths.size(), 2);
 }
 
+TEST_F(MountTest, MultipleImagesWithOptionsInterleaved)
+{
+	const auto result = Mount("W " + P("disk03.img") + " -t floppy " +
+	                          P("disk1.img") + " -ro " + P("disk02.img") +
+	                          " -label SWAP");
+
+	ASSERT_TRUE(result.has_value());
+
+	EXPECT_EQ(FileNames(*result),
+	          (std::vector<std::string>{"disk03.img", "disk1.img", "disk02.img"}));
+
+	EXPECT_EQ(result->type, MountType::FloppyImage);
+	EXPECT_TRUE(result->roflag);
+	EXPECT_EQ(result->label, "SWAP");
+}
+
+TEST_F(MountTest, MultipleImagesWithOptionsBeforePaths)
+{
+	const auto result = Mount("W -t floppy -label SWAP " + P("disk03.img") +
+	                          " " + P("disk1.img"));
+
+	ASSERT_TRUE(result.has_value());
+
+	EXPECT_EQ(FileNames(*result),
+	          (std::vector<std::string>{"disk03.img", "disk1.img"}));
+
+	EXPECT_EQ(result->type, MountType::FloppyImage);
+	EXPECT_EQ(result->label, "SWAP");
+}
+
+TEST_F(MountTest, MultipleImagesOnDriveWithColon)
+{
+	const auto result = Mount("W: " + P("disk1.img") + " " +
+	                          P("disk02.img") + " -t floppy");
+
+	ASSERT_TRUE(result.has_value());
+
+	EXPECT_EQ(result->drive, 'W');
+	EXPECT_EQ(FileNames(*result),
+	          (std::vector<std::string>{"disk1.img", "disk02.img"}));
+}
+
+TEST_F(MountTest, WildcardImagesWithGeometryAndFlagOptions)
+{
+	const auto result = Mount("A " + P("disk*.img") +
+	                          " -t floppy -freesize 720 -ro");
+
+	ASSERT_TRUE(result.has_value());
+
+	EXPECT_EQ(FileNames(*result),
+	          (std::vector<std::string>{"disk1.img", "disk02.img", "disk03.img"}));
+
+	EXPECT_TRUE(result->roflag);
+
+	// 720 KB of free space on a 1.44 MB floppy
+	EXPECT_EQ(result->sizes[0], 512);
+	EXPECT_EQ(result->sizes[1], 1);
+	EXPECT_EQ(result->sizes[2], 2880);
+	EXPECT_EQ(result->sizes[3], 1440);
+}
+
+TEST_F(MountTest, MultipleHddImagesShareExplicitGeometry)
+{
+	const auto result = Mount("C " + P("disk1.img") + " " +
+	                          P("disk02.img") + " -t hdd -chs 40,16,63");
+
+	ASSERT_TRUE(result.has_value());
+
+	EXPECT_EQ(FileNames(*result),
+	          (std::vector<std::string>{"disk1.img", "disk02.img"}));
+
+	EXPECT_EQ(result->type, MountType::HardDiskImage);
+
+	EXPECT_EQ(result->sizes[0], 512);
+	EXPECT_EQ(result->sizes[1], 63);
+	EXPECT_EQ(result->sizes[2], 16);
+	EXPECT_EQ(result->sizes[3], 40);
+}
+
+TEST_F(MountTest, MultipleCdImagesWithLabel)
+{
+	const auto result = Mount("D " + P("image.iso") + " " + P("image.cue") +
+	                          " -t iso -label MYCD");
+
+	ASSERT_TRUE(result.has_value());
+
+	EXPECT_EQ(FileNames(*result),
+	          (std::vector<std::string>{"image.iso", "image.cue"}));
+
+	EXPECT_EQ(result->type, MountType::CdRomImage);
+	EXPECT_EQ(result->fstype, MountFileSystemType::Iso);
+	EXPECT_EQ(result->label, "MYCD");
+}
+
+TEST_F(MountTest, MultipleImagesWithLabelStartingWithDash)
+{
+	const auto result = Mount("W " + P("disk1.img") + " " +
+	                          P("disk02.img") + " -t floppy -label -SWAP-");
+
+	ASSERT_TRUE(result.has_value());
+
+	EXPECT_EQ(FileNames(*result),
+	          (std::vector<std::string>{"disk1.img", "disk02.img"}));
+
+	EXPECT_EQ(result->label, "-SWAP-");
+}
+
+TEST_F(MountTest, SequentialMountsDoNotShareOptionState)
+{
+	const auto first = Mount("E " + P("plain_dir") + " -label ONE -ro");
+	ASSERT_TRUE(first.has_value());
+	EXPECT_EQ(first->label, "ONE");
+	EXPECT_TRUE(first->roflag);
+
+	// A mount rejected during option parsing must not occupy the drive
+	EXPECT_FALSE(Mount("F " + P("overlay_base") + " -label").has_value());
+
+	const auto second = Mount("F " + P("overlay_base"));
+	ASSERT_TRUE(second.has_value());
+	EXPECT_NE(second->label, "ONE");
+	EXPECT_FALSE(second->roflag);
+
+	const auto third = Mount("W " + P("disk1.img") + " " + P("disk02.img") +
+	                         " -t floppy");
+	ASSERT_TRUE(third.has_value());
+	EXPECT_EQ(FileNames(*third),
+	          (std::vector<std::string>{"disk1.img", "disk02.img"}));
+	EXPECT_TRUE(third->label.empty());
+	EXPECT_FALSE(third->roflag);
+}
+
 // ---------------------------------------------------------------------
 // IDE interactions
 // ---------------------------------------------------------------------
@@ -1134,6 +1306,37 @@ TEST_F(MountTest, IdeFlagDoesNotConsumeFollowingPath)
 
 	ASSERT_EQ(result->paths.size(), 1);
 	EXPECT_NE(result->paths[0].find("bootable.img"), std::string::npos);
+}
+
+TEST_F(MountTest, IdeFlagDoesNotConsumeAnyFollowingValue)
+{
+	// -ide takes no value. DOSBox-X slot values such as `auto` or `2m` are
+	// not recognised and are treated as paths like anything else.
+	for (const auto* value : {"auto", "none", "1", "2m", "0", "1x"}) {
+		SCOPED_TRACE(value);
+
+		const auto result = Mount("3 " + P("bootable.img") +
+		                          " -t hdd -size 512,63,16,100 -ide " +
+		                          value);
+
+		ASSERT_TRUE(result.has_value());
+
+		EXPECT_TRUE(result->is_ide);
+		EXPECT_EQ(FileNames(*result),
+		          (std::vector<std::string>{"bootable.img", value}));
+	}
+}
+
+TEST_F(MountTest, IdeFlagFollowedBySecondImageKeepsBothImages)
+{
+	const auto result = Mount("W " + P("disk1.img") + " -t floppy -ide " +
+	                          P("disk02.img"));
+
+	ASSERT_TRUE(result.has_value());
+
+	EXPECT_TRUE(result->is_ide);
+	EXPECT_EQ(FileNames(*result),
+	          (std::vector<std::string>{"disk1.img", "disk02.img"}));
 }
 
 // ---------------------------------------------------------------------
@@ -1202,6 +1405,35 @@ TEST_F(MountTest, ReadOnlyPreservedForDirectoryMount)
 	ASSERT_TRUE(result.has_value());
 
 	EXPECT_TRUE(result->roflag);
+}
+
+TEST_F(MountTest, LabelBeforeDirectoryPathIsNotTakenAsPath)
+{
+	const auto result = Mount("N -label MYLABEL " + P("plain_dir"));
+
+	ASSERT_TRUE(result.has_value());
+
+	EXPECT_EQ(result->type, MountType::Directory);
+	EXPECT_EQ(result->label, "MYLABEL");
+	EXPECT_EQ(FileNames(*result), (std::vector<std::string>{"plain_dir"}));
+}
+
+TEST_F(MountTest, OptionNamesAreCaseInsensitive)
+{
+	const auto result = Mount("3 " + P("bootable.img") +
+	                          " -T hdd -SIZE 512,63,16,100 -Ro -IDE");
+
+	ASSERT_TRUE(result.has_value());
+
+	EXPECT_EQ(result->type, MountType::HardDiskImage);
+	EXPECT_TRUE(result->roflag);
+	EXPECT_TRUE(result->is_ide);
+	EXPECT_EQ(FileNames(*result), (std::vector<std::string>{"bootable.img"}));
+
+	EXPECT_EQ(result->sizes[0], 512);
+	EXPECT_EQ(result->sizes[1], 63);
+	EXPECT_EQ(result->sizes[2], 16);
+	EXPECT_EQ(result->sizes[3], 100);
 }
 
 // ---------------------------------------------------------------------
