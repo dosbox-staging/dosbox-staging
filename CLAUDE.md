@@ -1,0 +1,1 @@
+Follow the rules as defined in AGENTS.md.

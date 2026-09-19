@@ -1,0 +1,20 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dosbox-mcp"
+version = "0.1.0"
+description = "MCP stdio bridge for the DOSBox Staging debugger HTTP API"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+  "httpx==0.28.1",
+  "mcp[cli]==1.28.0",
+]
+
+[project.scripts]
+dosbox-mcp = "dosbox_mcp.main:main"
+
+[tool.setuptools.packages.find]
+include = ["dosbox_mcp*"]

@@ -40,15 +40,6 @@ see the built-in API documentation.
 
 ## API endpoints
 
-### CPU registers
-
-`GET /api/v1/cpu/state`
-
-:   Returns all x86 CPU registers: `eax`, `ebx`, `ecx`, `edx`, `esi`,
-    `edi`, `esp`, `ebp`, `eip`, `flags`, `cs`, `ds`, `es`, `ss`, `fs`,
-    `gs`.
-
-
 ### Reading memory
 
 `GET /api/v1/memory/:offset/:len`
@@ -61,6 +52,9 @@ see the built-in API documentation.
     By default, the raw binary data is returned. Set
     `Accept: application/json` to receive a JSON response with the data
     encoded in Base64.
+
+    The JSON response includes only the resolved memory address and the
+    Base64-encoded memory payload.
 
     Maximum read size is 128 MiB per request.
 
@@ -152,11 +146,72 @@ see the built-in API documentation.
 
 :   Returns DOSBox Staging version and relevant filesystem paths.
 
+    Also includes `debuggerEnabled`, which reports whether the debugger API
+    endpoints are available in the current build.
+
 ### Shutdown
 
 `POST /api/v1/dosbox/shutdown`
 
 :   Request a graceful shutdown of DOSBox Staging.
+
+
+## Debugger API
+
+The debugger endpoints are only available in debugger-enabled builds. Build
+with `OPT_DEBUGGER=ON`.
+
+!!! warning
+
+    These endpoints can pause, resume, step, and otherwise control DOSBox
+    execution. Keep the webserver bound to localhost.
+
+All debugger endpoints live under `/api/v1/debug/`.
+
+
+### Debugger status
+
+`GET /api/v1/debug/status`
+
+:   Returns the current running or paused state, `stopSequence`, stop reason,
+    and the current register snapshot.
+
+
+### Execution control
+
+`POST /api/v1/debug/control/pause`
+
+:   Requests a pause at the next safe debugger boundary. Request body:
+
+    ``` json
+    {
+        "mode": "headless"
+    }
+    ```
+
+`POST /api/v1/debug/control/continue`
+
+:   Resumes execution from a paused debugger state.
+
+`POST /api/v1/debug/control/step`
+
+:   Single-steps execution while paused. Request body:
+
+    ``` json
+    {
+        "mode": "into"
+    }
+    ```
+
+    The only supported step mode is `into`.
+
+### Snapshots
+
+`GET /api/v1/debug/snapshot/registers`
+
+:   Returns the current register snapshot.
+
+    This replaces the older `GET /api/v1/cpu/state` endpoint.
 
 ## Example tools
 

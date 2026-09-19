@@ -3,9 +3,12 @@
 
 #include "webserver.h"
 #include "bridge.h"
+#if C_DEBUGGER
 #include "private/cpu.h"
+#include "private/debug.h"
+#endif
 #include "private/dos.h"
-#include "private/dosbox.h"
+#include "private/shutdown.h"
 #include "private/memory.h"
 
 #include <set>
@@ -56,7 +59,13 @@ static httplib::Server server;
 
 static void setup_api_handlers()
 {
-	server.Get("/api/v1/cpu/state", CpuStateCommand::Get);
+#if C_DEBUGGER
+	server.Get("/api/v1/debug/status", DebugStatusCommand::Get);
+	server.Post("/api/v1/debug/control/pause", DebugPauseCommand::Post);
+	server.Post("/api/v1/debug/control/continue", DebugContinueCommand::Post);
+	server.Post("/api/v1/debug/control/step", DebugStepCommand::Post);
+	server.Get("/api/v1/debug/snapshot/registers", CpuRegistersCommand::Get);
+#endif
 
 	server.Get("/api/v1/dos/internals", DosInternalsCommand::Get);
 
@@ -130,7 +139,9 @@ static void setup_host_validation(const std::string& addr, int port)
 	        });
 }
 
-static void run(const std::string addr, const int port, const std::string resource_home)
+static void run(const std::string& addr,
+                const int port,
+                const std::string& resource_home)
 {
 	const auto config_home = (get_config_dir() / DefaultWebserverDir).string();
 
@@ -142,10 +153,11 @@ static void run(const std::string addr, const int port, const std::string resour
 
 	server.set_exception_handler(error_handler);
 
-	server.Get("/api/v1/dosbox/info", [=](auto, auto& res) {
+	server.Get("/api/v1/dosbox/info", [config_home](auto, auto& res) {
 		json j;
 		j["configHome"]      = get_config_dir();
 		j["configWebserver"] = config_home;
+		j["debuggerEnabled"] = static_cast<bool>(C_DEBUGGER);
 		j["version"]         = DOSBOX_GetDetailedVersion();
 
 		send_json(res, j);
