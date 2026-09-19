@@ -71,13 +71,23 @@ public:
 	std::optional<MountParameters> ProcessArguments(CommandLine* cmd);
 
 private:
+	// Geometry options must be removed from the command line before
+	// processing the paths, but they can only be applied after the mount
+	// type has been auto-detected from the paths.
+	struct GeometryOptions {
+		std::optional<std::string> freesize = {};
+		std::optional<std::string> size     = {};
+		std::optional<std::string> chs      = {};
+	};
+
 	static void AddMessages();
 	void ShowUsage();
 
 	bool HandleUnmount();
 	bool ParseArguments(MountParameters& params, bool& explicit_fs,
 	                    bool& path_relative_to_last_config);
-	bool ParseGeometry(MountParameters& params);
+	GeometryOptions ParseGeometryOptions();
+	bool ParseGeometry(MountParameters& params, const GeometryOptions& options);
 	bool ParseDrive(MountParameters& params, bool explicit_fs);
 
 	std::string ApplyRelativePath(const std::string& path,
