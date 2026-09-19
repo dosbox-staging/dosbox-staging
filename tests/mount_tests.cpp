@@ -549,6 +549,43 @@ TEST_F(MountTest, FddAliasesToFloppy)
 	EXPECT_EQ(result->type, MountType::FloppyImage);
 }
 
+TEST_F(MountTest, TypeValuesAreCaseInsensitive)
+{
+	struct TestCase {
+		std::string args        = {};
+		MountType expected_type = {};
+	};
+
+	const std::vector<TestCase> test_cases = {
+	        {	              "A " + P("raw.dat") + " -t FLOPPY",MountType::FloppyImage                                                                          },
+	        {	                 "B " + P("raw.dat") + " -t Fdd", MountType::FloppyImage},
+	        {"3 " + P("bootable.img") + " -t HDD -size 512,63,16,100",
+	         MountType::HardDiskImage	                                                },
+	        {	               "D " + P("image.iso") + " -t ISO",  MountType::CdRomImage},
+	        {	             "E " + P("image.iso") + " -t CdRom",  MountType::CdRomImage},
+	        {	               "F " + P("plain_dir") + " -t DIR",   MountType::Directory},
+	};
+
+	for (const auto& [args, expected_type] : test_cases) {
+		SCOPED_TRACE(args);
+
+		const auto result = Mount(args);
+
+		ASSERT_TRUE(result.has_value());
+		EXPECT_EQ(result->type, expected_type);
+	}
+}
+
+TEST_F(MountTest, OverlayTypeValueIsCaseInsensitive)
+{
+	ASSERT_TRUE(Mount("O " + P("overlay_base")).has_value());
+
+	const auto result = Mount("O " + P("overlay_layer") + " -t OverLay");
+
+	ASSERT_TRUE(result.has_value());
+	EXPECT_EQ(result->type, MountType::Overlay);
+}
+
 // ---------------------------------------------------------------------
 // -ide flag
 // ---------------------------------------------------------------------
@@ -1036,6 +1073,30 @@ TEST_F(MountTest, ExplicitFatFilesystemWithoutType)
 	EXPECT_EQ(result->type, MountType::HardDiskImage);
 	EXPECT_EQ(result->fstype, MountFileSystemType::Fat16);
 	EXPECT_EQ(result->mediaid, MediaId::HardDisk);
+}
+
+TEST_F(MountTest, FilesystemValuesAreCaseInsensitive)
+{
+	struct TestCase {
+		std::string args                    = {};
+		MountFileSystemType expected_fstype = {};
+	};
+
+	const std::vector<TestCase> test_cases = {
+	        {	                    "D " + P("bootable.img") + " -fs FAT",MountFileSystemType::Fat16	                                                                           },
+	        {	                    "E " + P("bootable.img") + " -fs Iso",   MountFileSystemType::Iso},
+	        {"2 " + P("bootable.img") + " -t hdd -fs NONE -size 512,63,16,100",
+	         MountFileSystemType::None	                                                            },
+	};
+
+	for (const auto& [args, expected_fstype] : test_cases) {
+		SCOPED_TRACE(args);
+
+		const auto result = Mount(args);
+
+		ASSERT_TRUE(result.has_value());
+		EXPECT_EQ(result->fstype, expected_fstype);
+	}
 }
 
 TEST_F(MountTest, ExplicitIsoFilesystemOnIsoImage)
