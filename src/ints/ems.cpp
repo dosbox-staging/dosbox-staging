@@ -109,7 +109,6 @@ public:
 	device_EMM(bool is_emm386_avail) : is_emm386(is_emm386_avail)
 	{
 		SetName(EmsDeviceName.c_str());
-		GEMMIS_seg = 0;
 	}
 
 	bool Read(uint8_t* /*data*/, uint16_t* /*size*/) override
@@ -2151,7 +2150,11 @@ public:
 		call_vdma.Set_RealVec(0x4b);
 
 		vcpi.enabled = false;
-		GEMMIS_seg   = 0;
+
+		// GEMMIS_seg is lazily allocated from the DOS private memory
+		// pool on first use (see `ReadFromControlChannel()`) and, like
+		// `ems_baseseg`, must never be reset once allocated since that
+		// memory can't be freed.
 
 		ems_type = GetEMSType(section);
 		if (ems_type <= 0) {
@@ -2312,8 +2315,6 @@ public:
 			DOS_DelDevice(emm_device);
 			emm_device = nullptr;
 		}
-
-		GEMMIS_seg = 0;
 
 		// Remove the emsname and callback hack
 		char buf[32] = {0};
