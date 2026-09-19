@@ -14,6 +14,7 @@ add_executable(dosbox_tests
     drives_tests.cpp
     fraction_tests.cpp
     fs_utils_tests.cpp
+    i8042_wide_read_tests.cpp
     image_decoder_tests.cpp
     int10_modes_tests.cpp
     language_territory_tests.cpp
