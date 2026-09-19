@@ -986,6 +986,19 @@ void GFX_SetMouseRawInput([[maybe_unused]] const bool requested_raw_input)
 	// remains the case, remove the associated config option and related code.
 }
 
+static void set_keyboard_capture()
+{
+	assert(sdl.window);
+
+	// The keyboard follows the mouse
+	const auto capture_keyboard = get_sdl_section()->GetBool("keyboard_capture") &&
+	                              SDL_GetWindowRelativeMouseMode(sdl.window);
+
+	if (!SDL_SetWindowKeyboardGrab(sdl.window, capture_keyboard)) {
+		LOG_WARNING("SDL: Failed to set keyboard grab: %s", SDL_GetError());
+	}
+}
+
 void GFX_SetMouseCapture(const bool requested_capture)
 {
 	if (!SDL_SetWindowRelativeMouseMode(sdl.window, requested_capture)) {
@@ -995,6 +1008,8 @@ void GFX_SetMouseCapture(const bool requested_capture)
 		       requested_capture ? "putting the mouse into"
 		                         : "taking the mouse out of");
 	}
+
+	set_keyboard_capture();
 }
 
 void GFX_SetMouseVisibility(const bool requested_visible)
@@ -1607,17 +1622,6 @@ static RenderBackend* create_renderer()
 
 	assert(false);
 	return nullptr;
-}
-
-static void set_keyboard_capture()
-{
-	assert(sdl.window);
-
-	const auto capture_keyboard = get_sdl_section()->GetBool("keyboard_capture");
-
-	if (!SDL_SetWindowKeyboardGrab(sdl.window, capture_keyboard)) {
-		LOG_WARNING("SDL: Failed to set keyboard grab: %s", SDL_GetError());
-	}
 }
 
 // Window-inactive coordinator. Single entry point for everything that
@@ -2808,9 +2812,11 @@ static void init_sdl_config_settings(SectionProp& section)
 	pbool = section.AddBool("keyboard_capture", Always, false);
 	pbool->SetHelp(
 	        "Capture system keyboard shortcuts ('off' by default).\n"
-	        "When enabled, most system shortcuts such as Alt+Tab are captured and sent to\n"
-	        "DOSBox Staging. This is useful for Windows 3.1 and some DOS programs with\n"
-	        "unchangeable keyboard shortcuts that conflict with system shortcuts.");
+	        "When enabled, most system shortcuts such as Alt+Tab are sent to DOSBox Staging\n"
+	        "instead of the host OS while the mouse is captured. Releasing the mouse gives\n"
+	        "the shortcuts back to the host OS. This is useful for Windows 3.1 and some DOS\n"
+	        "programs with unchangeable keyboard shortcuts that conflict with system\n"
+	        "shortcuts.");
 
 	pstring = section.AddPath("mapperfile", Always, MAPPERFILE);
 	pstring->SetHelp(
