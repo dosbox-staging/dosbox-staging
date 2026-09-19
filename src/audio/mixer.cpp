@@ -2015,11 +2015,15 @@ bool MixerChannel::Sleeper::ConfigureFadeOut(const std::string& prefs)
 		        fade_ms);
 	};
 
-	// Disable fade-out (default)
+	// Disable fade-out
 	if (has_false(prefs)) {
-		wants_fadeout = false;
+		if (wants_fadeout) {
+			LOG_MSG("%s: Fade-out disabled", channel.GetName().c_str());
+			wants_fadeout = false;
+		}
 		return true;
 	}
+
 	// Enable fade-out with defaults
 	if (has_true(prefs)) {
 		set_wait_and_fade(DefaultWaitMs, DefaultWaitMs);
