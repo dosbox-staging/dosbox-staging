@@ -76,12 +76,15 @@ NativeFileHandle open_native_file(const char* path, const bool write_access)
 		access |= GENERIC_WRITE;
 	}
 
+	// FILE_FLAG_BACKUP_SEMANTICS is required to open a handle to a
+	// directory (e.g. so FindNext() can query directory timestamps via
+	// get_dos_file_time()); it has no effect when opening regular files.
 	return CreateFileW(utf16_path,
 	                   access,
 	                   FILE_SHARE_READ | FILE_SHARE_WRITE | FILE_SHARE_DELETE,
 	                   nullptr,
 	                   OPEN_EXISTING,
-	                   FILE_ATTRIBUTE_NORMAL,
+	                   FILE_ATTRIBUTE_NORMAL | FILE_FLAG_BACKUP_SEMANTICS,
 	                   nullptr);
 }
 
