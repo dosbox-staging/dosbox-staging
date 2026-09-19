@@ -34,23 +34,30 @@
 #include "misc/cross.h"
 #include "utils/string_utils.h"
 
-#define SOCKTABLESIZE 150 // DOS IPX driver was limited to 150 open sockets
+// DOS IPX driver was limited to 150 open sockets
+#define SOCKTABLESIZE 150
 
 struct ipxnetaddr {
-	uint8_t netnum[4]; // Both are big endian
+	// Both are big endian
+	uint8_t netnum[4];
 	uint8_t netnode[6];
 } localIpxAddr;
 
 uint32_t udpPort;
 bool isIpxServer;
 bool isIpxConnected;
-IPaddress ipxServConnIp;           // IPAddress for client connection to server
-uint8_t recvBuffer[IPXBUFFERSIZE]; // Incoming packet buffer
+
+// IPAddress for client connection to server
+IPaddress ipxServConnIp;
+
+// Incoming packet buffer
+uint8_t recvBuffer[IPXBUFFERSIZE];
 
 static asio::io_context ipx_io;
 static std::unique_ptr<asio::ip::udp::socket> ipx_client_socket = nullptr;
-static asio::ip::udp::endpoint ipx_server_endpoint              = {};
-static bool ipx_server_endpoint_valid                           = false;
+
+static asio::ip::udp::endpoint ipx_server_endpoint = {};
+static bool ipx_server_endpoint_valid              = false;
 
 static RealPt ipx_callback;
 
@@ -82,8 +89,11 @@ void PackIP(IPaddress ipAddr, PackedIP* ipPack)
 	ipPack->port = ipAddr.port;
 }
 
-ECBClass* ECBList; // Linked list of ECB's
-ECBClass* ESRList; // ECBs waiting to be ESR notified
+// Linked list of ECB's
+ECBClass* ECBList;
+
+// ECBs waiting to be ESR notified
+ECBClass* ESRList;
 
 #ifdef IPX_DEBUGMSG
 Bitu ECBSerialNumber = 0;
@@ -144,27 +154,37 @@ bool ECBClass::writeData()
 	Bitu length     = buflen;
 	uint8_t* buffer = databuffer;
 	fragmentDescriptor tmpFrag;
+
 	setInUseFlag(USEFLAG_AVAILABLE);
+
 	Bitu fragCount = getFragCount();
 	Bitu bufoffset = 0;
+
 	for (Bitu i = 0; i < fragCount; i++) {
 		getFragDesc(i, &tmpFrag);
+
 		for (Bitu t = 0; t < tmpFrag.size; t++) {
 			real_writeb(tmpFrag.segment,
 			            tmpFrag.offset + t,
 			            buffer[bufoffset]);
+
 			bufoffset++;
+
 			if (bufoffset >= length) {
 				setCompletionFlag(COMP_SUCCESS);
-				setImmAddress(&buffer[22]); // Write in source node
+
+				// Write in source node
+				setImmAddress(&buffer[22]);
 				return true;
 			}
 		}
 	}
+
 	if (bufoffset < length) {
 		setCompletionFlag(COMP_MALFORMED);
 		return false;
 	}
+
 	return false;
 }
 
@@ -196,11 +216,14 @@ uint16_t ECBClass::getFragCount(void)
 
 void ECBClass::getFragDesc(uint16_t descNum, fragmentDescriptor* fragDesc)
 {
-	uint16_t memoff  = RealOffset(ECBAddr) + 30 + ((descNum + 1) * 6);
+	uint16_t memoff = RealOffset(ECBAddr) + 30 + ((descNum + 1) * 6);
+
 	fragDesc->offset = real_readw(RealSegment(ECBAddr), memoff);
 	memoff += 2;
+
 	fragDesc->segment = real_readw(RealSegment(ECBAddr), memoff);
 	memoff += 2;
+
 	fragDesc->size = real_readw(RealSegment(ECBAddr), memoff);
 }
 
@@ -208,6 +231,7 @@ RealPt ECBClass::getESRAddr()
 {
 	const auto segment = RealSegment(ECBAddr);
 	const auto offset  = RealOffset(ECBAddr);
+
 	return RealMake(real_readw(segment, offset + 6),
 	                real_readw(segment, offset + 4));
 }
@@ -215,27 +239,35 @@ RealPt ECBClass::getESRAddr()
 void ECBClass::NotifyESR(void)
 {
 	uint32_t ESRval = real_readd(RealSegment(ECBAddr), RealOffset(ECBAddr) + 4);
-	if (ESRval || databuffer) { // databuffer: write data at realmode/v86 time
+
+	if (ESRval || databuffer) {
+		// databuffer: write data at realmode/v86 time
+		//
 		// LOG_IPX("ECB: SN%7d to be notified.", SerialNumber);
 		// take the ECB out of the current list
 		if (prevECB == nullptr) { // was the first in the list
 			ECBList = nextECB;
+
 			if (ECBList != nullptr) {
 				ECBList->prevECB = nullptr;
 			}
 		} else { // not the first
 			prevECB->nextECB = nextECB;
+
 			if (nextECB != nullptr) {
 				nextECB->prevECB = prevECB;
 			}
 		}
 
 		nextECB = nullptr;
+
 		// put it to the notification queue
 		if (ESRList == nullptr) {
 			ESRList = this;
 			prevECB = nullptr;
-		} else { // put to end of ESR list
+
+		} else {
+			// put to end of ESR list
 			ECBClass* useECB = ESRList;
 
 			while (useECB->nextECB != nullptr) {
@@ -245,11 +277,11 @@ void ECBClass::NotifyESR(void)
 			useECB->nextECB = this;
 			prevECB         = useECB;
 		}
+
 		isInESRList = true;
 		PIC_ActivateIRQ(11);
-	}
-	// this one does not want to be notified, delete it right away
-	else {
+	} else {
+		// this one does not want to be notified, delete it right away
 		delete this;
 	}
 }
@@ -281,14 +313,19 @@ ECBClass::~ECBClass()
 	if (isInESRList) {
 		// in ESR list, always the first element is deleted.
 		ESRList = nextECB;
+
 	} else {
-		if (prevECB == nullptr) { // was the first in the list
+		if (prevECB == nullptr) {
+			// was the first in the list
 			ECBList = nextECB;
+
 			if (ECBList != nullptr) {
 				ECBList->prevECB = nullptr;
 			}
-		} else { // not the first
+		} else {
+			// not the first
 			prevECB->nextECB = nextECB;
+
 			if (nextECB != nullptr) {
 				nextECB->prevECB = prevECB;
 			}
@@ -313,25 +350,31 @@ static void OpenSocket(void)
 	sockNum = swapByte(reg_dx);
 
 	if (socketCount >= SOCKTABLESIZE) {
-		reg_al = 0xfe; // Socket table full
+		// Socket table full
+		reg_al = 0xfe;
 		return;
 	}
 
 	if (sockNum == 0x0000) {
 		// Dynamic socket allocation
 		sockAlloc = 0x4002;
+
 		while (sockInUse(sockAlloc) && (sockAlloc < 0x7fff)) {
 			sockAlloc++;
 		}
+
 		if (sockAlloc > 0x7fff) {
 			// I have no idea how this could happen if the IPX
 			// driver is limited to 150 open sockets at a time
 			LOG_WARNING("IPX: Out of dynamic sockets");
 		}
+
 		sockNum = sockAlloc;
+
 	} else {
 		if (sockInUse(sockNum)) {
-			reg_al = 0xff; // Socket already open
+			// Socket already open
+			reg_al = 0xff;
 			return;
 		}
 	}
@@ -339,13 +382,18 @@ static void OpenSocket(void)
 	opensockets[socketCount] = sockNum;
 	socketCount++;
 
-	reg_al = 0x00;              // Success
-	reg_dx = swapByte(sockNum); // Convert back to big-endian
+	// Success
+	reg_al = 0x00;
+
+	// Convert back to big-endian
+	reg_dx = swapByte(sockNum);
 }
 
 static void CloseSocket(void)
 {
-	uint16_t sockNum, i;
+	uint16_t sockNum;
+	uint16_t i;
+
 	ECBClass* tmpECB  = ECBList;
 	ECBClass* tmp2ECB = ECBList;
 
@@ -363,16 +411,19 @@ static void CloseSocket(void)
 			break;
 		}
 	}
+
 	--socketCount;
 
 	// delete all ECBs of that socket
 	while (tmpECB != nullptr) {
 		tmp2ECB = tmpECB->nextECB;
+
 		if (tmpECB->getSocket() == sockNum) {
 			tmpECB->setCompletionFlag(COMP_CANCELLED);
 			tmpECB->setInUseFlag(USEFLAG_AVAILABLE);
 			delete tmpECB;
 		}
+
 		tmpECB = tmp2ECB;
 	}
 }
@@ -384,6 +435,7 @@ static bool IPX_Multiplex(void)
 	if (reg_ax != 0x7a00) {
 		return false;
 	}
+
 	reg_al = 0xff;
 	SegSet16(es, RealSegment(ipx_callback));
 	reg_di = RealOffset(ipx_callback);
@@ -397,10 +449,13 @@ static void IPX_AES_EventHandler(uint32_t param)
 {
 	ECBClass* tmpECB = ECBList;
 	ECBClass* tmp2ECB;
+
 	while (tmpECB != nullptr) {
 		tmp2ECB = tmpECB->nextECB;
+
 		if (tmpECB->iuflag == USEFLAG_AESCOUNT &&
 		    param == (Bitu)tmpECB->ECBAddr) {
+
 			tmpECB->setCompletionFlag(COMP_SUCCESS);
 			tmpECB->setInUseFlag(USEFLAG_AVAILABLE);
 			tmpECB->NotifyESR();
@@ -408,8 +463,10 @@ static void IPX_AES_EventHandler(uint32_t param)
 			// %d",tmpECB->SerialNumber);
 			return;
 		}
+
 		tmpECB = tmp2ECB;
 	}
+
 	LOG_WARNING("IPX: Rogue AES");
 }
 
@@ -424,10 +481,12 @@ static void handleIpxRequest(void)
 		OpenSocket();
 		LOG_IPX("IPX: Open socket %4x", swapByte(reg_dx));
 		break;
+
 	case 0x0001: // Close socket
 		LOG_IPX("IPX: Close socket %4x", swapByte(reg_dx));
 		CloseSocket();
 		break;
+
 	case 0x0002: // get local target
 	             // es:si
 	             // Currently no support for multiple networks
@@ -444,11 +503,14 @@ static void handleIpxRequest(void)
 
 	case 0x0003: // Send packet
 		tmpECB = new ECBClass(SegValue(es), reg_si);
+
 		if (!incomingPacket.connected) {
 			tmpECB->setInUseFlag(USEFLAG_AVAILABLE);
 			tmpECB->setCompletionFlag(COMP_UNDELIVERABLE);
+
 			delete tmpECB; // not notify?
 			reg_al = 0xff; // Failure
+			               //
 		} else {
 			tmpECB->setInUseFlag(USEFLAG_SENDING);
 			// LOG_IPX("IPX: Sending packet on %4x",
@@ -456,18 +518,24 @@ static void handleIpxRequest(void)
 			reg_al = 0x00; // Success
 			sendPacket(tmpECB);
 		}
-
 		break;
+
 	case 0x0004: // Listen for packet
 		tmpECB = new ECBClass(SegValue(es), reg_si);
 		// LOG_IPX("ECB: SN%7d RECEIVE.", tmpECB->SerialNumber);
-		if (!sockInUse(tmpECB->getSocket())) { // Socket is not open
+		//
+		if (!sockInUse(tmpECB->getSocket())) {
+			// Socket is not open
 			reg_al = 0xff;
+
 			tmpECB->setInUseFlag(USEFLAG_AVAILABLE);
 			tmpECB->setCompletionFlag(COMP_HARDWAREERROR);
 			delete tmpECB;
+
 		} else {
-			reg_al = 0x00; // Success
+			// Success
+			reg_al = 0x00;
+
 			tmpECB->setInUseFlag(USEFLAG_LISTENING);
 			/*LOG_IPX("IPX: Listen for packet on 0x%4x - ESR address
 			   %4x:%4x", tmpECB->getSocket(),
@@ -485,35 +553,47 @@ static void handleIpxRequest(void)
 		PIC_AddEvent(IPX_AES_EventHandler,
 		             (1000.0f / (1193182.0f / 65536.0f)) * (float)reg_ax,
 		             (Bitu)tmpECB->ECBAddr);
+
 		tmpECB->setInUseFlag(USEFLAG_AESCOUNT);
 	} break;
+
 	case 0x0006: // cancel operation
 	{
 		RealPt ecbaddress = RealMake(SegValue(es), reg_si);
 		ECBClass* tmpECB  = ECBList;
 		ECBClass* tmp2ECB;
+
 		while (tmpECB) {
 			tmp2ECB = tmpECB->nextECB;
+
 			if (tmpECB->ECBAddr == ecbaddress) {
 				if (tmpECB->getInUseFlag() == USEFLAG_AESCOUNT) {
 					PIC_RemoveSpecificEvents(IPX_AES_EventHandler,
 					                         ecbaddress);
 				}
+
 				tmpECB->setInUseFlag(USEFLAG_AVAILABLE);
 				tmpECB->setCompletionFlag(COMP_CANCELLED);
+
 				delete tmpECB;
-				reg_al = 0; // Success
+
+				// Success
+				reg_al = 0;
 				LOG_IPX("IPX: ECB canceled.");
 				return;
 			}
+
 			tmpECB = tmp2ECB;
 		}
-		reg_al = 0xff; // Fail
+		// Fail
+		reg_al = 0xff;
 	} break;
 
-	case 0x0008:                       // Get interval marker
-		reg_ax = mem_readw(0x46c); // BIOS_TIMER
+	case 0x0008: // Get interval marker
+		// BIOS_TIMER
+		reg_ax = mem_readw(0x46c);
 		break;
+
 	case 0x0009: // Get internetwork address
 	{
 		LOG_IPX("IPX: Get internetwork address %2x:%2x:%2x:%2x:%2x:%2x",
@@ -530,25 +610,31 @@ static void handleIpxRequest(void)
 		}
 	} break;
 
-	case 0x000a:   // Relinquish control
-		break; // Idle thingy
-
-	case 0x000b:   // Disconnect from Target
-		break; // We don't even connect
-
-	case 0x000d:           // get packet size
-		reg_cx = 0;    // retry count
-		reg_ax = 1024; // real implementation returns 1024
+	case 0x000a: // Relinquish control
+		// Idle thingy
 		break;
 
-	case 0x0010:        // SPX install check
-		reg_al = 0; // SPX not installed
+	case 0x000b: // Disconnect from Target
+		// We don't even connect
 		break;
 
-	case 0x001a:                    // get driver maximum packet size
-		reg_cx = 0;             // retry count
-		reg_ax = IPXBUFFERSIZE; // max packet size: something near the
-		                        // ethernet packet size
+	case 0x000d: // get packet size
+		// retry count
+		reg_cx = 0;
+		// real implementation returns 1024
+		reg_ax = 1024;
+		break;
+
+	case 0x0010: // SPX install check
+		// SPX not installed
+		reg_al = 0;
+		break;
+
+	case 0x001a: // get driver maximum packet size
+		// retry count
+		reg_cx = 0;
+		// max packet size: something near the ethernet packet size
+		reg_ax = IPXBUFFERSIZE;
 		break;
 
 	default: LOG_WARNING("Unhandled IPX function: %4x", reg_bx); break;
@@ -584,18 +670,22 @@ static void pingAck(IPaddress retAddr)
 	memcpy(regHeader.src.addr.byNode.node,
 	       localIpxAddr.netnode,
 	       sizeof(regHeader.src.addr.byNode.node));
+
 	net_write16(0x2, regHeader.src.socket);
+
 	regHeader.transControl = 0;
 	regHeader.pType        = 0x0;
 
 	if (!ipx_client_socket || !ipx_server_endpoint_valid) {
 		return;
 	}
+
 	std::error_code ec;
 	ipx_client_socket->send_to(asio::buffer(&regHeader, sizeof(regHeader)),
 	                           ipx_server_endpoint,
 	                           0,
 	                           ec);
+
 	if (ec) {
 		LOG_DEBUG("IPX: Failed to acknowledge send: %s",
 		          ec.message().c_str());
@@ -618,6 +708,7 @@ static void pingSend(void)
 	memcpy(regHeader.src.addr.byNode.node,
 	       localIpxAddr.netnode,
 	       sizeof(regHeader.src.addr.byNode.node));
+
 	net_write16(0x2, regHeader.src.socket);
 	regHeader.transControl = 0;
 	regHeader.pType        = 0x0;
@@ -640,8 +731,10 @@ static void receivePacket(uint8_t* buffer, int16_t bufSize)
 {
 	ECBClass* useECB;
 	ECBClass* nextECB;
+
 	auto bufword       = (uint16_t*)buffer;
 	uint16_t useSocket = swapByte(bufword[8]);
+
 	IPXHeader* tmpHeader;
 	tmpHeader = (IPXHeader*)buffer;
 
@@ -650,6 +743,7 @@ static void receivePacket(uint8_t* buffer, int16_t bufSize)
 		// Is this a broadcast?
 		if ((tmpHeader->dest.addr.byIP.host == 0xffffffff) &&
 		    (tmpHeader->dest.addr.byIP.port == 0xffff)) {
+
 			// Yes.  We should return the ping back to the sender
 			IPaddress tmpAddr;
 			UnpackIP(tmpHeader->src.addr.byIP, &tmpAddr);
@@ -661,6 +755,7 @@ static void receivePacket(uint8_t* buffer, int16_t bufSize)
 	useECB = ECBList;
 	while (useECB != nullptr) {
 		nextECB = useECB->nextECB;
+
 		if (useECB->iuflag == USEFLAG_LISTENING &&
 		    useECB->mysocket == useSocket) {
 			useECB->writeDataBuffer(buffer, bufSize);
@@ -677,16 +772,20 @@ static void IPX_ClientLoop(void)
 	if (!ipx_client_socket) {
 		return;
 	}
+
 	std::error_code ec;
 	asio::ip::udp::endpoint sender;
+
 	const auto len = ipx_client_socket->receive_from(
 	        asio::buffer(recvBuffer, IPXBUFFERSIZE), sender, 0, ec);
+
 	if (ec == asio::error::would_block || ec == asio::error::try_again) {
 		return;
 	}
 	if (ec) {
 		return;
 	}
+
 	if (len) {
 		receivePacket(recvBuffer, static_cast<int16_t>(len));
 	}
@@ -697,14 +796,18 @@ void DisconnectFromServer(bool unexpected)
 	if (unexpected) {
 		LOG_WARNING("IPX: Server disconnected unexpectedly");
 	}
+
 	if (incomingPacket.connected) {
 		incomingPacket.connected = false;
+
 		TIMER_DelTickHandler(&IPX_ClientLoop);
+
 		if (ipx_client_socket) {
 			std::error_code ec;
 			ipx_client_socket->close(ec);
 			ipx_client_socket.reset();
 		}
+
 		ipx_server_endpoint_valid = false;
 	}
 }
@@ -713,13 +816,16 @@ static void sendPacket(ECBClass* sendecb)
 {
 	uint8_t outbuffer[IPXBUFFERSIZE];
 	fragmentDescriptor tmpFrag;
-	uint16_t i, fragCount, t;
+	uint16_t i;
+	uint16_t fragCount;
+	uint16_t t;
 	int16_t packetsize;
 	uint16_t* wordptr;
 
 	sendecb->setInUseFlag(USEFLAG_AVAILABLE);
 	packetsize = 0;
 	fragCount  = sendecb->getFragCount();
+
 	for (i = 0; i < fragCount; i++) {
 		sendecb->getFragDesc(i, &tmpFrag);
 		if (i == 0) {
@@ -734,6 +840,7 @@ static void sendPacket(ECBClass* sendecb)
 				            tmpFrag.offset + m + 18,
 				            addrptr[m]);
 			}
+
 			// source node number
 			addrptr = (uint8_t*)&localIpxAddr.netnode;
 			for (uint16_t m = 0; m < 6; m++) {
@@ -741,6 +848,7 @@ static void sendPacket(ECBClass* sendecb)
 				            tmpFrag.offset + m + 22,
 				            addrptr[m]);
 			}
+
 			// Source socket
 			real_writew(tmpFrag.segment,
 			            tmpFrag.offset + 28,
@@ -757,6 +865,7 @@ static void sendPacket(ECBClass* sendecb)
 			if (packetsize >= IPXBUFFERSIZE) {
 				LOG_WARNING("IPX: Packet size to be sent greater than %d bytes.",
 				            IPXBUFFERSIZE);
+
 				sendecb->setCompletionFlag(COMP_UNDELIVERABLE);
 				sendecb->NotifyESR();
 				return;
@@ -788,12 +897,15 @@ static void sendPacket(ECBClass* sendecb)
 	uint8_t* addrptr;
 
 	addrptr = (uint8_t*)&localIpxAddr.netnum;
+
 	for (Bitu m = 0; m < 4; m++) {
 		if (addrptr[m] != outbuffer[m + 0x6]) {
 			isloopback = false;
 		}
 	}
+
 	addrptr = (uint8_t*)&localIpxAddr.netnode;
+
 	for (Bitu m = 0; m < 6; m++) {
 		if (addrptr[m] != outbuffer[m + 0xa]) {
 			isloopback = false;
@@ -802,29 +914,36 @@ static void sendPacket(ECBClass* sendecb)
 			islocalbroadcast = false;
 		}
 	}
+
 	LOG_IPX("SEND crc:%2x", packetCRC(&outbuffer[0], packetsize));
+
 	if (!isloopback) {
 		if (!ipx_client_socket || !ipx_server_endpoint_valid) {
 			sendecb->setCompletionFlag(COMP_NOCONNECTION);
 			sendecb->NotifyESR();
 			return;
 		}
+
 		std::error_code ec;
 		ipx_client_socket->send_to(asio::buffer(outbuffer, packetsize),
 		                           ipx_server_endpoint,
 		                           0,
 		                           ec);
+
 		if (ec) {
 			LOG_WARNING("IPX: Could not send packet: %s",
 			            ec.message().c_str());
+
 			sendecb->setCompletionFlag(COMP_HARDWAREERROR);
 			sendecb->NotifyESR();
 			DisconnectFromServer(true);
 			return;
+
 		} else {
 			sendecb->setCompletionFlag(COMP_SUCCESS);
 			LOG_IPX("Packet sent: size: %d", packetsize);
 		}
+
 	} else {
 		sendecb->setCompletionFlag(COMP_SUCCESS);
 	}
@@ -836,6 +955,7 @@ static void sendPacket(ECBClass* sendecb)
 		        isloopback,
 		        islocalbroadcast);
 	}
+
 	sendecb->NotifyESR();
 }
 
@@ -844,20 +964,26 @@ static bool pingCheck(IPXHeader* outHeader)
 	if (!ipx_client_socket) {
 		return false;
 	}
+
 	uint8_t buffer[1024] = {};
+
 	asio::ip::udp::endpoint sender;
 	std::error_code ec;
+
 	const auto len = ipx_client_socket->receive_from(
 	        asio::buffer(buffer, sizeof(buffer)), sender, 0, ec);
+
 	if (ec == asio::error::would_block || ec == asio::error::try_again) {
 		return false;
 	}
 	if (ec) {
 		return false;
 	}
+
 	if (len < sizeof(IPXHeader)) {
 		return false;
 	}
+
 	std::memcpy(outHeader, buffer, sizeof(IPXHeader));
 	return true;
 }
@@ -868,6 +994,7 @@ bool ConnectToServer(const char* strAddr)
 
 	std::error_code ec;
 	asio::ip::udp::resolver resolver(ipx_io);
+
 	auto endpoints = resolver.resolve(asio::ip::udp::v4(),
 	                                  strAddr,
 	                                  std::to_string(static_cast<uint16_t>(udpPort)),
@@ -893,12 +1020,14 @@ bool ConnectToServer(const char* strAddr)
 		LOG_WARNING("IPX: Unable to open socket");
 		return false;
 	}
+
 	ipx_client_socket->bind(asio::ip::udp::endpoint(asio::ip::udp::v4(), 0), ec);
 	if (ec) {
 		LOG_WARNING("IPX: Unable to open socket");
 		ipx_client_socket.reset();
 		return false;
 	}
+
 	ipx_client_socket->non_blocking(true, ec);
 	if (ec) {
 		LOG_WARNING("IPX: Unable to open socket");
@@ -920,6 +1049,7 @@ bool ConnectToServer(const char* strAddr)
 	regHeader.src.addr.byIP.port = 0x0;
 	net_write16(0x2, regHeader.src.socket);
 	regHeader.transControl = 0;
+
 	// Send registration packet to server. If server doesn't get this,
 	// client will not be registered.
 	ipx_client_socket->send_to(asio::buffer(&regHeader, sizeof(regHeader)),
@@ -931,6 +1061,7 @@ bool ConnectToServer(const char* strAddr)
 		            ec.message().c_str());
 		ipx_client_socket.reset();
 		return false;
+
 	} else {
 		// Wait for return packet from server.
 		// This will contain our IPX address and port num
@@ -946,16 +1077,19 @@ bool ConnectToServer(const char* strAddr)
 
 				return false;
 			}
+
 			if (CALLBACK_Idle()) {
 				break;
 			}
 
 			asio::ip::udp::endpoint sender;
+
 			const auto len = ipx_client_socket->receive_from(
 			        asio::buffer(reply_buffer, sizeof(reply_buffer)),
 			        sender,
 			        0,
 			        ec);
+
 			if (ec == asio::error::would_block ||
 			    ec == asio::error::try_again) {
 				continue;
@@ -963,12 +1097,15 @@ bool ConnectToServer(const char* strAddr)
 			if (ec) {
 				continue;
 			}
+
 			if (len >= sizeof(IPXHeader)) {
 				const auto* reply = reinterpret_cast<const IPXHeader*>(
 				        reply_buffer);
+
 				std::memcpy(localIpxAddr.netnode,
 				            reply->dest.addr.byNode.node,
 				            sizeof(localIpxAddr.netnode));
+
 				std::memcpy(localIpxAddr.netnum,
 				            reply->dest.network,
 				            sizeof(localIpxAddr.netnum));
@@ -1019,6 +1156,7 @@ public:
 			WriteOut("IPXNET CONNECT address <port>\n\n");
 			return;
 		}
+
 		// Help on the disconnect command
 		if (strcasecmp("disconnect", helpStr) == 0) {
 			WriteOut("IPXNET DISCONNECT closes the connection to the IPX tunneling server.\n\n");
@@ -1026,6 +1164,7 @@ public:
 			WriteOut("IPXNET DISCONNECT\n\n");
 			return;
 		}
+
 		// Help on the startserver command
 		if (strcasecmp("startserver", helpStr) == 0) {
 			WriteOut("IPXNET STARTSERVER starts and IPX tunneling server on this DOSBox session.  By\n");
@@ -1036,6 +1175,7 @@ public:
 			WriteOut("IPXNET STARTSERVER <port>\n\n");
 			return;
 		}
+
 		// Help on the stop server command
 		if (strcasecmp("stopserver", helpStr) == 0) {
 			WriteOut("IPXNET STOPSERVER stops the IPX tunneling server running on this DOSBox\nsession.");
@@ -1046,6 +1186,7 @@ public:
 			WriteOut("IPXNET STOPSERVER\n\n");
 			return;
 		}
+
 		// Help on the ping command
 		if (strcasecmp("ping", helpStr) == 0) {
 			WriteOut("IPXNET PING broadcasts a ping request through the IPX tunneled network.  In    \n");
@@ -1055,6 +1196,7 @@ public:
 			WriteOut("IPXNET PING\n\n");
 			return;
 		}
+
 		// Help on the status command
 		if (strcasecmp("status", helpStr) == 0) {
 			WriteOut("IPXNET STATUS reports the current state of this DOSBox's sessions IPX tunneling\n");
@@ -1069,6 +1211,7 @@ public:
 	void Run(void) override
 	{
 		WriteOut("IPX Tunneling utility for DOSBox\n\n");
+
 		if (!cmd->GetCount()) {
 			WriteOut("The syntax of this command is:\n\n");
 			WriteOut("IPXNET [ CONNECT | DISCONNECT | STARTSERVER | STOPSERVER | PING | HELP |\n         STATUS ]\n\n");
@@ -1090,13 +1233,16 @@ public:
 				}
 				return;
 			}
+
 			if (strcasecmp("startserver", temp_line.c_str()) == 0) {
 				if (!isIpxServer) {
 					if (incomingPacket.connected) {
 						WriteOut("IPX Tunneling Client already connected to another server.  Disconnect first.\n");
 						return;
 					}
+
 					bool startsuccess;
+
 					if (!cmd->FindCommand(2, temp_line)) {
 						udpPort = 213;
 					} else {
@@ -1104,23 +1250,28 @@ public:
 						                 nullptr,
 						                 10);
 					}
+
 					startsuccess = IPX_StartServer(
 					        (uint16_t)udpPort);
+
 					if (startsuccess) {
 						WriteOut("IPX Tunneling Server started\n");
 						isIpxServer = true;
 						ConnectToServer("localhost");
+
 					} else {
 						WriteOut("IPX Tunneling Server failed to start.\n");
 						if (udpPort < 1024) {
 							WriteOut("Try a port number above 1024. See IPXNET HELP CONNECT on how to specify a port.\n");
 						}
 					}
+
 				} else {
 					WriteOut("IPX Tunneling Server already started\n");
 				}
 				return;
 			}
+
 			if (strcasecmp("stopserver", temp_line.c_str()) == 0) {
 				if (!isIpxServer) {
 					WriteOut("IPX Tunneling Server not running in this DOSBox session.\n");
@@ -1132,12 +1283,14 @@ public:
 				}
 				return;
 			}
+
 			if (strcasecmp("connect", temp_line.c_str()) == 0) {
 				char strHost[1024];
 				if (incomingPacket.connected) {
 					WriteOut("IPX Tunneling Client already connected.\n");
 					return;
 				}
+
 				if (!cmd->FindCommand(2, temp_line)) {
 					WriteOut("IPX Server address not specified.\n");
 					return;
@@ -1174,9 +1327,12 @@ public:
 
 			if (strcasecmp("status", temp_line.c_str()) == 0) {
 				WriteOut("IPX Tunneling Status:\n\n");
+
 				WriteOut("Server status: %s\n",
 				         (isIpxServer ? "ACTIVE" : "INACTIVE"));
+
 				WriteOut("Client status: ");
+
 				if (incomingPacket.connected) {
 					WriteOut("CONNECTED -- Server at %d.%d.%d.%d port %d\n",
 					         CONVIP(ipxServConnIp.host),
@@ -1184,10 +1340,12 @@ public:
 				} else {
 					WriteOut("DISCONNECTED\n");
 				}
+
 				if (isIpxServer) {
 					WriteOut("List of active connections:\n\n");
 					int i;
 					IPaddress* ptrAddr;
+
 					for (i = 0; i < SOCKETTABLESIZE; i++) {
 						if (IPX_isConnectedToServer(i, &ptrAddr)) {
 							WriteOut("     %d.%d.%d.%d from port %d\n",
@@ -1208,10 +1366,14 @@ public:
 					WriteOut("IPX Tunneling Client not connected.\n");
 					return;
 				}
+
 				TIMER_DelTickHandler(&IPX_ClientLoop);
+
 				WriteOut("Sending broadcast ping:\n\n");
 				pingSend();
+
 				const auto ticks = GetTicks();
+
 				while ((GetTicksSince(ticks)) < 1500) {
 					if (CALLBACK_Idle()) {
 						return;
@@ -1228,6 +1390,7 @@ public:
 						        GetTicksSince(ticks));
 					}
 				}
+
 				TIMER_AddTickHandler(&IPX_ClientLoop);
 				return;
 			}
@@ -1238,19 +1401,24 @@ public:
 Bitu IPX_ESRHandler(void)
 {
 	LOG_IPX("ESR: >>>>>>>>>>>>>>>");
+
 	while (ESRList != nullptr) {
 		// LOG_IPX("ECB: SN%7d notified.", ESRList->SerialNumber);
 		if (ESRList->databuffer) {
 			ESRList->writeData();
 		}
+
 		if (ESRList->getESRAddr()) {
 			// setup registers
 			SegSet16(es, RealSegment(ESRList->ECBAddr));
+
 			reg_si = RealOffset(ESRList->ECBAddr);
 			reg_al = 0xff;
+
 			CALLBACK_RunRealFar(RealSegment(ESRList->getESRAddr()),
 			                    RealOffset(ESRList->getESRAddr()));
 		}
+
 		delete ESRList; // Destructor updates this pointer to the next
 		                // value or NULL
 	} // while
@@ -1266,8 +1434,11 @@ private:
 	CALLBACK_HandlerObject callback_ipx    = {};
 	CALLBACK_HandlerObject callback_esr    = {};
 	CALLBACK_HandlerObject callback_ipxint = {};
-	RealPt old_73_vector                   = 0;
+
+	RealPt old_73_vector = 0;
+
 	static uint16_t dospage;
+
 	SectionProp& section;
 
 	// True only if this instance actually installed the IPX interface (i.e.
@@ -1280,8 +1451,9 @@ private:
 public:
 	IPX(SectionProp& _section) : section(_section)
 	{
-		ECBList        = nullptr;
-		ESRList        = nullptr;
+		ECBList = nullptr;
+		ESRList = nullptr;
+
 		isIpxServer    = false;
 		isIpxConnected = false;
 
@@ -1354,6 +1526,7 @@ public:
 	~IPX()
 	{
 		PIC_RemoveEvents(IPX_AES_EventHandler);
+
 		if (!installed) {
 			return;
 		}
@@ -1362,6 +1535,7 @@ public:
 			isIpxServer = false;
 			IPX_StopServer();
 		}
+
 		DisconnectFromServer(false);
 
 		DOS_DeleteMultiplexHandler(IPX_Multiplex);
