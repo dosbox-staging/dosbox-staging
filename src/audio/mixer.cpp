@@ -62,7 +62,7 @@ constexpr auto EnvelopeMaxExpansionOverMs = 15;
 constexpr auto EnvelopeExpiresAfterSeconds = 10;
 
 constexpr auto DefaultPrebufferMs = 20;
-constexpr auto MaxPrebufferMs = 100;
+constexpr auto MaxPrebufferMs     = 100;
 
 constexpr auto DefaultBlocksize = 1024;
 constexpr auto MinBlocksize     = 16;
@@ -200,19 +200,19 @@ struct MixerSettings {
 	bool no_sound = false;
 
 	// Mute FSM (see `MixerMuteState` in mixer.h). When non-Audible,
-	// `mix_samples()` still runs (so the capture queue IS fed at full level)
-	// and the fade below ramps the SDL-bound `output_buffer` toward zero
-	// before it reaches `final_output`.
+	// `mix_samples()` still runs (so the capture queue IS fed at full
+	// level) and the fade below ramps the SDL-bound `output_buffer` toward
+	// zero before it reaches `final_output`.
 	std::atomic<MixerMuteState> mute_state = MixerMuteState::Audible;
 
 	// Fade-out/-in gain, ramped by `mixer_thread_loop()` and polled by the
-	// PausePending FSM in dosbox.cpp (via `MIXER_GetPlaybackGain()`) to know
-	// when the fade-out has reached zero.
+	// PausePending FSM in dosbox.cpp (via `MIXER_GetPlaybackGain()`) to
+	// know when the fade-out has reached zero.
 	//
 	// Written ONLY by the mixer thread. Read by the mixer thread and by
-	// `pending_pause_tick_handler()`. Because there's a single writer there's
-	// no coordination hazard; the atomic exists purely to make the FSM's read
-	// well-defined.
+	// `pending_pause_tick_handler()`. Because there's a single writer
+	// there's no coordination hazard; the atomic exists purely to make the
+	// FSM's read well-defined.
 	std::atomic<float> playback_gain = 1.0f;
 
 	HighpassFilter highpass_filter = {};
@@ -2629,9 +2629,12 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 	const auto frames_to_dequeue = std::min(mixer.final_output.Size(),
 	                                        frames_requested);
 
-	const auto frames_received = mixer.final_output.BulkDequeue(output, frames_to_dequeue);
+	const auto frames_received = mixer.final_output.BulkDequeue(output,
+	                                                            frames_to_dequeue);
 
-	SDL_PutAudioStreamData(stream, output.data(), check_cast<int>(frames_received) * BytesPerAudioFrame);
+	SDL_PutAudioStreamData(stream,
+	                       output.data(),
+	                       check_cast<int>(frames_received) * BytesPerAudioFrame);
 }
 
 float MIXER_GetPlaybackGain()
@@ -2716,8 +2719,8 @@ static void mixer_thread_loop()
 			if (mixer.no_sound) {
 				// No SDL device, no consumer for
 				// `final_output`. Just sleep to simulate the
-				// per-block duration; skipping the enqueue avoids
-				// filling and blocking the queue.
+				// per-block duration; skipping the enqueue
+				// avoids filling and blocking the queue.
 				constexpr double NanosecondsPerMillisecond = 1000000.0;
 
 				const auto expected_time =
@@ -3076,16 +3079,17 @@ static bool init_sdl_sound(const int requested_sample_rate_hz,
 		return false;
 	}
 
-	mixer.sdl_device = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &desired);
+	mixer.sdl_device = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK,
+	                                       &desired);
 	if (mixer.sdl_device == 0) {
 		LOG_ERR("MIXER: Can't open audio device: '%s'; sound output is disabled",
 		        SDL_GetError());
 		return false;
 	}
 
-	// We open the audio device with our desired audio specs but these are only a hint.
-	// The hardware and/or platform may not support what we requested.
-	// Check here to see what the device actually got opened with.
+	// We open the audio device with our desired audio specs but these are
+	// only a hint. The hardware and/or platform may not support what we
+	// requested. Check here to see what the device actually got opened with.
 	int obtained_blocksize = 0;
 	SDL_GetAudioDeviceFormat(mixer.sdl_device, &obtained, &obtained_blocksize);
 
@@ -3095,7 +3099,7 @@ static bool init_sdl_sound(const int requested_sample_rate_hz,
 	// to match the device's rate to avoid SDL having to resample our
 	// already resampled audio.
 	const auto obtained_sample_rate_hz = obtained.freq;
-	desired.freq = obtained_sample_rate_hz;
+	desired.freq                       = obtained_sample_rate_hz;
 
 	// This is a playback stream so the source must match our mixer's output.
 	// The destination spec will be set by SDL in SDL_BindAudioStream()
@@ -3128,9 +3132,11 @@ static bool init_sdl_sound(const int requested_sample_rate_hz,
 	mixer.sample_rate_hz = obtained_sample_rate_hz;
 	mixer.blocksize      = obtained_blocksize;
 
-	const auto driver_name = SDL_GetCurrentAudioDriver();
+	const auto driver_name   = SDL_GetCurrentAudioDriver();
 	const auto playback_name = SDL_GetAudioDeviceName(mixer.sdl_device);
-	LOG_MSG("MIXER: Initialised '%s' audio driver using '%s' output device", driver_name, playback_name);
+	LOG_MSG("MIXER: Initialised '%s' audio driver using '%s' output device",
+	        driver_name,
+	        playback_name);
 
 	// Did SDL negotiate a different playback rate?
 	if (obtained_sample_rate_hz != requested_sample_rate_hz) {
@@ -3145,7 +3151,8 @@ static bool init_sdl_sound(const int requested_sample_rate_hz,
 	}
 
 	// Did SDL adjust the hint request?
-	if (requested_blocksize_in_frames && obtained_blocksize != *requested_blocksize_in_frames) {
+	if (requested_blocksize_in_frames &&
+	    obtained_blocksize != *requested_blocksize_in_frames) {
 		LOG_MSG("MIXER: SDL changed the requested blocksize of "
 		        "%d to %d frames",
 		        *requested_blocksize_in_frames,
@@ -3206,7 +3213,7 @@ static void init_denoiser(bool enabled)
 	}
 }
 
-static std::optional<int> parse_blocksize(SectionProp *section)
+static std::optional<int> parse_blocksize(SectionProp* section)
 {
 	const auto str = section->GetString("blocksize");
 	if (str == "auto") {
@@ -3262,10 +3269,14 @@ void MIXER_Init()
 
 			mixer.final_output.Start();
 
-			// The stream becomes live (unpaused) during the SDL_BindAudioStream() call.
-			// It will play silence until we start the callback here and start feeding it audio.
-			// We never use SDL's pause feature. Instead we write silence when we mute the audio.
-			SDL_SetAudioStreamGetCallback(mixer.sdl_stream, mixer_callback, nullptr);
+			// The stream becomes live (unpaused) during the
+			// SDL_BindAudioStream() call. It will play silence
+			// until we start the callback here and start feeding it
+			// audio. We never use SDL's pause feature. Instead we
+			// write silence when we mute the audio.
+			SDL_SetAudioStreamGetCallback(mixer.sdl_stream,
+			                              mixer_callback,
+			                              nullptr);
 
 			// `mute_state` defaults to Audible and `paused`
 			// defaults to false; nothing more to set here.
@@ -3415,15 +3426,18 @@ static void init_mixer_config_settings(SectionProp& sec_prop)
 	        "rates to 48000 Hz anyway.");
 
 	constexpr auto DefaultBlocksizeString = "auto";
-	auto string_prop = sec_prop.AddString("blocksize", OnlyAtStart, DefaultBlocksizeString);
-	string_prop->SetHelp(format_str(
-	        "Block size of the host audio device in sample frames ('%s' by default). Valid\n"
-	        "range is %d to %d. Should be set to power-of-two values (e.g., 256, 512, 1024,\n"
-	        "etc.) Larger values might help with sound stuttering but will introduce more\n"
-	        "latency.",
-	        DefaultBlocksizeString,
-	        MinBlocksize,
-	        MaxBlocksize));
+
+	auto string_prop = sec_prop.AddString("blocksize",
+	                                      OnlyAtStart,
+	                                      DefaultBlocksizeString);
+	string_prop->SetHelp(
+	        format_str("Block size of the host audio device in sample frames ('%s' by default). Valid\n"
+	                   "range is %d to %d. Should be set to power-of-two values (e.g., 256, 512, 1024,\n"
+	                   "etc.) Larger values might help with sound stuttering but will introduce more\n"
+	                   "latency.",
+	                   DefaultBlocksizeString,
+	                   MinBlocksize,
+	                   MaxBlocksize));
 
 	int_prop = sec_prop.AddInt("prebuffer", OnlyAtStart, DefaultPrebufferMs);
 	int_prop->SetMinMax(0, MaxPrebufferMs);
