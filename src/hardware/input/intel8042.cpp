@@ -23,7 +23,8 @@ CHECK_NARROWING();
 // - https://wiki.osdev.org/%228042%22_PS/2_Controller
 // - https://stanislavs.org/helppc/8042.html
 // - https://homepages.cwi.nl/~aeb/linux/kbd/scancodes.html
-// - http://www-ug.eecg.toronto.edu/msl/nios_devices/datasheets/PS2%20Keyboard%20Protocol.htm
+// -
+// http://www-ug.eecg.toronto.edu/msl/nios_devices/datasheets/PS2%20Keyboard%20Protocol.htm
 // - https://k.lse.epita.fr/data/8042.pdf (SMSC KBD43W13 whitepaper)
 // - https://tvsat.com.pl/PDF/W/W83C42P_win.pdf (Winbond W83C42 whitepaper)
 // - http://www.os2museum.com/wp/ibm-pcat-8042-keyboard-controller-commands/
@@ -33,7 +34,7 @@ static constexpr uint8_t IrqNumKbdPcjr  = 6;
 static constexpr uint8_t IrqNumKbdIbmPc = 1;
 static constexpr uint8_t IrqNumMouse    = 12;
 
-constexpr uint8_t        FirmwareRevision  = 0x00;
+constexpr uint8_t FirmwareRevision         = 0x00;
 static const std::string FirmwareCopyright = DOSBOX_COPYRIGHT;
 
 static constexpr uint8_t BufferSize = 64; // in bytes
@@ -221,6 +222,7 @@ static size_t waiting_bytes_from_kbd = 0;
 
 // true = delay timer is in progress
 static bool delay_running = false;
+
 // true = delay timer expired, event can be sent immediately
 static bool delay_expired = true;
 
@@ -238,7 +240,7 @@ static void warn_buffer_full()
 {
 	static constexpr uint32_t threshold_ms = 15 * 1000; // 15 seconds
 
-	static bool already_warned = false;
+	static bool already_warned     = false;
 	static uint32_t last_timestamp = 0;
 
 	if (!already_warned || (PIC_Ticks - last_timestamp > threshold_ms)) {
@@ -296,7 +298,9 @@ static void warn_vendor_lines()
 static void warn_unknown_command(const Command command)
 {
 	static bool already_warned[UINT8_MAX + 1];
+
 	const auto code = static_cast<uint8_t>(command);
+
 	if (!already_warned[code]) {
 		LOG_WARNING("I8042: Unknown command 0x%02x", code);
 		already_warned[code] = true;
@@ -460,18 +464,18 @@ static void maybe_transfer_buffer()
 	--buffer_num_used;
 
 	// Transfer one byte of data from buffer to output port
-	data_byte        = buffer[idx].data;
+	data_byte = buffer[idx].data;
+
 	is_data_from_aux = buffer[idx].is_from_aux;
 	is_data_from_kbd = buffer[idx].is_from_kbd;
 	is_data_new      = true;
+
 	restart_delay_timer();
 	activate_irqs_if_needed();
 }
 
-static void buffer_add(const uint8_t byte,
-                       const bool is_from_aux = false,
-                       const bool is_from_kbd = false,
-                       const bool skip_delay  = false)
+static void buffer_add(const uint8_t byte, const bool is_from_aux = false,
+                       const bool is_from_kbd = false, const bool skip_delay = false)
 {
 	if ((is_from_aux && is_disabled_aux) || (is_from_kbd && is_disabled_kbd)) {
 		// Byte came from a device which is currently disabled
@@ -491,6 +495,7 @@ static void buffer_add(const uint8_t byte,
 	} else {
 		buffer[idx].data = byte;
 	}
+
 	buffer[idx].is_from_aux = is_from_aux;
 	buffer[idx].is_from_kbd = is_from_kbd;
 	buffer[idx].skip_delay  = skip_delay || (!is_from_aux && !is_from_kbd);
@@ -642,6 +647,7 @@ static void execute_command(const Command command)
 	case Command::WriteAux:         // 0xd4
 		current_command = command;
 		break;
+
 	case Command::WriteControllerMode: // 0xcb
 		warn_controller_mode();
 		current_command = command;
@@ -655,21 +661,25 @@ static void execute_command(const Command command)
 		flush_buffer();
 		buffer_add(config_byte.data);
 		break;
+
 	case Command::ReadFwCopyright: // 0xa0
 		// Reads the keyboard controller firmware
 		// copyright string, terminated by NUL
 		flush_buffer();
+
 		for (auto byte : FirmwareCopyright) {
 			buffer_add(static_cast<uint8_t>(byte));
 		}
 		buffer_add(0);
 		break;
+
 	case Command::ReadFwRevision: // 0xa1
 		// Reads the keyboard controller firmware
 		// revision, always one byte
 		flush_buffer();
 		buffer_add(FirmwareRevision);
 		break;
+
 	case Command::PasswordCheck: // 0xa4
 		// Check if password installed
 		// 0xf1: not installed, or no hardware support
@@ -677,14 +687,17 @@ static void execute_command(const Command command)
 		flush_buffer();
 		buffer_add(0xf1);
 		break;
+
 	case Command::DisablePortAux: // 0xa7
 		// Disable aux (mouse) port
 		is_disabled_aux = true;
 		break;
+
 	case Command::EnablePortAux: // 0xa8
 		// Enable aux (mouse) port
 		is_disabled_aux = false;
 		break;
+
 	case Command::TestPortAux: // 0xa9
 		// Port test. Possible results:
 		// 0x01: clock line stuck low
@@ -696,54 +709,68 @@ static void execute_command(const Command command)
 		flush_buffer();
 		buffer_add(0x00);
 		break;
+
 	case Command::TestController: // 0xaa
 		// Controller test. Possible results:
 		// 0x55: passed; 0xfc: failed
 		// Disables aux (mouse) and keyboard ports, enables translation,
 		// enables A20 line, marks self-test as passed.
 		MEM_A20_Enable(true);
+
 		is_disabled_aux      = true;
 		is_disabled_kbd      = true;
 		uses_kbd_translation = true;
 		passed_self_test     = true;
+
 		flush_buffer();
 		buffer_add(0x55);
 		break;
+
 	case Command::TestPortKbd: // 0xab
 		// Port test. Possible results:
 		// (as with aux port test)
 		// Disables the keyboard port
 		is_disabled_kbd = true;
+
 		flush_buffer();
 		buffer_add(0x00); // as with TestPortAux
 		break;
+
 	case Command::DiagnosticDump: // 0xac
 		// Dump the whole controller internal RAM (16 bytes),
 		// output port, input port, test input, and status byte
 		warn_internal_ram_access();
 		static_assert(BufferSize >= 20 * 3,
 		              "Buffer has to hold 3 bytes for each byte of dump");
+
 		flush_buffer();
 		is_diagnostic_dump = true;
 		diag_dump_byte(config_byte.data);
+
 		for (uint8_t idx = 1; idx <= 16; idx++) {
 			diag_dump_byte(0);
 		}
+
 		diag_dump_byte(get_input_port());
 		diag_dump_byte(get_output_port());
+
 		warn_read_test_inputs();
+
 		diag_dump_byte(0); // test input - TODO: not emulated for now
 		diag_dump_byte(status_byte.data);
 		break;
+
 	case Command::DisablePortKbd: // 0xad
 		// Disable keyboard port; any keyboard command
 		// reenables the port
 		is_disabled_kbd = true;
 		break;
+
 	case Command::EnablePortKbd: // 0xae
 		// Enable the keyboard port
 		is_disabled_kbd = false;
 		break;
+
 	case Command::ReadKbdVersion: // 0xaf
 		// Reads the keyboard version
 		// TODO: not found any meaningful description,
@@ -751,11 +778,13 @@ static void execute_command(const Command command)
 		flush_buffer();
 		buffer_add(0);
 		break;
+
 	case Command::ReadInputPort: // 0xc0
 		// Reads the controller input port (P1)
 		flush_buffer();
 		buffer_add(get_input_port());
 		break;
+
 	case Command::ReadControllerMode: // 0xca
 		// Reads keyboard controller mode
 		// 0x00: ISA (AT)
@@ -763,11 +792,13 @@ static void execute_command(const Command command)
 		flush_buffer();
 		buffer_add(0x01);
 		break;
+
 	case Command::ReadOutputPort: // 0xd0
 		// Reads the controller output port (P2)
 		flush_buffer();
 		buffer_add(get_output_port());
 		break;
+
 	case Command::DisableA20: // 0xdd
 		// Disable A20 line
 		MEM_A20_Enable(false);
@@ -777,10 +808,12 @@ static void execute_command(const Command command)
 		// as HP Vectra in tries to use it, leading to crashes:
 		// https://www.win.tue.nl/~aeb/linux/kbd/A20.html
 		break;
+
 	case Command::EnableA20: // 0xdf
 		// Enable A20 line
 		MEM_A20_Enable(true);
 		break;
+
 	case Command::ReadTestInputs: // 0xe0
 		// Read test bits:
 		// bit 0: keyboard clock in
@@ -790,6 +823,7 @@ static void execute_command(const Command command)
 		flush_buffer();
 		buffer_add(0x00);
 		break;
+
 	//
 	// Unknown or mostly unsupported commands
 	//
@@ -806,19 +840,24 @@ static void execute_command(const Command command)
 			// Read internal RAM - dummy, unimplemented
 			warn_internal_ram_access();
 			buffer_add(0x00);
+
 		} else if (is_cmd_mem_write(command)) { // 0x60-0x7f
 			// Write internal RAM - dummy, unimplemented
 			warn_internal_ram_access();
 			// requires a parameter
 			current_command = command;
+
 		} else if (is_cmd_vendor_lines(command)) { // 0xb0-0xbd
 			warn_vendor_lines();
+
 		} else if (is_cmd_pulse_line(command)) { // 0xf0-0xff
 			// requires a parameter
 			current_command = command;
+
 		} else {
 			warn_unknown_command(command);
 		}
+
 		break;
 	}
 }
@@ -829,6 +868,7 @@ static void execute_command(const Command command, const uint8_t param)
 	//          static_cast<int>(command), param);
 
 	using namespace bit::literals;
+
 	switch (command) {
 	case Command::WriteByteConfig: // 0x60
 		// Writes the keyboard controller configuration byte
@@ -838,11 +878,13 @@ static void execute_command(const Command command, const uint8_t param)
 		// should be safe in real implementation, how about here?
 		sanitize_config_byte();
 		break;
+
 	case Command::WriteControllerMode: // 0xcb
 		// Changes controller mode to PS/2 or AT
 		// TODO: not implemented for now
 		// ReadControllerMode will always claim PS/2
 		break;
+
 	case Command::WriteOutputPort: // 0xd1
 		// Writes the controller output port (P2)
 		// TODO: how should writing other bit behave,
@@ -853,16 +895,19 @@ static void execute_command(const Command command, const uint8_t param)
 			DOSBOX_Restart();
 		}
 		break;
+
 	case Command::SimulateInputKbd: // 0xd2
 		// Acts as if the byte was received from keyboard
 		flush_buffer();
 		buffer_add_kbd(param);
 		break;
+
 	case Command::SimulateInputAux: // 0xd3
 		// Acts as if the byte was received from aux (mouse)
 		flush_buffer();
 		buffer_add_aux(param);
 		break;
+
 	case Command::WriteAux: // 0xd4
 		// Sends a byte to the mouse.
 		// To prevent excessive inter-module communication,
@@ -871,23 +916,28 @@ static void execute_command(const Command command, const uint8_t param)
 		restart_delay_timer(PortDelayMs * 2); // 'round trip' delay
 		is_transmit_timeout = !MOUSEPS2_PortWrite(param);
 		break;
+
 	default:
 		if (is_cmd_mem_write(command)) { // 0x60-0x7f
 			// Internall controller memory write,
 			// not implemented for most bytes
+			//
 		} else if (is_cmd_pulse_line(command)) { // 0xf0-0xff
 			// Pulse controller lines for 6ms,
 			// bits 0-3 counts, 0 = pulse relevant line
 			const auto lines = param & 0b0000'1111;
 			const auto code  = static_cast<uint8_t>(command);
+
 			if ((code == 0xf0 && param != 0b1111 && param != 0b1110) ||
 			    (code != 0xf0 && param != 0b1111)) {
 				warn_line_pulse();
 			}
+
 			if (code == 0xf0 && !(lines & 0b0001)) {
 				// System reset via keyboard controller
 				DOSBOX_Restart();
 			}
+
 		} else {
 			// If we are here, than either this function
 			// was wrongly called or it is incomplete
@@ -901,14 +951,34 @@ static void execute_command(const Command command, const uint8_t param)
 // I/O port handlers
 // ***************************************************************************
 
-static uint32_t read_data_port(io_port_t, io_width_t width)
+// The VMware interface requires the port 0x60/0x64 handlers to be registered
+// for dword width, which bypasses the IO layer's fallback of composing wide
+// accesses from byte accesses of adjacent ports (mimicking the ISA bus).
+// Unless the VMware takeover is active, restore that legacy behaviour here so
+// pure DOS software sees no difference to byte-width registered handlers.
+//
+static uint32_t compose_wide_read(const uint8_t low_byte, const io_port_t port,
+                                  const io_width_t width)
 {
-	// Port 0x60 read handler
+	assert(width == io_width_t::word || width == io_width_t::dword);
 
-	if (width == WidthVmWare && VMWARE_I8042_ReadTakeover()) {
-		return VMWARE_I8042_ReadDataPort();
+	auto read_byte = [&](const io_port_t offset) {
+		return static_cast<uint32_t>(
+		        IO_ReadB(check_cast<io_port_t>(port + offset)));
+	};
+
+	uint32_t ret_val = low_byte;
+	ret_val |= read_byte(1) << 8;
+
+	if (width == io_width_t::dword) {
+		ret_val |= read_byte(2) << 16;
+		ret_val |= read_byte(3) << 24;
 	}
+	return ret_val;
+}
 
+static uint8_t read_data_port_byte()
+{
 	if (!is_data_new) {
 		// Byte already read - just return the previous one
 		return data_byte;
@@ -917,6 +987,7 @@ static uint32_t read_data_port(io_port_t, io_width_t width)
 	if (is_diagnostic_dump && !buffer_num_used) {
 		// Diagnostic dump finished
 		is_diagnostic_dump = false;
+
 		if (I8042_IsReadyForAuxFrame()) {
 			MOUSEPS2_NotifyReadyForFrame();
 		}
@@ -928,6 +999,7 @@ static uint32_t read_data_port(io_port_t, io_width_t width)
 	if (is_data_from_aux) {
 		assert(waiting_bytes_from_aux);
 		--waiting_bytes_from_aux;
+
 		if (I8042_IsReadyForAuxFrame()) {
 			MOUSEPS2_NotifyReadyForFrame();
 		}
@@ -936,6 +1008,7 @@ static uint32_t read_data_port(io_port_t, io_width_t width)
 	if (is_data_from_kbd) {
 		assert(waiting_bytes_from_kbd);
 		--waiting_bytes_from_kbd;
+
 		if (I8042_IsReadyForKbdFrame()) {
 			KEYBOARD_NotifyReadyForFrame();
 		}
@@ -955,7 +1028,22 @@ static uint32_t read_data_port(io_port_t, io_width_t width)
 	return ret_val;
 }
 
-static uint32_t read_status_register(io_port_t, io_width_t width)
+static uint32_t read_data_port(io_port_t port, io_width_t width)
+{
+	// Port 0x60 read handler
+
+	if (width == WidthVmWare && VMWARE_I8042_ReadTakeover()) {
+		return VMWARE_I8042_ReadDataPort();
+	}
+
+	const auto data = read_data_port_byte();
+	if (width == io_width_t::byte) {
+		return data;
+	}
+	return compose_wide_read(data, port, width);
+}
+
+static uint32_t read_status_register(io_port_t port, io_width_t width)
 {
 	// Port 0x64 read handler
 
@@ -963,14 +1051,17 @@ static uint32_t read_status_register(io_port_t, io_width_t width)
 		return VMWARE_I8042_ReadStatusRegister();
 	}
 
-	return status_byte.data;
+	if (width == io_width_t::byte) {
+		return status_byte.data;
+	}
+	return compose_wide_read(status_byte.data, port, width);
 }
 
 static void write_data_port(io_port_t, io_val_t value, io_width_t)
 {
 	// Port 0x60 write handler
 
-	const auto byte = check_cast<uint8_t>(value);
+	const auto byte                = check_cast<uint8_t>(value);
 	status_byte.was_last_write_cmd = false;
 
 	if (current_command != Command::None) {
@@ -992,18 +1083,24 @@ static void write_data_port(io_port_t, io_val_t value, io_width_t)
 		if (should_notify_kbd && I8042_IsReadyForKbdFrame()) {
 			KEYBOARD_NotifyReadyForFrame();
 		}
+
 	} else {
 		// Send this byte to the keyboard
 		is_transmit_timeout = false;
-		is_disabled_kbd     = false; // port auto-enable
+
+		// port auto-enable
+		is_disabled_kbd = false;
 
 		flush_buffer();
-		restart_delay_timer(PortDelayMs * 2); // 'round trip' delay
+
+		// 'round trip' delay
+		restart_delay_timer(PortDelayMs * 2);
+
 		KEYBOARD_PortWrite(byte);
 	}
 }
 
-static void write_command_port(io_port_t, io_val_t value, io_width_t width)
+static void write_command_port(io_port_t port, io_val_t value, io_width_t width)
 {
 	// Port 0x64 write handler
 
@@ -1011,7 +1108,7 @@ static void write_command_port(io_port_t, io_val_t value, io_width_t width)
 		return;
 	}
 
-	const auto byte = static_cast<uint8_t>(value);
+	const auto byte           = static_cast<uint8_t>(value);
 	should_skip_device_notify = true;
 
 	const bool should_notify_aux = !I8042_IsReadyForAuxFrame();
@@ -1039,6 +1136,23 @@ static void write_command_port(io_port_t, io_val_t value, io_width_t width)
 	}
 	if (should_notify_kbd && I8042_IsReadyForKbdFrame()) {
 		KEYBOARD_NotifyReadyForFrame();
+	}
+
+	// Forward the high bytes of wide writes to the adjacent ports, as the
+	// IO layer used to do for byte-width registered handlers (see the
+	// comment at 'compose_wide_read()')
+	//
+	if (width != io_width_t::byte) {
+		auto write_byte = [&](const io_port_t offset) {
+			IO_WriteB(check_cast<io_port_t>(port + offset),
+			          static_cast<uint8_t>(value >> (offset * 8)));
+		};
+
+		write_byte(1);
+		if (width == io_width_t::dword) {
+			write_byte(2);
+			write_byte(3);
+		}
 	}
 }
 
@@ -1074,6 +1188,7 @@ void I8042_AddAuxFrame(const std::vector<uint8_t>& bytes)
 
 	bool skip_delay = false;
 	enforce_buffer_space(bytes.size());
+
 	for (const auto& byte : bytes) {
 		buffer_add_aux(byte, skip_delay);
 		skip_delay = true;
@@ -1097,7 +1212,8 @@ void I8042_AddKbdFrame(const std::vector<uint8_t>& bytes)
 	assert(bytes.size() < UINT8_MAX);
 
 	if (bytes.empty() || is_disabled_kbd) {
-		return; // empty frame or keyboard port is disabled
+		// empty frame or keyboard port is disabled
+		return;
 	}
 
 	is_transmit_timeout = false;
@@ -1131,15 +1247,14 @@ void I8042_Init()
 {
 	assert(BufferSize >= FirmwareCopyright.size() + 16);
 
-	IO_RegisterReadHandler(port_num_i8042_data,
-	                       read_data_port,
-	                       io_width_t::dword);
+	IO_RegisterReadHandler(port_num_i8042_data, read_data_port, io_width_t::dword);
+
 	IO_RegisterReadHandler(port_num_i8042_status,
 	                       read_status_register,
 	                       io_width_t::dword);
-	IO_RegisterWriteHandler(port_num_i8042_data,
-	                        write_data_port,
-	                        io_width_t::byte);
+
+	IO_RegisterWriteHandler(port_num_i8042_data, write_data_port, io_width_t::byte);
+
 	IO_RegisterWriteHandler(port_num_i8042_command,
 	                        write_command_port,
 	                        io_width_t::dword);
