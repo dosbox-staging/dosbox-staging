@@ -3,14 +3,14 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 // Based of sn76496.c of the M.A.M.E. project
-
+//
 // Interaction between the Tandy DAC and the Sound Blaster:
 //
 // Because the Tandy DAC operates on IRQ 7 and DMA 1, it often conflicts with
 // the Sound Blaster. Later models of Sound Blaster included an IRQ sharing
 // feature to avoid crashes, so such Tandy + SB machines were possible to run
 // without issues.
-
+//
 // How does this work in DOSBox? DOSBox Staging always shuts down conflicting
 // DMA devices (and the Tandy DAC vs. SB is no exception), however the Tandy DAC
 // is unique in that the machine's BIOS (yes, on real hardware, too) is
@@ -745,9 +745,13 @@ void TANDYSOUND_Destroy()
 	if (tandy_psg || tandy_dac) {
 		LOG_MSG("%s: Shutting down", ChannelName::TandyPsg);
 
+		// Init requests the BIOS DAC callbacks for both the DAC and
+		// PSG-only variants, so clearing the request must not depend
+		// on the DAC's presence
+		BIOS_ConfigureTandyDacCallbacks(false);
+
 		if (tandy_dac) {
 			TIMER_DelTickHandler(TANDYSOUND_PicCallback);
-			BIOS_ConfigureTandyDacCallbacks(false);
 
 			tandy_dac.reset();
 		}
