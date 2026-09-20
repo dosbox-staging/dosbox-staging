@@ -76,18 +76,18 @@ These devices use hardcoded resource assignments that cannot be changed in the
 configuration. If a game asks the settings of these devices, use the values
 from this table.
 
-| Device                                                                                      | I/O base              | IRQ           | DMA
-| --------                                                                                    | ----------            | -----         | -----
-| [AdLib / OPL](../sound/sound-devices/adlib.md#adlib-music-synthesizer-card) (FM synth)      | 388                   | ---           | ---
-| [MPU-401](../sound/midi.md) (MIDI interface)                                                | 330                   | 9             | ---
-| [Game port](../input/joystick.md) (joystick)                                                | 201                   | ---           | ---
-| [Tandy DAC](../sound/sound-devices/tandy.md)                                                | C4                    | 7             | 1
-| [Tandy / PCjr PSG](../sound/sound-devices/tandy.md)                                         | C0                    | ---           | ---
-| [PC speaker](../sound/sound-devices/pc-speaker.md)                                          | 61                    | ---           | ---
-| [Parallel port DACs](../sound/sound-devices/covox-variants.md) (Covox, Disney, Stereo-on-1) | 378                   | ---           | ---
-| [Innovation SSI-2001](../sound/sound-devices/innovation.md)                                 | 280                   | ---           | ---
-| [IBM PS/1 Audio](../sound/sound-devices/ibm-ps1audio.md)                                    | 200--205              | ---           | ---
-| Serial ports (COM1 / COM2 / COM3 / COM4)                                                    | 3F8 / 2F8 / 3E8 / 2E8 | 4 / 3 / 4 / 3 | ---
+| Device                                                                                         | I/O base              | IRQ           | DMA
+| --------                                                                                       | ----------            | -----         | -----
+| [AdLib / OPL](../sound/sound-devices/adlib.md#adlib-music-synthesizer-card) (FM synth)         | 388                   | ---           | ---
+| [MPU-401](../sound/midi.md) (MIDI interface)                                                   | 330                   | 9             | ---
+| [Game port](../input/joystick.md) (joystick)                                                   | 201                   | ---           | ---
+| [Tandy DAC](../sound/sound-devices/tandy.md)                                                   | C4                    | 7             | 1
+| [Tandy / PCjr PSG](../sound/sound-devices/tandy.md)                                            | C0                    | ---           | ---
+| [PC speaker](../sound/sound-devices/pc-speaker.md)                                             | 61                    | ---           | ---
+| [Parallel port DACs](../sound/sound-devices/covox-variants.md)<br>(Covox, Disney, Stereo-on-1) | 378                   | ---           | ---
+| [Innovation SSI-2001](../sound/sound-devices/innovation.md)<br>(200 only used by [The Entertainer](../sound/sound-devices/innovation.md#the-entertainer-variant) ) | 280, 200 | --- | ---
+| [IBM PS/1 Audio](../sound/sound-devices/ibm-ps1audio.md)                                       | 200--205              | ---           | ---
+| Serial ports<br>(COM1 / COM2 / COM3 / COM4)                                                    | 3F8 / 2F8 / 3E8 / 2E8 | 4 / 3 / 4 / 3 | ---
 
 !!! note
 
