@@ -28,7 +28,7 @@ public:
 	virtual void ConfigureFilters(const FilterState state) = 0;
 	virtual void BindToPort(const io_port_t lpt_port)      = 0;
 
-	bool TryParseAndSetCustomFilter(const std::string& filter_choice);
+	bool TryParseAndSetCustomFilter(const std::string& filter_prefs);
 	void PicCallback(const int requested_frames);
 	std::string GetDacName();
 

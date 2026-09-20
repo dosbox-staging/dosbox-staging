@@ -24,8 +24,8 @@
 
 class Cms {
 public:
-	Cms(const int port_choice, const std::string& card_choice,
-	    const std::string& filter_choice);
+	Cms(const int port, const std::string& card_prefs,
+	    const std::string& filter_prefs);
 
 	~Cms();
 
