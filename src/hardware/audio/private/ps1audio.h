@@ -30,6 +30,7 @@ public:
 	Ps1Dac(const std::string& filter_choice);
 	~Ps1Dac();
 	void PicCallback(const int frames_requested);
+	void SetFilter(const std::string& filter_choice);
 
 	RWQueue<uint8_t> output_queue{1};
 	MixerChannelPtr channel = nullptr;

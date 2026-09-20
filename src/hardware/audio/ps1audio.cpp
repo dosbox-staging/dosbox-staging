@@ -21,6 +21,7 @@
 #include "hardware/pic.h"
 #include "hardware/port.h"
 #include "hardware/timer.h"
+#include "misc/notifications.h"
 #include "utils/checks.h"
 #include "utils/math_utils.h"
 
@@ -31,6 +32,15 @@ std::unique_ptr<Ps1Dac> ps1_dac = {};
 static void setup_filter(MixerChannelPtr& channel, const bool filter_enabled)
 {
 	if (filter_enabled) {
+		// The PSG filter parameters have been tweaked by analysing real
+		// hardware recordings. The results are virtually
+		// indistinguishable from the real thing by ear.
+		//
+		// We're using the same filter settings for the DAC. It's
+		// unclear whether this is accurate, but in any case, the
+		// filters do a good approximation of how a small integrated
+		// speaker would sound.
+		//
 		constexpr auto HpfOrder        = 3;
 		constexpr auto HpfCutoffFreqHz = 160;
 
@@ -46,6 +56,26 @@ static void setup_filter(MixerChannelPtr& channel, const bool filter_enabled)
 	} else {
 		channel->SetHighPassFilter(FilterState::Off);
 		channel->SetLowPassFilter(FilterState::Off);
+	}
+}
+
+static void set_channel_filter(MixerChannelPtr& channel,
+                               const std::string& filter_prefs,
+                               const char* channel_name, const char* setting_name)
+{
+	if (const auto maybe_bool = parse_bool_setting(filter_prefs)) {
+		setup_filter(channel, *maybe_bool);
+
+	} else if (!channel->TryParseAndSetCustomFilter(filter_prefs)) {
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      channel_name,
+		                      "PROGRAM_CONFIG_INVALID_SETTING",
+		                      setting_name,
+		                      filter_prefs.c_str(),
+		                      "on");
+
+		setup_filter(channel, true);
+		set_section_property_value("speaker", setting_name, "on");
 	}
 }
 
@@ -67,10 +97,13 @@ Ps1Dac::Ps1Dac(const std::string& filter_choice)
 
 	MIXER_LockMixerThread();
 
-	constexpr bool Stereo = false;
-	constexpr bool SignedData = false;
+	constexpr bool Stereo      = false;
+	constexpr bool SignedData  = false;
 	constexpr bool NativeOrder = true;
-	const auto callback = std::bind(MIXER_PullFromQueueCallback<Ps1Dac, uint8_t, Stereo, SignedData, NativeOrder>, _1, this);
+	const auto callback        = std::bind(
+                MIXER_PullFromQueueCallback<Ps1Dac, uint8_t, Stereo, SignedData, NativeOrder>,
+                _1,
+                this);
 
 	channel = MIXER_AddChannel(callback,
 	                           UseMixerRate,
@@ -81,25 +114,7 @@ Ps1Dac::Ps1Dac(const std::string& filter_choice)
 	                            ChannelFeature::DigitalAudio});
 
 	// Setup DAC filters
-	if (const auto maybe_bool = parse_bool_setting(filter_choice)) {
-		// Using the same filter settings for the DAC as for the PSG
-		// synth. It's unclear whether this is accurate, but in any
-		// case, the filters do a good approximation of how a small
-		// integrated speaker would sound.
-		const auto filter_enabled = *maybe_bool;
-		setup_filter(channel, filter_enabled);
-
-	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
-		LOG_WARNING(
-		        "%s: Invalid 'ps1audio_dac_filter' setting: '%s', "
-		        "using 'on'",
-		        ChannelName::Ps1AudioCardDac,
-		        filter_choice.c_str());
-
-		const auto filter_enabled = true;
-		setup_filter(channel, filter_enabled);
-		set_section_property_value("speaker", "ps1audio_dac_filter", "on");
-	}
+	SetFilter(filter_choice);
 
 	// Register DAC per-port read handlers
 	read_handlers[0].Install(0x02F,
@@ -344,6 +359,14 @@ void Ps1Dac::PicCallback(const int frames_requested)
 	bytes_pending = static_cast<uint32_t>(pending);
 }
 
+void Ps1Dac::SetFilter(const std::string& filter_choice)
+{
+	set_channel_filter(channel,
+	                   filter_choice,
+	                   ChannelName::Ps1AudioCardDac,
+	                   "ps1audio_dac_filter");
+}
+
 Ps1Dac::~Ps1Dac()
 {
 	MIXER_LockMixerThread();
@@ -374,6 +397,7 @@ class Ps1Synth {
 public:
 	Ps1Synth(const std::string& filter_choice);
 	~Ps1Synth();
+	void SetFilter(const std::string& filter_choice);
 
 private:
 	// Block alternate construction routes
@@ -427,24 +451,7 @@ Ps1Synth::Ps1Synth(const std::string& filter_choice)
 	                            ChannelFeature::Synthesizer});
 
 	// Setup PSG filters
-	if (const auto maybe_bool = parse_bool_setting(filter_choice)) {
-		// The filter parameters have been tweaked by analysing real
-		// hardware recordings. The results are virtually
-		// indistinguishable from the real thing by ear only.
-		const auto filter_enabled = *maybe_bool;
-		setup_filter(channel, filter_enabled);
-
-	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
-		LOG_WARNING(
-		        "%s: Invalid 'ps1audio_filter' setting: '%s', "
-		        "using 'on'",
-		        ChannelName::Ps1AudioCardPsg,
-		        filter_choice.c_str());
-
-		const auto filter_enabled = true;
-		setup_filter(channel, filter_enabled);
-		set_section_property_value("speaker", "ps1audio_filter", "on");
-	}
+	SetFilter(filter_choice);
 
 	const auto generate_sound =
 	        std::bind(&Ps1Synth::WriteSoundGeneratorPort205, this, _1, _2, _3);
@@ -529,6 +536,14 @@ void Ps1Synth::AudioCallback(const int requested_frames)
 
 	channel->AddSamples_mfloat(requested_frames, render_buf.data());
 	last_rendered_ms = PIC_AtomicIndex();
+}
+
+void Ps1Synth::SetFilter(const std::string& filter_choice)
+{
+	set_channel_filter(channel,
+	                   filter_choice,
+	                   ChannelName::Ps1AudioCardPsg,
+	                   "ps1audio_filter");
 }
 
 Ps1Synth::~Ps1Synth()
@@ -626,14 +641,18 @@ void PS1AUDIO_NotifySettingUpdated(SectionProp& section,
 	// The [speaker] section controls multiple audio devices, so we want to
 	// make sure to only restart the device affected by the setting.
 	//
-	if (prop_name == "ps1audio" || prop_name == "ps1audio_filter" ||
-	    prop_name == "ps1audio_dac_filter") {
-
+	if (prop_name == "ps1audio_filter") {
+		if (ps1_synth) {
+			ps1_synth->SetFilter(section.GetString("ps1audio_filter"));
+		}
+	} else if (prop_name == "ps1audio_dac_filter") {
+		if (ps1_dac) {
+			ps1_dac->SetFilter(section.GetString("ps1audio_dac_filter"));
+		}
+	} else if (prop_name == "ps1audio") {
 		PS1AUDIO_Destroy();
 		PS1AUDIO_Init(section);
 	}
-
-	// TODO support changing filter params without restarting the device
 }
 
 void PS1AUDIO_AddConfigSection(Section* sec)
