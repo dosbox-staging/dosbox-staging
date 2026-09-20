@@ -1299,20 +1299,14 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 	auto section = conf->AddSection("dosbox");
 	section->AddUpdateHandler(notify_dosbox_setting_updated);
 
-	auto pstring = section->AddString("language", Always, "auto");
+	auto pstring = section->AddString("language", Always, "us");
 
 	pstring->SetHelp(
-	        "Select the DOS messages language ('auto' by default). Possible values:\n"
+	        "Set the DOS messages language ('en' by default). Possible values are 'de', 'en',\n"
+	        "'es', 'fr', 'it', 'nl', 'pl', 'pt_BR' and 'ru'.\n"
 	        "\n"
-	        "  auto:     Detects the language from the host OS (default).\n"
-	        "  <value>:  Loads a translation from the given file.\n"
-	        "\n"
-	        "Notes:\n"
-	        "  - The following language files are available:\n"
-	        "    'de', 'en', 'es', 'fr', 'it', 'nl', 'pl', 'pt_BR' and 'ru'.\n"
-	        "\n"
-	        "  - English is built-in, the rest is stored in the bundled\n"
-	        "    'resources/translations' directory.");
+	        "Note: English is built-in; the rest is stored in the bundled\n"
+	        "      'resources/translations' directory.");
 
 	pstring = section->AddString("machine", OnlyAtStart, "svga_s3");
 	pstring->SetValues({"hercules",
