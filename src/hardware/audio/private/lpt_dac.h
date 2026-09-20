@@ -1,4 +1,4 @@
-// SPDX-FileSPDText:X Identifier: GPL-2.0-or-later
+// SPDX-FileCopyrightText:  2022-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DOSBOX_PRIVATE_LPT_DAC_H
