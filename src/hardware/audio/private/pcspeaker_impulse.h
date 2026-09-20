@@ -39,8 +39,9 @@ private:
 	                      const float index_base, const bool speaker_enabled);
 
 	// Wake, advance the PIT to the current position within this 1ms tick,
-	// emitting any transitions that occurred since the last sync. Returns the
-	// new position (PIC_TickIndex). Shared preamble of the public entry points.
+	// emitting any transitions that occurred since the last sync. Returns
+	// the new position (PIC_TickIndex). Shared preamble of the public entry
+	// points.
 	float SyncPitToTick();
 
 	// Output amplitude for a given speaker-enable and PIT output level.
@@ -101,8 +102,8 @@ private:
 	PitCounter pit_counter = {};
 
 	// Waveform accumulation buffer; large enough for one ms plus sinc tail.
-	// This stores fractional impulse contributions until they are integrated
-	// into output samples in PicCallback().
+	// This stores fractional impulse contributions until they are
+	// integrated into output samples in PicCallback().
 	static constexpr auto WaveformSize = SincFilterQuality + SampleRatePerMs;
 	std::deque<float> waveform = {};
 
