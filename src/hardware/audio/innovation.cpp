@@ -33,7 +33,7 @@ constexpr auto ChipClockHz = 14318180.0 / 16;
 constexpr auto EntertainerIdPort  = io_port_t{0x200};
 constexpr auto EntertainerIdValue = uint8_t{0xA5};
 
-Innovation::Innovation(const int sid_filter_strength,
+Innovation::Innovation(const Model model, const int sid_filter_strength,
                        const std::string& channel_filter_choice)
         : ms_per_clock{MillisInSecond / ChipClockHz}
 {
@@ -100,11 +100,16 @@ Innovation::Innovation(const int sid_filter_strength,
 
 	read_handler.Install(BasePort, read_from, io_width_t::byte, 0x20);
 
-	read_entertainer_id_handler.Install(
-	        EntertainerIdPort,
-	        [](io_port_t, io_width_t) { return EntertainerIdValue; },
-	        io_width_t::byte,
-	        1);
+	if (model == Model::Entertainer) {
+		// The ID port conflicts with the game port, whose register is
+		// mirrored across ports 200h-207h on real hardware, so only
+		// claim it when emulating The Entertainer.
+		read_entertainer_id_handler.Install(
+		        EntertainerIdPort,
+		        [](io_port_t, io_width_t) { return EntertainerIdValue; },
+		        io_width_t::byte,
+		        1);
+	}
 
 	write_handler.Install(BasePort, write_to, io_width_t::byte, 0x20);
 
@@ -115,7 +120,8 @@ Innovation::Innovation(const int sid_filter_strength,
 	// Ready state-values for rendering
 	last_rendered_ms = 0.0;
 
-	LOG_MSG("INNOVATION: Running on port %xh with filtering at %d%%",
+	LOG_MSG("INNOVATION: Running %s on port %xh with filtering at %d%%",
+	        model == Model::Entertainer ? "The Entertainer" : "SSI-2001",
 	        BasePort,
 	        sid_filter_strength);
 
@@ -238,11 +244,18 @@ void INNOVATION_Init()
 {
 	const auto section = get_section("innovation");
 
-	if (section->GetBool("innovation")) {
-		innovation = std::make_unique<Innovation>(
-		        section->GetInt("innovation_sid_filter"),
-		        section->GetString("innovation_filter"));
+	const auto pref = section->GetString("innovation");
+	if (has_false(pref)) {
+		return;
 	}
+
+	const auto model = (pref == "entertainer") ? Innovation::Model::Entertainer
+	                                           : Innovation::Model::Ssi2001;
+
+	innovation = std::make_unique<Innovation>(
+	        model,
+	        section->GetInt("innovation_sid_filter"),
+	        section->GetString("innovation_filter"));
 }
 
 void INNOVATION_Destroy()
@@ -262,13 +275,24 @@ static void init_innovation_config_settings(SectionProp& sec_prop)
 	constexpr auto when_idle = Property::Changeable::WhenIdle;
 
 	// Card state
-	auto* bool_prop = sec_prop.AddBool("innovation", when_idle, false);
-	assert(bool_prop);
-	bool_prop->SetHelp(
-	        "Enable emulation of the Innovation SSI-2001 and Microprose's \"The Entertainer\"\n"
-	        "sound cards on base port of 280. These use the iconic MOS 6581 SID chip of the\n"
+	auto* str_prop = sec_prop.AddString("innovation", when_idle, "off");
+	assert(str_prop);
+	str_prop->SetValues({"off", "on", "entertainer"});
+	str_prop->SetHelp(
+	        "Innovation SSI-2001 sound card emulation ('off' by default). The SSI-2001 and\n"
+	        "Microprose's \"The Entertainer\" variant use the iconic MOS 6581 SID chip of the\n"
 	        "Commodore 64 personal computer from the 1980s. Only 15 games are known to\n"
-	        "support these cards.");
+	        "support these cards. Possible values:\n"
+	        "\n"
+	        "  off:          Disable the emulation (default).\n"
+	        "\n"
+	        "  on:           Emulate the Innovation SSI-2001 on base port 280.\n"
+	        "\n"
+	        "  entertainer:  Emulate \"The Entertainer\" on base port 280. This variant adds\n"
+	        "                an identification port at 200 that Gunship and Pirates! need\n"
+	        "                for SID sound. Only enable it for these two games as the\n"
+	        "                identification port can cause phantom joystick input in other\n"
+	        "                games.");
 
 	// Filter strengths
 	auto* int_prop = sec_prop.AddInt("innovation_sid_filter", when_idle, 50);
@@ -278,7 +302,7 @@ static void init_innovation_config_settings(SectionProp& sec_prop)
 	        "Adjusts the 6581's filtering strength as a percentage from 0 to 100 (50 by\n"
 	        "default). The SID's analog filtering meant that each chip was physically unique.");
 
-	auto* str_prop = sec_prop.AddString("innovation_filter", when_idle, "off");
+	str_prop = sec_prop.AddString("innovation_filter", when_idle, "off");
 	assert(str_prop);
 	str_prop->SetHelp(
 	        "Filter for the Innovation audio output ('off' by default). Possible values:\n"
