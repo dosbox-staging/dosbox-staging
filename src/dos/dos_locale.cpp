@@ -150,14 +150,17 @@ static void populate_country_code()
 		// and Australia - we don't, as we have different settings for
 		// these. Let's imitate the MS-DOS behavior.
 		country = DosCountry::Australia;
+
 		populated.is_country_international = true;
 	} else {
 		populated.is_country_international = false;
 	}
+
 	dos.country_code = enum_val(country);
 
 	if (guest_country_override && *guest_country_override != country) {
 		dos.country_code = enum_val(*guest_country_override);
+
 		populated.is_country_overriden = true;
 		populated.is_country_international = false;
 	}
@@ -423,21 +426,27 @@ static void populate_all_country_info()
 	                                   ? get_info(DosCountry::International)
 	                                   : get_info(static_cast<DosCountry>(
 	                                              dos.country_code));
+
 	if (!config.country && !populated.is_country_overriden &&
 	    host_locale.numeric.country_code) {
+
 		const auto country_code = *host_locale.numeric.country_code;
 		populated.separate_numeric = country_code;
+
 		const auto& [period_specific, info_specific] = get_info(country_code);
 		populate_numeric_format(info_specific);
+
 		if (period_specific != config.locale_period) {
 			populated.is_using_fallback_period = true;
 		}
+
 	} else {
 		populate_numeric_format(info);
 		if (period != config.locale_period) {
 			populated.is_using_fallback_period = true;
 		}
 	}
+
 	if (config.locale_period == LocalePeriod::Native) {
 		populated.is_using_native_numeric = try_override_numeric_format(
 		        host_locale.native);
@@ -446,22 +455,28 @@ static void populate_all_country_info()
 	// Populate time/date format
 	if (!config.country && !populated.is_country_overriden &&
 	    host_locale.time_date.country_code) {
+
 		const auto country_code = *host_locale.time_date.country_code;
 		populated.separate_time_date = country_code;
+
 		const auto& [period_specific, info_specific] = get_info(country_code);
 		populate_time_date_format(info_specific);
+
 		if (period_specific != config.locale_period) {
 			populated.is_using_fallback_period = true;
 		}
+
 	} else {
 		populate_time_date_format(info);
 		if (period != config.locale_period) {
 			populated.is_using_fallback_period = true;
 		}
 	}
+
 	if (config.locale_period == LocalePeriod::Native) {
 		populated.is_using_native_time = try_override_time_format(
 		        host_locale.native);
+
 		populated.is_using_native_date = try_override_date_format(
 		        host_locale.native);
 	}
@@ -469,19 +484,24 @@ static void populate_all_country_info()
 	// Populate currency format
 	if (!config.country && !populated.is_country_overriden &&
 	    host_locale.currency.country_code) {
+
 		const auto country_code = *host_locale.currency.country_code;
 		populated.separate_currency = country_code;
+
 		const auto& [period_specific, info_specific] = get_info(country_code);
 		populate_currency_format(info_specific);
+
 		if (period_specific != config.locale_period) {
 			populated.is_using_fallback_period = true;
 		}
+
 	} else {
 		populate_currency_format(info);
 		if (period != config.locale_period) {
 			populated.is_using_fallback_period = true;
 		}
 	}
+
 	if (config.locale_period == LocalePeriod::Native) {
 		populated.is_using_native_currency = try_override_currency_format(
 		        host_locale.native);
@@ -1545,8 +1565,10 @@ static void load_keyboard_layout()
 	// Apply the code page
 	KeyboardLayoutResult result = KeyboardLayoutResult::LayoutNotKnown;
 	const bool prefer_rom_font  = using_detected || !code_page_supplied;
+
 	for (const auto& keyboard_layout : keyboard_layouts) {
 		uint16_t tried_code_page = 0;
+
 		if (keyboard_layout.code_page) {
 			tried_code_page = *keyboard_layout.code_page;
 		}
@@ -1567,18 +1589,23 @@ static void load_keyboard_layout()
 		if (code_page_supplied &&
 		    (result == KeyboardLayoutResult::NoBundledCpiFileForCodePage ||
 		     result == KeyboardLayoutResult::LayoutNotKnown)) {
+
 			// Retry without code page
 			LOG_WARNING("LOCALE: Unable to use 'keyboard_layout' code page %d, ignoring",
 			            *keyboard_layouts[0].code_page);
+
 			uint16_t tried_code_page = 0;
+
 			result = DOS_LoadKeyboardLayout(keyboard_layouts[0].keyboard_layout,
 			                                tried_code_page,
 			                                {},
 			                                prefer_rom_font);
+
 			if (result != KeyboardLayoutResult::OK) {
 				LOG_WARNING("LOCALE: Unable to use specified 'keyboard_layout' setting: '%s', using 'us'",
 				            config.keyboard_str.c_str());
 			}
+
 		} else if (result == KeyboardLayoutResult::IncompatibleMachine) {
 			LOG_WARNING("LOCALE: Invalid 'keyboard_layout' setting: '%s' for this display adapter, using 'us'",
 			            config.keyboard_str.c_str());
@@ -1617,6 +1644,7 @@ DOS_Locale::DOS_Locale(SectionProp& section)
 	LocalePeriod locale_period = {};
 
 	const auto period_str = section.GetString("locale_period");
+
 	if (period_str == "native") {
 		locale_period = LocalePeriod::Native;
 	} else if (period_str == "modern") {
@@ -1654,16 +1682,19 @@ void DOS_Locale_AddMessages()
 {
 	MSG_Add("DOSBOX_HELP_LIST_COUNTRIES_1",
 	        "List of available country codes (mostly same as telephone call codes)");
+
 	MSG_Add("DOSBOX_HELP_LIST_COUNTRIES_2",
 	        "The above codes can be used in the 'country' config setting.");
 
 	MSG_Add("DOSBOX_HELP_LIST_KEYBOARD_LAYOUTS_1",
 	        "List of available keyboard layout codes");
+
 	MSG_Add("DOSBOX_HELP_LIST_KEYBOARD_LAYOUTS_2",
 	        "The above codes can be used in the 'keyboard_layout' config setting.");
 
 	MSG_Add("DOSBOX_HELP_LIST_CODE_PAGES_1",
 	        "List of available code pages");
+
 	MSG_Add("DOSBOX_HELP_LIST_CODE_PAGES_2",
 	        "The above code pages can be used in the 'keyboard_layout' config setting.");
 
