@@ -23,6 +23,9 @@ public:
 
 	~Innovation();
 
+	void SetSidFilter(const int sid_filter_strength);
+	void SetChannelFilter(const std::string& channel_filter_choice);
+
 private:
 	void AudioCallback(const int requested_frames);
 
