@@ -55,10 +55,10 @@ std::string LptDac::GetDacName()
 	return dac_name;
 }
 
-bool LptDac::TryParseAndSetCustomFilter(const std::string& filter_choice)
+bool LptDac::TryParseAndSetCustomFilter(const std::string& filter_prefs)
 {
 	assert(channel);
-	return channel->TryParseAndSetCustomFilter(filter_choice);
+	return channel->TryParseAndSetCustomFilter(filter_prefs);
 }
 
 void LptDac::BindHandlers(const io_port_t lpt_port, const io_write_f write_data,
@@ -207,26 +207,26 @@ static void init_lpt_dac_settings(SectionProp& section)
 
 void LPTDAC_Init(SectionProp& section)
 {
-	const std::string dac_choice = section.GetString("lpt_dac");
+	const std::string dac_prefs = section.GetString("lpt_dac");
 
-	if (dac_choice == "disney") {
+	if (dac_prefs == "disney") {
 		MIXER_LockMixerThread();
 		lpt_dac = std::make_unique<Disney>();
 
-	} else if (dac_choice == "covox") {
+	} else if (dac_prefs == "covox") {
 		MIXER_LockMixerThread();
 		lpt_dac = std::make_unique<Covox>();
 
-	} else if (dac_choice == "ston1") {
+	} else if (dac_prefs == "ston1") {
 		MIXER_LockMixerThread();
 		lpt_dac = std::make_unique<StereoOn1>();
 
 	} else {
 		// The remaining setting is to turn the LPT DAC off
-		const auto dac_choice_has_bool = parse_bool_setting(dac_choice);
+		const auto dac_choice_has_bool = parse_bool_setting(dac_prefs);
 		if (!dac_choice_has_bool || *dac_choice_has_bool != false) {
-			LOG_WARNING("LPT_DAC: Invalid 'lpt_dac' setting: '%s', using 'none'",
-			            dac_choice.c_str());
+			LOG_WARNING("LPTDAC: Invalid 'lpt_dac' setting: '%s', using 'none'",
+			            dac_prefs.c_str());
 		}
 		return;
 	}

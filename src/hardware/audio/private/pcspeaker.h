@@ -22,7 +22,7 @@ public:
 	virtual ~PcSpeaker() = default;
 
 	virtual void SetFilterState(const FilterState filter_state) = 0;
-	virtual bool TryParseAndSetCustomFilter(const std::string& filter_choice) = 0;
+	virtual bool TryParseAndSetCustomFilter(const std::string& filter_prefs) = 0;
 
 	virtual void SetCounter(const int cntr, const PitMode pit_mode) = 0;
 	virtual void SetPITControl(const PitMode pit_mode)              = 0;
