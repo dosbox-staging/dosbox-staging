@@ -16,7 +16,6 @@ add_executable(dosbox_tests
     fs_utils_tests.cpp
     image_decoder_tests.cpp
     int10_modes_tests.cpp
-    language_territory_tests.cpp
     math_utils_tests.cpp
     messages_adjust_tests.cpp
     mixer_tests.cpp

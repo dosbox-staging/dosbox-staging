@@ -18,8 +18,6 @@
 #include "hardware/pic.h"
 #include "ints/bios.h"
 #include "ints/int10.h"
-#include "misc/host_locale.h"
-#include "misc/iso_locale_codes.h"
 #include "misc/messages.h"
 #include "utils/bitops.h"
 #include "utils/byteorder.h"
@@ -46,16 +44,15 @@ static constexpr uint8_t DriverVersionMinor = 0x05;
 
 // Mouse driver languages known by 'msd.exe' (the Microsoft Diagnostics tool)
 static const std::unordered_map<std::string, uint16_t> LanguageCodes = {
-        {Iso639::English,    0x00},
-        {Iso639::French,     0x01},
-        {Iso639::Dutch,      0x02},
-        {Iso639::German,     0x03},
-        {Iso639::LowGerman,  0x03}, // a German dialect
-        {Iso639::Swedish,    0x04},
-        {Iso639::Finnish,    0x05},
-        {Iso639::Spanish,    0x06},
-        {Iso639::Portuguese, 0x07},
-        {Iso639::Italian,    0x08},
+        {"en", 0x00},
+        {"fr", 0x01},
+        {"nl", 0x02},
+        {"de", 0x03},
+        {"sv", 0x04},
+        {"fi", 0x05},
+        {"es", 0x06},
+        {"pt", 0x07},
+        {"it", 0x08},
 };
 
 static constexpr auto CharToPixelRatio = 8;
@@ -942,7 +939,7 @@ static uint8_t get_interrupt_rate()
 static void synchronize_driver_language()
 {
 	// Get the translation language
-	const auto language = LanguageTerritory(MSG_GetLanguage()).GetIsoLanguageCode();
+	const auto language = MSG_GetLanguage();
 
 	// Find the mouse driver language code
 	if (LanguageCodes.contains(language)) {
