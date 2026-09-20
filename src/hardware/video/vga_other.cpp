@@ -1528,9 +1528,9 @@ void COMPOSITE_Init()
 		}
 	}
 
-	const auto era_choice = section->GetString("era");
-	is_composite_new_era  = era_choice == "new" ||
-	                       (is_machine_pcjr() && era_choice == "auto");
+	const auto era_prefs = section->GetString("era");
+	is_composite_new_era  = era_prefs == "new" ||
+	                       (is_machine_pcjr() && era_prefs == "auto");
 
 	hue.set(section->GetInt("hue"));
 	convergence.set(section->GetInt("convergence"));

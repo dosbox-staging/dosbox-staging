@@ -13389,20 +13389,20 @@ void IMFC_Init()
 		channel->SetLowPassFilter(FilterState::On);
 	};
 
-	const std::string filter_choice = section->GetString("imfc_filter");
+	const std::string filter_prefs = section->GetString("imfc_filter");
 
-	if (const auto maybe_bool = parse_bool_setting(filter_choice)) {
+	if (const auto maybe_bool = parse_bool_setting(filter_prefs)) {
 		if (*maybe_bool) {
 			enable_filter();
 		} else {
 			channel->SetLowPassFilter(FilterState::Off);
 		}
-	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
+	} else if (!channel->TryParseAndSetCustomFilter(filter_prefs)) {
 		NOTIFY_DisplayWarning(Notification::Source::Console,
 		                      "IMFC",
 		                      "PROGRAM_CONFIG_INVALID_SETTING",
 		                      "imfc_filter",
-		                      filter_choice.c_str(),
+		                      filter_prefs.c_str(),
 		                      "on");
 
 		set_section_property_value("imfc", "imfc_filter", "on");

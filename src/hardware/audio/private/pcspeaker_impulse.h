@@ -25,7 +25,7 @@ public:
 	~PcSpeakerImpulse() override;
 
 	void SetFilterState(const FilterState filter_state) override;
-	bool TryParseAndSetCustomFilter(const std::string& filter_choice) override;
+	bool TryParseAndSetCustomFilter(const std::string& filter_prefs) override;
 	void SetCounter(const int counter, const PitMode pit_mode) override;
 	void SetPITControl(const PitMode pit_mode) override;
 	void SetType(const PpiPortB& port_b) override;

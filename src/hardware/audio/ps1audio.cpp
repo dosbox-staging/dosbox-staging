@@ -91,7 +91,7 @@ static void PS1AUDIO_PicCallback()
 	ps1_dac->PicCallback(requested_frames);
 }
 
-Ps1Dac::Ps1Dac(const std::string& filter_choice)
+Ps1Dac::Ps1Dac(const std::string& filter_prefs)
 {
 	using namespace std::placeholders;
 
@@ -114,7 +114,7 @@ Ps1Dac::Ps1Dac(const std::string& filter_choice)
 	                            ChannelFeature::DigitalAudio});
 
 	// Setup DAC filters
-	SetFilter(filter_choice);
+	SetFilter(filter_prefs);
 
 	// Register DAC per-port read handlers
 	read_handlers[0].Install(0x02F,
@@ -359,10 +359,10 @@ void Ps1Dac::PicCallback(const int frames_requested)
 	bytes_pending = static_cast<uint32_t>(pending);
 }
 
-void Ps1Dac::SetFilter(const std::string& filter_choice)
+void Ps1Dac::SetFilter(const std::string& filter_prefs)
 {
 	set_channel_filter(channel,
-	                   filter_choice,
+	                   filter_prefs,
 	                   ChannelName::Ps1AudioCardDac,
 	                   "ps1audio_dac_filter");
 }
@@ -395,9 +395,9 @@ Ps1Dac::~Ps1Dac()
 
 class Ps1Synth {
 public:
-	Ps1Synth(const std::string& filter_choice);
+	Ps1Synth(const std::string& filter_prefs);
 	~Ps1Synth();
-	void SetFilter(const std::string& filter_choice);
+	void SetFilter(const std::string& filter_prefs);
 
 private:
 	// Block alternate construction routes
@@ -433,7 +433,7 @@ private:
 
 static std::unique_ptr<Ps1Synth> ps1_synth = {};
 
-Ps1Synth::Ps1Synth(const std::string& filter_choice)
+Ps1Synth::Ps1Synth(const std::string& filter_prefs)
         : device(nullptr, nullptr, Ps1PsgClockHz)
 {
 	using namespace std::placeholders;
@@ -451,7 +451,7 @@ Ps1Synth::Ps1Synth(const std::string& filter_choice)
 	                            ChannelFeature::Synthesizer});
 
 	// Setup PSG filters
-	SetFilter(filter_choice);
+	SetFilter(filter_prefs);
 
 	const auto generate_sound =
 	        std::bind(&Ps1Synth::WriteSoundGeneratorPort205, this, _1, _2, _3);
@@ -538,10 +538,10 @@ void Ps1Synth::AudioCallback(const int requested_frames)
 	last_rendered_ms = PIC_AtomicIndex();
 }
 
-void Ps1Synth::SetFilter(const std::string& filter_choice)
+void Ps1Synth::SetFilter(const std::string& filter_prefs)
 {
 	set_channel_filter(channel,
-	                   filter_choice,
+	                   filter_prefs,
 	                   ChannelName::Ps1AudioCardPsg,
 	                   "ps1audio_filter");
 }

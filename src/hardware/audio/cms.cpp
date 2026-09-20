@@ -14,14 +14,13 @@
 
 CHECK_NARROWING();
 
-Cms::Cms(const int port_choice, const std::string& card_choice,
-         const std::string& filter_choice)
+Cms::Cms(const int port, const std::string& card_prefs, const std::string& filter_prefs)
 {
 	using namespace std::placeholders;
 
 	MIXER_LockMixerThread();
 
-	is_standalone_gameblaster = (card_choice == "gb");
+	is_standalone_gameblaster = (card_prefs == "gb");
 
 	// Ports are filtered and corrected by the conf system, so we simply
 	// assert here
@@ -34,7 +33,7 @@ Cms::Cms(const int port_choice, const std::string& card_choice,
 	const auto valid_ports = is_standalone_gameblaster ? valid_gb_ports
 	                                                   : valid_cms_ports;
 
-	base_port = check_cast<io_port_t>(port_choice);
+	base_port = check_cast<io_port_t>(port);
 
 	assert(contains(valid_ports, base_port));
 
@@ -110,18 +109,18 @@ Cms::Cms(const int port_choice, const std::string& card_choice,
 		channel->SetLowPassFilter(FilterState::On);
 	};
 
-	if (const auto maybe_bool = parse_bool_setting(filter_choice)) {
+	if (const auto maybe_bool = parse_bool_setting(filter_prefs)) {
 		if (*maybe_bool) {
 			enable_filter();
 		} else {
 			channel->SetLowPassFilter(FilterState::Off);
 		}
-	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
+	} else if (!channel->TryParseAndSetCustomFilter(filter_prefs)) {
 		NOTIFY_DisplayWarning(Notification::Source::Console,
 		                      "CMS",
 		                      "PROGRAM_CONFIG_INVALID_SETTING",
 		                      "cms_filter",
-		                      filter_choice.c_str(),
+		                      filter_prefs.c_str(),
 		                      "on");
 
 		set_section_property_value("sblaster", "cms_filter", "on");
