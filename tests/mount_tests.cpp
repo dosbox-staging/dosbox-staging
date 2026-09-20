@@ -11,6 +11,7 @@
 #include <cstdlib>
 #include <filesystem>
 #include <fstream>
+#include <memory>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -111,9 +112,15 @@ protected:
 	        const std::string& command_params,
 	        const std::string& program_path = "Z:\\MOUNT.COM")
 	{
-		auto cmd     = new CommandLine(program_path, command_params);
-		auto program = new MOUNT();
-		return program->ProcessArguments(cmd);
+		auto program = std::make_unique<MOUNT>();
+
+		// Program owns its command line and deletes it on destruction,
+		// so replace the one built from the DOS PSP rather than passing
+		// an unowned one.
+		delete program->cmd;
+		program->cmd = new CommandLine(program_path, command_params);
+
+		return program->ProcessArguments(program->cmd);
 	}
 };
 
