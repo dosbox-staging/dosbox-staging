@@ -1,4 +1,4 @@
-// SPDX-FileSPDText:X Identifier: GPL-2.0-or-later
+// SPDX-FileCopyrightText:  2022-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 // NOTE: a lot of this code assumes that the callback is called every emulated
@@ -42,10 +42,7 @@ LptDac::LptDac(const std::string_view name, const int channel_rate_hz,
 	features.insert(extra_features.begin(), extra_features.end());
 
 	// Setup the mixer callback
-	channel = MIXER_AddChannel(audio_callback,
-	                           channel_rate_hz,
-	                           dac_name,
-	                           features);
+	channel = MIXER_AddChannel(audio_callback, channel_rate_hz, dac_name, features);
 
 	ms_per_frame = MillisInSecond / channel->GetSampleRate();
 
@@ -107,7 +104,7 @@ void LptDac::PicCallback(const int requested_frames)
 	for (int i = 0; i < frames_remaining; ++i) {
 		output_queue.NonblockingEnqueue(Render());
 	}
-	last_rendered_ms = PIC_FullIndex();
+	last_rendered_ms          = PIC_FullIndex();
 	frames_rendered_this_tick = 0;
 }
 
