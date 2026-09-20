@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2002-2024 The DOSBox Team
+// SPDX-FileCopyrightText:  2002-2026 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "opl.h"
@@ -229,7 +229,7 @@ bool OplChip::Write(const io_port_t reg, const uint8_t val)
 uint8_t OplChip::Read()
 {
 	const auto time = PIC_FullIndex();
-	uint8_t ret = 0;
+	uint8_t ret     = 0;
 
 	// Overflow won't be set if a channel is masked
 	if (timer0.Update(time)) {
@@ -302,7 +302,6 @@ void Opl::WriteReg(const io_port_t selected_reg, const uint8_t val)
 {
 	if (opl.mode == OplMode::Esfm) {
 		ESFM_write_reg_buffered_fast(&esfm.chip, selected_reg, val);
-
 
 	} else { // OPL
 		OPL3_WriteRegBuffered(&opl.chip, selected_reg, val);
@@ -565,7 +564,7 @@ uint8_t Opl::AdlibGoldControlRead()
 	case 0x0a: // Right FM Volume
 		return ctrl.rvol;
 
-	case 0x15: // Audio Relocation
+	case 0x15:                 // Audio Relocation
 		return 0x388 >> 3; // Cryo installer detection
 	}
 	return 0xff;
@@ -705,7 +704,8 @@ void Opl::PortWrite(const io_port_t port, const io_val_t value, const io_width_t
 			                   to_string(opl.mode)));
 		}
 
-		// Pass the command value onto the GUS (regardless of OPL card type)
+		// Pass the command value onto the GUS (regardless of OPL card
+		// type)
 		if (port == Port::AdLib::Command) {
 			GUS_MirrorAdLibCommandPortWrite(port, val);
 		}
@@ -794,7 +794,7 @@ static void OPL_SaveRawEvent(const bool pressed)
 		return;
 	}
 
-//	OPLCAPTURE_SaveRad(&opl->cache);
+	//	OPLCAPTURE_SaveRad(&opl->cache);
 
 	if (!opl) {
 		LOG_WARNING(
@@ -821,7 +821,7 @@ Opl::Opl(Section* configuration, const OplMode _opl_mode)
 
 	opl.mode = _opl_mode;
 
-	auto section = static_cast<SectionProp*>(configuration);
+	auto section    = static_cast<SectionProp*>(configuration);
 	const auto base = static_cast<uint16_t>(section->GetHex("sbbase"));
 
 	ctrl.mixer_enabled = section->GetBool("sbmixer");
@@ -869,7 +869,7 @@ Opl::Opl(Section* configuration, const OplMode _opl_mode)
 	// This gets rid of the residual noise which is in the [-8, 0] range
 	// on the OPL2, and in the [-18, 0] range on the OPL3 (in absolute
 	// unscaled 16-bit sample values).
-	// 
+	//
 	// This is accurate hardware behaviour, but pretty annoying to people
 	// with sensitive hearing. The OPL chips use bitwise inversion to
 	// negate operator output for the negative part of sine, so a small
@@ -893,8 +893,8 @@ Opl::Opl(Section* configuration, const OplMode _opl_mode)
 	// This gate threshold is fine-tuned to get rid of both [-9, 0] OPL2
 	// and [-18, 0] OPL3 noise while leaving very low level signals largely
 	// intact (they 100 ms release time is a key factor in achieving that).
-	// 
-	const auto threshold_db = -65.0f + gain_to_decibel(OplVolumeGain);
+	//
+	const auto threshold_db      = -65.0f + gain_to_decibel(OplVolumeGain);
 	constexpr auto AttackTimeMs  = 1.0f;
 	constexpr auto ReleaseTimeMs = 100.0f;
 	channel->ConfigureNoiseGate(threshold_db, AttackTimeMs, ReleaseTimeMs);
@@ -947,7 +947,9 @@ Opl::Opl(Section* configuration, const OplMode _opl_mode)
 
 Opl::~Opl()
 {
-	LOG_MSG("%s: Shutting down %s", channel->GetName().c_str(), to_string(opl.mode));
+	LOG_MSG("%s: Shutting down %s",
+	        channel->GetName().c_str(),
+	        to_string(opl.mode));
 
 	MIXER_LockMixerThread();
 
