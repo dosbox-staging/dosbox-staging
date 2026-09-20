@@ -28,9 +28,9 @@ First-time users and people migrating from other DOSBox variants should start by
 
 ## Build status
 
-[![Windows (VisualStudio) build status][build-win-msvc-badge]][build-win-msvc-ci]
-[![macOS build status][build-mac-badge]][build-mac-ci]
-[![Linux x86\_64 build status][build-lin1-badge]][build-lin1-ci]
+[![Windows build status][build-windows-badge]][build-windows-ci]
+[![macOS build status][build-macos-badge]][build-macos-ci]
+[![Linux build status][build-linux-badge]][build-linux-ci]
 
 ## Stable release builds
 
@@ -161,11 +161,11 @@ git fetch origin "refs/notes/*:refs/notes/*"
 [discord-badge]: https://img.shields.io/discord/514567252864008206?color=%237289da&logo=discord&logoColor=white&label=discord
 [discord]:       https://discord.gg/WwAg3Xf
 
-[build-lin1-badge]: https://img.shields.io/github/actions/workflow/status/dosbox-staging/dosbox-staging/linux.yml?label=Linux%20%28x86_64%29
-[build-lin1-ci]:    https://github.com/dosbox-staging/dosbox-staging/actions/workflows/linux.yml?query=branch%3Amain
+[build-windows-badge]: https://img.shields.io/github/actions/workflow/status/dosbox-staging/dosbox-staging/windows.yml?label=Windows%20%28x86_64%29
+[build-windows-ci]:    https://github.com/dosbox-staging/dosbox-staging/actions/workflows/windows.yml?query=branch%3Amain
 
-[build-win-msvc-badge]: https://img.shields.io/github/actions/workflow/status/dosbox-staging/dosbox-staging/windows-msvc.yml?label=Windows%20%28Visual%20Studio%29
-[build-win-msvc-ci]:    https://github.com/dosbox-staging/dosbox-staging/actions/workflows/windows-msvc.yml?query=branch%3Amain
+[build-macos-badge]: https://img.shields.io/github/actions/workflow/status/dosbox-staging/dosbox-staging/macos.yml?label=macOS%20%28x86_64%2C%20arm64%29
+[build-macos-ci]:    https://github.com/dosbox-staging/dosbox-staging/actions/workflows/macos.yml?query=branch%3Amain
 
-[build-mac-badge]: https://img.shields.io/github/actions/workflow/status/dosbox-staging/dosbox-staging/macos.yml?label=macOS%20%28x86_64%2C%20arm64%29
-[build-mac-ci]:    https://github.com/dosbox-staging/dosbox-staging/actions/workflows/macos.yml?query=branch%3Amain
+[build-linux-badge]: https://img.shields.io/github/actions/workflow/status/dosbox-staging/dosbox-staging/linux.yml?label=Linux%20%28x86_64%29
+[build-linux-ci]:    https://github.com/dosbox-staging/dosbox-staging/actions/workflows/linux.yml?query=branch%3Amain
