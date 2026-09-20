@@ -30,12 +30,12 @@ public:
 
 	bool TryParseAndSetCustomFilter(const std::string& filter_choice);
 	void PicCallback(const int requested_frames);
+	std::string GetDacName();
 
 	LptDac() = delete;
 
 	// prevent copying
 	LptDac(const LptDac&) = delete;
-
 	// prevent assignment
 	LptDac& operator=(const LptDac&) = delete;
 
