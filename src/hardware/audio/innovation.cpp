@@ -51,7 +51,7 @@ Innovation::Innovation(const Model model, const int sid_filter_strength,
 
 	MIXER_LockMixerThread();
 
-	// Setup the mixer and get it's sampling rate
+	// Setup the mixer and get its sampling rate
 	const auto mixer_callback = std::bind_front(&Innovation::AudioCallback, this);
 
 	auto mixer_channel = MIXER_AddChannel(mixer_callback,
@@ -231,8 +231,11 @@ void Innovation::AudioCallback(const int requested_frames)
 		--frames_remaining;
 	}
 
-	channel->AddSamples_mfloat(static_cast<int>(render_buf.size()),
-	                           render_buf.data());
+	if (render_buf.size() > 0) {
+		channel->AddSamples_mfloat(static_cast<int>(render_buf.size()),
+		                           render_buf.data());
+	}
+
 	last_rendered_ms = PIC_AtomicIndex();
 }
 
