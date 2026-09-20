@@ -21,9 +21,12 @@ public:
 	enum class Model { Ssi2001, Entertainer };
 
 	Innovation(const Model model, const int sid_filter_strength,
-	           const std::string& channel_filter_choice);
+	           const std::string& channel_filter_prefs);
 
 	~Innovation();
+
+	void SetSidFilter(const int sid_filter_strength);
+	void SetChannelFilter(const std::string& channel_filter_prefs);
 
 private:
 	void AudioCallback(const int requested_frames);
