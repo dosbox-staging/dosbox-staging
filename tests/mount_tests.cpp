@@ -144,8 +144,15 @@ TEST_F(MountTest, RejectsUnknownType)
 
 TEST_F(MountTest, RejectsInvalidChsFormat)
 {
-	const auto result = Mount("C " + P("bootable.img") + " -t hdd -chs notnumbers");
-	EXPECT_FALSE(result.has_value());
+	// Every part must be a whole number, and all three must be present
+	for (const auto* chs :
+	     {"notnumbers", "200,16", "200,16,63,1", "200,16,63x", "200,,63", "200,16,0x3f"}) {
+		SCOPED_TRACE(chs);
+
+		const auto result = Mount("C " + P("bootable.img") +
+		                          " -t hdd -chs " + chs);
+		EXPECT_FALSE(result.has_value());
+	}
 }
 
 TEST_F(MountTest, RejectsOptionValueThatIsAnotherOption)
