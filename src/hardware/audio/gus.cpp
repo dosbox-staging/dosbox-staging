@@ -515,7 +515,8 @@ void Gus::RenderUpToNow()
 		        std::floor(elapsed_ms / ms_per_render));
 		assert(num_elapsed_frames > 0);
 
-		// Append to the FIFO that will be drained when the mixer pulls frames
+		// Append to the FIFO that will be drained when the mixer pulls
+		// frames
 		const auto& frames = RenderFrames(num_elapsed_frames);
 		fifo.insert(fifo.end(), frames.begin(), frames.end());
 		last_rendered_ms += num_elapsed_frames * ms_per_render;
