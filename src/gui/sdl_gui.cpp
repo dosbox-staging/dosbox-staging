@@ -993,8 +993,8 @@ static void set_keyboard_capture()
 	const auto pref = get_sdl_section()->GetString("keyboard_capture");
 
 	// In 'auto' mode, the keyboard follows the mouse
-	const auto capture_keyboard = parse_bool_setting(pref).value_or(
-	        SDL_GetWindowRelativeMouseMode(sdl.window));
+	const auto capture_keyboard = (pref == "auto") ? sdl.is_mouse_captured
+	                                               : has_true(pref);
 
 	if (!SDL_SetWindowKeyboardGrab(sdl.window, capture_keyboard)) {
 		LOG_WARNING("SDL: Failed to set keyboard grab: %s", SDL_GetError());
@@ -1010,6 +1010,8 @@ void GFX_SetMouseCapture(const bool requested_capture)
 		       requested_capture ? "putting the mouse into"
 		                         : "taking the mouse out of");
 	}
+
+	sdl.is_mouse_captured = requested_capture;
 
 	set_keyboard_capture();
 }
