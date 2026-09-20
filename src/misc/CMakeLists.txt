@@ -5,9 +5,7 @@ target_sources(dosboxcommon PRIVATE
   dos_rwops.cpp
   fs_utils.cpp
   help_util.cpp
-  host_locale.cpp
   image_decoder.cpp
-  iso_locale_codes.cpp
   messages_adjust.cpp
   messages_po_entry.cpp
   rwqueue.cpp
@@ -21,7 +19,6 @@ if (DOSBOX_PLATFORM_WINDOWS)
   # Windows-only filesystem helpers and locale detection
   target_sources(dosboxcommon PRIVATE
     fs_utils_win32.cpp
-    host_locale_win32.cpp
   )
   # Shlwapi needed for PathFileExistsW
   target_link_libraries(dosboxcommon PRIVATE Shlwapi)
@@ -30,15 +27,10 @@ elseif (DOSBOX_PLATFORM_MACOS)
   # Linux & macOS-only filesystem helpers
   target_sources(dosboxcommon PRIVATE fs_utils_posix.cpp)
 
-  # macOS-only locale detection
-  target_sources(dosboxcommon PRIVATE host_locale_macos.cpp)
-
 elseif (DOSBOX_PLATFORM_LINUX)
   # Linux & macOS-only filesystem helpers
   target_sources(dosboxcommon PRIVATE fs_utils_posix.cpp)
 
-  # Linux-only locale detection
-  target_sources(dosboxcommon PRIVATE host_locale_linux.cpp)
 endif()
 
 target_sources(dosbox PRIVATE messages.cpp)
