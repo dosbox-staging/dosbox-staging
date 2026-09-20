@@ -44,6 +44,14 @@ games detect the card automatically.
     </div>
 
 
+!!! danger Base address conflict
+
+    IBM PS/1 Audio uses the 200--205 address range which conflicts with port
+    200 of [The Entertainer](innovation.md#the-entertainer-variant)
+    (obscure [Innovation SSI-2001](innovation.md) variant). Don't enable both
+    audio devices at the same time.
+
+
 ## Mixer channels
 
 The PS/1 Audio synthesiser outputs to the **PS1** [mixer
