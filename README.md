@@ -126,6 +126,12 @@ For building versions prior to 0.83.0 (e.g. when bisecting), see the
 [legacy Meson build guide](docs/build-meson.md).
 
 
+## Website & documentation
+
+Please refer to the [documentation guide](DOCUMENTATION.md) before making
+changes to the website or the documentation.
+
+
 ## Imported branches, community patches, old forks
 
 Upstream commits are imported to this repo in a timely manner,
@@ -144,11 +150,6 @@ Additionally, we attach some optional metadata to the commits in the form of
 ``` shell
 git fetch origin "refs/notes/*:refs/notes/*"
 ```
-
-## Website & documentation
-
-Please refer to the [documentation guide](DOCUMENTATION.md) before making
-changes to the website or the documentation.
 
 [`svn/*`]:     https://github.com/dosbox-staging/dosbox-staging/branches/all?utf8=%E2%9C%93&query=svn%2F
 [`svn/trunk`]: https://github.com/dosbox-staging/dosbox-staging/tree/svn/trunk
