@@ -223,10 +223,13 @@ void LPTDAC_Init(SectionProp& section)
 
 	} else {
 		// The remaining setting is to turn the LPT DAC off
-		const auto dac_choice_has_bool = parse_bool_setting(dac_prefs);
-		if (!dac_choice_has_bool || *dac_choice_has_bool != false) {
-			LOG_WARNING("LPTDAC: Invalid 'lpt_dac' setting: '%s', using 'none'",
-			            dac_prefs.c_str());
+		if (!has_false(dac_prefs)) {
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "LPTDAC",
+			                      "PROGRAM_CONFIG_INVALID_SETTING",
+			                      "lpt_dac",
+			                      dac_prefs.c_str(),
+			                      "none");
 		}
 		return;
 	}
