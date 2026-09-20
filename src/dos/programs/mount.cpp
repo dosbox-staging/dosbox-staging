@@ -875,27 +875,28 @@ bool MOUNT::ParseGeometry(MountParameters& params, const GeometryOptions& option
 
 	// Parse -chs C,H,S
 	if (options.chs) {
-		int cmd_cylinders = 0;
-		int cmd_heads     = 0;
-		int cmd_sectors   = 0;
+		const auto parts = split(*options.chs, ",");
 
-		if (sscanf(options.chs->c_str(),
-		           "%d,%d,%d",
-		           &cmd_cylinders,
-		           &cmd_heads,
-		           &cmd_sectors) == 3) {
+		const auto has_three_parts = (parts.size() == 3);
 
-			params.sizes[0] = 512;
-			params.sizes[1] = static_cast<uint16_t>(cmd_sectors);
-			params.sizes[2] = static_cast<uint16_t>(cmd_heads);
-			params.sizes[3] = static_cast<uint16_t>(cmd_cylinders);
+		const auto cylinders = has_three_parts ? parse_int(parts[0])
+		                                       : std::optional<int>{};
+		const auto heads     = has_three_parts ? parse_int(parts[1])
+		                                       : std::optional<int>{};
+		const auto sectors   = has_three_parts ? parse_int(parts[2])
+		                                       : std::optional<int>{};
 
-		} else {
+		if (!cylinders || !heads || !sectors) {
 			NOTIFY_DisplayWarning(Notification::Source::Console,
 			                      "MOUNT",
 			                      "PROGRAM_MOUNT_INVALID_CHS");
 			return false;
 		}
+
+		params.sizes[0] = 512;
+		params.sizes[1] = static_cast<uint16_t>(*sectors);
+		params.sizes[2] = static_cast<uint16_t>(*heads);
+		params.sizes[3] = static_cast<uint16_t>(*cylinders);
 	}
 
 	return true;
