@@ -41,7 +41,7 @@ public:
 
 	RWQueue<AudioFrame> output_queue{1};
 	MixerChannelPtr channel = {};
-	float frame_counter = 0.0f;
+	float frame_counter     = 0.0f;
 
 protected:
 	// Base LPT DAC functionality
