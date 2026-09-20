@@ -3884,11 +3884,36 @@ static void sblaster_evict([[maybe_unused]] Section* sec)
 	set_section_property_value(SblasterSectionName, "sbtype", "none");
 }
 
-static void notify_sblaster_setting_updated([[maybe_unused]] SectionProp& section,
-                                            [[maybe_unused]] const std::string& prop_name)
+static void notify_sblaster_setting_updated(SectionProp& section,
+                                            const std::string& prop_name)
 {
-	SBLASTER_Destroy();
-	SBLASTER_Init();
+	if (prop_name == "sb_filter" || prop_name == "sb_filter_always_on") {
+		if (auto channel = MIXER_FindChannel(ChannelName::SoundBlasterDac)) {
+			configure_sb_filter(channel,
+			                    section.GetString("sb_filter"),
+			                    section.GetBool("sb_filter_always_on"),
+			                    sb.type);
+		}
+	} else if (prop_name == "opl_filter") {
+		if (auto channel = MIXER_FindChannel(ChannelName::Opl)) {
+			configure_opl_filter(channel,
+			                     section.GetString("opl_filter"),
+			                     sb.type);
+		}
+	} else if (prop_name == "opl_fadeout") {
+		if (auto channel = MIXER_FindChannel(ChannelName::Opl)) {
+			if (!channel->ConfigureFadeOut(
+			            section.GetString("opl_fadeout"))) {
+
+				set_section_property_value("sblaster",
+				                           "opl_fadeout",
+				                           "off");
+			}
+		}
+	} else {
+		SBLASTER_Destroy();
+		SBLASTER_Init();
+	}
 }
 
 static void register_sblaster_text_messages()
