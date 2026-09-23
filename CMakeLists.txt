@@ -282,6 +282,7 @@ check_cxx_source_compiles("${TEST_CODE_BUILTIN_CLEAR_CACHE}"
 
 set(C_TARGET_CPU_ARM    OFF)
 set(C_TARGET_CPU_X86    OFF)
+set(C_TARGET_CPU_UNK    OFF)
 
 option(OPT_FORCE_DYNREC "Force DYNREC dynamic recompiler (not x86-64 optimized)" OFF)
 
@@ -312,9 +313,16 @@ elseif (CMAKE_SYSTEM_PROCESSOR  STREQUAL "arm64"   OR
   set(C_DYNREC           ON)
   set(C_FPU_X86          OFF)
   set(C_UNALIGNED_MEMORY OFF)
-
 else()
-  message(FATAL_ERROR "Unknown processor ${CMAKE_SYSTEM_PROCESSOR}")
+  message(WARNING "Unsupported processor ${CMAKE_SYSTEM_PROCESSOR}: "
+                  "building interpreter-only, untested configuration")
+
+  set(C_TARGET_CPU_UNK     ON)
+
+  set(C_DYNAMIC_X86        OFF)
+  set(C_DYNREC             OFF)
+  set(C_FPU_X86            OFF)
+  set(C_UNALIGNED_MEMORY   OFF)
 endif()
 
 check_include_file("libgen.h"     HAVE_LIBGEN_H)
