@@ -1,5 +1,6 @@
 target_sources(dosboxcommon PRIVATE
   bridge.cpp
+  capture.cpp
   webserver.cpp
   cpu.cpp
   memory.cpp

@@ -52,6 +52,10 @@ void CAPTURE_AddAudioData(const uint32_t sample_rate, const uint32_t num_sample_
 
 void CAPTURE_AddMidiData(const bool sysex, const size_t len, const uint8_t* data);
 
+// Request a screenshot of the next frame, as the screenshot hotkeys do.
+// `type` must be one of the image capture types.
+void CAPTURE_RequestImage(const CaptureType type);
+
 void CAPTURE_StartVideoCapture();
 void CAPTURE_StopVideoCapture();
 

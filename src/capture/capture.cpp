@@ -580,6 +580,23 @@ static void handle_capture_single_rendered_screenshot_event(const bool pressed)
 	}
 }
 
+void CAPTURE_RequestImage(const CaptureType type)
+{
+	if (!image_capturer) {
+		return;
+	}
+	switch (type) {
+	case CaptureType::RawImage: image_capturer->RequestRawCapture(); break;
+	case CaptureType::UpscaledImage:
+		image_capturer->RequestUpscaledCapture();
+		break;
+	case CaptureType::RenderedImage:
+		image_capturer->RequestRenderedCapture();
+		break;
+	default: assertm(false, "Not an image capture type"); break;
+	}
+}
+
 static void handle_capture_video_event(bool pressed)
 {
 	// Ignore key-release events

@@ -3,6 +3,7 @@
 
 #include "webserver.h"
 #include "bridge.h"
+#include "private/capture.h"
 #include "private/cpu.h"
 #include "private/dos.h"
 #include "private/dosbox.h"
@@ -67,6 +68,8 @@ static void writes_disabled(const httplib::Request&, httplib::Response& res)
 
 static void setup_api_handlers(const bool allow_writes)
 {
+	server.Post("/api/v1/capture/screenshot", ScreenshotCommand::Post);
+
 	server.Get("/api/v1/cpu/state", CpuStateCommand::Get);
 
 	server.Get("/api/v1/dos/internals", DosInternalsCommand::Get);
