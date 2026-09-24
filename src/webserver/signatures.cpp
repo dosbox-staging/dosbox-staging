@@ -16,6 +16,7 @@
 
 #include "capture/capture.h"
 #include "dosbox.h"
+#include "hardware/input/mouse.h"
 #include "hardware/memory.h"
 #include "misc/logging.h"
 #include "misc/std_filesystem.h"
@@ -234,6 +235,9 @@ void log_hit(const Signature& s, json j, const uint32_t address,
 	j["address"]      = address;
 	j["window_start"] = first;
 	j["window"]       = to_hex(mem + first, last - first);
+	if (const auto mouse = MOUSEDOS_GetPosition()) {
+		j["mouse"] = {mouse->first, mouse->second};
+	}
 
 	const auto line = j.dump() + "\n";
 	fwrite(line.data(), 1, line.size(), hit_log.get());

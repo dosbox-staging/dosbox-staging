@@ -976,6 +976,14 @@ void MOUSE_NotifyLanguageChanged()
 	synchronize_driver_language();
 }
 
+std::optional<std::pair<uint16_t, uint16_t>> MOUSEDOS_GetPosition()
+{
+	if (!state_segment || *state_segment == 0) {
+		return {};
+	}
+	return std::pair{get_pos_x(), get_pos_y()};
+}
+
 void MOUSEDOS_NotifyMinRate(const uint16_t value_hz)
 {
 	min_rate_hz = value_hz;

@@ -6,8 +6,11 @@
 #define DOSBOX_MOUSE_H
 
 #include <array>
+#include <cstdint>
+#include <optional>
 #include <regex>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "config/config.h"
@@ -137,6 +140,10 @@ void MOUSE_NewScreenParams(const MouseScreenParams &params);
 // Notification that user pressed/released the hotkey combination
 // to capture/release the mouse
 void MOUSE_ToggleUserCapture(const bool pressed);
+
+// The position the DOS mouse driver reports to programs (INT 33h, AX=03h),
+// or nothing when the driver isn't active.
+std::optional<std::pair<uint16_t, uint16_t>> MOUSEDOS_GetPosition();
 
 // ***************************************************************************
 // BIOS mouse interface for PS/2 mouse
