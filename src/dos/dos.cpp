@@ -32,6 +32,7 @@
 #include "programs/mount_common.h"
 #include "utils/ascii.h"
 #include "utils/string_utils.h"
+#include "webserver/file_log.h"
 
 #if defined(WIN32)
 #include <winsock2.h> // for gethostname
@@ -465,6 +466,8 @@ static Bitu DOS_21Handler(void) {
 	char name2[DOSNAMEBUF+2+DOS_NAMELENGTH_ASCII];
 	
 	static Bitu time_start = 0; //For emulating temporary time changes.
+
+	const auto logged_file_call = FileLog::Begin();
 
 	switch (reg_ah) {
 	case 0x00:		/* Terminate Program */
@@ -1612,6 +1615,7 @@ static Bitu DOS_21Handler(void) {
 		reg_al=0x00; /* default value */
 		break;
 	};
+	FileLog::End(logged_file_call);
 	return CBRET_NONE;
 }
 

@@ -3,6 +3,7 @@
 
 #include "webserver.h"
 #include "bridge.h"
+#include "file_log.h"
 #include "private/capture.h"
 #include "private/cpu.h"
 #include "private/dos.h"
@@ -212,6 +213,12 @@ static void init_config_settings(SectionProp& section)
 	bind_port->SetMinMax(1, 0xFFFF);
 	bind_port->SetHelp("TCP port to bind to.");
 
+	auto file_log = section.AddString("webserver_file_log", OnlyAtStart, "");
+	file_log->SetHelp(
+	        "Log every DOS file call (open, create, close, read, write, seek) to this\n"
+	        "file as JSON Lines, including the memory address each read or write uses\n"
+	        "(empty by default: no log). Works without the web server.");
+
 	auto allow_writes = section.AddBool("webserver_allow_writes", OnlyAtStart, false);
 	allow_writes->SetHelp(
 	        "Allow API requests that change emulator state: writing memory, allocating\n"
@@ -226,6 +233,8 @@ static bool is_webserver_enabled = false;
 void WEBSERVER_Init()
 {
 	auto section = get_section("webserver");
+
+	FileLog::Init(section->GetString("webserver_file_log"));
 
 	if (section->GetBool("webserver_enabled")) {
 		const auto addr = section->GetString("webserver_bind_address");
