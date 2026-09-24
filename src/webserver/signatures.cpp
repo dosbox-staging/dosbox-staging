@@ -273,6 +273,43 @@ void scan()
 			s.present = std::move(now_present);
 		} else {
 			s.values.resize(s.count);
+
+			// When most of a table changes in one scan, the program
+			// has reused or reloaded that memory (a save loading, a
+			// battle), so log one summary line rather than every
+			// record.
+			constexpr uint32_t MinTableForBulk = 8;
+			if (s.has_baseline && s.count >= MinTableForBulk) {
+				uint32_t changed = 0;
+				for (uint32_t i = 0; i < s.count; ++i) {
+					const auto address = s.address + i * s.stride;
+					if (address + s.size <= mem_size &&
+					    !std::equal(s.values[i].begin(),
+					                s.values[i].end(),
+					                mem + address)) {
+						++changed;
+					}
+				}
+				if (changed * 2 > s.count) {
+					json j       = json::object();
+					j["bulk"]    = true;
+					j["changed"] = changed;
+					j["count"]   = s.count;
+					log_hit(s, j, s.address, mem, mem_size);
+					for (uint32_t i = 0; i < s.count; ++i) {
+						const auto address = s.address +
+						                     i * s.stride;
+						if (address + s.size <= mem_size) {
+							s.values[i].assign(
+							        mem + address,
+							        mem + address +
+							                s.size);
+						}
+					}
+					continue;
+				}
+			}
+
 			for (uint32_t i = 0; i < s.count; ++i) {
 				const auto address = s.address + i * s.stride;
 				if (address + s.size > mem_size) {
