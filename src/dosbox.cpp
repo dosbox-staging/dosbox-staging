@@ -77,6 +77,7 @@
 #include "utils/math_utils.h"
 #include "utils/string_utils.h"
 #include "webserver/bridge.h"
+#include "webserver/signatures.h"
 #include "webserver/webserver.h"
 
 MachineType machine = MachineType::None;
@@ -520,6 +521,7 @@ static Bitu paused_tick()
 	if (WEBSERVER_IsEnabled()) {
 		Webserver::Bridge::Instance().ProcessRequests();
 	}
+	Signatures::Tick();
 
 	MAPPER_RunPending();
 
@@ -544,6 +546,7 @@ static Bitu normal_loop()
 			if (WEBSERVER_IsEnabled()) {
 				Webserver::Bridge::Instance().ProcessRequests();
 			}
+			Signatures::Tick();
 
 			ret = (*cpudecoder)();
 			if (ret < 0) {

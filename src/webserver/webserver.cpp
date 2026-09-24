@@ -4,6 +4,7 @@
 #include "webserver.h"
 #include "bridge.h"
 #include "file_log.h"
+#include "signatures.h"
 #include "private/capture.h"
 #include "private/cpu.h"
 #include "private/dos.h"
@@ -70,6 +71,10 @@ static void writes_disabled(const httplib::Request&, httplib::Response& res)
 static void setup_api_handlers(const bool allow_writes)
 {
 	server.Post("/api/v1/capture/screenshot", ScreenshotCommand::Post);
+
+	server.Post("/api/v1/dosbox/pause", PauseCommand::PostPause);
+	server.Post("/api/v1/dosbox/resume", PauseCommand::PostResume);
+	server.Post("/api/v1/signatures/reload", ReloadSignaturesCommand::Post);
 
 	server.Get("/api/v1/cpu/state", CpuStateCommand::Get);
 
@@ -219,6 +224,18 @@ static void init_config_settings(SectionProp& section)
 	        "file as JSON Lines, including the memory address each read or write uses\n"
 	        "(empty by default: no log). Works without the web server.");
 
+	auto signature_dir = section.AddString("webserver_signature_dir", OnlyAtStart, "");
+	signature_dir->SetHelp(
+	        "Watch emulated memory for the signatures in this directory's *.json files and\n"
+	        "log each hit, with a window of the memory around it, to hits.jsonl there\n"
+	        "(empty by default: off). A signature is a byte pattern or text that appears\n"
+	        "('pattern'), or a watched address or table that changes ('watch'); a hit can\n"
+	        "also take a screenshot or pause the emulator. Works without the web server.");
+
+	auto signature_interval = section.AddInt("webserver_signature_interval", OnlyAtStart, 500);
+	signature_interval->SetMinMax(50, 60000);
+	signature_interval->SetHelp("Milliseconds between signature scans (500 by default).");
+
 	auto allow_writes = section.AddBool("webserver_allow_writes", OnlyAtStart, false);
 	allow_writes->SetHelp(
 	        "Allow API requests that change emulator state: writing memory, allocating\n"
@@ -235,6 +252,8 @@ void WEBSERVER_Init()
 	auto section = get_section("webserver");
 
 	FileLog::Init(section->GetString("webserver_file_log"));
+	Signatures::Init(section->GetString("webserver_signature_dir"),
+	                 section->GetInt("webserver_signature_interval"));
 
 	if (section->GetBool("webserver_enabled")) {
 		const auto addr = section->GetString("webserver_bind_address");
