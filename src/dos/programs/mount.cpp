@@ -8,6 +8,7 @@
 #include "dosbox.h"
 
 #include <algorithm>
+#include <limits>
 #include <vector>
 
 #include "config/config.h"
@@ -619,6 +620,20 @@ static std::optional<MountFileSystemType> parse_file_system_type(const std::stri
 	}
 }
 
+// Parses a single CHS geometry value. The geometry is stored in uint16_t
+// fields, so out-of-range values would silently wrap (e.g., 65536 cylinders
+// would become 0).
+static std::optional<uint16_t> parse_geometry_value(const std::string& s)
+{
+	constexpr auto MaxValue = std::numeric_limits<uint16_t>::max();
+
+	const auto value = parse_int(s);
+	if (!value || *value < 1 || *value > MaxValue) {
+		return {};
+	}
+	return static_cast<uint16_t>(*value);
+}
+
 // Returns the first option that requires a value and is either the last
 // argument or is followed by another MOUNT option. Values can otherwise start
 // with a dash (e.g., `-label -DISK-`).
@@ -877,14 +892,15 @@ bool MOUNT::ParseGeometry(MountParameters& params, const GeometryOptions& option
 	if (options.chs) {
 		const auto parts = split(*options.chs, ",");
 
-		const auto has_three_parts = (parts.size() == 3);
+		std::optional<uint16_t> cylinders = {};
+		std::optional<uint16_t> heads     = {};
+		std::optional<uint16_t> sectors   = {};
 
-		const auto cylinders = has_three_parts ? parse_int(parts[0])
-		                                       : std::optional<int>{};
-		const auto heads     = has_three_parts ? parse_int(parts[1])
-		                                       : std::optional<int>{};
-		const auto sectors   = has_three_parts ? parse_int(parts[2])
-		                                       : std::optional<int>{};
+		if (parts.size() == 3) {
+			cylinders = parse_geometry_value(parts[0]);
+			heads     = parse_geometry_value(parts[1]);
+			sectors   = parse_geometry_value(parts[2]);
+		}
 
 		if (!cylinders || !heads || !sectors) {
 			NOTIFY_DisplayWarning(Notification::Source::Console,
@@ -894,9 +910,9 @@ bool MOUNT::ParseGeometry(MountParameters& params, const GeometryOptions& option
 		}
 
 		params.sizes[0] = 512;
-		params.sizes[1] = static_cast<uint16_t>(*sectors);
-		params.sizes[2] = static_cast<uint16_t>(*heads);
-		params.sizes[3] = static_cast<uint16_t>(*cylinders);
+		params.sizes[1] = *sectors;
+		params.sizes[2] = *heads;
+		params.sizes[3] = *cylinders;
 	}
 
 	return true;
