@@ -758,9 +758,15 @@ XMS::XMS(SectionProp& section) : callbackhandler{}
 	BIOS_ZeroExtendedSize(true);
 	DOS_AddMultiplexHandler(xms_multiplex);
 
-	// Place hookable callback in writable memory area
-	xms.callback = RealMake(static_cast<uint16_t>(DOS_GetMemory(0x1) - 1),
-	                        0x10);
+	// Place hookable callback in writable memory area. The DOS private
+	// memory pool cannot free allocations, so allocate the area only once
+	// and reuse it across re-initialisations (e.g. runtime [dos] setting
+	// changes); this also keeps the XMS entry point address stable for
+	// programs that have already cached it.
+	static const auto CallbackSeg = static_cast<uint16_t>(DOS_GetMemory(0x1) - 1);
+
+	xms.callback = RealMake(CallbackSeg, 0x10);
+
 	callbackhandler.Install(&XMS_Handler,
 	                        CB_HOOKABLE,
 	                        RealToPhysical(xms.callback),
@@ -784,6 +790,8 @@ XMS::XMS(SectionProp& section) : callbackhandler{}
 
 	// TODO: If implementing CP/M compatibility, mirror the JMP
 	//       instruction in HMA
+
+	LOG_MSG("XMS: Initialised");
 }
 
 XMS::~XMS()
@@ -798,6 +806,8 @@ XMS::~XMS()
 	if (!xms.is_available) {
 		return;
 	}
+
+	LOG_MSG("XMS: Shutting down");
 
 	// Undo biosclearing
 	BIOS_ZeroExtendedSize(false);
