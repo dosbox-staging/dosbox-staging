@@ -14,7 +14,7 @@ runs:
         echo "DOSBOX_VERSION_AND_HASH=$DOSBOX_VERSION_AND_HASH" >> $GITHUB_ENV
 
         echo "VCPKG_EXT_DEPS_VERSION=v0.83.0-4" >> $GITHUB_ENV
-        echo "NUKED_SC55_CLAP_VERSION=v0.11.0" >> $GITHUB_ENV
+        echo "NUKED_SC55_CLAP_VERSION=v0.12.0" >> $GITHUB_ENV
 
         # For release notes generation - set to previous release publish time
         echo "RELEASE_START_TIME=2026-05-11T00:00:00Z" >> $GITHUB_ENV
