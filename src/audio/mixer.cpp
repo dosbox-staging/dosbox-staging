@@ -194,6 +194,10 @@ struct MixerSettings {
 	SDL_AudioDeviceID sdl_device = 0;
 	SDL_AudioStream* sdl_stream  = nullptr;
 
+	// Whether this mixer has incremented the SDL audio subsystem refcount
+	// (via SDL_InitSubSystem) and still owes a matching SDL_QuitSubSystem
+	bool sdl_audio_initialised = false;
+
 	// Config-time flag from the `nosound` setting. If set, there is no SDL
 	// audio device and the mixer thread just sleeps for the expected
 	// per-block duration to simulate timing. Never changes after init.
@@ -3040,6 +3044,13 @@ void MIXER_CloseAudioDevice()
 		SDL_CloseAudioDevice(mixer.sdl_device);
 		mixer.sdl_device = 0;
 	}
+
+	// Release our reference on the SDL audio subsystem to balance the
+	// SDL_InitSubSystem() call in init_sdl_sound()
+	if (mixer.sdl_audio_initialised) {
+		SDL_QuitSubSystem(SDL_INIT_AUDIO);
+		mixer.sdl_audio_initialised = false;
+	}
 }
 
 // Sets `mixer.sample_rate_hz` and `mixer.blocksize` on success
@@ -3067,6 +3078,7 @@ static bool init_sdl_sound(const int requested_sample_rate_hz,
 
 		return false;
 	}
+	mixer.sdl_audio_initialised = true;
 
 	mixer.sdl_device = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &desired);
 	if (mixer.sdl_device == 0) {
@@ -3262,6 +3274,11 @@ void MIXER_Init()
 			// `mute_state` defaults to Audible and `paused`
 			// defaults to false; nothing more to set here.
 		} else {
+			// `init_sdl_sound()` may have already incremented the
+			// SDL audio subsystem refcount (e.g. if
+			// `SDL_OpenAudioDevice()` failed) before returning
+			// false; release it here.
+			MIXER_CloseAudioDevice();
 			set_no_sound();
 		}
 	}
