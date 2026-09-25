@@ -162,6 +162,40 @@ TEST_F(MountTest, RejectsInvalidChsFormat)
 	}
 }
 
+TEST_F(MountTest, RejectsOutOfRangeChsValues)
+{
+	// The geometry is stored in uint16_t fields. These values would
+	// otherwise wrap silently, e.g. 65536 cylinders would become 0.
+	for (const auto* chs : {"65536,16,63",
+	                        "200,65536,63",
+	                        "200,16,65536",
+	                        "0,16,63",
+	                        "200,0,63",
+	                        "200,16,0",
+	                        "-1,16,63"}) {
+		SCOPED_TRACE(chs);
+
+		const auto result = Mount("C " + P("bootable.img") +
+		                          " -t hdd -chs " + chs);
+		EXPECT_FALSE(result.has_value());
+	}
+}
+
+TEST_F(MountTest, AcceptsChsCylinderCountsAboveTheLegacyBiosLimit)
+{
+	// MOUNT's own autosize path derives well over 1024 cylinders for
+	// images larger than ~504 MB (a 2 GB image comes to 4161), so the
+	// legacy Int 13h cylinder limit must not be enforced here.
+	const auto result = Mount("C " + P("bootable.img") + " -t hdd -chs 4161,16,63");
+
+	ASSERT_TRUE(result.has_value());
+
+	EXPECT_EQ(result->sizes[0], 512);
+	EXPECT_EQ(result->sizes[1], 63);   // sectors
+	EXPECT_EQ(result->sizes[2], 16);   // heads
+	EXPECT_EQ(result->sizes[3], 4161); // cylinders
+}
+
 TEST_F(MountTest, RejectsOptionValueThatIsAnotherOption)
 {
 	const auto result = Mount("1 " + P("bootable.img") + " -size -t hdd");
