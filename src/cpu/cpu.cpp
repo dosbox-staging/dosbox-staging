@@ -3748,8 +3748,8 @@ void CPU_Destroy()
 	cpu_instance.reset();
 }
 
-static void notify_cpu_setting_updated([[maybe_unused]] SectionProp& section,
-                                       [[maybe_unused]] const std::string& prop_name)
+static void notify_cpu_setting_updated(SectionProp& section,
+                                       const std::string& prop_name)
 {
 	auto enable_modern_mode = [&] {
 		// Clear legacy CPU 'cycles' setting to enable "modern" mode
@@ -3812,10 +3812,24 @@ static void notify_cpu_setting_updated([[maybe_unused]] SectionProp& section,
 		enable_modern_mode();
 		set_cpu_cycles_to_default_if_empty();
 		set_cpu_cycles_protected_to_default_if_empty();
-	}
 
-	CPU_Destroy();
-	CPU_Init();
+	} else if (prop_name == "cycleup" || prop_name == "cycledown" ||
+	           prop_name == "cpu_idle") {
+		// These only affect the cycle-adjustment hotkey increments and
+		// the idle-HLT behaviour; apply them in place rather than
+		// tearing down and rebuilding the CPU core (which would flush
+		// the dynamic-recompiler cache).
+		//
+		cpu_cycle_up       = section.GetInt("cycleup");
+		cpu_cycle_down     = section.GetInt("cycledown");
+		should_hlt_on_idle = section.GetBool("cpu_idle");
+
+		TITLEBAR_NotifyCyclesChanged();
+
+	} else {
+		CPU_Destroy();
+		CPU_Init();
+	}
 }
 
 void init_cpu_config_settings(SectionProp& secprop)

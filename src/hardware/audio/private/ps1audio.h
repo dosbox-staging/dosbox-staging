@@ -27,9 +27,10 @@ struct Ps1Registers {
 
 class Ps1Dac {
 public:
-	Ps1Dac(const std::string& filter_choice);
+	Ps1Dac(const std::string& filter_prefs);
 	~Ps1Dac();
 	void PicCallback(const int frames_requested);
+	void SetFilter(const std::string& filter_prefs);
 
 	RWQueue<uint8_t> output_queue{1};
 	MixerChannelPtr channel = nullptr;

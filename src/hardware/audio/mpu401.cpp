@@ -780,9 +780,9 @@ public:
 			return;
 		}
 
-		const std::string mpu_choice = section->GetString("mpu401");
+		const std::string mpu_prefs = section->GetString("mpu401");
 
-		if (const auto has_bool = parse_bool_setting(mpu_choice);
+		if (const auto has_bool = parse_bool_setting(mpu_prefs);
 		    has_bool && *has_bool == false) {
 			return;
 		}
@@ -796,7 +796,7 @@ public:
 		ReadHandler[1].Install(port_0x331, &MPU401_ReadStatus, io_width_t::byte);
 
 		mpu = Mpu{};
-		mpu.is_intelligent = (mpu_choice == "intelligent");
+		mpu.is_intelligent = (mpu_prefs == "intelligent");
 		if (mpu.is_intelligent) {
 			// Set IRQ and unmask it(for timequest/princess maker 2)
 			PIC_SetIRQMask(mpu.irq, false);

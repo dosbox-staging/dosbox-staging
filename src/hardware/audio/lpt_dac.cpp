@@ -1,4 +1,4 @@
-// SPDX-FileSPDText:X Identifier: GPL-2.0-or-later
+// SPDX-FileCopyrightText:  2022-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 // NOTE: a lot of this code assumes that the callback is called every emulated
@@ -13,6 +13,7 @@
 #include "config/setup.h"
 #include "hardware/pic.h"
 #include "hardware/timer.h"
+#include "misc/notifications.h"
 #include "misc/support.h"
 #include "utils/math_utils.h"
 
@@ -24,12 +25,13 @@ LptDac::LptDac(const std::string_view name, const int channel_rate_hz,
 
 	assert(!dac_name.empty());
 
-	constexpr bool Stereo = true;
-	constexpr bool SignedData = true;
+	constexpr bool Stereo      = true;
+	constexpr bool SignedData  = true;
 	constexpr bool NativeOrder = true;
-	const auto audio_callback = std::bind(MIXER_PullFromQueueCallback<LptDac, AudioFrame, Stereo, SignedData, NativeOrder>,
-	                                      std::placeholders::_1,
-	                                      this);
+	const auto audio_callback  = std::bind(
+                MIXER_PullFromQueueCallback<LptDac, AudioFrame, Stereo, SignedData, NativeOrder>,
+                std::placeholders::_1,
+                this);
 
 	std::set<ChannelFeature> features = {ChannelFeature::Sleep,
 	                                     ChannelFeature::ReverbSend,
@@ -39,10 +41,7 @@ LptDac::LptDac(const std::string_view name, const int channel_rate_hz,
 	features.insert(extra_features.begin(), extra_features.end());
 
 	// Setup the mixer callback
-	channel = MIXER_AddChannel(audio_callback,
-	                           channel_rate_hz,
-	                           dac_name,
-	                           features);
+	channel = MIXER_AddChannel(audio_callback, channel_rate_hz, dac_name, features);
 
 	ms_per_frame = MillisInSecond / channel->GetSampleRate();
 
@@ -51,10 +50,15 @@ LptDac::LptDac(const std::string_view name, const int channel_rate_hz,
 	status_reg.busy  = false;
 }
 
-bool LptDac::TryParseAndSetCustomFilter(const std::string& filter_choice)
+std::string LptDac::GetDacName()
+{
+	return dac_name;
+}
+
+bool LptDac::TryParseAndSetCustomFilter(const std::string& filter_prefs)
 {
 	assert(channel);
-	return channel->TryParseAndSetCustomFilter(filter_choice);
+	return channel->TryParseAndSetCustomFilter(filter_prefs);
 }
 
 void LptDac::BindHandlers(const io_port_t lpt_port, const io_write_f write_data,
@@ -99,7 +103,7 @@ void LptDac::PicCallback(const int requested_frames)
 	for (int i = 0; i < frames_remaining; ++i) {
 		output_queue.NonblockingEnqueue(Render());
 	}
-	last_rendered_ms = PIC_FullIndex();
+	last_rendered_ms          = PIC_FullIndex();
 	frames_rendered_this_tick = 0;
 }
 
@@ -128,8 +132,11 @@ static void lpt_dac_callback()
 	if (!lpt_dac || !lpt_dac->channel->is_enabled) {
 		return;
 	}
+
 	lpt_dac->frame_counter += lpt_dac->channel->GetFramesPerTick();
+
 	const auto requested_frames = ifloor(lpt_dac->frame_counter);
+
 	lpt_dac->frame_counter -= static_cast<float>(requested_frames);
 	lpt_dac->PicCallback(requested_frames);
 }
@@ -145,6 +152,28 @@ void LPTDAC_NotifyUnlockMixer()
 {
 	if (lpt_dac) {
 		lpt_dac->output_queue.Start();
+	}
+}
+
+static void set_filter(const std::string& channel_name, const std::string& filter_prefs)
+{
+	assert(lpt_dac);
+
+	if (!lpt_dac->TryParseAndSetCustomFilter(filter_prefs)) {
+		if (const auto maybe_bool = parse_bool_setting(filter_prefs)) {
+			lpt_dac->ConfigureFilters(*maybe_bool ? FilterState::On
+			                                      : FilterState::Off);
+		} else {
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      channel_name.c_str(),
+			                      "PROGRAM_CONFIG_INVALID_SETTING",
+			                      "lpt_dac_filter",
+			                      filter_prefs.c_str(),
+			                      "on");
+
+			set_section_property_value("speaker", "lpt_dac_filter", "on");
+			lpt_dac->ConfigureFilters(FilterState::On);
+		}
 	}
 }
 
@@ -178,48 +207,35 @@ static void init_lpt_dac_settings(SectionProp& section)
 
 void LPTDAC_Init(SectionProp& section)
 {
-	const std::string dac_choice = section.GetString("lpt_dac");
+	const std::string dac_prefs = section.GetString("lpt_dac");
 
-	if (dac_choice == "disney") {
+	if (dac_prefs == "disney") {
 		MIXER_LockMixerThread();
 		lpt_dac = std::make_unique<Disney>();
 
-	} else if (dac_choice == "covox") {
+	} else if (dac_prefs == "covox") {
 		MIXER_LockMixerThread();
 		lpt_dac = std::make_unique<Covox>();
 
-	} else if (dac_choice == "ston1") {
+	} else if (dac_prefs == "ston1") {
 		MIXER_LockMixerThread();
 		lpt_dac = std::make_unique<StereoOn1>();
 
 	} else {
 		// The remaining setting is to turn the LPT DAC off
-		const auto dac_choice_has_bool = parse_bool_setting(dac_choice);
-		if (!dac_choice_has_bool || *dac_choice_has_bool != false) {
-			LOG_WARNING("LPT_DAC: Invalid 'lpt_dac' setting: '%s', using 'none'",
-			            dac_choice.c_str());
+		if (!has_false(dac_prefs)) {
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "LPTDAC",
+			                      "PROGRAM_CONFIG_INVALID_SETTING",
+			                      "lpt_dac",
+			                      dac_prefs.c_str(),
+			                      "none");
 		}
 		return;
 	}
 
 	// Apply LPT DAC filter
-	const std::string filter_choice = section.GetString("lpt_dac_filter");
-	assert(lpt_dac);
-
-	if (!lpt_dac->TryParseAndSetCustomFilter(filter_choice)) {
-		if (const auto maybe_bool = parse_bool_setting(filter_choice)) {
-			lpt_dac->ConfigureFilters(*maybe_bool ? FilterState::On
-			                                      : FilterState::Off);
-		} else {
-			LOG_WARNING(
-			        "LPT_DAC: Invalid 'lpt_dac_filter' setting: '%s', "
-			        "using 'on'",
-			        filter_choice.c_str());
-
-			set_section_property_value("speaker", "lpt_dac_filter", "on");
-			lpt_dac->ConfigureFilters(FilterState::On);
-		}
-	}
+	set_filter(lpt_dac->GetDacName(), section.GetString("lpt_dac_filter"));
 
 	lpt_dac->BindToPort(Lpt1Port);
 
@@ -245,18 +261,20 @@ void LPTDAC_Destroy()
 	}
 }
 
-void LPTDAC_NotifySettingUpdated(SectionProp& section,
-                                 [[maybe_unused]] const std::string& prop_name)
+void LPTDAC_NotifySettingUpdated(SectionProp& section, const std::string& prop_name)
 {
 	// The [speaker] section controls multiple audio devices, so we want to
 	// make sure to only restart the device affected by the setting.
 	//
-	if (prop_name == "lpt_dac" || prop_name == "lpt_dac_filter") {
+	if (prop_name == "lpt_dac_filter") {
+		if (lpt_dac) {
+			set_filter(lpt_dac->GetDacName(),
+			           section.GetString("lpt_dac_filter"));
+		}
+	} else if (prop_name == "lpt_dac") {
 		LPTDAC_Destroy();
 		LPTDAC_Init(section);
 	}
-
-	// TODO support changing filter params without restarting the device
 }
 
 void LPTDAC_AddConfigSection(Section* sec)

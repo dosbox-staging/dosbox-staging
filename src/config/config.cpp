@@ -375,18 +375,18 @@ StartupVerbosity Config::GetStartupVerbosity() const
 {
 	const Section* s = GetSection("dosbox");
 	assert(s);
-	const std::string user_choice = s->GetPropertyValue("startup_verbosity");
+	const std::string startup_prefs = s->GetPropertyValue("startup_verbosity");
 
-	if (user_choice == "high") {
+	if (startup_prefs == "high") {
 		return StartupVerbosity::High;
 	}
-	if (user_choice == "low") {
+	if (startup_prefs == "low") {
 		return StartupVerbosity::Low;
 	}
-	if (user_choice == "quiet") {
+	if (startup_prefs == "quiet") {
 		return StartupVerbosity::Quiet;
 	}
-	if (user_choice == "auto") {
+	if (startup_prefs == "auto") {
 		return (cmdline->HasDirectory() || cmdline->HasExecutableName())
 		             ? StartupVerbosity::Low
 		             : StartupVerbosity::High;
@@ -396,7 +396,7 @@ StartupVerbosity Config::GetStartupVerbosity() const
 	                      "CONFIG",
 	                      "Invalid [color=light-green]'startup_verbosity'[reset] setting: "
 	                      "[color=white]'%s'[reset], using [color=white]'high'[reset]",
-	                      user_choice.c_str());
+	                      startup_prefs.c_str());
 
 	return StartupVerbosity::High;
 }

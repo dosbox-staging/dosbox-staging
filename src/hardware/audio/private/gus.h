@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2020-2026 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -271,7 +271,7 @@ public:
 
 	float frame_counter     = 0.0f;
 	MixerChannelPtr channel = nullptr;
-	RWQueue<AudioFrame> output_queue {1};
+	RWQueue<AudioFrame> output_queue{1};
 
 	std::function<bool()> PerformDmaTransfer = {};
 
@@ -328,9 +328,9 @@ private:
 	std::mutex mutex                        = {};
 
 	// Struct and pointer members
-	VoiceIrq voice_irq            = {};
-	Voice* target_voice           = nullptr;
-	DmaChannel* dma_channel       = nullptr;
+	VoiceIrq voice_irq      = {};
+	Voice* target_voice     = nullptr;
+	DmaChannel* dma_channel = nullptr;
 
 	// Playback related
 	double last_rendered_ms = 0.0;
@@ -361,8 +361,8 @@ private:
 	uint16_t dma_addr       = 0;
 	uint8_t dma_addr_nibble = 0;
 
-	uint8_t dma1      = 0; // playback DMA
-	uint8_t dma2      = 0; // recording DMA
+	uint8_t dma1 = 0; // playback DMA
+	uint8_t dma2 = 0; // recording DMA
 
 	// IRQ states
 	uint8_t irq1       = 0; // playback IRQ
@@ -370,7 +370,7 @@ private:
 	uint8_t irq_status = 0;
 
 	DmaControlRegister dma_control_register = {};
-	ResetRegister reset_register = {};
+	ResetRegister reset_register            = {};
 	MixControlRegister mix_control_register = {};
 
 	bool irq_previously_interrupted = false;

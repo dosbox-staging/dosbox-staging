@@ -822,39 +822,44 @@ void ReelMagic_EnableAudioChannel(const bool should_enable)
 	MIXER_UnlockMixerThread();
 }
 
-static void set_magic_key(const std::string& key_choice)
+static void set_magic_key(const std::string& key_prefs)
 {
-	if (key_choice == "auto") {
+	if (key_prefs == "auto") {
 		_initialMagicKey = common_magic_key;
 		// default: don't report anything
-	} else if (key_choice == "common") {
+		//
+	} else if (key_prefs == "common") {
 		_initialMagicKey = common_magic_key;
 		LOG_MSG("REELMAGIC: Using the common key: 0x%x", common_magic_key);
-	} else if (key_choice == "thehorde") {
+
+	} else if (key_prefs == "thehorde") {
 		_initialMagicKey = thehorde_magic_key;
 		LOG_MSG("REELMAGIC: Using The Horde's key: 0x%x", thehorde_magic_key);
-	} else if (unsigned int k; sscanf(key_choice.c_str(), "%x", &k) == 1) {
+
+	} else if (unsigned int k; sscanf(key_prefs.c_str(), "%x", &k) == 1) {
 		_initialMagicKey = k;
 		LOG_MSG("REELMAGIC: Using custom key: 0x%x", k);
+
 	} else {
-		LOG_WARNING("REELMAGIC: Failed parsing key choice '%s', using built-in routines",
-		            key_choice.c_str());
+		LOG_WARNING("REELMAGIC: Failed parsing key '%s', using built-in routines",
+		            key_prefs.c_str());
+
 		_initialMagicKey = common_magic_key;
 	}
 }
 
-static void set_fcode(const int fps_code_choice)
+static void set_fcode(const int fps_code)
 {
 	// Default
 	constexpr auto default_fps_code = 0;
 
-	if (fps_code_choice == default_fps_code) {
+	if (fps_code == default_fps_code) {
 		_magicalFcodeOverride = default_fps_code;
 		return;
 	}
 
 	auto fps_from_code = [=]() {
-		switch (fps_code_choice) {
+		switch (fps_code) {
 		case 1: return "23.976";
 		case 2: return "24";
 		case 3: return "25";
@@ -867,16 +872,16 @@ static void set_fcode(const int fps_code_choice)
 	};
 
 	// Override with a valid code
-	if (fps_code_choice >= 1 && fps_code_choice <= 7) {
+	if (fps_code >= 1 && fps_code <= 7) {
 		LOG_MSG("REELMAGIC: Overriding the frame rate to %s FPS (code %d)",
 		        fps_from_code(),
-		        fps_code_choice);
-		_magicalFcodeOverride = fps_code_choice;
+		        fps_code);
+		_magicalFcodeOverride = fps_code;
 		return;
 	}
 
 	LOG_WARNING("REELMAGIC: Frame rate code '%d' is not between 0 and 7, using built-in routines",
-	            fps_code_choice);
+	            fps_code);
 	_magicalFcodeOverride = default_fps_code;
 }
 

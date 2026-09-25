@@ -56,8 +56,7 @@ static void tandy_dac_evict(Section*);
 class TandyPSG {
 public:
 	TandyPSG(const ConfigProfile config_profile, const bool is_dac_enabled,
-	         const std::string& fadeout_choice,
-	         const std::string& filter_choice);
+	         const std::string& fadeout_prefs, const std::string& filter_prefs);
 	~TandyPSG();
 
 private:
@@ -115,7 +114,7 @@ static void setup_filter(MixerChannelPtr& channel, const bool filter_enabled)
 	}
 }
 
-TandyDAC::TandyDAC(const ConfigProfile config_profile, const std::string& filter_choice)
+TandyDAC::TandyDAC(const ConfigProfile config_profile, const std::string& filter_prefs)
 {
 	using namespace std::placeholders;
 
@@ -148,16 +147,16 @@ TandyDAC::TandyDAC(const ConfigProfile config_profile, const std::string& filter
 	channel->SetResampleMethod(ResampleMethod::ZeroOrderHoldAndResample);
 
 	// Set up DAC filters
-	if (const auto maybe_bool = parse_bool_setting(filter_choice)) {
+	if (const auto maybe_bool = parse_bool_setting(filter_prefs)) {
 		const auto filter_enabled = *maybe_bool;
 		setup_filter(channel, filter_enabled);
 
-	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
+	} else if (!channel->TryParseAndSetCustomFilter(filter_prefs)) {
 		LOG_WARNING(
 		        "%s: Invalid 'tandy_dac_filter' setting: '%s', "
 		        "using 'on'",
 		        ChannelName::TandyDac,
-		        filter_choice.c_str());
+		        filter_prefs.c_str());
 
 		const auto filter_enabled = true;
 		setup_filter(channel, filter_enabled);
@@ -415,9 +414,8 @@ void TandyDAC::PicCallback(const int requested)
 	}
 }
 
-TandyPSG::TandyPSG(const ConfigProfile config_profile,
-                   const bool is_dac_enabled, const std::string& fadeout_choice,
-                   const std::string& filter_choice)
+TandyPSG::TandyPSG(const ConfigProfile config_profile, const bool is_dac_enabled,
+                   const std::string& fadeout_prefs, const std::string& filter_prefs)
 {
 	using namespace std::placeholders;
 
@@ -463,21 +461,21 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile,
 	                            ChannelFeature::Synthesizer});
 
 	// Setup fadeout
-	if (!channel->ConfigureFadeOut(fadeout_choice)) {
+	if (!channel->ConfigureFadeOut(fadeout_prefs)) {
 		set_section_property_value("speaker", "tandy_fadeout", "off");
 	}
 
 	// Set up PSG filters
-	if (const auto maybe_bool = parse_bool_setting(filter_choice)) {
+	if (const auto maybe_bool = parse_bool_setting(filter_prefs)) {
 		const auto filter_enabled = *maybe_bool;
 		setup_filter(channel, filter_enabled);
 
-	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
+	} else if (!channel->TryParseAndSetCustomFilter(filter_prefs)) {
 		LOG_WARNING(
 		        "%s: Invalid 'tandy_filter' value: '%s', "
 		        "using 'on'",
 		        ChannelName::TandyPsg,
-		        filter_choice.c_str());
+		        filter_prefs.c_str());
 
 		const auto filter_enabled = true;
 		setup_filter(channel, filter_enabled);

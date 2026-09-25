@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2022-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2022-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "private/adlib_gold.h"
@@ -316,7 +316,7 @@ AdlibGold::AdlibGold(const int sample_rate_hz)
           stereo_processor(nullptr)
 {
 	surround_processor = std::make_unique<SurroundProcessor>(sample_rate_hz);
-	stereo_processor   = std::make_unique<StereoProcessor>(sample_rate_hz);
+	stereo_processor = std::make_unique<StereoProcessor>(sample_rate_hz);
 }
 
 AdlibGold::~AdlibGold() = default;

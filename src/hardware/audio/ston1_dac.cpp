@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2022-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2022-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "private/ston1_dac.h"
@@ -65,12 +65,14 @@ void StereoOn1::WriteControl(const io_port_t, const io_val_t value, const io_wid
 	const auto new_control = LptControlRegister{check_cast<uint8_t>(value)};
 
 	// Write data to the left channel
-	if (control_reg.auto_lf && !new_control.auto_lf)
+	if (control_reg.auto_lf && !new_control.auto_lf) {
 		stereo_data[0] = data_reg;
+	}
 
 	// Write data to the right channel
-	if (control_reg.strobe && !new_control.strobe)
+	if (control_reg.strobe && !new_control.strobe) {
 		stereo_data[1] = data_reg;
+	}
 
 	control_reg.data = new_control.data;
 }

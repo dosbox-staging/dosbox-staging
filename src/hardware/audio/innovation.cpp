@@ -33,8 +33,28 @@ constexpr auto ChipClockHz = 14318180.0 / 16;
 constexpr auto EntertainerIdPort  = io_port_t{0x200};
 constexpr auto EntertainerIdValue = uint8_t{0xA5};
 
+static void set_innovation_channel_filter(MixerChannelPtr& channel,
+                                          const std::string& filter_prefs)
+{
+	if (!channel->TryParseAndSetCustomFilter(filter_prefs)) {
+		if (!has_false(filter_prefs)) {
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "INNOVATION",
+			                      "PROGRAM_CONFIG_INVALID_SETTING",
+			                      "innovation_filter",
+			                      filter_prefs.c_str(),
+			                      "off");
+		}
+
+		channel->SetHighPassFilter(FilterState::Off);
+		channel->SetLowPassFilter(FilterState::Off);
+
+		set_section_property_value("innovation", "innovation_filter", "off");
+	}
+}
+
 Innovation::Innovation(const int sid_filter_strength,
-                       const std::string& channel_filter_choice)
+                       const std::string& channel_filter_prefs)
         : ms_per_clock{MillisInSecond / ChipClockHz}
 {
 	using namespace std::placeholders;
@@ -64,24 +84,7 @@ Innovation::Innovation(const int sid_filter_strength,
 	                                       ChannelFeature::ChorusSend,
 	                                       ChannelFeature::Synthesizer});
 
-	if (!mixer_channel->TryParseAndSetCustomFilter(channel_filter_choice)) {
-		const auto filter_choice_has_bool = parse_bool_setting(
-		        channel_filter_choice);
-
-		if (!filter_choice_has_bool) {
-			NOTIFY_DisplayWarning(Notification::Source::Console,
-			                      "INNOVATION",
-			                      "PROGRAM_CONFIG_INVALID_SETTING",
-			                      "innovation_filter",
-			                      channel_filter_choice.c_str(),
-			                      "off");
-		}
-
-		mixer_channel->SetHighPassFilter(FilterState::Off);
-		mixer_channel->SetLowPassFilter(FilterState::Off);
-
-		set_section_property_value("innovation", "innovation_filter", "off");
-	}
+	set_innovation_channel_filter(mixer_channel, channel_filter_prefs);
 
 	const auto sample_rate_hz = mixer_channel->GetSampleRate();
 
@@ -148,6 +151,22 @@ Innovation::~Innovation()
 	service.reset();
 
 	MIXER_UnlockMixerThread();
+}
+
+void Innovation::SetSidFilter(const int sid_filter_strength)
+{
+	std::lock_guard lock(mutex);
+	service->enableFilter(sid_filter_strength > 0);
+	if (sid_filter_strength > 0) {
+		service->setFilter6581Curve(sid_filter_strength / 100.0);
+	}
+
+	LOG_MSG("INNOVATION: Set SID filter to %d%%", sid_filter_strength);
+}
+
+void Innovation::SetChannelFilter(const std::string& filter_prefs)
+{
+	set_innovation_channel_filter(channel, filter_prefs);
 }
 
 uint8_t Innovation::ReadFromPort(io_port_t port, io_width_t)
@@ -250,11 +269,23 @@ void INNOVATION_Destroy()
 	innovation = {};
 }
 
-static void notify_innovation_setting_updated([[maybe_unused]] SectionProp& section,
-                                              [[maybe_unused]] const std::string& prop_name)
+static void notify_innovation_setting_updated(SectionProp& section,
+                                              const std::string& prop_name)
 {
-	INNOVATION_Destroy();
-	INNOVATION_Init();
+	if (prop_name == "innovation_filter") {
+		if (innovation) {
+			innovation->SetChannelFilter(
+			        section.GetString("innovation_filter"));
+		}
+	} else if (prop_name == "innovation_sid_filter") {
+		if (innovation) {
+			innovation->SetSidFilter(
+			        section.GetInt("innovation_sid_filter"));
+		}
+	} else {
+		INNOVATION_Destroy();
+		INNOVATION_Init();
+	}
 }
 
 static void init_innovation_config_settings(SectionProp& sec_prop)

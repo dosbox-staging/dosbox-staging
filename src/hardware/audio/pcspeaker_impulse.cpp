@@ -41,10 +41,13 @@ float PcSpeakerImpulse::CalcImpulse(const double t) const
 
 	if ((0 < t) && (t * Fs < Q)) {
 		constexpr auto Midpoint = Q / (2.0 * Fs);
+
 		const auto window = 1.0 +
 		                    std::cos(2.0 * Fs * M_PI * (Midpoint - t) / Q);
+
 		const auto amplitude = Gain * window *
 		                       sinc(2.0 * Fc * M_PI * (t - Midpoint)) / 2.0;
+
 		res = static_cast<float>(amplitude);
 	}
 
@@ -60,9 +63,8 @@ void PcSpeakerImpulse::HandleWakeUp()
 
 void PcSpeakerImpulse::InitializeLut()
 {
-	const auto sample_step = 1.0 /
-	                         (static_cast<double>(SampleRateHz) *
-	                          SincOversamplingFactor);
+	const auto sample_step = 1.0 / (static_cast<double>(SampleRateHz) *
+	                                SincOversamplingFactor);
 
 	double sample_time = 0.0;
 	for (auto it = impulse_lut.begin(); it != impulse_lut.end(); ++it) {
@@ -176,6 +178,7 @@ void PcSpeakerImpulse::SetCounter(const int counter, const PitMode pit_mode)
 		// reload.
 		const auto now_ms = static_cast<float>(PIC_FullIndex());
 		const auto previous_reload_gap_ms = now_ms - undersampled_reload_ms;
+
 		const auto is_rapid_reload = have_undersampled_reload &&
 		                             previous_reload_gap_ms >= 0.0f &&
 		                             previous_reload_gap_ms <=
@@ -321,10 +324,10 @@ void PcSpeakerImpulse::SetFilterState(const FilterState filter_state)
 	}
 }
 
-bool PcSpeakerImpulse::TryParseAndSetCustomFilter(const std::string& filter_choice)
+bool PcSpeakerImpulse::TryParseAndSetCustomFilter(const std::string& filter_prefs)
 {
 	assert(channel);
-	return channel->TryParseAndSetCustomFilter(filter_choice);
+	return channel->TryParseAndSetCustomFilter(filter_prefs);
 }
 
 PcSpeakerImpulse::PcSpeakerImpulse()
