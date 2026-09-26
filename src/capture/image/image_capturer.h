@@ -28,6 +28,16 @@
 // output from framebuffer (e.g. if we want to capture the post-CRT-shader
 // output).
 //
+// This deferred rendered capture is a two-step handoff. `Pending` means the
+// capture has been requested. `InProgress` means MaybeCaptureImage() has
+// grabbed the frame and allocated the output path, and we're now waiting for
+// the post-render framebuffer readback at frame present time, which completes
+// the capture via CapturePostRenderImage(). The renderer only reads back the
+// framebuffer while the capture is `InProgress`; frames can be presented
+// before MaybeCaptureImage() gets to run (e.g. in `host-rate` presentation
+// mode), and those must not be read back before the output path exists. The
+// same applies to grouped captures that include the rendered output.
+//
 // An even further complication is that in "grouped capture" mode we may need
 // to capture all three image types (raw, upscaled, and post-rendered). These
 // need to be synchronised (as best as we can) so all images contain the same
@@ -50,7 +60,7 @@ public:
 	void RequestGroupedCapture();
 
 	bool IsCaptureRequested() const;
-	bool IsRenderedCaptureRequested() const;
+	bool IsRenderedCaptureInProgress() const;
 
 	void MaybeCaptureImage(const RenderedImage& image);
 	void CapturePostRenderImage(const RenderedImage& image);
