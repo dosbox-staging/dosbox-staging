@@ -3,9 +3,9 @@
 
 #include "keyb.h"
 
-#include "misc/ansi_code_markup.h"
 #include "dos/dos_locale.h"
 #include "ints/int10.h"
+#include "misc/ansi_code_markup.h"
 #include "more_output.h"
 #include "shell/shell.h"
 #include "utils/string_utils.h"
@@ -22,8 +22,8 @@ void KEYB::Run()
 	}
 
 	constexpr bool RemoveIfFound = true;
-	const bool has_option_list = cmd->FindExist("/list", RemoveIfFound);
-	const bool has_option_rom  = cmd->FindExist("/rom", RemoveIfFound);
+	const bool has_option_list   = cmd->FindExist("/list", RemoveIfFound);
+	const bool has_option_rom    = cmd->FindExist("/rom", RemoveIfFound);
 
 	if (has_option_list && has_option_rom) {
 		WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH_COMBO"));
@@ -189,8 +189,8 @@ void KEYB::WriteOutSuccess()
 	const std::string AnsiYellow = "[color=yellow]";
 	const std::string AnsiReset  = "[reset]";
 
-	const auto layout       = DOS_GetLoadedLayout();
-	const bool show_layout  = !layout.empty();
+	const auto layout      = DOS_GetLoadedLayout();
+	const bool show_layout = !layout.empty();
 
 	// Prepare strings based on translation
 
@@ -253,8 +253,8 @@ void KEYB::WriteOutSuccess()
 	message += align_code_page;
 
 	const auto space_file_name = INT10_GetTextColumns() - 1 - target_len -
-		std::max(align_code_page.length() + space_code_page,
-		         align_layout.length() + space_layout);
+	                             std::max(align_code_page.length() + space_code_page,
+	                                      align_layout.length() + space_layout);
 
 	switch (dos.screen_font_type) {
 	case ScreenFontType::Rom:
