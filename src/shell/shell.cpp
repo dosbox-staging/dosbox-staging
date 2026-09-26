@@ -1217,7 +1217,7 @@ void SHELL_InitAndRun()
 	        "\n");
 
 	MSG_Add("SHELL_CMD_CHCP_HELP",
-	        "Display or change the active character set (code page).\n");
+	        "Display or change the active character set (code page, or screen font).\n");
 
 	MSG_Add("SHELL_CMD_CHCP_HELP_LONG",
 	        "Usage:\n"
@@ -1229,8 +1229,10 @@ void SHELL_InitAndRun()
 	        "\n"
 	        "Notes:\n"
 	        "  - Running [color=light-green]chcp[reset] without an argument shows the currently active code page.\n"
-	        "  - Changing the code page keeps the currently loaded keyboard layout; use the\n"
-	        "    [color=light-green]keyb[reset] command to also change the keyboard layout.\n"
+	        "\n"
+	        "  - Changing the code page (screen font) keeps the currently loaded keyboard\n"
+	        "    layout; use the [color=light-green]keyb[reset] command to also change the keyboard layout.\n"
+	        "\n"
 	        "  - The code page cannot be changed if no keyboard layout is loaded yet.\n"
 	        "\n"
 	        "Examples:\n"
