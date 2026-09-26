@@ -999,9 +999,17 @@ static uint8_t* draw_text_line_from_dac_palette(Bitu vidstart, Bitu line)
 		++blocks;
 	}
 
+	// Use a left margin to support sub-character-cell panning
+	constexpr auto DrawBufferMarginBytes = 32;
+
+	// draw_idx is a pixel index and VGA is always rendered with
+	// 32-bit BGRX32 pixels.
+	constexpr auto DrawBufferMarginPixels = DrawBufferMarginBytes /
+	                                        sizeof(uint32_t);
+
 	// The first write-index into the draw buffer. Panning shifts
 	// the console text left by shifting the write start to the left.
-	const uint16_t draw_idx_start = 8 - vga.draw.panning;
+	const uint16_t draw_idx_start = DrawBufferMarginPixels - vga.draw.panning;
 
 	// This holds the to-be-written pixel offset, and is incremented per
 	// pixel and also per character block.
@@ -1100,7 +1108,7 @@ static uint8_t* draw_text_line_from_dac_palette(Bitu vidstart, Bitu line)
 			}
 		}
 	}
-	return TempLine + 32;
+	return TempLine + DrawBufferMarginBytes;
 }
 
 static void VGA_ProcessSplit()
