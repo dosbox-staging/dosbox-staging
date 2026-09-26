@@ -80,7 +80,7 @@ bool CAPTURE_IsCapturingImage()
 bool CAPTURE_IsCapturingPostRenderImage()
 {
 	if (image_capturer) {
-		return image_capturer->IsRenderedCaptureRequested();
+		return image_capturer->IsRenderedCaptureInProgress();
 	}
 	return false;
 }

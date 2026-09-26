@@ -99,10 +99,11 @@ bool ImageCapturer::IsCaptureRequested() const
 	       state.grouped != CaptureState::Off;
 }
 
-bool ImageCapturer::IsRenderedCaptureRequested() const
+bool ImageCapturer::IsRenderedCaptureInProgress() const
 {
-	return state.rendered != CaptureState::Off ||
-	       (state.grouped != CaptureState::Off && grouped_mode.wants_rendered);
+	return state.rendered == CaptureState::InProgress ||
+	       (state.grouped == CaptureState::InProgress &&
+	        grouped_mode.wants_rendered);
 }
 
 void ImageCapturer::MaybeCaptureImage(const RenderedImage& image)
@@ -122,13 +123,17 @@ void ImageCapturer::MaybeCaptureImage(const RenderedImage& image)
 		// We're in regular single image capture mode
 		capture_raw      = (state.raw != CaptureState::Off);
 		capture_upscaled = (state.upscaled != CaptureState::Off);
-		capture_rendered = (state.rendered != CaptureState::Off);
 
 		// Clear the state flags
 		state.raw      = CaptureState::Off;
 		state.upscaled = CaptureState::Off;
+
 		// The `rendered` state is cleared in the
-		// CAPTURE_AddPostRenderImage callback
+		// CapturePostRenderImage() callback
+		if (state.rendered == CaptureState::Pending) {
+			capture_rendered = true;
+			state.rendered   = CaptureState::InProgress;
+		}
 	} else {
 		assert(state.grouped == CaptureState::Pending);
 		state.grouped = CaptureState::InProgress;
@@ -156,6 +161,9 @@ void ImageCapturer::MaybeCaptureImage(const RenderedImage& image)
 	// We can pass in any of the image types; it doesn't matter which.
 	const auto index = get_next_capture_index(CaptureType::RawImage);
 	if (!index) {
+		// Nothing can be saved, so abandon all requests; otherwise an
+		// `InProgress` rendered or grouped capture would never complete.
+		state = {};
 		return;
 	}
 	if (capture_raw) {
@@ -197,8 +205,8 @@ ImageSaver& ImageCapturer::GetNextImageSaver()
 
 // During pause, `RENDER_EndUpdate()` doesn't fire, so the normal vertical
 // retrace-driven `MaybeCaptureImage()` drain never runs and the request stays
-// in `Pending` forever (rendered-only captures would also hit a stale
-// `rendered_path` from a prior non-paused capture).
+// in `Pending` forever (and a rendered capture would never be armed, so the
+// paused present wouldn't read back the framebuffer either).
 //
 // Drive the drain synchronously here using the source latch via
 // `RENDER_GetCurrentImage()`; each press allocates its own index inside
