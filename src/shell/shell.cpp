@@ -27,7 +27,7 @@ callback_number_t call_shellstop = 0;
 
 // Larger scope so shell_del autoexec can use it to
 // remove things from the environment
-static DOS_Shell *first_shell = nullptr;
+static DOS_Shell* first_shell = nullptr;
 
 DOS_Shell* DOS_GetFirstShell()
 {
@@ -41,7 +41,8 @@ static Bitu shellstop_handler()
 	return CBRET_STOP;
 }
 
-std::unique_ptr<Program> SHELL_ProgramCreate() {
+std::unique_ptr<Program> SHELL_ProgramCreate()
+{
 	return ProgramCreate<DOS_Shell>();
 }
 
@@ -56,7 +57,7 @@ DOS_Shell::DOS_Shell()
 	static std::weak_ptr<ShellHistory> global_shell_history = {};
 	history = global_shell_history.lock();
 	if (!history) {
-		history = std::make_shared<ShellHistory>();
+		history              = std::make_shared<ShellHistory>();
 		global_shell_history = history;
 	}
 }
@@ -186,29 +187,29 @@ std::optional<DOS_Shell::RedirectionResults> DOS_Shell::GetRedirection(
 	return results;
 }
 
-static uint16_t get_output_redirection(const char *out_file,
-                     const char *pipe_file,
-                     char (&pipe_tempfile)[270],
-                     const bool append,
-                     bool &failed_pipe)
+static uint16_t get_output_redirection(const char* out_file, const char* pipe_file,
+                                       char (&pipe_tempfile)[270],
+                                       const bool append, bool& failed_pipe)
 {
-	constexpr bool fcb = true;
+	constexpr bool fcb      = true;
 	FatAttributeFlags fattr = {};
-	uint16_t file_handle = InvalidFileHandle;
-	bool success = true;
+	uint16_t file_handle    = InvalidFileHandle;
+	bool success            = true;
 	/* Create if not exist. Open if exist. Both in read/write mode */
 	if (!pipe_file && append) {
 		if (DOS_GetFileAttr(out_file, &fattr) && fattr.read_only) {
 			DOS_SetError(DOSERR_ACCESS_DENIED);
 			success = false;
-		} else if ((success = DOS_OpenFile(out_file, OPEN_READWRITE, &file_handle, fcb))) {
+		} else if ((success = DOS_OpenFile(
+		                    out_file, OPEN_READWRITE, &file_handle, fcb))) {
 			uint32_t seek_pos = 0;
 			DOS_SeekFile(file_handle, &seek_pos, DOS_SEEK_END, fcb);
 		} else {
 			// Create if not exists.
 			success = DOS_CreateFile(out_file,
-			                        FatAttributeFlags::Archive,
-			                        &file_handle, fcb);
+			                         FatAttributeFlags::Archive,
+			                         &file_handle,
+			                         fcb);
 		}
 	} else if (!pipe_file && DOS_GetFileAttr(out_file, &fattr) && fattr.read_only) {
 		DOS_SetError(DOSERR_ACCESS_DENIED);
@@ -219,8 +220,11 @@ static uint16_t get_output_redirection(const char *out_file,
 		    !DOS_UnlinkFile(pipe_tempfile)) {
 			failed_pipe = true;
 		}
-		success = DOS_CreateFile((pipe_file && !failed_pipe) ? pipe_tempfile : out_file,
-		                         FatAttributeFlags::Archive, &file_handle, fcb);
+		success = DOS_CreateFile((pipe_file && !failed_pipe) ? pipe_tempfile
+		                                                     : out_file,
+		                         FatAttributeFlags::Archive,
+		                         &file_handle,
+		                         fcb);
 		if (pipe_file && (failed_pipe || !success) &&
 		    (Drives[0] || Drives[2] || Drives[24]) &&
 		    !strchr(pipe_tempfile, '\\')) {
@@ -240,7 +244,10 @@ static uint16_t get_output_redirection(const char *out_file,
 				if (success) {
 					DOS_CloseFile(file_handle, fcb);
 				}
-				success = DOS_CreateFile(pipe_tempfile, FatAttributeFlags::Archive, &file_handle, fcb);
+				success = DOS_CreateFile(pipe_tempfile,
+				                         FatAttributeFlags::Archive,
+				                         &file_handle,
+				                         fcb);
 			}
 		}
 	}
@@ -251,7 +258,8 @@ static uint16_t get_output_redirection(const char *out_file,
 	return InvalidFileHandle;
 }
 
-uint16_t get_tick_random_number() {
+uint16_t get_tick_random_number()
+{
 	constexpr uint16_t random_uplimit = 10000;
 	return (uint16_t)(GetTicks() % random_uplimit);
 }
@@ -264,14 +272,15 @@ uint16_t get_tick_random_number() {
 // Disable PVS warning 1020 for this function.
 // It's a false positive about needing to call DOS_CloseFile()
 #pragma pvs(push)
-#pragma pvs(disable: 1020)
+#pragma pvs(disable : 1020)
 
-void DOS_Shell::ParseLine(char *line)
+void DOS_Shell::ParseLine(char* line)
 {
 	LOG(LOG_EXEC, LOG_ERROR)("Parsing command line: %s", line);
 	/* Check for a leading @ */
-	if (line[0] == '@')
+	if (line[0] == '@') {
 		line[0] = ' ';
+	}
 	line = trim(line);
 
 	constexpr bool fcb = true;
@@ -280,7 +289,7 @@ void DOS_Shell::ParseLine(char *line)
 	const auto old_stdin  = psp->GetFileHandle(STDIN);
 	const auto old_stdout = psp->GetFileHandle(STDOUT);
 
-	auto input_redirection = InvalidFileHandle;
+	auto input_redirection  = InvalidFileHandle;
 	auto output_redirection = InvalidFileHandle;
 
 	const auto redirection_results = GetRedirection(line);
@@ -326,9 +335,10 @@ void DOS_Shell::ParseLine(char *line)
 		}
 	}
 	if (out_file.length() || pipe_file.length()) {
-		if (out_file.length() && pipe_file.length())
+		if (out_file.length() && pipe_file.length()) {
 			WriteOut(MSG_Get("SHELL_CMD_DUPLICATE_REDIRECTION"),
 			         out_file.c_str());
+		}
 		// LOG_MSG("SHELL: Redirecting output to %s",
 		//         pipe_file.length() ? pipe_tempfile : out_file.c_str());
 		output_redirection = get_output_redirection(
@@ -344,7 +354,10 @@ void DOS_Shell::ParseLine(char *line)
 				                         : "SHELL_FILE_CREATE_ERROR"),
 				         out_file.length() ? out_file.c_str()
 				                           : "(unnamed)");
-				DOS_OpenFile("nul", OPEN_READWRITE, &output_redirection, fcb);
+				DOS_OpenFile("nul",
+				             OPEN_READWRITE,
+				             &output_redirection,
+				             fcb);
 			}
 		}
 	}
@@ -373,7 +386,8 @@ void DOS_Shell::ParseLine(char *line)
 	if (pipe_file.length()) {
 		uint16_t pipe_handle = InvalidFileHandle;
 		// Test if file can be opened for reading
-		if (!failed_pipe && DOS_OpenFile(pipe_tempfile, OPEN_READ, &pipe_handle, fcb)) {
+		if (!failed_pipe &&
+		    DOS_OpenFile(pipe_tempfile, OPEN_READ, &pipe_handle, fcb)) {
 			assert(pipe_handle != InvalidFileHandle);
 			psp->SetFileHandle(STDIN, pipe_handle);
 
@@ -426,8 +440,8 @@ static bool is_shell_running = false;
 
 void DOS_Shell::Run()
 {
-	// COMMAND.COM's /C and /INIT spawn sub-commands. When parsing help, we need
-	// to be sure the /? and -? are intended for us and not part of the
+	// COMMAND.COM's /C and /INIT spawn sub-commands. When parsing help, we
+	// need to be sure the /? and -? are intended for us and not part of the
 	// sub-command.
 	if (cmd->ExistsPriorTo({"/?", "-?"}, {"/C", "/INIT"})) {
 		MoreOutputStrings output(*this);
@@ -436,11 +450,13 @@ void DOS_Shell::Run()
 		return;
 	}
 	char input_line[CMD_MAXLINE] = {0};
-	std::string line = {};
-	if (cmd->FindStringRemainBegin("/C",line)) {
+	std::string line             = {};
+	if (cmd->FindStringRemainBegin("/C", line)) {
 		safe_strcpy(input_line, line.c_str());
-		char* sep = strpbrk(input_line, "\r\n"); //GTA installer
-		if (sep) *sep = 0;
+		char* sep = strpbrk(input_line, "\r\n"); // GTA installer
+		if (sep) {
+			*sep = 0;
+		}
 		DOS_Shell temp;
 		temp.echo = echo;
 		temp.ParseLine(input_line);
@@ -448,14 +464,18 @@ void DOS_Shell::Run()
 		return;
 	}
 	/* Start a normal shell and check for a first command init */
-	if (cmd->FindString("/INIT",line,true)) {
+	if (cmd->FindString("/INIT", line, true)) {
 		const bool wants_welcome_banner = control->GetStartupVerbosity() >=
 		                                  StartupVerbosity::High;
 		if (wants_welcome_banner) {
 			WriteOut(MSG_Get("SHELL_STARTUP_BEGIN"),
-			         DOSBOX_GetDetailedVersion(), PRIMARY_MOD_NAME,
-			         PRIMARY_MOD_NAME, PRIMARY_MOD_PAD, PRIMARY_MOD_PAD,
-			         PRIMARY_MOD_NAME, PRIMARY_MOD_PAD);
+			         DOSBOX_GetDetailedVersion(),
+			         PRIMARY_MOD_NAME,
+			         PRIMARY_MOD_NAME,
+			         PRIMARY_MOD_PAD,
+			         PRIMARY_MOD_PAD,
+			         PRIMARY_MOD_NAME,
+			         PRIMARY_MOD_PAD);
 #if C_DEBUGGER
 			WriteOut(MSG_Get("SHELL_STARTUP_DEBUG"), MMOD2_NAME);
 #endif
@@ -509,23 +529,28 @@ extern int64_t ticks_at_program_launch;
 static Bitu INT2E_Handler()
 {
 	/* Save return address and current process */
-	RealPt save_ret=real_readd(SegValue(ss),reg_sp);
-	uint16_t save_psp=dos.psp();
+	RealPt save_ret   = real_readd(SegValue(ss), reg_sp);
+	uint16_t save_psp = dos.psp();
 
 	/* Set first shell as process and copy command */
 	dos.psp(DOS_FIRST_SHELL);
 	DOS_PSP psp(DOS_FIRST_SHELL);
-	psp.SetCommandTail(RealMakeSeg(ds,reg_si));
-	SegSet16(ss,RealSegment(psp.GetStack()));
-	reg_sp=2046;
+	psp.SetCommandTail(RealMakeSeg(ds, reg_si));
+	SegSet16(ss, RealSegment(psp.GetStack()));
+	reg_sp = 2046;
 
 	/* Read and fix up command string */
 	CommandTail tail;
-	MEM_BlockRead(PhysicalMake(dos.psp(),128),&tail,128);
-	if (tail.count<127) tail.buffer[tail.count]=0;
-	else tail.buffer[126]=0;
-	char* crlf=strpbrk(tail.buffer, "\r\n");
-	if (crlf) *crlf=0;
+	MEM_BlockRead(PhysicalMake(dos.psp(), 128), &tail, 128);
+	if (tail.count < 127) {
+		tail.buffer[tail.count] = 0;
+	} else {
+		tail.buffer[126] = 0;
+	}
+	char* crlf = strpbrk(tail.buffer, "\r\n");
+	if (crlf) {
+		*crlf = 0;
+	}
 
 	/* Execute command */
 	if (safe_strlen(tail.buffer)) {
@@ -536,9 +561,9 @@ static Bitu INT2E_Handler()
 
 	/* Restore process and "return" to caller */
 	dos.psp(save_psp);
-	SegSet16(cs,RealSegment(save_ret));
-	reg_ip=RealOffset(save_ret);
-	reg_ax=0;
+	SegSet16(cs, RealSegment(save_ret));
+	reg_ip = RealOffset(save_ret);
+	reg_ax = 0;
 	return CBRET_NONE;
 }
 
@@ -565,15 +590,17 @@ void SHELL_InitAndRun()
 	MSG_Add("SHELL_FILE_EXISTS", "File '%s' already exists.\n");
 	MSG_Add("SHELL_DIRECTORY_NOT_FOUND", "Directory not found - '%s'\n");
 	MSG_Add("SHELL_NO_SUBDIRS_TO_DISPLAY", "No subdirectories to display.\n");
-	MSG_Add("SHELL_NO_FILES_SUBDIRS_TO_DISPLAY", "No files or subdirectories to display.\n");
+	MSG_Add("SHELL_NO_FILES_SUBDIRS_TO_DISPLAY",
+	        "No files or subdirectories to display.\n");
 	MSG_Add("SHELL_READ_ERROR", "Error reading file - '%s'\n");
 	MSG_Add("SHELL_WRITE_ERROR", "Error writing file - '%s'\n");
 	MSG_Add("SHELL_CANT_RUN_UNDER_WINDOWS",
 	        "This command cannot be executed under Microsoft Windows.\n");
 
 	// Command specific messages
-	MSG_Add("SHELL_CMD_HELP", "If you want a list of all supported commands, run [color=yellow]help /all[reset]\n"
-			"A short list of the most often used commands:\n");
+	MSG_Add("SHELL_CMD_HELP",
+	        "If you want a list of all supported commands, run [color=yellow]help /all[reset]\n"
+	        "A short list of the most often used commands:\n");
 	MSG_Add("SHELL_CMD_COMMAND_HELP_LONG",
 	        "Start the DOSBox Staging command shell.\n"
 	        "\n"
@@ -600,18 +627,21 @@ void SHELL_InitAndRun()
 	MSG_Add("SHELL_CMD_ECHO_OFF", "Echo is off.\n");
 
 	MSG_Add("SHELL_CMD_CHDIR_ERROR", "Unable to change to: %s\n");
-	MSG_Add("SHELL_CMD_CHDIR_HINT", "Hint: To change to a different drive, run [color=yellow]%c:[reset]\n");
+	MSG_Add("SHELL_CMD_CHDIR_HINT",
+	        "Hint: To change to a different drive, run [color=yellow]%c:[reset]\n");
 
 	MSG_Add("SHELL_CMD_CHDIR_HINT_2",
 	        "Directory name is longer than 8 characters and/or contains spaces.\n"
 	        "Try [color=yellow]cd %s[reset]\n");
-	MSG_Add("SHELL_CMD_CHDIR_HINT_3", "You are still on drive Z:; change to a mounted drive with [color=yellow]C:[reset].\n");
+	MSG_Add("SHELL_CMD_CHDIR_HINT_3",
+	        "You are still on drive Z:; change to a mounted drive with [color=yellow]C:[reset].\n");
 
 	MSG_Add("SHELL_CMD_DATE_HELP", "Display or change the internal date.\n");
 	MSG_Add("SHELL_CMD_DATE_ERROR", "The specified date is not correct.\n");
 	MSG_Add("SHELL_CMD_DATE_DAYS", "3SunMonTueWedThuFriSat"); // "2SoMoDiMiDoFrSa"
 	MSG_Add("SHELL_CMD_DATE_NOW", "Current date: ");
-	MSG_Add("SHELL_CMD_DATE_SETHLP", "Run [color=yellow]date %s[reset] to change the current date.\n");
+	MSG_Add("SHELL_CMD_DATE_SETHLP",
+	        "Run [color=yellow]date %s[reset] to change the current date.\n");
 
 	MSG_Add("SHELL_CMD_DATE_HELP_LONG",
 	        "Usage:\n"
@@ -635,7 +665,8 @@ void SHELL_InitAndRun()
 	MSG_Add("SHELL_CMD_TIME_HELP", "Display or change the internal time.\n");
 	MSG_Add("SHELL_CMD_TIME_ERROR", "The specified time is not correct.\n");
 	MSG_Add("SHELL_CMD_TIME_NOW", "Current time: ");
-	MSG_Add("SHELL_CMD_TIME_SETHLP", "Run [color=yellow]time %s[reset] to change the current time.\n");
+	MSG_Add("SHELL_CMD_TIME_SETHLP",
+	        "Run [color=yellow]time %s[reset] to change the current time.\n");
 	MSG_Add("SHELL_CMD_TIME_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]time[reset] [/t]\n"
@@ -665,24 +696,30 @@ void SHELL_InitAndRun()
 	MSG_Add("SHELL_CMD_SET_OPTION_P_UNSUPPORTED",
 	        "Option /P is not supported; please use the CHOICE command.\n");
 
-	MSG_Add("SHELL_CMD_IF_EXIST_MISSING_FILENAME", "IF EXIST: Missing filename.\n");
-	MSG_Add("SHELL_CMD_IF_ERRORLEVEL_MISSING_NUMBER", "IF ERRORLEVEL: Missing number.\n");
-	MSG_Add("SHELL_CMD_IF_ERRORLEVEL_INVALID_NUMBER", "IF ERRORLEVEL: Invalid number.\n");
+	MSG_Add("SHELL_CMD_IF_EXIST_MISSING_FILENAME",
+	        "IF EXIST: Missing filename.\n");
+	MSG_Add("SHELL_CMD_IF_ERRORLEVEL_MISSING_NUMBER",
+	        "IF ERRORLEVEL: Missing number.\n");
+	MSG_Add("SHELL_CMD_IF_ERRORLEVEL_INVALID_NUMBER",
+	        "IF ERRORLEVEL: Invalid number.\n");
 
-	MSG_Add("SHELL_CMD_GOTO_MISSING_LABEL", "No label supplied to GOTO command.\n");
+	MSG_Add("SHELL_CMD_GOTO_MISSING_LABEL",
+	        "No label supplied to GOTO command.\n");
 	MSG_Add("SHELL_CMD_GOTO_LABEL_NOT_FOUND", "GOTO: Label '%s' not found.\n");
 
 	MSG_Add("SHELL_CMD_DUPLICATE_REDIRECTION", "Duplicate redirection: %s\n");
 
-	MSG_Add("SHELL_CMD_FAILED_PIPE", "\nFailed to create/open a temporary file for piping. Check the %%TEMP%% variable.\n");
+	MSG_Add("SHELL_CMD_FAILED_PIPE",
+	        "\nFailed to create/open a temporary file for piping. Check the %%TEMP%% variable.\n");
 
 	MSG_Add("SHELL_CMD_DIR_VOLUME", " Volume in drive %c is %s\n");
 	MSG_Add("SHELL_CMD_DIR_INTRO", " Directory of %s\n");
 	MSG_Add("SHELL_CMD_DIR_BYTES_USED", "%17d file(s) %21s bytes\n");
 	MSG_Add("SHELL_CMD_DIR_BYTES_FREE", "%17d dir(s)  %21s bytes free\n");
 
-	MSG_Add("SHELL_EXECUTE_DRIVE_NOT_FOUND", "Drive %c does not exist!\nYou must [color=yellow]mount[reset] it first. "
-			"Run [color=yellow]intro[reset] or [color=yellow]intro mount[reset] for more information.\n");
+	MSG_Add("SHELL_EXECUTE_DRIVE_NOT_FOUND",
+	        "Drive %c does not exist!\nYou must [color=yellow]mount[reset] it first. "
+	        "Run [color=yellow]intro[reset] or [color=yellow]intro mount[reset] for more information.\n");
 
 	MSG_Add("SHELL_EXECUTE_ILLEGAL_COMMAND", "Illegal command: %s\n");
 	MSG_Add("SHELL_CMD_PAUSE", "Press any key to continue...");
@@ -706,7 +743,8 @@ void SHELL_InitAndRun()
 	MSG_Add("SHELL_CMD_COPY_FAILURE", "Copy failure: %s.\n");
 	MSG_Add("SHELL_CMD_COPY_SUCCESS", "   %d File(s) copied.\n");
 	MSG_Add("SHELL_CMD_SUBST_NO_REMOVE", "Unable to remove, drive not in use.\n");
-	MSG_Add("SHELL_CMD_SUBST_FAILURE", "SUBST failed, the target drive may already exist.\nNote it is only possible to use SUBST on local drives.");
+	MSG_Add("SHELL_CMD_SUBST_FAILURE",
+	        "SUBST failed, the target drive may already exist.\nNote it is only possible to use SUBST on local drives.");
 
 	MSG_Add("SHELL_STARTUP_BEGIN",
 	        "[bgcolor=blue][color=white]╔═══════════════════════════════════════════════════════════════════════╗\n"
@@ -837,8 +875,7 @@ void SHELL_InitAndRun()
 	        "Examples:\n"
 	        "  [color=light-green]exit[reset]\n");
 
-	MSG_Add("SHELL_CMD_HELP_HELP",
-	        "Display help information for DOS commands.\n");
+	MSG_Add("SHELL_CMD_HELP_HELP", "Display help information for DOS commands.\n");
 	MSG_Add("SHELL_CMD_HELP_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]help[reset]\n"
@@ -932,8 +969,7 @@ void SHELL_InitAndRun()
 	        "  [color=light-green]if[reset] [color=white]\"%%myvar%%\"==\"mystring\"[reset] echo Hello world!\n"
 	        "  [color=light-green]if[reset] [color=light-magenta]not[reset] [color=light-cyan]exist[reset] [color=white]file.txt[reset] exit\n");
 
-	MSG_Add("SHELL_CMD_GOTO_HELP",
-	        "Jump to a labeled line in a batch program.\n");
+	MSG_Add("SHELL_CMD_GOTO_HELP", "Jump to a labeled line in a batch program.\n");
 	MSG_Add("SHELL_CMD_GOTO_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]goto[reset] [color=light-cyan]LABEL[reset]\n"
@@ -948,7 +984,8 @@ void SHELL_InitAndRun()
 	        "Examples:\n"
 	        "  [color=light-green]goto[reset] [color=light-cyan]mylabel[reset]\n");
 
-	MSG_Add("SHELL_CMD_SHIFT_HELP", "Left-shift command-line parameters in a batch program.\n");
+	MSG_Add("SHELL_CMD_SHIFT_HELP",
+	        "Left-shift command-line parameters in a batch program.\n");
 	MSG_Add("SHELL_CMD_SHIFT_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]shift[reset]\n"
@@ -994,7 +1031,8 @@ void SHELL_InitAndRun()
 	        "Examples:\n"
 	        "  [color=light-green]rem[reset] [color=light-cyan]This is my test batch program.[reset]\n");
 
-	MSG_Add("SHELL_CMD_NO_WILD", "This is a simple version of the command, no wildcards allowed!\n");
+	MSG_Add("SHELL_CMD_NO_WILD",
+	        "This is a simple version of the command, no wildcards allowed!\n");
 
 	MSG_Add("SHELL_CMD_RENAME_HELP", "Rename one or more files.\n");
 	MSG_Add("SHELL_CMD_RENAME_HELP_LONG",
@@ -1108,8 +1146,7 @@ void SHELL_InitAndRun()
 	        "Examples:\n"
 	        "  [color=light-green]lh[reset] [color=light-cyan]tsrapp[reset] [color=white]args[reset]\n");
 
-	MSG_Add("SHELL_CMD_ATTRIB_HELP",
-			"Display or change file attributes.\n");
+	MSG_Add("SHELL_CMD_ATTRIB_HELP", "Display or change file attributes.\n");
 	MSG_Add("SHELL_CMD_ATTRIB_HELP_LONG",
 	        "Usage:\n"
 	        "  [color=light-green]attrib[reset] [color=white][ATTRIBUTES][reset] [color=light-cyan]PATTERN[reset] [/S]\n"
@@ -1155,8 +1192,10 @@ void SHELL_InitAndRun()
 	        "Examples:\n"
 	        "  [color=light-green]choice[reset] /t:[color=white]y[reset],[color=light-magenta]2[reset] [color=light-cyan]Continue[reset]\n"
 	        "  [color=light-green]choice[reset] /c:[color=white]abc[reset] /s [color=light-cyan]Type the letter a, b, or c[reset]\n");
-	MSG_Add("SHELL_CMD_CHOICE_EOF", "\n[color=light-red]Choice failed[reset]: the input stream ended without a valid choice.\n");
-	MSG_Add("SHELL_CMD_CHOICE_ABORTED", "\n[color=yellow]Choice aborted.[reset]\n");
+	MSG_Add("SHELL_CMD_CHOICE_EOF",
+	        "\n[color=light-red]Choice failed[reset]: the input stream ended without a valid choice.\n");
+	MSG_Add("SHELL_CMD_CHOICE_ABORTED",
+	        "\n[color=yellow]Choice aborted.[reset]\n");
 
 	MSG_Add("SHELL_CMD_PATH_HELP",
 	        "Display or set a search path for executable files.\n");
@@ -1191,9 +1230,11 @@ void SHELL_InitAndRun()
 	        "\n"
 	        "Examples:\n"
 	        "  [color=light-green]ver[reset]\n");
-	MSG_Add("SHELL_CMD_VER_VER", "DOSBox Staging version %s\n"
-	                             "DOS version %d.%02d\n");
-	MSG_Add("SHELL_CMD_VER_INVALID", "The specified DOS version is not correct.\n");
+	MSG_Add("SHELL_CMD_VER_VER",
+	        "DOSBox Staging version %s\n"
+	        "DOS version %d.%02d\n");
+	MSG_Add("SHELL_CMD_VER_INVALID",
+	        "The specified DOS version is not correct.\n");
 
 	MSG_Add("SHELL_CMD_VOL_HELP",
 	        "Display the disk volume and serial number, if they exist.\n");
@@ -1312,56 +1353,60 @@ void SHELL_InitAndRun()
 	HELP_AddMessages();
 
 	/* Regular startup */
-	call_shellstop=CALLBACK_Allocate();
+	call_shellstop = CALLBACK_Allocate();
 	/* Setup the startup CS:IP to kill the last running machine when exitted */
-	RealPt newcsip=CALLBACK_RealPointer(call_shellstop);
-	SegSet16(cs,RealSegment(newcsip));
-	reg_ip=RealOffset(newcsip);
+	RealPt newcsip = CALLBACK_RealPointer(call_shellstop);
+	SegSet16(cs, RealSegment(newcsip));
+	reg_ip = RealOffset(newcsip);
 
-	CALLBACK_Setup(call_shellstop,shellstop_handler,CB_IRET, "shell stop");
-	PROGRAMS_MakeFile("COMMAND.COM",SHELL_ProgramCreate);
+	CALLBACK_Setup(call_shellstop, shellstop_handler, CB_IRET, "shell stop");
+	PROGRAMS_MakeFile("COMMAND.COM", SHELL_ProgramCreate);
 
 	/* Now call up the shell for the first time */
-	uint16_t psp_seg=DOS_FIRST_SHELL;
-	uint16_t env_seg=DOS_FIRST_SHELL+19; //DOS_GetMemory(1+(4096/16))+1;
-	uint16_t stack_seg=DOS_GetMemory(2048/16);
-	SegSet16(ss,stack_seg);
-	reg_sp=2046;
+	uint16_t psp_seg = DOS_FIRST_SHELL;
+	uint16_t env_seg = DOS_FIRST_SHELL + 19; // DOS_GetMemory(1+(4096/16))+1;
+	uint16_t stack_seg = DOS_GetMemory(2048 / 16);
+	SegSet16(ss, stack_seg);
+	reg_sp = 2046;
 
 	/* Set up int 24 and psp (Telarium games) */
-	real_writeb(psp_seg+16+1,0,0xea);		/* far jmp */
-	real_writed(psp_seg+16+1,1,real_readd(0,0x24*4));
-	real_writed(0,0x24*4,((uint32_t)psp_seg<<16) | ((16+1)<<4));
+	real_writeb(psp_seg + 16 + 1, 0, 0xea); /* far jmp */
+	real_writed(psp_seg + 16 + 1, 1, real_readd(0, 0x24 * 4));
+	real_writed(0, 0x24 * 4, ((uint32_t)psp_seg << 16) | ((16 + 1) << 4));
 
 	/* Set up int 23 to "int 20" in the psp. Fixes what.exe */
-	real_writed(0,0x23*4,((uint32_t)psp_seg<<16));
+	real_writed(0, 0x23 * 4, ((uint32_t)psp_seg << 16));
 
 	/* Set up int 2e handler */
-	Bitu call_int2e=CALLBACK_Allocate();
-	RealPt addr_int2e=RealMake(psp_seg+16+1,8);
-	CALLBACK_Setup(call_int2e,&INT2E_Handler,CB_IRET_STI,RealToPhysical(addr_int2e), "Shell Int 2e");
-	RealSetVec(0x2e,addr_int2e);
+	Bitu call_int2e   = CALLBACK_Allocate();
+	RealPt addr_int2e = RealMake(psp_seg + 16 + 1, 8);
+	CALLBACK_Setup(call_int2e,
+	               &INT2E_Handler,
+	               CB_IRET_STI,
+	               RealToPhysical(addr_int2e),
+	               "Shell Int 2e");
+	RealSetVec(0x2e, addr_int2e);
 
 	/* Setup MCBs */
-	DOS_MCB pspmcb((uint16_t)(psp_seg-1));
-	pspmcb.SetPSPSeg(psp_seg);	// MCB of the command shell psp
-	pspmcb.SetSize(0x10+2);
+	DOS_MCB pspmcb((uint16_t)(psp_seg - 1));
+	pspmcb.SetPSPSeg(psp_seg); // MCB of the command shell psp
+	pspmcb.SetSize(0x10 + 2);
 	pspmcb.SetType(0x4d);
-	DOS_MCB envmcb((uint16_t)(env_seg-1));
-	envmcb.SetPSPSeg(psp_seg);	// MCB of the command shell environment
-	envmcb.SetSize(DOS_MEM_START-env_seg);
+	DOS_MCB envmcb((uint16_t)(env_seg - 1));
+	envmcb.SetPSPSeg(psp_seg); // MCB of the command shell environment
+	envmcb.SetSize(DOS_MEM_START - env_seg);
 	envmcb.SetType(0x4d);
 
 	/* Setup environment */
-	PhysPt env_write=PhysicalMake(env_seg,0);
-	MEM_BlockWrite(env_write,path_string,(Bitu)(strlen(path_string)+1));
-	env_write += (PhysPt)(strlen(path_string)+1);
-	MEM_BlockWrite(env_write,comspec_string,(Bitu)(strlen(comspec_string)+1));
-	env_write += (PhysPt)(strlen(comspec_string)+1);
-	mem_writeb(env_write++,0);
-	mem_writew(env_write,1);
-	env_write+=2;
-	MEM_BlockWrite(env_write,full_name,(Bitu)(strlen(full_name)+1));
+	PhysPt env_write = PhysicalMake(env_seg, 0);
+	MEM_BlockWrite(env_write, path_string, (Bitu)(strlen(path_string) + 1));
+	env_write += (PhysPt)(strlen(path_string) + 1);
+	MEM_BlockWrite(env_write, comspec_string, (Bitu)(strlen(comspec_string) + 1));
+	env_write += (PhysPt)(strlen(comspec_string) + 1);
+	mem_writeb(env_write++, 0);
+	mem_writew(env_write, 1);
+	env_write += 2;
+	MEM_BlockWrite(env_write, full_name, (Bitu)(strlen(full_name) + 1));
 
 	DOS_PSP psp(psp_seg);
 	psp.MakeNew(0);
@@ -1371,19 +1416,21 @@ void SHELL_InitAndRun()
 	 * 01 01 01 00 02
 	 * In order to achieve this: First open 2 files. Close the first and
 	 * duplicate the second (so the entries get 01) */
-	uint16_t dummy=0;
-	DOS_OpenFile("CON",OPEN_READWRITE,&dummy);	/* STDIN  */
-	DOS_OpenFile("CON",OPEN_READWRITE,&dummy);	/* STDOUT */
-	DOS_CloseFile(0);							/* Close STDIN */
-	DOS_ForceDuplicateEntry(1,0);				/* "new" STDIN */
-	DOS_ForceDuplicateEntry(1,2);				/* STDERR */
-	DOS_OpenFile("CON",OPEN_READWRITE,&dummy);	/* STDAUX */
-	DOS_OpenFile("PRN",OPEN_READWRITE,&dummy);	/* STDPRN */
+	uint16_t dummy = 0;
+	DOS_OpenFile("CON", OPEN_READWRITE, &dummy); /* STDIN  */
+	DOS_OpenFile("CON", OPEN_READWRITE, &dummy); /* STDOUT */
+	DOS_CloseFile(0);                            /* Close STDIN */
+	DOS_ForceDuplicateEntry(1, 0);               /* "new" STDIN */
+	DOS_ForceDuplicateEntry(1, 2);               /* STDERR */
+	DOS_OpenFile("CON", OPEN_READWRITE, &dummy); /* STDAUX */
+	DOS_OpenFile("PRN", OPEN_READWRITE, &dummy); /* STDPRN */
 
 	/* Create appearance of handle inheritance by first shell */
-	for (uint16_t i=0;i<5;i++) {
-		uint8_t handle=psp.GetFileHandle(i);
-		if (Files[handle]) Files[handle]->AddRef();
+	for (uint16_t i = 0; i < 5; i++) {
+		uint8_t handle = psp.GetFileHandle(i);
+		if (Files[handle]) {
+			Files[handle]->AddRef();
+		}
 	}
 
 	psp.SetParent(psp_seg);
@@ -1391,13 +1438,13 @@ void SHELL_InitAndRun()
 	psp.SetEnvironment(env_seg);
 	/* Set the command line for the shell start up */
 	CommandTail tail;
-	tail.count=(uint8_t)strlen(init_line);
-	memset(&tail.buffer,0,127);
+	tail.count = (uint8_t)strlen(init_line);
+	memset(&tail.buffer, 0, 127);
 	safe_strcpy(tail.buffer, init_line);
-	MEM_BlockWrite(PhysicalMake(psp_seg,128),&tail,128);
+	MEM_BlockWrite(PhysicalMake(psp_seg, 128), &tail, 128);
 
 	/* Setup internal DOS Variables */
-	dos.dta(RealMake(psp_seg,0x80));
+	dos.dta(RealMake(psp_seg, 0x80));
 	dos.psp(psp_seg);
 
 	// Load SETVER fake version table from external file
