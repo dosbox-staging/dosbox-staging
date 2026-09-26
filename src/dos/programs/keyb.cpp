@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2002-2025 The DOSBox Team
+// SPDX-FileCopyrightText:  2002-2026 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "keyb.h"
@@ -113,52 +113,66 @@ void KEYB::WriteOutFailure(const KeyboardLayoutResult error_code,
 	case KeyboardLayoutResult::CpiFileNotFound:
 		WriteOut(MSG_Get("PROGRAM_KEYB_CPI_FILE_NOT_FOUND"));
 		break;
+
 	case KeyboardLayoutResult::CpiReadError:
 		WriteOut(MSG_Get("PROGRAM_KEYB_CPI_READ_ERROR"));
 		break;
+
 	case KeyboardLayoutResult::InvalidCpiFile:
 		WriteOut(MSG_Get("PROGRAM_KEYB_INVALID_CPI_FILE"));
 		break;
+
 	case KeyboardLayoutResult::CpiFileTooLarge:
 		WriteOut(MSG_Get("PROGRAM_KEYB_CPI_FILE_TOO_LARGE"));
 		break;
+
 	case KeyboardLayoutResult::UnsupportedCpxFile:
 		WriteOut(MSG_Get("PROGRAM_KEYB_UNSUPPORTED_CPX_FILE"));
 		break;
+
 	case KeyboardLayoutResult::PrinterCpiFile:
 		WriteOut(MSG_Get("PROGRAM_KEYB_PRINTER_CPI_FILE"));
 		break;
+
 	case KeyboardLayoutResult::ScreenFontUnusable:
 		WriteOut(MSG_Get("PROGRAM_KEYB_SCREEN_FONT_UNUSABLE"),
 		         tried_code_page);
 		break;
+
 	case KeyboardLayoutResult::NoBundledCpiFileForCodePage:
 		WriteOut(MSG_Get("PROGRAM_KEYB_NO_BUNDLED_CPI_FILE"), tried_code_page);
 		break;
+
 	case KeyboardLayoutResult::NoCodePageInCpiFile:
 		WriteOut(MSG_Get("PROGRAM_KEYB_NO_CODE_PAGE_IN_FILE"),
 		         tried_code_page);
 		break;
+
 	case KeyboardLayoutResult::IncompatibleMachine:
 		WriteOut(MSG_Get("PROGRAM_KEYB_INCOMPATIBLE_MACHINE"));
 		break;
+
 	// Keyboard layout related errors
 	case KeyboardLayoutResult::LayoutFileNotFound:
 		WriteOut(MSG_Get("PROGRAM_KEYB_LAYOUT_FILE_NOT_FOUND"),
 		         layout.c_str());
 		break;
+
 	case KeyboardLayoutResult::InvalidLayoutFile:
 		WriteOut(MSG_Get("PROGRAM_KEYB_INVALID_LAYOUT_FILE"),
 		         layout.c_str());
 		break;
+
 	case KeyboardLayoutResult::LayoutNotKnown:
 		WriteOut(MSG_Get("PROGRAM_KEYB_LAYOUT_NOT_KNOWN"), layout.c_str());
 		break;
+
 	case KeyboardLayoutResult::NoLayoutForCodePage:
 		WriteOut(MSG_Get("PROGRAM_KEYB_NO_LAYOUT_FOR_CODE_PAGE"),
 		         layout.c_str(),
 		         requested_code_page);
 		break;
+
 	default:
 		LOG_WARNING("KEYB:Invalid return code %x", enum_val(error_code));
 		assert(false);
@@ -376,42 +390,58 @@ void KEYB::AddMessages()
 	        "  [color=light-green]KEYB[reset] [color=light-cyan]uk[reset]\n"
 	        "  [color=light-green]KEYB[reset] [color=light-cyan]sp[reset] [color=white]850[reset]\n"
 	        "  [color=light-green]KEYB[reset] [color=light-cyan]de[reset] [color=white]858[reset] mycp.cpi\n");
+
 	// Success/status message
 	MSG_Add("PROGRAM_KEYB_CODE_PAGE", "Code page");
 	MSG_Add("PROGRAM_KEYB_ROM_FONT", "ROM font");
 	MSG_Add("PROGRAM_KEYB_KEYBOARD_LAYOUT", "Keyboard layout");
 	MSG_Add("PROGRAM_KEYB_KEYBOARD_SCRIPT", "Keyboard script");
 	MSG_Add("PROGRAM_KEYB_NOT_LOADED", "not loaded");
+
 	// Error messages - KEYB program related
 	MSG_Add("PROGRAM_KEYB_INVALID_CODE_PAGE", "Invalid code page.\n");
+
 	// Error messages - CPI file related
 	MSG_Add("PROGRAM_KEYB_CPI_FILE_NOT_FOUND",
 	        "Code page information file not found.\n");
+
 	MSG_Add("PROGRAM_KEYB_CPI_READ_ERROR",
 	        "Error reading code page information file.\n");
+
 	MSG_Add("PROGRAM_KEYB_INVALID_CPI_FILE",
 	        "Invalid code page information file.\n");
+
 	MSG_Add("PROGRAM_KEYB_CPI_FILE_TOO_LARGE",
 	        "Code page information file too large.\n");
+
 	MSG_Add("PROGRAM_KEYB_UNSUPPORTED_CPX_FILE",
 	        "Unsupported FreeDOS CPX file format. Convert the file to the CPI format by\n"
 	        "uncompressing it with the 3rd party [color=light-green]upx[reset] tool.\n");
+
 	MSG_Add("PROGRAM_KEYB_PRINTER_CPI_FILE",
 	        "This is a printer code page information file, it does not contain screen fonts.\n");
+
 	MSG_Add("PROGRAM_KEYB_SCREEN_FONT_UNUSABLE",
 	        "Code page %d found, but the screen font could not be used.\n");
+
 	MSG_Add("PROGRAM_KEYB_NO_BUNDLED_CPI_FILE",
 	        "No bundled code page information file for code page %d.\n");
+
 	MSG_Add("PROGRAM_KEYB_NO_CODE_PAGE_IN_FILE",
 	        "No code page %d in the code page information file.\n");
+
 	MSG_Add("PROGRAM_KEYB_INCOMPATIBLE_MACHINE",
 	        "Can't change the screen font; EGA machine or better is required.\n");
+
 	// Error messages - keyboard layout file related
 	MSG_Add("PROGRAM_KEYB_LAYOUT_FILE_NOT_FOUND",
 	        "File with keyboard layout '%s' not found.\n");
+
 	MSG_Add("PROGRAM_KEYB_INVALID_LAYOUT_FILE",
 	        "Invalid file with keyboard layout '%s'.\n");
+
 	MSG_Add("PROGRAM_KEYB_LAYOUT_NOT_KNOWN", "Keyboard layout '%s' not known.\n");
+
 	MSG_Add("PROGRAM_KEYB_NO_LAYOUT_FOR_CODE_PAGE",
 	        "No keyboard layout '%s' for code page %d.\n");
 }
