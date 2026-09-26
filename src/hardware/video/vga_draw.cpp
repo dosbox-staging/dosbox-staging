@@ -103,6 +103,9 @@ static VGA_Line_Handler VGA_DrawLine;
 constexpr auto MaxPixelBytes = sizeof(uint32_t);
 constexpr auto MaxRowBytes   = ScalerMaxWidth * MaxPixelBytes;
 
+constexpr auto TextModeBytesPerCell = 2;
+constexpr auto FontGlyphStrideBytes = 32;
+
 // The line buffer can be written in units up to RGB888 pixels (32-bit) size
 alignas(uint64_t) static std::array<uint8_t, MaxRowBytes> templine_buffer;
 static auto TempLine = templine_buffer.data();
@@ -167,7 +170,10 @@ static uint8_t* VGA_Draw_CGA16_Line(Bitu vidstart, Bitu line)
 	assert(vidstart <= UINT16_MAX);
 	assert(line <= UINT16_MAX);
 
-	static uint8_t temp[643] = {0};
+	// There are 640 hdots in each line of the screen.
+	constexpr auto DotsPerLine = 640;
+
+	static uint8_t temp[DotsPerLine + 3] = {0};
 	const uint8_t* base = vga.tandy.draw_base + ((line & vga.tandy.line_mask)
 	                                             << vga.tandy.line_shift);
 
@@ -177,7 +183,6 @@ static uint8_t* VGA_Draw_CGA16_Line(Bitu vidstart, Bitu line)
 		return base[index & index_mask];
 	};
 
-	// There are 640 hdots in each line of the screen.
 	// The color of an even hdot always depends on only 4 bits of video RAM.
 	// The color of an odd hdot depends on 4 bits of video RAM in
 	// 1-hdot-per-pixel modes and 6 bits of video RAM in 2-hdot-per-pixel
@@ -186,15 +191,15 @@ static uint8_t* VGA_Draw_CGA16_Line(Bitu vidstart, Bitu line)
 	// composite modes.
 	temp[1] = (read_cga16_offset(0) >> 6) & 3;
 
-	for (uint16_t x = 2; x < 640; x += 2) {
+	for (uint16_t x = 2; x < DotsPerLine; x += 2) {
 		temp[x]     = (temp[x - 1] & 0xf);
 		temp[x + 1] = (temp[x] << 2) |
 		              (((read_cga16_offset(x >> 3)) >> (6 - (x & 6))) & 3);
 	}
 
-	temp[640] = temp[639] & 0xf;
-	temp[641] = temp[640] << 2;
-	temp[642] = temp[641] & 0xf;
+	temp[DotsPerLine]     = temp[DotsPerLine - 1] & 0xf;
+	temp[DotsPerLine + 1] = temp[DotsPerLine] << 2;
+	temp[DotsPerLine + 2] = temp[DotsPerLine + 1] & 0xf;
 
 	for (uint32_t i = 2, j = 0, x = 0; x < vga.draw.blocks * 2;
 	     i += 4, ++j, ++x) {
@@ -823,7 +828,7 @@ static uint8_t* VGA_Draw_LIN32_Line_HWMouse(Bitu vidstart, Bitu /*line*/)
 static const uint8_t* VGA_Text_Memwrap(Bitu vidstart)
 {
 	vidstart      = vidstart & vga.draw.linear_mask;
-	Bitu line_end = 2 * vga.draw.blocks;
+	Bitu line_end = TextModeBytesPerCell * vga.draw.blocks;
 
 	if ((vidstart + line_end) > vga.draw.linear_mask) {
 		// wrapping in this line
@@ -861,9 +866,9 @@ static uint8_t* VGA_TEXT_Draw_Line(Bitu vidstart, Bitu line)
 	const uint8_t* vidmem = VGA_Text_Memwrap(vidstart);
 
 	for (Bitu cx = 0; cx < vga.draw.blocks; ++cx) {
-		Bitu chr = vidmem[cx * 2];
-		Bitu col = vidmem[cx * 2 + 1];
-		Bitu font = vga.draw.font_tables[(col >> 3) & 1][chr * 32 + line];
+		Bitu chr = vidmem[cx * TextModeBytesPerCell];
+		Bitu col = vidmem[cx * TextModeBytesPerCell + 1];
+		Bitu font = vga.draw.font_tables[(col >> 3) & 1][chr * FontGlyphStrideBytes + line];
 
 		uint32_t mask1 = TXT_Font_Table[font >> 4] & FontMask[col >> 7];
 		uint32_t mask2 = TXT_Font_Table[font & 0xf] & FontMask[col >> 7];
@@ -900,8 +905,8 @@ static uint8_t* VGA_TEXT_Herc_Draw_Line(Bitu vidstart, Bitu line)
 	const uint8_t* vidmem = VGA_Text_Memwrap(vidstart);
 
 	for (Bitu cx = 0; cx < vga.draw.blocks; ++cx) {
-		Bitu chr    = vidmem[cx * 2];
-		Bitu attrib = vidmem[cx * 2 + 1];
+		Bitu chr    = vidmem[cx * TextModeBytesPerCell];
+		Bitu attrib = vidmem[cx * TextModeBytesPerCell + 1];
 
 		if (!(attrib & 0x77)) {
 			// 00h, 80h, 08h, 88h produce black space
@@ -938,7 +943,7 @@ static uint8_t* VGA_TEXT_Herc_Draw_Line(Bitu vidstart, Bitu line)
 			if (underline) {
 				mask1 = mask2 = FontMask[attrib >> 7];
 			} else {
-				Bitu font = vga.draw.font_tables[0][chr * 32 + line];
+				Bitu font = vga.draw.font_tables[0][chr * FontGlyphStrideBytes + line];
 
 				// blinking
 				mask1 = TXT_Font_Table[font >> 4] &
@@ -1021,7 +1026,8 @@ static uint8_t* draw_text_line_from_dac_palette(Bitu vidstart, Bitu line)
 		const auto attr = *vidmem++;
 
 		// The font pattern
-		uint16_t font = vga.draw.font_tables[(attr >> 3) & 1][(chr << 5) + line];
+		uint16_t font = vga.draw.font_tables[(attr >> 3) & 1]
+		                                    [chr * FontGlyphStrideBytes + line];
 
 		uint8_t bg_palette_idx = attr >> 4;
 		// If blinking is enabled bit7 is not mapped to attributes
@@ -1048,7 +1054,7 @@ static uint8_t* draw_text_line_from_dac_palette(Bitu vidstart, Bitu line)
 		const auto bg_colour = palette_map[bg_palette_idx];
 
 		if (vga.seq.clocking_mode.is_eight_dot_mode) {
-			for (auto n = 0; n < 8; ++n) {
+			for (auto n = 0; n < PixelsPerChar::Eight; ++n) {
 				const auto color = (font & 0x80) ? fg_colour
 				                                 : bg_colour;
 
@@ -1066,7 +1072,7 @@ static uint8_t* draw_text_line_from_dac_palette(Bitu vidstart, Bitu line)
 				font |= 1;
 			}
 
-			for (auto n = 0; n < 9; ++n) {
+			for (auto n = 0; n < PixelsPerChar::Nine; ++n) {
 				const auto color = (font & 0x100) ? fg_colour
 				                                  : bg_colour;
 
@@ -1101,7 +1107,11 @@ static uint8_t* draw_text_line_from_dac_palette(Bitu vidstart, Bitu line)
 
 			draw_idx = draw_idx_start;
 
-			for (uint8_t n = 0; n < 8; ++n) {
+			// Intentionally fixed-width, independent of 8/9-dot
+			// character mode
+			constexpr auto CursorBlockWidthPixels = 8;
+
+			for (uint8_t n = 0; n < CursorBlockWidthPixels; ++n) {
 				write_unaligned_uint32_at(draw_addr,
 				                          draw_idx++,
 				                          fg_colour);
@@ -1529,8 +1539,10 @@ static void VGA_VerticalTimer(uint32_t /*val*/)
 			vga.draw.linear_mask = 0x3fff; // CGA, Tandy 4 pages
 		}
 
-		vga.draw.cursor.address = vga.config.cursor_start * 2;
-		vga.draw.address *= 2;
+		vga.draw.cursor.address = vga.config.cursor_start *
+		                          TextModeBytesPerCell;
+
+		vga.draw.address *= TextModeBytesPerCell;
 
 		// Check for blinking and blinking change delay
 		FontMask[1] = (vga.draw.blinking & (vga.draw.cursor.count >> 4))
