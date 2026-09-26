@@ -1,8 +1,7 @@
-simpleini
-=========
+# simpleini
 
 ![Latest Test Results](https://github.com/brofield/simpleini/actions/workflows/build-and-test.yml/badge.svg)
- 
+
 A cross-platform library that provides a simple API to read and write INI-style configuration files. It supports data files in ASCII, MBCS and Unicode. It is designed explicitly to be portable to any platform and has been tested on Windows, WinCE and Linux. Released as open-source and free using the MIT licence.
 
 [Full documentation](https://brofield.github.io/simpleini/)
@@ -14,8 +13,8 @@ A cross-platform library that provides a simple API to read and write INI-style 
 - loading and saving of INI-style configuration files
 - configuration files can have any newline format on all platforms
 - liberal acceptance of file format
-  * key/values with no section, keys with no value
-  * removal of whitespace around sections, keys and values
+  - key/values with no section, keys with no value
+  - removal of whitespace around sections, keys and values
 - support for multi-line values (values with embedded newline characters)
 - optional support for multiple keys with the same name
 - optional case-insensitive sections and keys (for ASCII characters only)
@@ -33,6 +32,90 @@ A cross-platform library that provides a simple API to read and write INI-style 
 # Documentation
 
 Full documentation of the interface is available in doxygen format. See [latest documentation here](https://brofield.github.io/simpleini/).
+
+# Installation
+
+SimpleIni is a header-only library. No building is required to use it in your project.
+
+Simply include `SimpleIni.h` in your source files:
+
+```c++
+#include "SimpleIni.h"
+```
+
+That's it! The library is ready to use.
+
+# Build and Test
+
+While the library itself doesn't require building, you can build and run the test suite using CMake. A top-level `Makefile` wraps the usual CMake workflow for local development:
+
+```bash
+make help          # list targets
+make check         # format-check, build, and test
+make format        # apply clang-format
+make format-check  # verify formatting
+make test          # run ctest
+make clean         # remove build/
+```
+
+Requires `cmake`, a C++17 compiler, and `clang-format` for format targets. Test builds use `-Werror`. CMake remains the build system.
+
+CI (`.github/workflows/build-and-test.yml`) runs `make format-check` on Linux only; tests run on Linux (x64 and arm64), Windows, macOS, and FreeBSD (14.4 via a VM on `ubuntu-latest`, currently disabled).
+
+Direct CMake usage:
+
+```bash
+# Configure the project
+cmake -S . -B build
+
+# Build the tests (optional)
+cmake --build build
+
+# To build without tests
+cmake -S . -B build -DBUILD_TESTING=OFF
+cmake --build build
+
+# Run all tests
+cd build
+ctest --verbose
+```
+
+## CMake Integration
+
+To use SimpleIni in your CMake project:
+
+```cmake
+# Add SimpleIni as a subdirectory
+add_subdirectory(simpleini)
+
+# Link against your target
+target_link_libraries(your_target PRIVATE SimpleIni::SimpleIni)
+```
+
+Or install it system-wide:
+
+```bash
+cmake -S . -B build
+cmake --build build
+sudo cmake --install build
+```
+
+Then in your CMake project:
+
+```cmake
+find_package(SimpleIni REQUIRED)
+target_link_libraries(your_target PRIVATE SimpleIni::SimpleIni)
+```
+
+Note that `SI_CONVERT_GENERIC` is not the default conversion mode. When enabled,
+UTF-8 conversion is built into the header; no additional source files are required.
+
+### Migration from ConvertUTF
+
+Earlier releases shipped `ConvertUTF.c` and `ConvertUTF.h` for `SI_CONVERT_GENERIC`
+and expected you to compile them into your project. UTF-8 conversion is now inline
+in `SimpleIni.h`. Remove any `ConvertUTF.c` / `ConvertUTF.h` from your build and
+drop links to `ConvertUTF.c`; no replacement source files are required.
 
 # Examples
 
@@ -101,7 +184,7 @@ These snippets are included with the distribution in the automatic tests as ts-s
 	pv = ini.GetValue("section1", "key1");
 	ASSERT_STREQ(pv, "value1");
 
-	// get the value of a key which may have multiple 
+	// get the value of a key which may have multiple
 	// values. If hasMultiple is true, then there are
 	// multiple values and just one value has been returned
 	bool hasMulti;
@@ -131,10 +214,10 @@ These snippets are included with the distribution in the automatic tests as ts-s
 ### MODIFYING DATA
 
 ```c++
-	// add a new section 
+	// add a new section
 	rc = ini.SetValue("section1", nullptr, nullptr);
 	if (rc < 0) { /* handle error */ };
-	ASSERT_EQ(rc, SI_INSERTED); 
+	ASSERT_EQ(rc, SI_INSERTED);
 
 	// not an error to add one that already exists
 	rc = ini.SetValue("section1", nullptr, nullptr);
