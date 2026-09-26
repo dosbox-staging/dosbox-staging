@@ -999,9 +999,9 @@ static uint8_t* draw_text_line_from_dac_palette(Bitu vidstart, Bitu line)
 		++blocks;
 	}
 
-	// The first write-index into the draw buffer. Increasing this shifts
-	// the console text right (and vice-versa)
-	const uint16_t draw_idx_start = 8 + vga.draw.panning;
+	// The first write-index into the draw buffer. Panning shifts
+	// the console text left by shifting the write start to the left.
+	const uint16_t draw_idx_start = 8 - vga.draw.panning;
 
 	// This holds the to-be-written pixel offset, and is incremented per
 	// pixel and also per character block.
