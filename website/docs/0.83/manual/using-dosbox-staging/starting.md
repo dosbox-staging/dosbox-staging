@@ -22,6 +22,12 @@ directory](#the-working-directory), which underpins the recommended workflow.
 The remainder of this page then describes the platform-specific ways to launch
 DOSBox Staging with the correct working directory.
 
+!!! note "Note for non-English speakers"
+
+    DOSBox Staging defaults to English --- you'll get pointers on how to
+    change the interface language in the [Configuration](configuration.md)
+    section.
+
 
 ## The working directory
 
