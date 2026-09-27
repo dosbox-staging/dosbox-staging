@@ -1274,8 +1274,6 @@ void SHELL_InitAndRun()
 	        "  - Changing the code page (screen font) keeps the currently loaded keyboard\n"
 	        "    layout; use the [color=light-green]keyb[reset] command to also change the keyboard layout.\n"
 	        "\n"
-	        "  - The code page cannot be changed if no keyboard layout is loaded yet.\n"
-	        "\n"
 	        "Examples:\n"
 	        "  [color=light-green]chcp[reset]\n"
 	        "  [color=light-green]chcp[reset] [color=white]437[reset]\n");
