@@ -19,20 +19,14 @@ All key bindings can be customised through the [key mapper](keymapper.md)
 [Keyboard shortcuts](../appendices/shortcuts.md) for the full list of
 default bindings.
 
-
 ## DOS keyboard layout and code pages
 
-The settings above control how your physical keyboard is captured and mapped
-by DOSBox Staging. The DOS-level keyboard layout --- which characters your
-keys actually produce inside DOS programs --- is a separate matter; see
-[Keyboard layout and code pages](../system/localisation.md#keyboard_layout).
-
-At the DOS prompt, use the `KEYB` command to change the keyboard layout and
-code page together (run `KEYB /?` for details), or the `CHCP` command to
-switch just the code page while keeping the current keyboard layout (run
-`CHCP /?` for details). This is useful when a game assumes a certain code
-page --- usually 437 --- but you want the keyboard layout unchanged (for example,
-the game [Tommy's Manor](https://www.mobygames.com/game/49191/tommys-manor/)).
+DOSBox Staging also emulates DOS's own keyboard layout and code page
+(screen font) system, separate from the capture settings above. It's
+managed from the DOS prompt with the `KEYB` and `CHCP` commands rather than
+through configuration here --- see
+[Keyboard layout and code pages](../system/localisation.md#keyboard-layout-and-code-pages)
+for the full explanation.
 
 
 ## Configuration settings
