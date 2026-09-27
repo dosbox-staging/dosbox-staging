@@ -2368,12 +2368,6 @@ void DosShell::CMD_CHCP(char* args)
 		return;
 	}
 
-	const auto keyboard_layout = DOS_GetLoadedLayout();
-	if (keyboard_layout.empty()) {
-		WriteOut(MSG_Get("SHELL_CMD_CHCP_NO_LAYOUT_LOADED"));
-		return;
-	}
-
 	const auto value = parse_int(args);
 	if (!value || (*value < 1) || (*value > UINT16_MAX)) {
 		WriteOut(MSG_Get("SHELL_CMD_CHCP_INVALID_CODE_PAGE"));
@@ -2382,7 +2376,11 @@ void DosShell::CMD_CHCP(char* args)
 
 	auto tried_code_page = static_cast<uint16_t>(*value);
 
+	const auto keyboard_layout = DOS_GetLoadedLayout();
+	assert(!keyboard_layout.empty());
+
 	const auto result = DOS_LoadKeyboardLayout(keyboard_layout, tried_code_page);
+
 	if (result != KeyboardLayoutResult::OK) {
 		using enum KeyboardLayoutResult;
 		switch (result) {
