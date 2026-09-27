@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2002-2026 The DOSBox Team
+// SPDX-FileCopyrightText:  2021-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "keyb.h"
@@ -52,8 +52,9 @@ void KEYB::Run()
 		return;
 	}
 
-	// Fetch keyboard layout
-	const auto& keyboard_layout = params[0];
+	// Fetch keyboard layout. We strip the optional comma separator so `KEYB
+	// GR 437` and `KEYB GR, 437` are both accepted.
+	const auto& keyboard_layout = strip_suffix(params[0], ",");
 
 	// Fetch CPI file name
 	const std::string cpi_file = (params.size() >= 3) ? params[2] : "";
@@ -356,8 +357,8 @@ void KEYB::AddMessages()
 	        "Usage:\n"
 	        "  [color=light-green]keyb[reset]\n"
 	        "  [color=light-green]keyb[reset] /list\n"
-	        "  [color=light-green]keyb[reset] [color=light-cyan]LAYOUT[reset] [[color=white]CODEPAGE[reset]] /rom\n"
-	        "  [color=light-green]keyb[reset] [color=light-cyan]LAYOUT[reset] [[color=white]CODEPAGE[reset] [[color=white]CPIFILE[reset]]]\n"
+	        "  [color=light-green]keyb[reset] [color=light-cyan]LAYOUT[reset][,] [[color=white]CODEPAGE[reset]] /rom\n"
+	        "  [color=light-green]keyb[reset] [color=light-cyan]LAYOUT[reset][,] [[color=white]CODEPAGE[reset] [[color=white]CPIFILE[reset]]]\n"
 	        "\n"
 	        "Parameters:\n"
 	        "  [color=light-cyan]LAYOUT[reset]    keyboard layout code\n"
@@ -396,6 +397,7 @@ void KEYB::AddMessages()
 	        "  [color=light-green]KEYB[reset]\n"
 	        "  [color=light-green]KEYB[reset] [color=light-cyan]uk[reset]\n"
 	        "  [color=light-green]KEYB[reset] [color=light-cyan]sp[reset] [color=white]850[reset]\n"
+	        "  [color=light-green]KEYB[reset] [color=light-cyan]gr[reset], [color=white]437[reset]\n"
 	        "  [color=light-green]KEYB[reset] [color=light-cyan]de[reset] [color=white]858[reset] mycp.cpi");
 
 	// Success/status message
