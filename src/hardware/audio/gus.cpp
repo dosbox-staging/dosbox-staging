@@ -727,6 +727,11 @@ bool Gus::IsDmaXfer16Bit() noexcept
 
 static void gus_dma_event(uint32_t)
 {
+	if (!gus->PerformDmaTransfer) {
+		LOG_WARNING("GUS: DMA event fired without a configured transfer callback");
+		return;
+	}
+
 	if (gus->PerformDmaTransfer()) {
 		PIC_AddEvent(gus_dma_event, MS_PER_DMA_XFER);
 	}
