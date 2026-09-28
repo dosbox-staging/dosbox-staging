@@ -106,7 +106,7 @@ MidiDeviceClapBase::~MidiDeviceClapBase()
 	audio_frame_fifo.Stop();
 
 	// A paused renderer waits on the pauser, not on the stopped work FIFO.
-	Resume();
+	MidiDeviceClapBase::Resume();
 	if (renderer.joinable()) {
 		renderer.join();
 	}
