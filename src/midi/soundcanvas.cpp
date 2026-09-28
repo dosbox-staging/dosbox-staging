@@ -7,14 +7,11 @@
 #include <set>
 #include <vector>
 
-#include "clap/all.h"
-
 #include "audio/channel_names.h"
 #include "audio/clap/library.h"
 #include "audio/clap/plugin_manager.h"
 #include "config/setup.h"
 #include "dos/programs.h"
-#include "hardware/pic.h"
 #include "misc/ansi_code_markup.h"
 #include "misc/std_filesystem.h"
 #include "utils/checks.h"
@@ -373,8 +370,7 @@ MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 	set_soundcanvas_rom_dir_env_var();
 
 	const auto model_name = get_model_setting();
-
-	auto plugin_wrapper = load_model(model_name);
+	auto plugin_wrapper   = load_model(model_name);
 	if (!plugin_wrapper.plugin) {
 		const auto msg = format_str("SOUNDCANVAS: Failed to load '%s' Sound Canvas model",
 		                            model_name.c_str());
@@ -383,54 +379,38 @@ MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 	}
 
 	model = plugin_wrapper.model;
+	LOG_MSG("SOUNDCANVAS: Initialised %s", model.display_name_long);
 
-	clap.plugin = std::move(plugin_wrapper.plugin);
-
-	const auto it = std::find_if(all_models.begin(),
-	                             all_models.end(),
-	                             [&](const SoundCanvas::SynthModel* m) {
-		                             return model.model == m->model;
-	                             });
-	assert(it != all_models.end());
-
-	const auto sc_model = *it;
-	LOG_MSG("SOUNDCANVAS: Initialised %s", sc_model->display_name_long);
-
-	// Run the plugin at the native sample rate of the Sound Canvas model
-	// to avoid any extra resampling passes.
-	//
+	// Use the model's native sample rate to avoid an extra resampling pass.
 	const auto sample_rate_hz = native_sample_rate_hz_for_model(model.model);
 
-	ms_per_audio_frame = MillisInSecond / sample_rate_hz;
+	Config config               = {};
+	config.sample_rate_hz       = sample_rate_hz;
+	config.mixer_channel_name   = ChannelName::SoundCanvas;
+	config.channel_features     = {ChannelFeature::NoiseGate,
+	                               ChannelFeature::Sleep,
+	                               ChannelFeature::Stereo,
+	                               ChannelFeature::Synthesizer};
+	config.log_prefix           = "SOUNDCANVAS";
+	config.renderer_thread_name = "dosbox:sndcanv";
+	config.configure_channel    = [this](MixerChannelPtr& channel) {
+                ConfigureMixerChannel(channel);
+	};
+	config.enable_backlog_mode = true;
 
-	MIXER_LockMixerThread();
+	Initialize(std::move(plugin_wrapper.plugin), config);
+}
 
-	// Set up the mixer callback
-	const auto mixer_callback = std::bind(&MidiDeviceSoundCanvas::MixerCallback,
-	                                      this,
-	                                      std::placeholders::_1);
+MidiDeviceSoundCanvas::~MidiDeviceSoundCanvas()
+{
+	LOG_MSG("SOUNDCANVAS: Shutting down");
+}
 
-	mixer_channel = MIXER_AddChannel(mixer_callback,
-	                                 iroundf(sample_rate_hz),
-	                                 ChannelName::SoundCanvas,
-	                                 {ChannelFeature::NoiseGate,
-	                                  ChannelFeature::Sleep,
-	                                  ChannelFeature::Stereo,
-	                                  ChannelFeature::Synthesizer});
-
-	mixer_channel->SetResampleMethod(ResampleMethod::Resample);
-
-	// CLAP plugins render float audio frames between -1.0f and +1.0f, so we
-	// ask the channel to scale all the samples up to its 0db level.
-	mixer_channel->Set0dbScalar(Max16BitSampleValue);
-
-	// The original SC-55 models ("mk1") have a tendency to output a low
-	// level constant noise from time to time depending on previous MIDI
-	// input. Implementations accurate to the hardwave behaviour might
-	// emulate this noise as well, so we'll use our audio gate to remove it.
-
-	// This effectively disables the gate on the mk2
-	const auto is_mk1_model = (sc_model->model <= Model::Sc55_200);
+void MidiDeviceSoundCanvas::ConfigureMixerChannel(MixerChannelPtr& mixer_channel)
+{
+	// The original SC-55 models can emit constant low-level noise. The gate
+	// removes it without affecting the mk2.
+	const auto is_mk1_model = (model.model <= SoundCanvas::Model::Sc55_200);
 	const auto threshold_db = is_mk1_model ? -70.0f : -1000.0f;
 
 	constexpr auto AttackTimeMs  = 1.0f;
@@ -440,13 +420,10 @@ MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 	const auto denoiser_enabled = get_mixer_section()->GetBool("denoiser");
 	mixer_channel->EnableNoiseGate(denoiser_enabled);
 
-	// Set up channel filter
 	const auto filter_prefs = get_soundcanvas_section()->GetString(
 	        "soundcanvas_filter");
-
 	if (const auto maybe_bool = parse_bool_setting(filter_prefs)) {
-		const auto filter_enabled = *maybe_bool;
-		setup_filter(mixer_channel, filter_enabled);
+		setup_filter(mixer_channel, *maybe_bool);
 
 	} else if (!mixer_channel->TryParseAndSetCustomFilter(filter_prefs)) {
 		if (!has_false(filter_prefs)) {
@@ -455,338 +432,9 @@ MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 			        "using 'on'",
 			        filter_prefs.c_str());
 		}
-
-		const auto filter_enabled = true;
-		setup_filter(mixer_channel, filter_enabled);
-
+		setup_filter(mixer_channel, true);
 		set_section_property_value("soundcanvas", "soundcanvas_filter", "off");
 	}
-
-	// Double the baseline PCM prebuffer because MIDI is demanding and
-	// bursty. The mixer's default of ~20 ms becomes 40 ms here, which gives
-	// slower systems a better chance to keep up (and prevent their audio
-	// frame FIFO from running dry).
-	const auto render_ahead_ms = MIXER_GetPreBufferMs() * 2;
-
-	// Size the out-bound audio frame FIFO
-	assertm(sample_rate_hz >= 8000, "Sample rate must be at least 8 kHz");
-
-	const auto audio_frames_per_ms = iround(sample_rate_hz / MillisInSecond);
-	audio_frame_fifo.Resize(
-	        check_cast<size_t>(render_ahead_ms * audio_frames_per_ms));
-
-	// Size the in-bound work FIFO
-	work_fifo.Resize(MaxMidiWorkFifoSize);
-
-	clap.plugin->Activate(iroundf(sample_rate_hz));
-
-	// Start rendering audio
-	const auto render = std::bind(&MidiDeviceSoundCanvas::Render, this);
-	renderer          = std::thread(render);
-	set_thread_name(renderer, "dosbox:sndcanv");
-
-	// Start playback
-	MIXER_UnlockMixerThread();
-}
-
-MidiDeviceSoundCanvas::~MidiDeviceSoundCanvas()
-{
-	LOG_MSG("SOUNDCANVAS: Shutting down");
-
-	if (had_underruns) {
-		LOG_WARNING(
-		        "SOUNDCANVAS: Fix underruns by lowering the CPU load "
-		        "or increasing the 'prebuffer' or 'blocksize' setting");
-		had_underruns = false;
-	}
-
-	MIXER_LockMixerThread();
-
-	// Stop playback
-	if (mixer_channel) {
-		mixer_channel->Enable(false);
-	}
-
-	// Stop queueing new MIDI work and audio frames
-	work_fifo.Stop();
-	audio_frame_fifo.Stop();
-
-	// Wake the renderer via the pauser's condvar if it's parked (stopping
-	// `work_fifo` alone does not notify it); once unblocked it sees
-	// `work_fifo` has stopped and exits its loop cleanly.
-	Resume();
-
-	// Wait for the rendering thread to finish
-	if (renderer.joinable()) {
-		renderer.join();
-	}
-
-	// Deregister the mixer channel and remove it
-	assert(mixer_channel);
-	MIXER_DeregisterChannel(mixer_channel);
-	mixer_channel.reset();
-
-	MIXER_UnlockMixerThread();
-}
-
-int MidiDeviceSoundCanvas::GetNumPendingAudioFrames()
-{
-	const auto now_ms = PIC_AtomicIndex();
-
-	// Wake up the channel and update the last rendered time datum.
-	assert(mixer_channel);
-	if (mixer_channel->WakeUp()) {
-		last_rendered_ms = now_ms;
-		return 0;
-	}
-	if (last_rendered_ms >= now_ms) {
-		return 0;
-	}
-
-	// Return the number of audio frames needed to get current again
-	assert(ms_per_audio_frame > 0.0);
-
-	const auto elapsed_ms = now_ms - last_rendered_ms;
-	const auto num_audio_frames = iround(ceil(elapsed_ms / ms_per_audio_frame));
-	last_rendered_ms += (num_audio_frames * ms_per_audio_frame);
-
-	return num_audio_frames;
-}
-
-// The request to play the channel message is placed in the MIDI work FIFO
-void MidiDeviceSoundCanvas::SendMidiMessage(const MidiMessage& msg)
-{
-	std::vector<uint8_t> message(msg.data.begin(), msg.data.end());
-
-	MidiWork work{std::move(message),
-	              GetNumPendingAudioFrames(),
-	              MessageType::Channel,
-	              PIC_AtomicIndex()};
-
-	work_fifo.Enqueue(std::move(work));
-}
-
-// The request to play the sysex message is placed in the MIDI work FIFO
-void MidiDeviceSoundCanvas::SendSysExMessage(uint8_t* sysex, size_t len)
-{
-	std::vector<uint8_t> message(sysex, sysex + len);
-
-	MidiWork work{std::move(message),
-	              GetNumPendingAudioFrames(),
-	              MessageType::SysEx,
-	              PIC_AtomicIndex()};
-
-	work_fifo.Enqueue(std::move(work));
-}
-
-// The callback operates at the audio frame-level, steadily adding samples to
-// the mixer until the requested numbers of audio frames is met.
-void MidiDeviceSoundCanvas::MixerCallback(const int requested_audio_frames)
-{
-	assert(mixer_channel);
-
-	// Report buffer underruns
-	constexpr auto warning_percent = 5.0f;
-
-	if (const auto percent_full = audio_frame_fifo.GetPercentFull();
-	    percent_full < warning_percent) {
-		static auto iteration = 0;
-		if (iteration++ % 100 == 0) {
-			LOG_WARNING("SOUNDCANVAS: Audio buffer underrun");
-		}
-		had_underruns = true;
-	}
-
-	static std::vector<AudioFrame> audio_frames = {};
-
-	// A short read means the fifo was stopped for a pause (or a genuine
-	// underrun): add whatever we got and pad the shortfall with silence.
-	// Never hand `AddSamples_sfloat` fewer frames than it will read.
-	const auto num_dequeued = audio_frame_fifo.BulkDequeue(audio_frames,
-	                                                       requested_audio_frames);
-
-	if (num_dequeued > 0) {
-		mixer_channel->AddSamples_sfloat(check_cast<int>(num_dequeued),
-		                                 &audio_frames[0][0]);
-
-		last_rendered_ms = PIC_AtomicIndex();
-	}
-	if (check_cast<int>(num_dequeued) < requested_audio_frames) {
-		mixer_channel->AddSilence();
-	}
-}
-
-void MidiDeviceSoundCanvas::RenderAudioFramesToFifo(const int num_audio_frames)
-{
-	assert(num_audio_frames > 0);
-
-	static std::vector<float> left  = {};
-	static std::vector<float> right = {};
-
-	// Maybe expand the vectors
-	if (check_cast<int>(left.size()) < num_audio_frames) {
-		left.resize(num_audio_frames);
-		right.resize(num_audio_frames);
-	}
-
-	float* audio_out[] = {left.data(), right.data()};
-
-	clap.plugin->Process(audio_out, num_audio_frames, clap.event_list);
-	clap.event_list.Clear();
-
-	for (auto i = 0; i < num_audio_frames; ++i) {
-		audio_frame_fifo.Enqueue({left[i], right[i]});
-	}
-}
-
-// The next MIDI work task is processed, which includes rendering audio frames
-// prior to sending channel and sysex messages to the plugin
-void MidiDeviceSoundCanvas::ProcessWorkFromFifo()
-{
-	const auto work = work_fifo.Dequeue();
-	if (!work) {
-		return;
-	}
-
-	// Detect if the work FIFO is heavily backlogged and enter the special
-	// backlogged rendering mode. This happens in fast-forward mode if the
-	// Sound Canvas emulation can't keep up with the sped-up CPU emulation.
-	const auto delta_from_now    = PIC_AtomicIndex() - work->timestamp;
-	constexpr auto OneSecondInMs = 1000.0;
-
-	if (delta_from_now > OneSecondInMs) {
-		is_work_fifo_backlogged = true;
-	}
-
-#if 0
-	// To log inter-cycle rendering
-	if (work->num_pending_audio_frames > 0) {
-		LOG_MSG("SOUNDCANVAS: %2u audio frames prior to %s message, followed by "
-		        "%2lu more messages. Have %4lu audio frames queued",
-		        work->num_pending_audio_frames,
-		        work->message_type == MessageType::Channel ? "channel" : "sysex",
-		        work_fifo.Size(),
-		        audio_frame_fifo.Size());
-	}
-#endif
-
-	if (work->num_pending_audio_frames > 0) {
-		RenderAudioFramesToFifo(work->num_pending_audio_frames);
-	}
-
-	AddClapEvent(*work);
-}
-
-void MidiDeviceSoundCanvas::AddClapEvent(const MidiWork& work)
-{
-	if (work.message_type == MessageType::Channel) {
-		assert(work.message.size() >= MaxMidiMessageLen);
-		clap.event_list.AddMidiEvent(work.message, 0);
-
-	} else {
-		assert(work.message_type == MessageType::SysEx);
-		clap.event_list.AddMidiSysExEvent(work.message, 0);
-	}
-}
-
-void MidiDeviceSoundCanvas::RenderBacklogged()
-{
-	// This will only keep the MIDI events we must process (e.g. program
-	// change and SysEx messages).
-	ProcessWorkFromFifoBacklogged();
-
-	// We must drip-feed these essential MIDI events to the Sound Canvas
-	// emulation while in fast-forward mode and render a nominal sample now
-	// and then to keep the emulation ticking along. Batching them up in
-	// groups of 10 does the job fine.
-	//
-	// If we'd let them pile up and send them to the Sound Canvas in one big
-	// batch after exiting fast-forward mode, we'd overload the Sound
-	// Canvas' input buffers so not all messages would be processed. This
-	// has been proven to not be a viable approach as it resulted in
-	// wrong-sounding instruments in many cases.
-	//
-	if (clap.event_list.Size() > 10) {
-		constexpr auto OneFrame = 1;
-		RenderAudioFramesToFifo(OneFrame);
-	}
-
-	if (!MIXER_FastForwardModeEnabled()) {
-		is_work_fifo_backlogged = false;
-
-		// Send "All Notes Off" message to all MIDI channels when
-		// exiting from fast-forward mode. This is the best we can do as
-		// we've skipped processing any "Note On" or "Note Off" messages
-		// while in fast-forward mode. There would be a lot of hanging
-		// notes if we don't do this.
-		for (uint8_t ch = 0; ch < NumMidiChannels; ++ch) {
-			const uint8_t status = MidiStatus::ControlChange | ch;
-			const std::vector<uint8_t> all_notes_off_msg = {
-			        status, MidiChannelMode::AllNotesOff};
-
-			clap.event_list.AddMidiEvent(all_notes_off_msg, 0);
-		}
-	}
-}
-
-void MidiDeviceSoundCanvas::ProcessWorkFromFifoBacklogged()
-{
-	const auto work = work_fifo.Dequeue();
-	if (!work) {
-		return;
-	}
-
-	// If we're in backlogged mode when fast-forward is activated, it means
-	// the Sound Canvas can't keep up with the sped-up CPU emulation.
-	// Therefore, we need to minimise the work to catch up.
-	//
-	// We can't just *not* process any MIDI events at all; we need to keep
-	// processing program change, control change, etc. events, otherwise
-	// there's a real chance the instrument sounds will be wrong when we
-	// resume normal playback. But we can drop all MIDI notes and bypass the
-	// actual audio rendering; we'll just render a few samples from time to
-	// time to keep the Sound Canvas emulation ticking along. This way, we
-	// can catch up and stay in sync with the CPU emulation.
-	//
-	if (const auto status = get_midi_status(work->message[0]);
-	    get_midi_message_type(status) == MessageType::Channel) {
-
-		if (status == MidiStatus::NoteOn || status == MidiStatus::NoteOff) {
-			// Drop all MIDI note messages as we won't render any audio
-			return;
-		}
-	}
-
-	AddClapEvent(*work);
-}
-
-// Keep the FIFO populated with freshly rendered buffers
-void MidiDeviceSoundCanvas::Render()
-{
-	while (work_fifo.IsRunning()) {
-		if (pauser.ParkIfPaused(audio_frame_fifo)) {
-			continue;
-		}
-
-		if (is_work_fifo_backlogged) {
-			RenderBacklogged();
-
-		} else {
-			constexpr auto OneFrame = 1;
-			work_fifo.IsEmpty() ? RenderAudioFramesToFifo(OneFrame)
-			                    : ProcessWorkFromFifo();
-		}
-	}
-}
-
-void MidiDeviceSoundCanvas::Pause()
-{
-	pauser.Pause();
-}
-
-void MidiDeviceSoundCanvas::Resume()
-{
-	pauser.Resume();
 }
 
 static std::set<const SoundCanvas::SynthModel*> available_models = {};

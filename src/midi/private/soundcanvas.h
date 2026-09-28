@@ -4,18 +4,8 @@
 #ifndef DOSBOX_SOUNDCANVAS_H
 #define DOSBOX_SOUNDCANVAS_H
 
-#include "midi_device.h"
-#include "synth_render_pauser.h"
-
-#include <memory>
-#include <optional>
-#include <thread>
-
-#include "audio/clap/event_list.h"
-#include "audio/clap/plugin.h"
-#include "audio/mixer.h"
 #include "dos/programs/more_output.h"
-#include "utils/rwqueue.h"
+#include "clap_base.h"
 
 namespace SoundCanvas {
 
@@ -47,10 +37,10 @@ struct SynthModel {
 
 } // namespace SoundCanvas
 
-class MidiDeviceSoundCanvas final : public MidiDevice {
+class MidiDeviceSoundCanvas final : public MidiDeviceClapBase {
 public:
-	// Throws `std::runtime_error` if the MIDI device cannot be
-	// initialiased (e.g., the requested SoundFont cannot be loaded).
+	// Throws `std::runtime_error` if the requested Sound Canvas model
+	// cannot be loaded.
 	MidiDeviceSoundCanvas();
 
 	~MidiDeviceSoundCanvas() override;
@@ -65,55 +55,12 @@ public:
 		return MidiDeviceName::SoundCanvas;
 	}
 
-	Type GetType() const override
-	{
-		return MidiDevice::Type::Internal;
-	}
-
 	SoundCanvas::SynthModel GetModel() const;
 
-	void SendMidiMessage(const MidiMessage& msg) override;
-	void SendSysExMessage(uint8_t* sysex, size_t len) override;
-
-	void Pause() override;
-	void Resume() override;
-
 private:
-	void MixerCallback(const int requested_audio_frames);
-	void ProcessWorkFromFifo();
-	void ProcessWorkFromFifoBacklogged();
-
-	int GetNumPendingAudioFrames();
-	void RenderAudioFramesToFifo(const int num_frames);
-	void Render();
-	void RenderBacklogged();
-
-	void AddClapEvent(const MidiWork& work);
-
-	// Managed objects
-	MixerChannelPtr mixer_channel        = nullptr;
-	RWQueue<AudioFrame> audio_frame_fifo = {1};
-	RWQueue<MidiWork> work_fifo          = {1};
-
-	struct {
-		std::unique_ptr<Clap::Plugin> plugin = nullptr;
-		Clap::EventList event_list           = {};
-	} clap = {};
-
-	std::thread renderer = {};
-
-	// Parks the renderer thread during a DOSBox pause.
-	SynthRenderPauser pauser = {};
+	void ConfigureMixerChannel(MixerChannelPtr& mixer_channel);
 
 	SoundCanvas::SynthModel model = {};
-
-	// Used to track the balance of time between the last mixer
-	// callback versus the current MIDI SysEx or Msg event.
-	double last_rendered_ms   = 0.0;
-	double ms_per_audio_frame = 0.0;
-
-	bool had_underruns           = false;
-	bool is_work_fifo_backlogged = false;
 };
 
 void SOUNDCANVAS_ListDevices(MidiDeviceSoundCanvas* device, MoreOutputStrings& output);
