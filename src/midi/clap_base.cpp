@@ -8,8 +8,20 @@
 #include "hardware/pic.h"
 #include "misc/support.h"
 #include "utils/checks.h"
+#include "utils/env_utils.h"
 
 CHECK_NARROWING();
+
+void MidiDeviceClapBase::SetEnvironmentVariable(const std::string& name,
+                                                const std::string& value,
+                                                const std::string& log_prefix)
+{
+	LOG_MSG("%s: Setting %s env variable to '%s'",
+	        log_prefix.c_str(),
+	        name.c_str(),
+	        value.c_str());
+	set_env_var(name.c_str(), value.c_str(), Env::Overwrite);
+}
 
 void MidiDeviceClapBase::Initialize(std::unique_ptr<Clap::Plugin> loaded_plugin,
                                     const Config& config)

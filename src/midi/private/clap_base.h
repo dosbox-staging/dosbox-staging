@@ -39,6 +39,11 @@ public:
 	void Pause() override;
 	void Resume() override;
 
+	// Set process-wide plugin options before loading or enumerating plugins.
+	static void SetEnvironmentVariable(const std::string& name,
+	                                   const std::string& value,
+	                                   const std::string& log_prefix = "CLAP");
+
 protected:
 	MidiDeviceClapBase() = default;
 

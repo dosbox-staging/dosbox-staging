@@ -358,9 +358,9 @@ static void set_soundcanvas_rom_dir_env_var()
 			env_list.append(canonical_rom_dir.string());
 		}
 	}
-	LOG_MSG("SOUNDCANVAS: Setting SOUNDCANVAS_ROM_PATH env variable to '%s'",
-	        env_list.c_str());
-	set_env_var("SOUNDCANVAS_ROM_PATH", env_list.c_str(), Env::Overwrite);
+	MidiDeviceClapBase::SetEnvironmentVariable("SOUNDCANVAS_ROM_PATH",
+	                                           env_list,
+	                                           "SOUNDCANVAS");
 }
 
 MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
