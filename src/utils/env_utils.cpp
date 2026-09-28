@@ -47,6 +47,9 @@ std::string get_env_var(const char* var_name)
 void set_env_var(const char* var_name, const char* value, [[maybe_unused]] int overwrite)
 {
 #ifdef _WIN32
+    // getenv() reads the CRT's environment copy, not the Win32 environment.
+    // Keep both in sync for plugins that share the host's C runtime.
+    _putenv_s(var_name, value ? value : "");
     SetEnvironmentVariableA(var_name, value);
 #else
     setenv(var_name, value, overwrite);
