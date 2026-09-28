@@ -1601,10 +1601,11 @@ void DOSBOX_InitModuleConfigsAndMessages()
 #endif
 	FSYNTH_AddConfigSection(control);
 	SOUNDCANVAS_AddConfigSection(control);
+	CLAP_AddConfigSection(control);
 
-	// The MIDI section must be added *after* the FluidSynth, MT-32 and
-	// SoundCanvas MIDI device sections. If the MIDI section is intialised
-	// before these, these devices would be double-initialised if selected
+	// The MIDI section must be added *after* all internal MIDI device
+	// sections. If the MIDI section is initialised before these, these
+	// devices would be double-initialised if selected
 	// at startup time (e.g., by having `mididevice = mt32` in the config).
 	MIDI_AddConfigSection(control);
 

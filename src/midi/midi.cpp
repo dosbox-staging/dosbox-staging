@@ -12,6 +12,7 @@
 #include <memory>
 #include <string>
 
+#include "private/clap.h"
 #include "private/fluidsynth.h"
 #include "private/midi_device.h"
 #include "private/mt32.h"
@@ -83,6 +84,9 @@ static std::unique_ptr<MidiDevice> create_device(
 	using namespace MidiDeviceName;
 
 	// Internal MIDI synths
+	if (name == MidiDeviceName::Clap) {
+		return std::make_unique<MidiDeviceClap>();
+	}
 	if (name == MidiDeviceName::SoundCanvas) {
 		return std::make_unique<MidiDeviceSoundCanvas>();
 	}
@@ -750,6 +754,13 @@ void MIDI_ListDevices(MoreOutputStrings& output)
 	                                : nullptr,
 	                        output);
 
+	write_device_name(MidiDeviceName::Clap);
+
+	CLAP_ListDevices((device_name == MidiDeviceName::Clap)
+	                         ? dynamic_cast<MidiDeviceClap*>(device_ptr)
+	                         : nullptr,
+	                 output);
+
 	write_device_name(MidiDeviceName::FluidSynth);
 
 	FSYNTH_ListDevices((device_name == MidiDeviceName::FluidSynth)
@@ -893,6 +904,9 @@ static void init_mididevice_settings(SectionProp& secprop)
 	                        "                plugin that implements the Sound Canvas to be available;\n"
 	                        "                see the [soundcanvas] section).\n");
 
+	str_prop->SetOptionHelp(MidiDeviceName::Clap,
+	                        "  clap:         The internal CLAP plugin synthesizer (see the [clap] section).\n");
+
 	str_prop->SetOptionHelp(MidiDeviceName::FluidSynth,
 	                        "  fluidsynth:   The internal FluidSynth MIDI synthesizer (SoundFont player)\n"
 	                        "                (requires the FluidSynth dynamic-link library to be available;\n"
@@ -909,6 +923,7 @@ static void init_mididevice_settings(SectionProp& secprop)
 	                     MidiDeviceName::Mt32,
 	                     MidiDeviceName::SoundCanvas,
 #endif
+	                     MidiDeviceName::Clap,
 	                     MidiDeviceName::FluidSynth,
 	                     "none"});
 

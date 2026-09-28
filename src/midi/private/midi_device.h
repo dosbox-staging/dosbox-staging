@@ -11,6 +11,7 @@
 
 namespace MidiDeviceName {
 // Internal synths
+constexpr auto Clap        = "clap";
 constexpr auto FluidSynth  = "fluidsynth";
 constexpr auto SoundCanvas = "soundcanvas";
 constexpr auto Mt32        = "mt32";

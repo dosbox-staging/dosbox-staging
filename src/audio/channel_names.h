@@ -15,6 +15,7 @@ namespace ChannelName {
 constexpr auto CdAudio           = "CDAUDIO";
 constexpr auto MaxCdAudioChannel = 32;
 
+constexpr auto Clap                 = "CLAPMIDI";
 constexpr auto Cms                  = "CMS";
 constexpr auto CovoxDac             = "COVOX";
 constexpr auto DiskNoise            = "DISKNOISE";
@@ -54,6 +55,7 @@ constexpr auto PcSpeakerDeprecated  = "SPKR";
 // clang-format off
 static std::vector<std::string> AllChannelNames = {
         ChannelName::CdAudio,
+        ChannelName::Clap,
         ChannelName::Cms,
         ChannelName::CovoxDac,
         ChannelName::DiskNoise,
