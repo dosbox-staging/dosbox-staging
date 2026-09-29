@@ -22,6 +22,7 @@ libxi-dev
 libxss-dev
 libxtst-dev
 libwayland-dev
+libxkbcommon-dev
 libdecor-0-dev
 liburing-dev
 libdbus-1-dev

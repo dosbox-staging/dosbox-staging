@@ -76,7 +76,7 @@ runs:
       run: |
         if [ -n "${{ inputs.compiler }}" ]; then INPUTS_COMPILER="${{ inputs.compiler }}-"; fi
         if [ -n "${{ inputs.compiler_version }}" ]; then INPUTS_COMPILER_VERSION="${{ inputs.compiler_version }}-"; fi
-        echo "cacheKey=vcpkg-${VCPKG_SHORT_HASH}-bin-cache-${{ inputs.name_os }}-${{ inputs.arch }}-${INPUTS_COMPILER}${INPUTS_COMPILER_VERSION}${ImageOS}-${ImageVersion}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg-ports/**') }}" >> $GITHUB_OUTPUT
+        echo "cacheKey=vcpkg-${VCPKG_SHORT_HASH}-bin-cache-${{ inputs.name_os }}-${{ inputs.arch }}-${INPUTS_COMPILER}${INPUTS_COMPILER_VERSION}${ImageOS}-${ImageVersion}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg-ports/**', 'extras/linux/ubuntu-24.04-packages.txt') }}" >> $GITHUB_OUTPUT
 
     - name: Restore vcpkg binary cache
       uses: actions/cache@v4
