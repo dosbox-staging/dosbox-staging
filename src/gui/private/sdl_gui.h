@@ -134,9 +134,6 @@ struct SDL_Block {
 		int height = 0;
 		int x_pos  = SDL_WINDOWPOS_UNDEFINED;
 		int y_pos  = SDL_WINDOWPOS_UNDEFINED;
-
-		// Instantaneous canvas size of the window
-		SDL_Rect canvas_size = {};
 	} windowed = {};
 
 	struct {
