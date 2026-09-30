@@ -572,12 +572,6 @@ static void notify_new_mouse_screen_params()
 	MOUSE_NewScreenParams(params);
 }
 
-static bool is_aspect_ratio_correction_enabled()
-{
-	return (RENDER_GetAspectRatioCorrectionMode() ==
-	        AspectRatioCorrectionMode::Auto);
-}
-
 static void set_minimum_window_size()
 {
 	assert(sdl.window);
@@ -1197,60 +1191,24 @@ void GFX_Destroy()
 	MAPPER_Destroy();
 }
 
-static SDL_Point refine_window_size(const SDL_Point size,
-                                    const bool wants_aspect_ratio_correction)
+#if defined(LINUX)
+static void maybe_limit_window_size_kmsdrm_driver(int& w, int& h,
+                                                  const SDL_Rect desktop_size)
 {
-	// TODO This only works for 320x200 games. We cannot make hardcoded
-	// assumptions about aspect ratios in general, e.g. the pixel aspect
-	// ratio is 1:1 for 640x480 games both with 'aspect = on' and 'aspect =
-	// off'.
-	constexpr SDL_Point RatiosForStretchedPixels = {4, 3};
-	constexpr SDL_Point RatiosForSquarePixels    = {8, 5};
-
-	const auto image_aspect = wants_aspect_ratio_correction
-	                                ? RatiosForStretchedPixels
-	                                : RatiosForSquarePixels;
-
-	const auto window_aspect = static_cast<double>(size.x) / size.y;
-
-	const auto game_aspect = static_cast<double>(image_aspect.x) /
-	                         image_aspect.y;
-
-	// Window is wider than the emulated image, so constrain horizonally
-	if (window_aspect > game_aspect) {
-		const int x = ceil_sdivide(size.y * image_aspect.x, image_aspect.y);
-		return {x, size.y};
-	} else {
-		// Window is narrower than the emulated image, so constrain
-		// vertically
-		const int y = ceil_sdivide(size.x * image_aspect.y, image_aspect.x);
-		return {size.x, y};
-	}
-
-	return minimum_window_size;
-}
-
-static void maybe_limit_requested_resolution(int& w, int& h,
-                                             const char* size_description)
-{
-	const auto desktop = get_desktop_size();
-	if (w <= desktop.w && h <= desktop.h) {
+	if (w <= desktop_size.w && h <= desktop_size.h) {
 		return;
 	}
 
 	bool was_limited = false;
 
-	// Add any driver / platform / operating system limits in succession:
-
 	// SDL KMSDRM limitations
 	if (is_using_kmsdrm_driver()) {
-		w = desktop.w;
-		h = desktop.h;
+		w = desktop_size.w;
+		h = desktop_size.h;
 
 		was_limited = true;
 
-		LOG_WARNING("DISPLAY: Limiting '%s' resolution to %dx%d to avoid kmsdrm issues",
-		            size_description,
+		LOG_WARNING("DISPLAY: Limiting window size to %dx%d to avoid kmsdrm issues",
 		            w,
 		            h);
 	}
@@ -1259,29 +1217,55 @@ static void maybe_limit_requested_resolution(int& w, int& h,
 		// TODO shouldn't we log the display resolution in physical
 		// pixels instead?
 		LOG_INFO(
-		        "DISPLAY: Accepted '%s' resolution %dx%d despite exceeding "
+		        "DISPLAY: Accepted window size resolution %dx%d despite exceeding "
 		        "the %dx%d display",
-		        size_description,
 		        w,
 		        h,
-		        desktop.w,
-		        desktop.h);
+		        desktop_size.w,
+		        desktop_size.h);
 	}
 }
+#endif
 
-static SDL_Point parse_window_resolution_from_conf(const std::string& pref)
+static SDL_Rect parse_window_size_pref(const std::string& window_size_pref,
+                                       const SDL_Rect desktop_size)
 {
-	int w = 0;
-	int h = 0;
+	constexpr auto SmallPercent   = 50;
+	constexpr auto MediumPercent  = 74;
+	constexpr auto LargePercent   = 90;
+	constexpr auto DesktopPercent = 100;
 
-	const bool was_parsed = sscanf(pref.c_str(), "%dx%d", &w, &h) == 2;
+	const auto make_percent_size = [&](const int percent) -> SDL_Rect {
+		const int w = ceil_sdivide(desktop_size.w * percent, 100);
+		const int h = ceil_sdivide(desktop_size.h * percent, 100);
+		return {0, 0, w, h};
+	};
 
-	const bool is_valid = (w >= minimum_window_size.x &&
-	                       h >= minimum_window_size.y);
+	const auto pref = lowcase(window_size_pref);
 
-	if (was_parsed && is_valid) {
-		maybe_limit_requested_resolution(w, h, "window");
-		return {w, h};
+	if (pref == "s" || pref == "small") {
+		return make_percent_size(SmallPercent);
+
+	} else if (pref == "m" || pref == "medium" || pref == "default") {
+		return make_percent_size(MediumPercent);
+
+	} else if (pref == "l" || pref == "large") {
+		return make_percent_size(LargePercent);
+
+	} else if (pref == "desktop") {
+		return make_percent_size(DesktopPercent);
+
+	} else {
+		const auto parts = split(pref, "x");
+
+		if (parts.size() == 2) {
+			const auto w = parse_int(parts[0]);
+			const auto h = parse_int(parts[1]);
+
+			if (w && h) {
+				return SDL_Rect{0, 0, *w, *h};
+			}
+		}
 	}
 
 	// TODO convert to notification
@@ -1290,51 +1274,7 @@ static SDL_Point parse_window_resolution_from_conf(const std::string& pref)
 	        "using 'default'",
 	        pref.c_str());
 
-	return minimum_window_size;
-}
-
-static SDL_Point window_bounds_from_label(const std::string& pref,
-                                          const SDL_Rect desktop)
-{
-	constexpr int SmallPercent  = 50;
-	constexpr int MediumPercent = 74;
-	constexpr int LargePercent  = 90;
-
-	const int percent = [&] {
-		if (pref.starts_with('s')) {
-			return SmallPercent;
-
-		} else if (pref.starts_with('m') || pref == "default" ||
-		           pref.empty()) {
-			return MediumPercent;
-
-		} else if (pref.starts_with('l')) {
-			return LargePercent;
-
-		} else if (pref == "desktop") {
-			return 100;
-
-		} else {
-			// TODO convert to notification
-			LOG_WARNING(
-			        "DISPLAY: Invalid 'window_size' setting: '%s', "
-			        "using 'default'",
-			        pref.c_str());
-			return MediumPercent;
-		}
-	}();
-
-	const int w = ceil_sdivide(desktop.w * percent, 100);
-	const int h = ceil_sdivide(desktop.h * percent, 100);
-
-	return {w, h};
-}
-
-static SDL_Point clamp_to_minimum_window_dimensions(SDL_Point size)
-{
-	const auto w = std::max(size.x, minimum_window_size.x);
-	const auto h = std::max(size.y, minimum_window_size.y);
-	return {w, h};
+	return make_percent_size(MediumPercent);
 }
 
 static std::optional<SDL_Point> parse_window_position_conf(const std::string& window_position_val)
@@ -1453,53 +1393,28 @@ static void handle_window_size_pref_after_config_load()
 	set_section_property_value(SectionName, LegacyPrefName, "");
 }
 
-// Takes in:
-//  - The user's window_size setting: default, WxH, small, medium, large,
-//    desktop, or an invalid setting.
-//  - If aspect correction is requested.
-//
-// This function returns a refined size and additionally populates the
-// following struct members:
-//
-//  - 'sdl.window', with the refined size.
-//
 static void configure_window_size()
 {
 	const auto window_size_pref = get_sdl_section()->GetString("window_size");
 
-	// Get the coarse resolution from the users setting, and adjust
-	// refined scaling mode if an exact resolution is desired.
-	SDL_Point coarse_size = minimum_window_size;
+	const auto requested_size = parse_window_size_pref(window_size_pref,
+	                                                   get_desktop_size());
 
-	const auto use_exact_window_resolution = window_size_pref.find('x') !=
-	                                         std::string::npos;
+	auto w = std::max(static_cast<int>(requested_size.w),
+	                  minimum_window_size.x);
 
-	if (use_exact_window_resolution) {
-		coarse_size = parse_window_resolution_from_conf(window_size_pref);
-	} else {
-		const auto desktop = get_desktop_size();
+	auto h = std::max(static_cast<int>(requested_size.h),
+	                  minimum_window_size.y);
 
-		coarse_size = window_bounds_from_label(window_size_pref, desktop);
-	}
+#if defined(LINUX)
+	maybe_limit_window_size_kmsdrm_driver(w, h, get_desktop_size());
+#endif
 
-	// Refine the coarse resolution and save it in the SDL struct.
-	auto refined_size = coarse_size;
+	save_window_size(w, h);
 
-	if (use_exact_window_resolution) {
-		refined_size = clamp_to_minimum_window_dimensions(coarse_size);
-	} else {
-		refined_size = refine_window_size(coarse_size,
-		                                  is_aspect_ratio_correction_enabled());
-	}
-
-	assert(refined_size.x <= UINT16_MAX && refined_size.y <= UINT16_MAX);
-
-	save_window_size(refined_size.x, refined_size.y);
-
-	// Let the user know the resulting window properties
 	LOG_MSG("DISPLAY: Using %dx%d window size in windowed mode on display-%d",
-	        refined_size.x,
-	        refined_size.y,
+	        w,
+	        h,
 	        sdl.display_number);
 }
 
