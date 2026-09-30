@@ -582,26 +582,12 @@ static void set_minimum_window_size()
 {
 	assert(sdl.window);
 
-	// TODO This only works for 320x200 games. We cannot make hardcoded
-	// assumptions about aspect ratios in general, e.g. the pixel aspect
-	// ratio is 1:1 for 640x480 games both with 'aspect = on' and 'aspect =
-	// off'.
-	const auto minimum_height = (is_aspect_ratio_correction_enabled() ? 240 : 200);
-
-	constexpr auto MinimumWidth = 320;
-
-	minimum_window_size = {iround(MinimumWidth), iround(minimum_height)};
-
-	// The SDL documentation is incorrect; this will set the minimum window
-	// size in logical units, not pixels.
 	if (!SDL_SetWindowMinimumSize(sdl.window,
 	                              minimum_window_size.x,
 	                              minimum_window_size.y)) {
 		LOG_WARNING("SDL: Failed to set window minimum size: %s",
 		            SDL_GetError());
 	}
-
-	// LOG_INFO("SDL: Updated window minimum size to %dx%d", width, height);
 }
 
 static void check_and_handle_dpi_change(SDL_Window* sdl_window,
