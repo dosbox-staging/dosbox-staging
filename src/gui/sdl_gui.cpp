@@ -61,7 +61,7 @@ void log_window_event([[maybe_unused]] const char* message,
 
 SDL_Block sdl;
 
-static SDL_Point minimum_window_size = {320, 200};
+constexpr SDL_Rect MinWindowSize = {0, 0, 320, 200};
 
 constexpr SDL_Rect DefaultDesktopSize = {0, 0, 640, 480};
 
@@ -576,9 +576,7 @@ static void set_minimum_window_size()
 {
 	assert(sdl.window);
 
-	if (!SDL_SetWindowMinimumSize(sdl.window,
-	                              minimum_window_size.x,
-	                              minimum_window_size.y)) {
+	if (!SDL_SetWindowMinimumSize(sdl.window, MinWindowSize.w, MinWindowSize.h)) {
 		LOG_WARNING("SDL: Failed to set window minimum size: %s",
 		            SDL_GetError());
 	}
@@ -776,8 +774,8 @@ static SDL_Rect get_desktop_size()
 		desktop.h -= (top + bottom);
 	}
 
-	assert(desktop.w >= minimum_window_size.x);
-	assert(desktop.h >= minimum_window_size.y);
+	assert(desktop.w >= MinWindowSize.w);
+	assert(desktop.h >= MinWindowSize.h);
 	return desktop;
 }
 
@@ -1400,11 +1398,8 @@ static void configure_window_size()
 	const auto requested_size = parse_window_size_pref(window_size_pref,
 	                                                   get_desktop_size());
 
-	auto w = std::max(static_cast<int>(requested_size.w),
-	                  minimum_window_size.x);
-
-	auto h = std::max(static_cast<int>(requested_size.h),
-	                  minimum_window_size.y);
+	auto w = std::max(requested_size.w, MinWindowSize.w);
+	auto h = std::max(requested_size.h, MinWindowSize.h);
 
 #if defined(LINUX)
 	maybe_limit_window_size_kmsdrm_driver(w, h, get_desktop_size());
@@ -1815,8 +1810,8 @@ void GFX_InitAndStartGui()
 	handle_window_size_pref_after_config_load();
 	configure_window_size();
 
-	sdl.draw.render_width_px  = minimum_window_size.x;
-	sdl.draw.render_height_px = minimum_window_size.y;
+	sdl.draw.render_width_px  = MinWindowSize.w;
+	sdl.draw.render_height_px = MinWindowSize.h;
 
 	// Create rendering backend and application window
 	sdl.renderer = std::unique_ptr<RenderBackend>(create_renderer());
