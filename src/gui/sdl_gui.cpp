@@ -1061,12 +1061,6 @@ static void toggle_fullscreen()
 {
 	assert(sdl.renderer);
 
-	// Record the window's current canvas size if we're departing window-mode
-	if (!sdl.is_fullscreen) {
-		sdl.windowed.canvas_size = to_sdl_rect(
-		        sdl.renderer->GetCanvasSizeInPixels());
-	}
-
 	if (sdl.is_fullscreen) {
 		exit_fullscreen();
 	} else {
@@ -1430,12 +1424,6 @@ static void save_window_size(const int w, const int h)
 	// on the aspect ratio, window DPI, or manual resizing.
 	sdl.windowed.width  = w;
 	sdl.windowed.height = h;
-
-	// Initialize the window's canvas size if it hasn't yet been set.
-	if (sdl.windowed.canvas_size.w <= 0 || sdl.windowed.canvas_size.h <= 0) {
-		sdl.windowed.canvas_size.w = w;
-		sdl.windowed.canvas_size.h = h;
-	}
 
 	set_section_property_value("sdl", "window_size", format_str("%dx%d", w, h));
 }
