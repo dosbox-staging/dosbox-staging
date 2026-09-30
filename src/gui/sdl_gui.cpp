@@ -61,7 +61,7 @@ void log_window_event([[maybe_unused]] const char* message,
 
 SDL_Block sdl;
 
-static SDL_Point minimum_window_size = {640, 480};
+static SDL_Point minimum_window_size = {320, 200};
 
 constexpr SDL_Rect DefaultDesktopSize = {0, 0, 640, 480};
 
@@ -586,9 +586,9 @@ static void set_minimum_window_size()
 	// assumptions about aspect ratios in general, e.g. the pixel aspect
 	// ratio is 1:1 for 640x480 games both with 'aspect = on' and 'aspect =
 	// off'.
-	const auto minimum_height = (is_aspect_ratio_correction_enabled() ? 480 : 400);
+	const auto minimum_height = (is_aspect_ratio_correction_enabled() ? 240 : 200);
 
-	constexpr auto MinimumWidth = 640;
+	constexpr auto MinimumWidth = 320;
 
 	minimum_window_size = {iround(MinimumWidth), iround(minimum_height)};
 
