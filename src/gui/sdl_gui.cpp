@@ -798,33 +798,6 @@ float GFX_GetDpiScaleFactor()
 	return sdl.dpi_scale;
 }
 
-static bool is_using_kmsdrm_driver()
-{
-	assert(SDL_WasInit(SDL_INIT_VIDEO));
-
-	const auto driver = SDL_GetCurrentVideoDriver();
-	if (!driver) {
-		return false;
-	}
-
-	std::string driver_str = driver;
-	lowcase(driver_str);
-	return driver_str == "kmsdrm";
-}
-
-static bool check_kmsdrm_setting()
-{
-	// Do we have read access to the event subsystem
-	if (auto f = fopen("/dev/input/event0", "r"); f) {
-		fclose(f);
-		return true;
-	}
-
-	// We're using KMSDRM, but we don't have read access to the event
-	// subsystem
-	return false;
-}
-
 [[maybe_unused]] static bool operator!=(const SDL_Point lhs, const SDL_Point rhs)
 {
 	return lhs.x != rhs.x || lhs.y != rhs.y;
@@ -1190,6 +1163,34 @@ void GFX_Destroy()
 }
 
 #if defined(LINUX)
+
+static bool is_using_kmsdrm_driver()
+{
+	assert(SDL_WasInit(SDL_INIT_VIDEO));
+
+	const auto driver = SDL_GetCurrentVideoDriver();
+	if (!driver) {
+		return false;
+	}
+
+	std::string driver_str = driver;
+	lowcase(driver_str);
+	return driver_str == "kmsdrm";
+}
+
+static bool check_kmsdrm_setting()
+{
+	// Do we have read access to the event subsystem
+	if (auto f = fopen("/dev/input/event0", "r"); f) {
+		fclose(f);
+		return true;
+	}
+
+	// We're using KMSDRM, but we don't have read access to the event
+	// subsystem
+	return false;
+}
+
 static void maybe_limit_window_size_kmsdrm_driver(int& w, int& h,
                                                   const SDL_Rect desktop_size)
 {
@@ -1223,6 +1224,7 @@ static void maybe_limit_window_size_kmsdrm_driver(int& w, int& h,
 		        desktop_size.h);
 	}
 }
+
 #endif
 
 static SDL_Rect parse_window_size_pref(const std::string& window_size_pref,
@@ -1753,10 +1755,12 @@ void GFX_InitSdl()
 		E_Exit("SDL: Failed to init SDL video and timer: %s", SDL_GetError());
 	}
 
+#if defined(LINUX)
 	if (is_using_kmsdrm_driver() && !check_kmsdrm_setting()) {
 		E_Exit("SDL: /dev/input/event0 is not readable, quitting early to prevent TTY input lockup.\n"
 		       "Please run: 'sudo usermod -aG input $(whoami)', then re-login and try again.");
 	}
+#endif
 
 	// Register custom SDL events
 	sdl.start_event_id = SDL_RegisterEvents(enum_val(DosBoxSdlEvent::NumEvents));
