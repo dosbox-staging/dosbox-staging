@@ -20,7 +20,7 @@ theme:
   font:
     text: Open Sans
     code: Roboto Mono
-  logo: assets/images/dosbox-staging-nobg.svg
+  logo: assets/images/dosbox-staging-logo.svg
   favicon: assets/images/favicon.ico
 
 # CSS overrides
