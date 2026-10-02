@@ -1,8 +1,10 @@
-.PHONY: help png windows macos linux clean
+.PHONY: all help png windows favicon macos linux clean
 
 PNG_DIR = png
 
 WINDOWS_DIR = windows
+
+WEB_IMAGES_DIR = ../../website/docs/assets/images
 
 MACOS_DIR = macos
 MACOS_ICON_1024 = $(MACOS_DIR)/dosbox-staging-1024.png
@@ -14,6 +16,7 @@ help:
 	@echo "Available targets:"
 	@echo "  png     - re-generate small PNG icons from the SVG sources"
 	@echo "  windows - re-generate Windows .ico file from the PNG icons"
+	@echo "  favicon - re-generate website favicon from the PNG icons"
 	@echo "  macos   - re-generate macOS .icns file from the macOS source PNG"
 	@echo "  all     - re-generate all (in above the listed order)"
 	@echo ""
@@ -22,7 +25,7 @@ help:
 	@echo "  make install prefix=/usr  # install icons to \$${DESTDIR}/usr/share/icons/..."
 	@echo "  make install datadir=foo  # install icons to \$${DESTDIR}foo/icons/..."
 
-all: png windows macos
+all: png windows favicon macos
 
 ##
 #  Re-generate small PNG icons from the SVG sources.
@@ -59,7 +62,7 @@ png:
 ##
 #  Re-generate Window .ico file from the PNG icons.
 #
-#  Needs icotool from the icoutils packags (there's no good Windows native
+#  Needs icotool from the icoutils packages (there's no good Windows native
 #  CLI tool for this).
 #
 windows:
@@ -80,6 +83,15 @@ windows:
 	           $(PNG_DIR)/icon_20.png \
 	           $(PNG_DIR)/icon_16.png \
 	        -o $(WINDOWS_DIR)/dosbox-staging.ico
+
+##
+#  Re-generate favicon from the PNG icons.
+#
+favicon:
+	icotool -c $(PNG_DIR)/icon_48.png \
+	           $(PNG_DIR)/icon_32.png \
+	           $(PNG_DIR)/icon_16.png \
+	        -o $(WEB_IMAGES_DIR)/favicon.ico
 
 ##
 #  Re-generate macOS .icns file from the 1024x1024 macOS source PNG.
