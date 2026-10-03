@@ -17,16 +17,6 @@
 
 enum class MountFileSystemType { Fat16, Iso, None };
 
-// Raw geometry option strings, as given on the command line. These are
-// extracted before the path arguments are processed so they are not mistaken
-// for image paths, but can only be interpreted afterwards because their
-// meaning depends on the auto-detected mount type.
-struct GeometryArgs {
-	std::optional<std::string> size     = {};
-	std::optional<std::string> freesize = {};
-	std::optional<std::string> chs      = {};
-};
-
 // Struct to hold all parameters required for a mount operation
 struct MountParameters {
 	char drive                 = '\0';
@@ -74,14 +64,24 @@ public:
 	std::optional<MountParameters> ProcessArguments(CommandLine* cmd);
 
 private:
+	// Like every other option, the geometry options are removed from the
+	// command line before the paths are processed. Their values are held
+	// here because they can only be applied once the mount type is known,
+	// which may require auto-detection from the paths.
+	struct GeometryOptions {
+		std::optional<std::string> freesize = {};
+		std::optional<std::string> size     = {};
+		std::optional<std::string> chs      = {};
+	};
+
 	static void AddMessages();
 	void ShowUsage();
 
 	bool HandleUnmount();
-	bool ParseArguments(MountParameters& params, GeometryArgs& geometry,
-	                    bool& explicit_fs, bool& path_relative_to_last_config);
-	bool ParseGeometry(MountParameters& params, const GeometryArgs& geometry);
-	bool HasUnknownOptions();
+	bool ParseArguments(MountParameters& params, bool& explicit_fs,
+	                    bool& path_relative_to_last_config);
+	GeometryOptions ParseGeometryOptions();
+	bool ParseGeometry(MountParameters& params, const GeometryOptions& options);
 	bool ParseDrive(MountParameters& params, bool explicit_fs);
 
 	std::string ApplyRelativePath(const std::string& path,

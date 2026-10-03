@@ -8,6 +8,7 @@
 #include "dosbox.h"
 
 #include <algorithm>
+#include <limits>
 #include <vector>
 
 #include "config/config.h"
@@ -38,11 +39,14 @@ void MOUNT::ListMounts()
 	const std::string header_label = MSG_Get("PROGRAM_MOUNT_STATUS_LABEL");
 
 	const int console_width = real_readw(BIOSMEM_SEG, BIOSMEM_NB_COLS);
-	const auto width_drive  = static_cast<int>(header_drive.length());
-	const auto width_type   = 16;
-	const auto width_label  = std::max(minimum_column_length,
-                                          static_cast<int>(header_label.size()));
-	const auto width_path   = console_width - 4 - width_drive - width_type -
+
+	const auto width_drive = static_cast<int>(header_drive.length());
+	const auto width_type  = 16;
+
+	const auto width_label = std::max(minimum_column_length,
+	                                  static_cast<int>(header_label.size()));
+
+	const auto width_path = console_width - 4 - width_drive - width_type -
 	                        width_label;
 
 	if (width_path < 0) {
@@ -88,6 +92,7 @@ void MOUNT::ListMounts()
 			// Render rows for drives holding multiple loaded images
 			if (images.size() > 1) {
 				bool first = true;
+
 				for (const auto& img : images) {
 					auto type = img->GetTypeString();
 					auto path = img->GetInfo();
@@ -99,15 +104,18 @@ void MOUNT::ListMounts()
 					                                d)} +
 					                        ":[reset]  ")
 					              : "";
+
 					std::string label_str =
 					        first ? To_Label(Drives[d]->GetLabel())
 					              : "";
+
 					std::string type_str = first ? type : "";
 
 					print_row(drive_letter_str,
 					          type_str,
 					          truncate_path(path, width_path),
 					          label_str);
+
 					first = false;
 				}
 			} else {
@@ -123,6 +131,7 @@ void MOUNT::ListMounts()
 				          truncate_path(path, width_path),
 				          To_Label(Drives[d]->GetLabel()));
 			}
+
 			found_drives = true;
 		}
 	}
@@ -132,9 +141,11 @@ void MOUNT::ListMounts()
 	}
 	WriteOut("\n");
 }
+
 void MOUNT::ShowUsage()
 {
 	MoreOutputStrings output(*this);
+
 	// Combined help
 	output.AddString(MSG_Get("PROGRAM_MOUNT_HELP_LONG"), PRIMARY_MOD_NAME);
 #ifdef WIN32
@@ -153,8 +164,9 @@ bool MOUNT::AddWildcardPaths(const std::string& path_arg,
                              std::vector<std::string>& paths)
 {
 	// Expand the given path argument
-	constexpr auto OnlyExpandFiles          = true;
-	constexpr auto SkipNativePath           = true;
+	constexpr auto OnlyExpandFiles = true;
+	constexpr auto SkipNativePath  = true;
+
 	std::vector<std::string> expanded_paths = {};
 	if (!get_expanded_files(path_arg, expanded_paths, OnlyExpandFiles, SkipNativePath)) {
 		return false;
@@ -163,6 +175,7 @@ bool MOUNT::AddWildcardPaths(const std::string& path_arg,
 	// Sort wildcards with natural ordering
 	const auto has_wildcards = path_arg.find_first_of('*') != std::string::npos ||
 	                           path_arg.find_first_of('?') != std::string::npos;
+
 	if (has_wildcards) {
 		std::sort(expanded_paths.begin(), expanded_paths.end(), natural_compare);
 	}
@@ -180,17 +193,21 @@ void MOUNT::WriteMountStatus(const std::string& image_type,
                              char drive_letter, bool readonly)
 {
 	const size_t term_width = INT10_GetTextColumns();
-	constexpr auto Indent   = "  ";
-	const auto indent_size  = strlen(Indent);
-	std::string images_str  = {};
+
+	constexpr auto Indent  = "  ";
+	const auto indent_size = strlen(Indent);
+
+	std::string images_str = {};
 
 	if (images.size() == 1) {
 		// If only one image, don't add newlines and just write in one
 		// line:
 		images_str = image_type.c_str() + std::string(" ") + images[0];
+
 		WriteOut(MSG_Get("PROGRAM_MOUNT_STATUS_2"),
 		         images_str.c_str(),
 		         drive_letter);
+
 		if (readonly) {
 			WriteOut(MSG_Get("PROGRAM_MOUNT_READONLY"));
 		}
@@ -198,11 +215,13 @@ void MOUNT::WriteMountStatus(const std::string& image_type,
 
 		for (const auto& image : images) {
 			assert(!image.empty());
+
 			images_str = images_str.append(
 			        std::string(Indent) +
 			        truncate_path(image, term_width - indent_size) +
 			        std::string("\n"));
 		}
+
 		WriteOut(MSG_Get("PROGRAM_MOUNT_RESULT"),
 		         image_type.c_str(),
 		         drive_letter,
@@ -229,6 +248,7 @@ bool MOUNT::MountImageFat(MountParameters& params)
 			                      "PROGRAM_IMGMOUNT_INVALID_IMAGE");
 			return false;
 		}
+
 		const auto sz = stdio_num_sectors(diskfile);
 		if (sz < 0) {
 			fclose(diskfile);
@@ -300,6 +320,7 @@ bool MOUNT::MountImageFat(MountParameters& params)
 		                                            params.roflag);
 		if (fat_image->created_successfully) {
 			fat_images.push_back(fat_image);
+
 		} else {
 			NOTIFY_DisplayWarning(Notification::Source::Console,
 			                      "MOUNT",
@@ -331,7 +352,7 @@ bool MOUNT::MountImageFat(MountParameters& params)
 	dos.dta(dos.tables.tempdta);
 
 	for (auto it = fat_images.begin(); it != fat_images.end(); ++it) {
-		const bool should_notify = (std::next(it) == fat_images.end());
+		const bool should_notify = std::next(it) == fat_images.end();
 
 		DriveManager::CycleDisks(drive_index(params.drive), should_notify);
 
@@ -356,6 +377,7 @@ bool MOUNT::MountImageFat(MountParameters& params)
 	        fat_images.front());
 
 	assert(fat_image);
+
 	const auto has_hdd = fat_image->loadedDisk && fat_image->loadedDisk->hardDrive;
 
 	const auto is_floppy = (params.drive == 'A' || params.drive == 'B') &&
@@ -379,10 +401,12 @@ static const char* mscdex_error_to_message_id(const int error, const bool is_ima
 	case 1: return "MSCDEX_ERROR_MULTIPLE_CDROMS";
 	case 2: return "MSCDEX_ERROR_NOT_SUPPORTED";
 	case 3:
+
 		return is_image_file ? "MSCDEX_ERROR_OPEN" : "MSCDEX_ERROR_PATH";
 	case 4: return "MSCDEX_TOO_MANY_DRIVES";
 	case 5: return "MSCDEX_LIMITED_SUPPORT";
 	case 6: return "MSCDEX_INVALID_FILEFORMAT";
+
 	default: return "MSCDEX_UNKNOWN_ERROR";
 	}
 }
@@ -398,8 +422,10 @@ bool MOUNT::MountImageIso(const MountParameters& params)
 
 	// create new drives for all images
 	DriveManager::filesystem_images_t iso_images = {};
+
 	for (const auto& iso_path : params.paths) {
 		int error = -1;
+
 		iso_images.push_back(std::make_shared<isoDrive>(
 		        params.drive, iso_path.c_str(), params.mediaid, error));
 
@@ -408,6 +434,7 @@ bool MOUNT::MountImageIso(const MountParameters& params)
 			NOTIFY_DisplayWarning(Notification::Source::Console,
 			                      "MOUNT",
 			                      mscdex_error_to_message_id(error, true));
+
 			NOTIFY_DisplayWarning(Notification::Source::Console,
 			                      "MOUNT",
 			                      "PROGRAM_IMGMOUNT_CANT_CREATE");
@@ -466,6 +493,7 @@ bool MOUNT::MountImageRaw(MountParameters& params)
 	const auto sz = stdio_size_kb(new_disk);
 	if (sz < 0) {
 		fclose(new_disk);
+
 		NOTIFY_DisplayWarning(Notification::Source::Console,
 		                      "MOUNT",
 		                      "PROGRAM_IMGMOUNT_INVALID_IMAGE");
@@ -528,6 +556,7 @@ bool MOUNT::MountImage(MountParameters& params)
 	} else if (params.fstype == MountFileSystemType::None) {
 		return MountImageRaw(params);
 	}
+
 	return true;
 }
 
@@ -556,17 +585,116 @@ bool MOUNT::HandleUnmount()
 
 static std::optional<MountFileSystemType> parse_file_system_type(const std::string s)
 {
-	if (s == "fat") {
+	if (iequals(s, "fat")) {
 		return MountFileSystemType::Fat16;
 
-	} else if (s == "iso") {
+	} else if (iequals(s, "iso")) {
 		return MountFileSystemType::Iso;
 
-	} else if (s == "none") {
+	} else if (iequals(s, "none")) {
 		return MountFileSystemType::None;
 
 	} else {
 		return {};
+	}
+}
+
+// Parses a single CHS geometry value. The geometry is stored in uint16_t
+// fields, so out-of-range values would silently wrap (e.g., 65536 cylinders
+// would become 0).
+static std::optional<uint16_t> parse_geometry_value(const std::string& s)
+{
+	constexpr auto MaxValue = std::numeric_limits<uint16_t>::max();
+
+	const auto value = parse_int(s);
+	if (!value || *value < 1 || *value > MaxValue) {
+		return {};
+	}
+	return static_cast<uint16_t>(*value);
+}
+
+// CD-ROM options of the original DOSBox. They have no effect in DOSBox Staging,
+// but they're still common in old configs, so they're ignored with a warning
+// instead of being rejected as unknown options.
+constexpr std::array LegacyCdRomFlags =
+        {"-ioctl", "-noioctl", "-ioctl_dx", "-ioctl_dio", "-ioctl_mci", "-aspi"};
+
+constexpr auto LegacyCdRomOptionWithValue = "-usecd";
+
+// Returns the first option that requires a value and is either the last
+// argument or is followed by another MOUNT option. Values can otherwise start
+// with a dash (e.g., `-label -DISK-`).
+static std::optional<std::string> find_option_missing_value(const CommandLine& cmd)
+{
+	constexpr std::array OptionsWithValue = {"-t",
+	                                         "-fs",
+	                                         "-label",
+	                                         "-freesize",
+	                                         "-size",
+	                                         "-chs",
+	                                         LegacyCdRomOptionWithValue};
+
+	constexpr std::array Flags = {"-pr", "-ro", "-ide"};
+
+	const auto is_one_of = [](const std::string& arg, const auto& options) {
+		return std::ranges::any_of(options, [&arg](const auto option) {
+			return iequals(arg, option);
+		});
+	};
+
+	std::string arg      = {};
+	std::string next_arg = {};
+
+	for (auto i = 1; cmd.FindCommand(i, arg); ++i) {
+		if (!is_one_of(arg, OptionsWithValue)) {
+			continue;
+		}
+
+		const auto is_missing = !cmd.FindCommand(i + 1, next_arg) ||
+		                        is_one_of(next_arg, OptionsWithValue) ||
+		                        is_one_of(next_arg, Flags) ||
+		                        is_one_of(next_arg, LegacyCdRomFlags);
+		if (is_missing) {
+			return arg;
+		}
+	}
+	return {};
+}
+
+// Finds and removes a value-taking option and its value. Only the first
+// occurrence is used, but all of them are removed so that repeated options are
+// not mistaken for paths.
+static std::optional<std::string> find_remove_option_value(CommandLine& cmd,
+                                                           const std::string& option)
+{
+	std::string value = {};
+	if (!cmd.FindString(option, value, true)) {
+		return {};
+	}
+
+	std::string ignored_value = {};
+	while (cmd.FindString(option, ignored_value, true)) {
+	}
+	return value;
+}
+
+static void remove_legacy_cdrom_options(CommandLine& cmd)
+{
+	const auto warn_ignored = [](const char* option) {
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "MOUNT",
+		                      "MSCDEX_WARNING_NO_OPTION",
+		                      option);
+	};
+
+	for (const auto option : LegacyCdRomFlags) {
+		if (cmd.FindExistRemoveAll(option)) {
+			warn_ignored(option);
+		}
+	}
+
+	if (find_remove_option_value(cmd, LegacyCdRomOptionWithValue)) {
+		warn_ignored(LegacyCdRomOptionWithValue);
 	}
 }
 
@@ -581,39 +709,27 @@ static std::optional<MountFileSystemType> parse_file_system_type(const std::stri
 //
 //   params.label  (from the -label option)
 //
-// Also extracts the raw geometry option strings into `geometry` (from the
-// -size, -freesize and -chs options). Every option must be consumed here,
-// including repeated ones, because ProcessPaths() collects whatever is left
-// on the command line as image paths.
-//
-bool MOUNT::ParseArguments(MountParameters& params, GeometryArgs& geometry,
-                           bool& explicit_fs, bool& path_relative_to_last_config)
+bool MOUNT::ParseArguments(MountParameters& params, bool& explicit_fs,
+                           bool& path_relative_to_last_config)
 {
-	// Consumes all occurrences of an option that takes a value and returns
-	// the first one; repeats are dropped so they can't be picked up as
-	// image paths later on.
-	auto extract_option = [&](const std::string& option) {
-		std::optional<std::string> first_value = {};
+	// Reject options with missing values upfront, so an option never
+	// consumes the next option as its value
+	if (const auto option = find_option_missing_value(*cmd); option) {
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "MOUNT",
+		                      "PROGRAM_MISSING_OPTION_VALUE",
+		                      option->c_str());
+		return false;
+	}
 
-		std::string value = {};
-		while (cmd->FindString(option, value, true)) {
-			if (!first_value) {
-				first_value = value;
-			}
-		}
-		return first_value;
-	};
+	remove_legacy_cdrom_options(*cmd);
 
-	path_relative_to_last_config = cmd->FindExistRemoveAll("-pr");
-
-	// The geometry options can only be interpreted once the mount type is
-	// known, which ProcessPaths() may still auto-detect from the paths.
-	geometry.size     = extract_option("-size");
-	geometry.freesize = extract_option("-freesize");
-	geometry.chs      = extract_option("-chs");
+	if (cmd->FindExistRemoveAll("-pr")) {
+		path_relative_to_last_config = true;
+	}
 
 	// Default is "dir" if the -t option is not provided
-	const auto type_str = extract_option("-t").value_or("dir");
+	const auto type_str = find_remove_option_value(*cmd, "-t").value_or("dir");
 
 	const auto maybe_mount_type = parse_mount_type(type_str);
 	if (!maybe_mount_type) {
@@ -629,11 +745,10 @@ bool MOUNT::ParseArguments(MountParameters& params, GeometryArgs& geometry,
 
 	// Parse -fs (filesystem type)
 	// Default is "fat" if the -fs option is not provided
-	const auto maybe_fstype_str = extract_option("-fs");
+	const auto fs_value = find_remove_option_value(*cmd, "-fs");
 
-	explicit_fs = maybe_fstype_str.has_value();
-
-	const auto fstype_str = maybe_fstype_str.value_or("fat");
+	explicit_fs           = fs_value.has_value();
+	const auto fstype_str = fs_value.value_or("fat");
 
 	const auto maybe_fs_type = parse_file_system_type(fstype_str);
 	if (!maybe_fs_type) {
@@ -651,51 +766,34 @@ bool MOUNT::ParseArguments(MountParameters& params, GeometryArgs& geometry,
 		}
 	}
 
-	// Parse -ide, which can be given with or without a value
-	const auto has_ide_value = extract_option("-ide").has_value();
-
-	params.is_ide = cmd->FindExistRemoveAll("-ide") || has_ide_value;
+	// Parse -ide. It is a flag, so anything following it is left on the
+	// command line.
+	params.is_ide = cmd->FindExistRemoveAll("-ide");
 
 	if (params.is_ide && (params.type == MountType::CdRomImage)) {
 		IDE_Get_Next_Cable_Slot(params.ide_index, params.is_second_cable_slot);
 	}
 
 	// Label
-	params.label = extract_option("-label").value_or("");
+	params.label = find_remove_option_value(*cmd, "-label").value_or("");
 
 	return true;
 }
 
-// Anything still starting with a dash once ParseArguments() has run is an
-// option we don't know about. Reporting it beats letting ProcessPaths()
-// collect it as an image path, which fails much later with a confusing
-// "can't create drive from file" message.
-//
-bool MOUNT::HasUnknownOptions()
+MOUNT::GeometryOptions MOUNT::ParseGeometryOptions()
 {
-	auto unknown_option_found = false;
-
-	std::string arg = {};
-	for (auto i = 1u; cmd->FindCommand(i, arg); ++i) {
-		if (arg.starts_with('-')) {
-			NOTIFY_DisplayWarning(Notification::Source::Console,
-			                      "MOUNT",
-			                      "PROGRAM_MOUNT_UNKNOWN_OPTION",
-			                      arg.c_str());
-			unknown_option_found = true;
-		}
-	}
-	return unknown_option_found;
+	return {.freesize = find_remove_option_value(*cmd, "-freesize"),
+	        .size     = find_remove_option_value(*cmd, "-size"),
+	        .chs      = find_remove_option_value(*cmd, "-chs")};
 }
 
 // Sets:
 //   params.mediaid
 //   params.sizes
 //
-bool MOUNT::ParseGeometry(MountParameters& params, const GeometryArgs& geometry)
+bool MOUNT::ParseGeometry(MountParameters& params, const GeometryOptions& options)
 {
 	std::string str_size = "";
-	std::string str_chs  = "";
 
 	// Default sizing logic based on type
 	switch (params.type) {
@@ -719,6 +817,7 @@ bool MOUNT::ParseGeometry(MountParameters& params, const GeometryArgs& geometry)
 
 		if (!command_arg.empty()) {
 			const int i_drive = std::toupper(command_arg[0]);
+
 			if (i_drive == 'A' || i_drive == 'B') {
 				params.mediaid = MediaId::Floppy1_44MB;
 			}
@@ -740,13 +839,11 @@ bool MOUNT::ParseGeometry(MountParameters& params, const GeometryArgs& geometry)
 	}
 
 	// Parse the free space in mb (kb for floppies)
-	std::string mb_size;
-
-	if (geometry.freesize) {
+	if (options.freesize) {
 
 		char teststr[1024];
-		auto freesize = static_cast<uint16_t>(
-		        atoi(geometry.freesize->c_str()));
+		uint16_t freesize = static_cast<uint16_t>(
+		        atoi(options.freesize->c_str()));
 
 		if (params.type == MountType::FloppyImage) {
 			// freesize in kb
@@ -774,8 +871,8 @@ bool MOUNT::ParseGeometry(MountParameters& params, const GeometryArgs& geometry)
 	}
 
 	// Parse -size
-	if (geometry.size) {
-		str_size = *geometry.size;
+	if (options.size) {
+		str_size = *options.size;
 	}
 
 	// Apply str_size string to sizes array
@@ -797,6 +894,7 @@ bool MOUNT::ParseGeometry(MountParameters& params, const GeometryArgs& geometry)
 			}
 			scan++;
 		}
+
 		if (count < 4) {
 			// always goes correct as index is max 20 at this point.
 			number[index] = 0;
@@ -806,27 +904,30 @@ bool MOUNT::ParseGeometry(MountParameters& params, const GeometryArgs& geometry)
 	}
 
 	// Parse -chs C,H,S
-	if (geometry.chs) {
-		str_chs = *geometry.chs;
+	if (options.chs) {
+		const auto parts = split(*options.chs, ",");
 
-		int cmd_cylinders = 0;
-		int cmd_heads     = 0;
-		int cmd_sectors   = 0;
+		std::optional<uint16_t> cylinders = {};
+		std::optional<uint16_t> heads     = {};
+		std::optional<uint16_t> sectors   = {};
 
-		if (sscanf(str_chs.c_str(), "%d,%d,%d", &cmd_cylinders, &cmd_heads, &cmd_sectors) ==
-		    3) {
+		if (parts.size() == 3) {
+			cylinders = parse_geometry_value(parts[0]);
+			heads     = parse_geometry_value(parts[1]);
+			sectors   = parse_geometry_value(parts[2]);
+		}
 
-			params.sizes[0] = 512;
-			params.sizes[1] = static_cast<uint16_t>(cmd_sectors);
-			params.sizes[2] = static_cast<uint16_t>(cmd_heads);
-			params.sizes[3] = static_cast<uint16_t>(cmd_cylinders);
-
-		} else {
+		if (!cylinders || !heads || !sectors) {
 			NOTIFY_DisplayWarning(Notification::Source::Console,
 			                      "MOUNT",
 			                      "PROGRAM_MOUNT_INVALID_CHS");
 			return false;
 		}
+
+		params.sizes[0] = 512;
+		params.sizes[1] = *sectors;
+		params.sizes[2] = *heads;
+		params.sizes[3] = *cylinders;
 	}
 
 	return true;
@@ -841,6 +942,7 @@ bool MOUNT::ParseDrive(MountParameters& params, bool explicit_fs)
 {
 	// get the drive letter or number
 	std::string temp_line;
+
 	cmd->FindCommand(1, temp_line);
 
 	if ((temp_line.size() > 2) ||
@@ -870,6 +972,7 @@ bool MOUNT::ParseDrive(MountParameters& params, bool explicit_fs)
 			                      "PROGRAM_IMGMOUNT_SPECIFY2");
 			return false;
 		}
+
 	} else if (first_char >= 'A' && first_char <= 'Z') {
 		params.drive = first_char;
 
@@ -1006,6 +1109,7 @@ void MOUNT::ProcessPaths(const std::string first_path, MountParameters& params,
 	// If not found on the host, check if it is a mounted DOS path
 	if (!stat_ok) {
 		const auto mapped_host_path = GetDosMappedHostPath(path_arg_1);
+
 		if (!mapped_host_path.empty() &&
 		    stat(mapped_host_path.c_str(), &test) == 0) {
 			stat_ok = true;
@@ -1067,6 +1171,7 @@ void MOUNT::ProcessPaths(const std::string first_path, MountParameters& params,
 
 			if (real_path.empty() ||
 			    !local_drive_path_exists(real_path.c_str())) {
+
 				// Try Virtual DOS Drive mapping
 				auto found_on_virtual = false;
 
@@ -1166,6 +1271,7 @@ bool MOUNT::MountPaths(MountParameters& params)
 void MOUNT::MountLocal(MountParameters& params, const std::string& local_path)
 {
 	std::string final_path = local_path;
+
 	if (!final_path.empty() && final_path.back() != CROSS_FILESPLIT) {
 		final_path += CROSS_FILESPLIT;
 	}
@@ -1174,6 +1280,7 @@ void MOUNT::MountLocal(MountParameters& params, const std::string& local_path)
 #if defined(WIN32)
 	if ((final_path == "c:\\") || (final_path == "C:\\") ||
 	    (final_path == "c:/") || (final_path == "C:/")) {
+
 		NOTIFY_DisplayWarning(Notification::Source::Console,
 		                      "MOUNT",
 		                      "PROGRAM_MOUNT_WARNING_WIN");
@@ -1187,7 +1294,8 @@ void MOUNT::MountLocal(MountParameters& params, const std::string& local_path)
 #endif
 
 	std::shared_ptr<DOS_Drive> newdrive = {};
-	const uint8_t int8_tize             = (uint8_t)params.sizes[1];
+
+	const uint8_t int8_tize = (uint8_t)params.sizes[1];
 
 	if (params.type == MountType::Overlay) {
 		const auto ldp = std::dynamic_pointer_cast<localDrive>(
@@ -1218,6 +1326,7 @@ void MOUNT::MountLocal(MountParameters& params, const std::string& local_path)
 				NOTIFY_DisplayWarning(Notification::Source::Console,
 				                      "MOUNT",
 				                      "PROGRAM_MOUNT_OVERLAY_REL_ABS");
+
 			} else if (o_error == 2) {
 				NOTIFY_DisplayWarning(Notification::Source::Console,
 				                      "MOUNT",
@@ -1248,7 +1357,8 @@ void MOUNT::MountLocal(MountParameters& params, const std::string& local_path)
                                                         error);
 
 		const char* msg_id = mscdex_error_to_message_id(error, false);
-		if (error == 0) { //-V457
+
+		if (error == 0) { //-V457 //-V547
 			NOTIFY_DisplayInfoMessage(Notification::Source::Console,
 			                          "MOUNT",
 			                          msg_id);
@@ -1265,6 +1375,7 @@ void MOUNT::MountLocal(MountParameters& params, const std::string& local_path)
 		}
 	} else {
 		const auto section = get_section("dosbox");
+
 		// Standard directory mount
 		newdrive = std::make_shared<localDrive>(
 		        final_path.c_str(),
@@ -1373,12 +1484,30 @@ std::optional<MountParameters> MOUNT::ProcessArguments(CommandLine* cmd)
 
 	MountParameters params;
 
-	GeometryArgs geometry             = {};
 	bool explicit_fs                  = false;
 	bool path_relative_to_last_config = false;
 
 	// Parse command line arguments
-	if (!ParseArguments(params, geometry, explicit_fs, path_relative_to_last_config)) {
+	if (!ParseArguments(params, explicit_fs, path_relative_to_last_config)) {
+		return {};
+	}
+
+	// Remove the remaining options; everything left on the command line is
+	// treated as a path. The geometry values can only be applied once the
+	// mount type is known, so they are kept until after the paths have been
+	// processed.
+	const auto geometry_options = ParseGeometryOptions();
+
+	// All known options have been removed by now, so anything else starting
+	// with a dash is an unknown option, not a path
+	std::string unknown_option = {};
+	if (cmd->FindStringBegin("-", unknown_option)) {
+		unknown_option = "-" + unknown_option;
+
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "MOUNT",
+		                      "SHELL_ILLEGAL_SWITCH",
+		                      unknown_option.c_str());
 		return {};
 	}
 
@@ -1389,17 +1518,13 @@ std::optional<MountParameters> MOUNT::ProcessArguments(CommandLine* cmd)
 		return {};
 	}
 
-	if (HasUnknownOptions()) {
-		return {};
-	}
-
 	// Resolve host paths, wildcard path arguments, auto-detect mount types,
 	// and determine whether we're dealing with image or directory/overlay
 	// mounts.
 	ProcessPaths(first_path, params, path_relative_to_last_config);
 
 	// Check drive geometry and types, abort if not valid
-	if (!ParseGeometry(params, geometry)) {
+	if (!ParseGeometry(params, geometry_options)) {
 		return {};
 	}
 
@@ -1509,7 +1634,6 @@ void MOUNT::AddMessages()
 	        "%s isn't a directory or valid image file.\n");
 
 	MSG_Add("PROGRAM_MOUNT_ILL_TYPE", "Illegal type %s");
-	MSG_Add("PROGRAM_MOUNT_UNKNOWN_OPTION", "Unknown option: %s\n");
 	MSG_Add("PROGRAM_MOUNT_ALREADY_MOUNTED", "Drive %c already mounted with %s\n");
 	MSG_Add("PROGRAM_MOUNT_UMOUNT_NOT_MOUNTED", "Drive %c isn't mounted.\n");
 

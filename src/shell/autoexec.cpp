@@ -518,7 +518,7 @@ static std::unique_ptr<Config> specify_drive_conf()
 
 	// Define the [drive] section
 	const AutoMountSettings defaults = {};
-	const auto default_type          = defaults.type.has_value()
+	const auto default_type          = defaults.type.has_value() //-V547
 	                                         ? to_string(defaults.type.value())
 	                                         : "";
 
@@ -575,19 +575,20 @@ static std::optional<AutoMountSettings> parse_drive_conf(const char dir_letter,
 		LOG_ERR("AUTOMOUNT: The override_drive setting can be left empty or a drive letter from 'a' to 'y'");
 	}
 
-	const auto type = parse_mount_type(section->GetString("type"));
+	const auto type_str = section->GetString("type");
+	const auto type     = parse_mount_type(type_str);
 
 	if (type == MountType::FloppyImage && dir_letter >= 'c') {
 		LOG_ERR("AUTOMOUNT: %s: setting 'type = %s' is invalid",
 		        conf_path.string().c_str(),
-		        to_string(type.value()).c_str());
+		        type_str.c_str());
 		LOG_ERR("AUTOMOUNT: Type can be set to 'floppy' only for drive letters 'a' or 'b'");
 
 	} else if (type == MountType::CdRomImage &&
 	           (dir_letter == 'a' || dir_letter == 'b')) {
 		LOG_ERR("AUTOMOUNT: %s: setting 'type = %s' is invalid",
 		        conf_path.string().c_str(),
-		        to_string(type.value()).c_str());
+		        type_str.c_str());
 		LOG_ERR("AUTOMOUNT: Type can be set to 'cdrom' only for drive letters 'c' to 'y'");
 
 	} else {

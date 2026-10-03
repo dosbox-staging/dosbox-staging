@@ -15,7 +15,7 @@ enum class MountType {
 	Overlay
 };
 
-std::string to_string(const MountType& mount_type);
+std::string to_string(const MountType mount_type);
 
 std::optional<MountType> parse_mount_type(const std::string& s);
 

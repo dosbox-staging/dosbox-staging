@@ -2,12 +2,17 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "dos/mount.h"
-#include "misc/support.h"
 
 #include <optional>
 #include <string>
 
-std::string to_string(const MountType& mount_type)
+#include "misc/support.h"
+#include "utils/checks.h"
+#include "utils/string_utils.h"
+
+CHECK_NARROWING();
+
+std::string to_string(const MountType mount_type)
 {
 	switch (mount_type) {
 	case MountType::Directory: return "dir";
@@ -21,19 +26,19 @@ std::string to_string(const MountType& mount_type)
 
 std::optional<MountType> parse_mount_type(const std::string& s)
 {
-	if (s == "floppy" || s == "fdd") {
+	if (iequals(s, "floppy") || iequals(s, "fdd")) {
 		return MountType::FloppyImage;
 
-	} else if (s == "hdd") {
+	} else if (iequals(s, "hdd")) {
 		return MountType::HardDiskImage;
 
-	} else if (s == "iso" || s == "cdrom") {
+	} else if (iequals(s, "iso") || iequals(s, "cdrom")) {
 		return MountType::CdRomImage;
 
-	} else if (s == "dir") {
+	} else if (iequals(s, "dir")) {
 		return MountType::Directory;
 
-	} else if (s == "overlay") {
+	} else if (iequals(s, "overlay")) {
 		return MountType::Overlay;
 
 	} else {
