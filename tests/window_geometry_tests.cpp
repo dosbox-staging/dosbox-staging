@@ -42,7 +42,56 @@ void expect_point(const SDL_Point actual, const int x, const int y)
 // 1080p desktop at 150% display scaling
 constexpr Desktop TestDesktop = {1280.0f, 720.0f, 1.5f};
 
+SDL_DisplayMode make_display_mode(const int w, const int h, const float pixel_density)
+{
+	SDL_DisplayMode mode = {};
+	mode.w               = w;
+	mode.h               = h;
+	mode.pixel_density   = pixel_density;
+	return mode;
+}
+
 } // namespace
+
+// ----------------------------------------------------------------------------
+// CalcDesktop
+// ----------------------------------------------------------------------------
+
+// The Windows and macOS examples are from SDL's README-highdpi.md; both are
+// 3840x2160 pixel displays at 200% scaling
+
+TEST(WindowGeometry, CalcDesktopWindows)
+{
+	// The desktop mode size is in pixels, the content scale is the OS-level
+	// display scaling factor
+	const auto desktop = CalcDesktop(make_display_mode(3840, 2160, 1.0f), 2.0f);
+
+	EXPECT_FLOAT_EQ(desktop.width, 1920.0f);
+	EXPECT_FLOAT_EQ(desktop.height, 1080.0f);
+	EXPECT_FLOAT_EQ(desktop.display_scale, 2.0f);
+}
+
+TEST(WindowGeometry, CalcDesktopMacOs)
+{
+	// The desktop mode size is in logical units, the content scale is
+	// always 1.0
+	const auto desktop = CalcDesktop(make_display_mode(1920, 1080, 2.0f), 1.0f);
+
+	EXPECT_FLOAT_EQ(desktop.width, 1920.0f);
+	EXPECT_FLOAT_EQ(desktop.height, 1080.0f);
+	EXPECT_FLOAT_EQ(desktop.display_scale, 2.0f);
+}
+
+TEST(WindowGeometry, CalcDesktopFractionalScale)
+{
+	// 1440p display at 175% scaling on Windows
+	const auto desktop = CalcDesktop(make_display_mode(2560, 1440, 1.0f), 1.75f);
+
+	// The logical size is not rounded, so it converts back to the exact size
+	// in pixels
+	EXPECT_FLOAT_EQ(desktop.width * desktop.display_scale, 2560.0f);
+	EXPECT_FLOAT_EQ(desktop.height * desktop.display_scale, 1440.0f);
+}
 
 // ----------------------------------------------------------------------------
 // ParseWindowSizeSetting
