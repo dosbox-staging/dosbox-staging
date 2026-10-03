@@ -2710,14 +2710,23 @@ static void init_sdl_config_settings(SectionProp& section)
 	        "  default:   Same as 'medium'.\n"
 	        "\n"
 	        "  small, medium, large (s, m, l):\n"
-	        "             Size the window relative to the desktop.\n"
+	        "             4:3 window sizes relative to the desktop height (same as\n"
+	        "             66.67x50%%, 98.67x74%%, and 120x90%%, respectively).\n"
 	        "\n"
 	        "  WxH:       Specify window size in WxH format in logical units (e.g.,\n"
-	        "             1024x768). The values be multiplied by the OS-level DPI scaling to\n"
-	        "             get the window size in pixels.\n"
+	        "             1024x768). The values are multiplied by the OS-level display\n"
+	        "             scaling factor to get the window size in pixels.\n"
 	        "\n"
-	        "Note: If you want to use pixel coordinates instead and ignore DPI scaling, set\n"
-	        "      the SDL_WINDOWS_DPI_SCALING environment variable to 0.");
+	        "  WxHpx:     Specify window size in pixels (e.g., 1440x1080px). The window\n"
+	        "             keeps its size in pixels when moved to another display.\n"
+	        "\n"
+	        "  WxH%%:      Specify window size as a percentage of the desktop height (e.g.,\n"
+	        "             120x90%% for a 4:3 window 90%% as tall as the desktop). Both values\n"
+	        "             are relative to the desktop height, so the aspect ratio of the\n"
+	        "             window doesn't depend on the aspect ratio of the desktop.\n"
+	        "\n"
+	        "Note: Resizing the window updates this setting in the same format, except for\n"
+	        "      the named sizes, which are updated in WxH%% format.");
 
 	pstring = section.AddString("window_position", Always, "auto");
 	pstring->SetHelp(
@@ -2727,12 +2736,16 @@ static void init_sdl_config_settings(SectionProp& section)
 	        "  auto:      Let the window manager decide the position (default).\n"
 	        "\n"
 	        "  X,Y:       Set window position in X,Y format in logical units (e.g., 250,100).\n"
-	        "             0,0 is the top-left corner of the screen. The values will be\n"
-	        "             multiplied by the OS-level DPI scaling to get the window position\n"
-	        "             in pixels.\n"
+	        "             0,0 is the top-left corner of the screen. The values are\n"
+	        "             multiplied by the OS-level display scaling factor to get the\n"
+	        "             window position in pixels.\n"
 	        "\n"
-	        "Note: If you want to use pixel coordinates instead and ignore DPI scaling, set\n"
-	        "      the SDL_WINDOWS_DPI_SCALING environment variable to 0.");
+	        "  X,Ypx:     Set window position in pixels (e.g., 375,150px).\n"
+	        "\n"
+	        "  X,Y%%:      Set window position as a percentage of the desktop width and\n"
+	        "             height (e.g., 10,10%%).\n"
+	        "\n"
+	        "Note: Moving the window updates this setting in the same format.");
 
 	pbool = section.AddBool("window_decorations", Always, true);
 	pbool->SetHelp("Enable window decorations in windowed mode ('on' by default).");
