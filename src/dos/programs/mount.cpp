@@ -370,6 +370,11 @@ bool MOUNT::MountImageFat(MountParameters& params)
 	                                  ? MSG_Get("MOUNT_TYPE_FAT_PLURAL")
 	                                  : MSG_Get("MOUNT_TYPE_FAT");
 
+	// Reflect any read-only flag the image itself imposed
+	if (fat_images.front()->IsReadOnly()) {
+		params.roflag = true;
+	}
+
 	WriteMountStatus(mount_message, params.paths, params.drive, params.roflag);
 
 	const auto fat_image = std::dynamic_pointer_cast<fatDrive>(
@@ -518,8 +523,16 @@ bool MOUNT::MountImageRaw(MountParameters& params)
 
 	const auto drv_idx = params.drive - '0';
 
-	imageDiskList.at(drv_idx) = std::make_shared<imageDisk>(
-	        new_disk, params.paths[0].c_str(), imagesize, is_hdd);
+	imageDiskList.at(drv_idx) = CreateImageDisk(new_disk,
+	                                            params.paths[0].c_str(),
+	                                            imagesize,
+	                                            is_hdd);
+
+	// Image formats that cannot be written back, such as TeleDisk images,
+	// are forced to mount read-only even if the user didn't specify it
+	if (imageDiskList.at(drv_idx)->is_readonly) {
+		params.roflag = true;
+	}
 
 	if (is_hdd) {
 		imageDiskList.at(drv_idx)->Set_Geometry(params.sizes[2],
@@ -1206,7 +1219,8 @@ void MOUNT::ProcessPaths(const std::string first_path, MountParameters& params,
 
 					} else if (ext == "vfd" || ext == "flp" ||
 					           ext == "360" || ext == "720" ||
-					           ext == "1200" || ext == "1440") {
+					           ext == "1200" || ext == "1440" ||
+					           ext == "td0") {
 						params.type = MountType::FloppyImage;
 
 					} else if (ext == "img" ||
