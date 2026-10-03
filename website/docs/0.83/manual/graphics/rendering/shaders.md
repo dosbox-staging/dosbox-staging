@@ -33,9 +33,12 @@ The adaptive shaders also take the available viewport size into account. They
 need enough vertical resolution to produce clean scanlines, and different
 shader variants are used at different scaling ratios. Generally, CRT shaders
 need at least three times the vertical resolution of the emulated video mode
-to produce the intended CRT effect (e.g., 800×600 SVGA requires at least 1800
-vertical pixels). If the viewport becomes too small, CRT emulation is disabled
-and DOSBox Staging falls back to the [`sharp`](#shader) shader.
+to produce the intended CRT effect (e.g., 320×200 EGA requires at least 600
+vertical pixels). VGA modes have a little more leeway thanks to the [1080p
+special cases](#1080p-special-cases); e.g., 800×600 SVGA gets CRT emulation
+from 1200 vertical pixels upwards. If the viewport becomes too small, CRT
+emulation is disabled and DOSBox Staging falls back to the [`sharp`](#shader)
+shader.
 
 This means the shader can change even though the game and its video mode have
 not changed. Resizing the window or switching between windowed and fullscreen
@@ -138,8 +141,8 @@ designed around it.
 
 This has a direct consequence for [integer scaling](aspect-ratios-and-scaling.md#integer-scaling):
 a 320&times;200 VGA game has an effective internal resolution of 640&times;400.
-A 4&times; integer scale therefore produces a 2560&times;1600 image, not
-1280&times;800 (but we have implemented some special quality-of-life
+A 4&times; integer scale therefore produces a 1600-pixel-tall image, not an
+800-pixel-tall one (but we have implemented some special quality-of-life
 concessions for [1080p monitor users](#1080p-special-cases)).
 
 If you prefer the "chunky scanline" look of a CGA monitor or arcade cabinet
