@@ -548,9 +548,14 @@ static void notify_new_mouse_screen_params()
 
 	MouseScreenParams params = {};
 
-	// It is important to scale not just the size of the rectangle but also
-	// its starting point by the inverse of the DPI scale factor.
-	params.draw_rect = to_rect(sdl.draw.draw_rect_px).Copy().Scale(1.0f / sdl.dpi_scale);
+	// The mouse position is in SDL's native units (logical units on macOS
+	// and Wayland, pixels on Windows and X11), so we need to convert both the
+	// size and the starting point of the rectangle from pixels to native
+	// units.
+	const auto density       = SDL_GetWindowPixelDensity(sdl.window);
+	const auto pixel_density = (density > 0.0f) ? density : 1.0f;
+
+	params.draw_rect = to_rect(sdl.draw.draw_rect_px).Copy().Scale(1.0f / pixel_density);
 
 	float abs_x = 0.0f;
 	float abs_y = 0.0f;
