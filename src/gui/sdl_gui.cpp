@@ -1310,10 +1310,8 @@ static std::optional<SDL_Point> parse_window_position_conf(const std::string& wi
 		return {};
 	}
 
-	int x, y;
-	const auto was_parsed = (sscanf(window_position_val.c_str(), "%d,%d", &x, &y) ==
-	                         2);
-	if (!was_parsed) {
+	const auto position = WindowGeometry::ParsePosition(window_position_val);
+	if (!position) {
 		// TODO convert to notification
 		LOG_WARNING(
 		        "DISPLAY: Invalid 'window_position' setting: '%s'. "
@@ -1324,8 +1322,10 @@ static std::optional<SDL_Point> parse_window_position_conf(const std::string& wi
 
 	const auto desktop = get_desktop();
 
-	const bool is_out_of_bounds = x < 0 || x > desktop.width || y < 0 ||
-	                              y > desktop.height;
+	const auto [x, y] = WindowGeometry::PositionToLogicalUnits(*position, desktop);
+
+	// Negative positions are rejected by the parser
+	const bool is_out_of_bounds = (x > desktop.width || y > desktop.height);
 	if (is_out_of_bounds) {
 		// TODO convert to notification
 		LOG_WARNING(
