@@ -532,9 +532,10 @@ void ShaderPipeline::UpdateTextureUniforms(const std::vector<ShaderPass>::iterat
 		pass->in_textures.emplace_back(in_texture);
 	}
 
-	shader.SetUniform2f("OUTPUT_SIZE",
-	                    pass->out_viewport.w,
-	                    pass->out_viewport.h);
+	const auto& out_viewport = pass->out_viewport;
+
+	shader.SetUniform2f("OUTPUT_START_OFFSET", out_viewport.x, out_viewport.y);
+	shader.SetUniform2f("OUTPUT_SIZE", out_viewport.w, out_viewport.h);
 }
 
 void ShaderPipeline::UpdatePassTextureUniforms()
