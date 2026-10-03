@@ -138,13 +138,6 @@ struct SDL_Block {
 
 	struct {
 		FullscreenMode mode = {};
-
-		struct {
-			int width  = 0;
-			int height = 0;
-			int x_pos  = 0;
-			int y_pos  = 0;
-		} prev_window;
 	} fullscreen = {};
 
 	struct {
