@@ -12,7 +12,7 @@
 
 CHECK_NARROWING();
 
-std::string to_string(const MountType& mount_type)
+std::string to_string(const MountType mount_type)
 {
 	switch (mount_type) {
 	case MountType::Directory: return "dir";

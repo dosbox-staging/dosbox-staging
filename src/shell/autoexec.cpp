@@ -518,7 +518,7 @@ static std::unique_ptr<Config> specify_drive_conf()
 
 	// Define the [drive] section
 	const AutoMountSettings defaults = {};
-	const auto default_type          = defaults.type.has_value()
+	const auto default_type          = defaults.type.has_value() //-V547
 	                                         ? to_string(defaults.type.value())
 	                                         : "";
 
