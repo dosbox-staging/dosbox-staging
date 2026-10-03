@@ -5,6 +5,7 @@
 #define DOSBOX_WINDOW_GEOMETRY_H
 
 #include <optional>
+#include <string>
 #include <string_view>
 
 #include <SDL3/SDL_rect.h>
@@ -88,6 +89,15 @@ SDL_Rect SizeToLogicalUnits(const SizeSetting& size, const Desktop& desktop);
 // is relative to the desktop width, the Y value to the desktop height.
 SDL_Point PositionToLogicalUnits(const PositionSetting& position,
                                  const Desktop& desktop);
+
+// Formats a window size in logical units as a setting value in the given unit
+// (the inverse of `SizeToLogicalUnits()`).
+std::string FormatSize(const SDL_Rect size, const Unit unit, const Desktop& desktop);
+
+// Formats a window position in logical units as a setting value in the given
+// unit (the inverse of `PositionToLogicalUnits()`).
+std::string FormatPosition(const SDL_Point position, const Unit unit,
+                           const Desktop& desktop);
 
 } // namespace WindowGeometry
 
