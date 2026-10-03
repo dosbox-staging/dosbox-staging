@@ -73,6 +73,30 @@ SDL_Rect to_sdl_rect(const DosBox::Rect& r)
 	return {iroundf(r.x), iroundf(r.y), iroundf(r.w), iroundf(r.h)};
 }
 
+// SDL window coordinates are in points on macOS and Wayland, and in pixels on
+// Windows and X11. We use logical units for window sizes and positions on all
+// platforms instead (pixels divided by the OS-level DPI scale factor); the
+// display content scale converts between the two.
+static float get_content_scale()
+{
+	const auto scale = SDL_GetDisplayContentScale(sdl.display_number);
+	return (scale > 0.0f) ? scale : 1.0f;
+}
+
+static int to_native(const int logical)
+{
+	// Special window position values must be passed to SDL unchanged
+	if (SDL_WINDOWPOS_ISUNDEFINED(logical) || SDL_WINDOWPOS_ISCENTERED(logical)) {
+		return logical;
+	}
+	return iroundf(static_cast<float>(logical) * get_content_scale());
+}
+
+static int to_logical(const int native)
+{
+	return iroundf(static_cast<float>(native) / get_content_scale());
+}
+
 #if C_DEBUGGER
 
 static bool is_debugger_event(const SDL_Event& event)
@@ -572,8 +596,8 @@ static void set_minimum_window_size()
 	assert(sdl.window);
 
 	if (!SDL_SetWindowMinimumSize(sdl.window,
-	                              MinWindowSize.w,
-	                              MinWindowSize.h)) {
+	                              to_native(MinWindowSize.w),
+	                              to_native(MinWindowSize.h))) {
 		LOG_WARNING("SDL: Failed to set window minimum size: %s", SDL_GetError());
 	}
 }
@@ -625,7 +649,9 @@ static void apply_windowed_size()
 	if (sdl.is_fullscreen) {
 		return;
 	}
-	if (!SDL_SetWindowSize(sdl.window, sdl.windowed.width, sdl.windowed.height)) {
+	if (!SDL_SetWindowSize(sdl.window,
+	                       to_native(sdl.windowed.width),
+	                       to_native(sdl.windowed.height))) {
 		LOG_WARNING("SDL: Failed to set window size: %s", SDL_GetError());
 	}
 }
@@ -635,7 +661,9 @@ static void apply_windowed_position()
 	if (sdl.is_fullscreen) {
 		return;
 	}
-	if (!SDL_SetWindowPosition(sdl.window, sdl.windowed.x_pos, sdl.windowed.y_pos)) {
+	if (!SDL_SetWindowPosition(sdl.window,
+	                           to_native(sdl.windowed.x_pos),
+	                           to_native(sdl.windowed.y_pos))) {
 		LOG_WARNING("SDL: Failed to set window position: %s",
 		            SDL_GetError());
 	}
@@ -748,18 +776,19 @@ RenderBackendType GFX_GetRenderBackendType()
 	return sdl.render_backend_type;
 }
 
+// Returns the desktop size in logical units
 static SDL_Rect get_desktop_size()
 {
-	SDL_Rect desktop = {};
 	assert(sdl.display_number > 0);
 
-	if (!SDL_GetDisplayBounds(sdl.display_number, &desktop)) {
+	SDL_Rect bounds = {};
+	if (!SDL_GetDisplayBounds(sdl.display_number, &bounds)) {
 		LOG_ERR("SDL: Could not get display bounds for display number %d: %s", sdl.display_number, SDL_GetError());
 		// Return a safe default
-		desktop.w = 640;
-		desktop.h = 480;
-		return desktop;
+		return {0, 0, 640, 480};
 	}
+
+	const SDL_Rect desktop = {0, 0, to_logical(bounds.w), to_logical(bounds.h)};
 
 	assert(desktop.w >= MinWindowSize.w);
 	assert(desktop.h >= MinWindowSize.h);
@@ -1349,8 +1378,8 @@ void GFX_SaveCurrentWindowSizeAndPosition()
 	SDL_GetWindowPosition(sdl.window, &r.x, &r.y);
 	SDL_GetWindowSize(sdl.window, &r.w, &r.h);
 
-	save_window_position(r.x, r.y);
-	save_window_size(r.w, r.h);
+	save_window_position(to_logical(r.x), to_logical(r.y));
+	save_window_size(to_logical(r.w), to_logical(r.h));
 }
 
 static void handle_window_size_pref_after_config_load()
@@ -1444,10 +1473,10 @@ static RenderBackend* create_renderer()
 #if C_OPENGL
 	if (sdl.render_backend_type == RenderBackendType::OpenGl) {
 		try {
-			return new OpenGlRenderer(sdl.windowed.x_pos,
-			                          sdl.windowed.y_pos,
-			                          sdl.windowed.width,
-			                          sdl.windowed.height,
+			return new OpenGlRenderer(to_native(sdl.windowed.x_pos),
+			                          to_native(sdl.windowed.y_pos),
+			                          to_native(sdl.windowed.width),
+			                          to_native(sdl.windowed.height),
 			                          get_sdl_window_flags());
 
 		} catch (const std::runtime_error& ex) {
@@ -1474,10 +1503,10 @@ static RenderBackend* create_renderer()
 			        "texture_renderer");
 			lowcase(render_driver);
 
-			return new SdlRenderer(sdl.windowed.x_pos,
-			                       sdl.windowed.y_pos,
-			                       sdl.windowed.width,
-			                       sdl.windowed.height,
+			return new SdlRenderer(to_native(sdl.windowed.x_pos),
+			                       to_native(sdl.windowed.y_pos),
+			                       to_native(sdl.windowed.width),
+			                       to_native(sdl.windowed.height),
 			                       get_sdl_window_flags(),
 			                       render_driver,
 			                       sdl.texture_filter_mode);
@@ -2052,9 +2081,8 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 	}
 
 	case SDL_EVENT_WINDOW_RESIZED: {
-		// Window dimensions in logical coordinates
-		const auto width  = event.window.data1;
-		const auto height = event.window.data2;
+		const auto width  = to_logical(event.window.data1);
+		const auto height = to_logical(event.window.data2);
 
 		log_window_event("SDL: Window has been resized to %dx%d", width, height);
 
@@ -2139,8 +2167,8 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		return true;
 
 	case SDL_EVENT_WINDOW_MOVED: {
-		const auto x = event.window.data1;
-		const auto y = event.window.data2;
+		const auto x = to_logical(event.window.data1);
+		const auto y = to_logical(event.window.data2);
 
 		log_window_event("SDL: Window has been moved to %d, %d", x, y);
 
