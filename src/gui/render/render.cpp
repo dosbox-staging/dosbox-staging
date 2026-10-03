@@ -1105,7 +1105,7 @@ static std::optional<ViewportSettings> parse_fit_viewport_modes(const std::strin
 	} else if (const auto width_and_height = parse_int_dimensions(pref)) {
 		const auto [w, h] = *width_and_height;
 
-		const auto desktop = GFX_GetDesktopSize();
+		const auto desktop = GFX_GetDesktopSizeInLogicalUnits();
 
 		const bool is_out_of_bounds = (w <= 0 ||
 		                               static_cast<float>(w) > desktop.w ||

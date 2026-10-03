@@ -105,7 +105,7 @@ void GFX_EndUpdate();
 
 void GFX_CaptureRenderedImage();
 
-DosBox::Rect GFX_GetDesktopSize();
+DosBox::Rect GFX_GetDesktopSizeInLogicalUnits();
 
 DosBox::Rect GFX_GetDesktopSizeInPixels();
 

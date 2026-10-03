@@ -795,7 +795,7 @@ static SDL_Rect get_desktop_size()
 	return desktop;
 }
 
-DosBox::Rect GFX_GetDesktopSize()
+DosBox::Rect GFX_GetDesktopSizeInLogicalUnits()
 {
 	return to_rect(get_desktop_size());
 }
