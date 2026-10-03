@@ -1462,6 +1462,19 @@ std::optional<MountParameters> MOUNT::ProcessArguments(CommandLine* cmd)
 	// processed.
 	const auto geometry_options = ParseGeometryOptions();
 
+	// All known options have been removed by now, so anything else starting
+	// with a dash is an unknown option, not a path
+	std::string unknown_option = {};
+	if (cmd->FindStringBegin("-", unknown_option)) {
+		unknown_option = "-" + unknown_option;
+
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "MOUNT",
+		                      "SHELL_ILLEGAL_SWITCH",
+		                      unknown_option.c_str());
+		return {};
+	}
+
 	// Get the first path argument
 	std::string first_path = {};
 	if (!cmd->FindCommand(2, first_path) || first_path.empty()) {
