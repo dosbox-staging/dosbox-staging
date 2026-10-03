@@ -26,6 +26,7 @@
 #include "cpu/cpu.h"
 #include "dosbox.h"
 #include "gui/mapper.h"
+#include "gui/private/window_geometry.h"
 #include "gui/render/opengl_renderer.h"
 #include "gui/render/sdl_renderer.h"
 #include "gui/titlebar.h"
@@ -797,32 +798,41 @@ RenderBackendType GFX_GetRenderBackendType()
 	return sdl.render_backend_type;
 }
 
-// Returns the desktop size in logical units
-static SDL_Rect get_desktop_size()
+// Returns the desktop size in logical units and the display scale of the
+// current display
+static WindowGeometry::Desktop get_desktop_geometry()
 {
 	assert(sdl.display_number > 0);
 
-	SDL_Rect bounds = {};
-
-	if (!SDL_GetDisplayBounds(sdl.display_number, &bounds)) {
-		LOG_ERR("SDL: Could not get display bounds for display number %d: %s",
-		        sdl.display_number,
+	const auto* mode = SDL_GetDesktopDisplayMode(sdl.display_number);
+	if (!mode) {
+		LOG_ERR("SDL: Could not get the desktop display mode: %s",
 		        SDL_GetError());
 
 		// Return a safe default
-		return DefaultDesktopSize;
+		return {static_cast<float>(DefaultDesktopSize.w),
+		        static_cast<float>(DefaultDesktopSize.h),
+		        1.0f};
 	}
 
-	const SDL_Rect desktop = {0, 0, to_logical(bounds.w), to_logical(bounds.h)};
+	const auto desktop = WindowGeometry::CalcDesktop(*mode, get_content_scale());
 
-	assert(desktop.w >= MinWindowSize.w);
-	assert(desktop.h >= MinWindowSize.h);
-	return desktop;
+	assert(desktop.width >= MinWindowSize.w);
+	assert(desktop.height >= MinWindowSize.h);
+
+	if (!sdl.window) {
+		return desktop;
+	}
+
+	// Once the window exists, use its display scale; that reflects the
+	// actual pixel density of the window.
+	return {desktop.width, desktop.height, SDL_GetWindowDisplayScale(sdl.window)};
 }
 
 DosBox::Rect GFX_GetDesktopSize()
 {
-	return to_rect(get_desktop_size());
+	const auto desktop = get_desktop_geometry();
+	return {desktop.width, desktop.height};
 }
 
 DosBox::Rect GFX_GetViewportSizeInPixels()
@@ -1241,9 +1251,10 @@ static bool check_kmsdrm_setting()
 }
 
 static void maybe_limit_window_size_kmsdrm_driver(int& w, int& h,
-                                                  const SDL_Rect desktop_size)
+                                                  const WindowGeometry::Desktop& desktop)
 {
-	if (w <= desktop_size.w && h <= desktop_size.h) {
+	if (static_cast<float>(w) <= desktop.width &&
+	    static_cast<float>(h) <= desktop.height) {
 		return;
 	}
 
@@ -1251,8 +1262,8 @@ static void maybe_limit_window_size_kmsdrm_driver(int& w, int& h,
 
 	// SDL KMSDRM limitations
 	if (is_using_kmsdrm_driver()) {
-		w = desktop_size.w;
-		h = desktop_size.h;
+		w = iroundf(desktop.width);
+		h = iroundf(desktop.height);
 
 		was_limited = true;
 
@@ -1269,15 +1280,15 @@ static void maybe_limit_window_size_kmsdrm_driver(int& w, int& h,
 		        "the %dx%d display",
 		        w,
 		        h,
-		        desktop_size.w,
-		        desktop_size.h);
+		        iroundf(desktop.width),
+		        iroundf(desktop.height));
 	}
 }
 
 #endif
 
 static SDL_Rect parse_window_size_pref(const std::string& window_size_pref,
-                                       const SDL_Rect desktop_size)
+                                       const WindowGeometry::Desktop& desktop)
 {
 	constexpr auto SmallPercent   = 50;
 	constexpr auto MediumPercent  = 74;
@@ -1285,8 +1296,8 @@ static SDL_Rect parse_window_size_pref(const std::string& window_size_pref,
 	constexpr auto DesktopPercent = 100;
 
 	const auto make_percent_size = [&](const int percent) -> SDL_Rect {
-		const int w = ceil_sdivide(desktop_size.w * percent, 100);
-		const int h = ceil_sdivide(desktop_size.h * percent, 100);
+		const int w = ceil_sdivide(iroundf(desktop.width) * percent, 100);
+		const int h = ceil_sdivide(iroundf(desktop.height) * percent, 100);
 		return {0, 0, w, h};
 	};
 
@@ -1344,10 +1355,12 @@ static std::optional<SDL_Point> parse_window_position_conf(const std::string& wi
 		return {};
 	}
 
-	const auto desktop = get_desktop_size();
+	const auto desktop = get_desktop_geometry();
 
-	const bool is_out_of_bounds = x < 0 || x > desktop.w || y < 0 ||
-	                              y > desktop.h;
+	const bool is_out_of_bounds = x < 0 ||
+	                              static_cast<float>(x) > desktop.width ||
+	                              y < 0 ||
+	                              static_cast<float>(y) > desktop.height;
 	if (is_out_of_bounds) {
 		// TODO convert to notification
 		LOG_WARNING(
@@ -1355,8 +1368,8 @@ static std::optional<SDL_Point> parse_window_position_conf(const std::string& wi
 		        "Requested position is outside the bounds of the %dx%d "
 		        "desktop, using 'auto'.",
 		        window_position_val.c_str(),
-		        desktop.w,
-		        desktop.h);
+		        iroundf(desktop.width),
+		        iroundf(desktop.height));
 		return {};
 	}
 
@@ -1445,13 +1458,13 @@ static void configure_window_size()
 	const auto window_size_pref = get_sdl_section()->GetString("window_size");
 
 	const auto requested_size = parse_window_size_pref(window_size_pref,
-	                                                   get_desktop_size());
+	                                                   get_desktop_geometry());
 
 	auto w = std::max(requested_size.w, MinWindowSize.w);
 	auto h = std::max(requested_size.h, MinWindowSize.h);
 
 #if defined(LINUX)
-	maybe_limit_window_size_kmsdrm_driver(w, h, get_desktop_size());
+	maybe_limit_window_size_kmsdrm_driver(w, h, get_desktop_geometry());
 #endif
 
 	save_window_size(w, h);

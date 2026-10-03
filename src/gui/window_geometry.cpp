@@ -15,6 +15,17 @@ CHECK_NARROWING();
 
 namespace WindowGeometry {
 
+Desktop CalcDesktop(const SDL_DisplayMode& desktop_mode, const float content_scale)
+{
+	assert(content_scale > 0.0f);
+
+	// We don't round the desktop size in logical units so we can convert it
+	// back to pixels exactly
+	return {static_cast<float>(desktop_mode.w) / content_scale,
+	        static_cast<float>(desktop_mode.h) / content_scale,
+	        content_scale * desktop_mode.pixel_density};
+}
+
 static std::pair<std::string, Unit> split_unit_suffix(const std::string& value)
 {
 	if (value.ends_with("px")) {

@@ -8,6 +8,7 @@
 #include <string_view>
 
 #include <SDL3/SDL_rect.h>
+#include <SDL3/SDL_video.h>
 
 // Window and desktop geometry helpers.
 //
@@ -42,6 +43,16 @@ struct Desktop {
 	// Number of pixels per logical unit
 	float display_scale = 1.0f;
 };
+
+// Calculates the desktop geometry of a display from its desktop display mode
+// (see `SDL_GetDesktopDisplayMode()`) and its content scale (see
+// `SDL_GetDisplayContentScale()`).
+//
+// The size of the mode is in the native units of the platform (logical units
+// on macOS and Wayland, pixels on Windows and X11). The display scale is
+// calculated the same way as SDL calculates it for windows created with the
+// `SDL_WINDOW_HIGH_PIXEL_DENSITY` flag.
+Desktop CalcDesktop(const SDL_DisplayMode& desktop_mode, const float content_scale);
 
 // Parses window sizes in 'WxH', 'WxHpx', or 'WxH%' format (case
 // insensitive). Returns nullopt if the value is invalid or not positive.
