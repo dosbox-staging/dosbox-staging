@@ -581,31 +581,12 @@ static std::optional<MountFileSystemType> parse_file_system_type(const std::stri
 //
 //   params.label  (from the -label option)
 //
-// Also extracts the raw geometry option strings into `geometry` (from the
-// -size, -freesize and -chs options). All options must be consumed here,
-// before ProcessPaths() collects the remaining arguments as image paths.
-//
-bool MOUNT::ParseArguments(MountParameters& params, GeometryArgs& geometry,
-                           bool& explicit_fs, bool& path_relative_to_last_config)
+bool MOUNT::ParseArguments(MountParameters& params, bool& explicit_fs,
+                           bool& path_relative_to_last_config)
 {
 	if (cmd->FindExist("-pr", true)) {
 		path_relative_to_last_config = true;
 	}
-
-	// The geometry options can only be interpreted once the mount type is
-	// known, which ProcessPaths() may still auto-detect from the paths.
-	auto extract_option =
-	        [&](const std::string& option) -> std::optional<std::string> {
-		std::string value = {};
-		if (cmd->FindString(option, value, true)) {
-			return value;
-		}
-		return {};
-	};
-
-	geometry.size     = extract_option("-size");
-	geometry.freesize = extract_option("-freesize");
-	geometry.chs      = extract_option("-chs");
 
 	// Default is "dir" if the -t option is not provided
 	std::string type_str = "dir";
@@ -665,7 +646,7 @@ bool MOUNT::ParseArguments(MountParameters& params, GeometryArgs& geometry,
 //   params.mediaid
 //   params.sizes
 //
-bool MOUNT::ParseGeometry(MountParameters& params, const GeometryArgs& geometry)
+bool MOUNT::ParseGeometry(MountParameters& params)
 {
 	std::string str_size = "";
 	std::string str_chs  = "";
@@ -715,11 +696,10 @@ bool MOUNT::ParseGeometry(MountParameters& params, const GeometryArgs& geometry)
 	// Parse the free space in mb (kb for floppies)
 	std::string mb_size;
 
-	if (geometry.freesize) {
+	if (cmd->FindString("-freesize", mb_size, true)) {
 
 		char teststr[1024];
-		auto freesize = static_cast<uint16_t>(
-		        atoi(geometry.freesize->c_str()));
+		uint16_t freesize = static_cast<uint16_t>(atoi(mb_size.c_str()));
 
 		if (params.type == MountType::FloppyImage) {
 			// freesize in kb
@@ -747,9 +727,7 @@ bool MOUNT::ParseGeometry(MountParameters& params, const GeometryArgs& geometry)
 	}
 
 	// Parse -size
-	if (geometry.size) {
-		str_size = *geometry.size;
-	}
+	cmd->FindString("-size", str_size, true);
 
 	// Apply str_size string to sizes array
 	if (!str_size.empty()) {
@@ -779,9 +757,7 @@ bool MOUNT::ParseGeometry(MountParameters& params, const GeometryArgs& geometry)
 	}
 
 	// Parse -chs C,H,S
-	if (geometry.chs) {
-		str_chs = *geometry.chs;
-
+	if (cmd->FindString("-chs", str_chs, true)) {
 		int cmd_cylinders = 0;
 		int cmd_heads     = 0;
 		int cmd_sectors   = 0;
@@ -1346,12 +1322,11 @@ std::optional<MountParameters> MOUNT::ProcessArguments(CommandLine* cmd)
 
 	MountParameters params;
 
-	GeometryArgs geometry             = {};
 	bool explicit_fs                  = false;
 	bool path_relative_to_last_config = false;
 
 	// Parse command line arguments
-	if (!ParseArguments(params, geometry, explicit_fs, path_relative_to_last_config)) {
+	if (!ParseArguments(params, explicit_fs, path_relative_to_last_config)) {
 		return {};
 	}
 
@@ -1368,7 +1343,7 @@ std::optional<MountParameters> MOUNT::ProcessArguments(CommandLine* cmd)
 	ProcessPaths(first_path, params, path_relative_to_last_config);
 
 	// Check drive geometry and types, abort if not valid
-	if (!ParseGeometry(params, geometry)) {
+	if (!ParseGeometry(params)) {
 		return {};
 	}
 
