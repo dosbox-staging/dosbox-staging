@@ -162,7 +162,8 @@ The [`integer_scaling`](#integer_scaling) setting controls this:
   cases. Enables vertical integer scaling only when a CRT shader is active,
   allows a few extra scaling ratios (e.g., 3.5x, 4.5x) to make better use of
   the screen, and turns integer scaling off when it's safe to do so (e.g.,
-  low-resolution games in fullscreen on a 4K display; see the
+  low-resolution games in fullscreen on a 4K display, or 320&times;200 games
+  on a 1080p display; see the
   [`integer_scaling`](#integer_scaling) setting reference below for the
   exact scaling-factor thresholds).
 
@@ -193,6 +194,19 @@ also **letterbox** (black bars on top and bottom) or pillarbox, because the
 image can't always be enlarged by a whole-number factor while also filling the
 available space. With integer scaling off, 4:3 content on a widescreen monitor
 would only ever pillarbox, never letterbox.
+
+This is what to expect in fullscreen with the default settings on the most
+common screen resolutions:
+
+- **1080p** --- 320&times;200 VGA games and most CGA and EGA games fill the
+  screen vertically. 640&times;480 games are scaled 2&times;, leaving a
+  60-pixel border at the top and bottom.
+
+- **1440p** --- 640&times;480 games fill the screen vertically at exactly
+  3&times;, and most CGA and EGA games fill it too. 320&times;200 VGA games
+  are scaled 3.5&times;, leaving a 20-pixel border at the top and bottom.
+
+- **4K** --- All video modes up to 640&times;480 fill the screen vertically.
 
 Because the adaptive CRT shaders take the viewport size into account,
 resizing the window or switching between windowed and fullscreen can change
