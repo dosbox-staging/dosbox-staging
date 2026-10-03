@@ -251,6 +251,58 @@ TEST_F(MountTest, RejectsMissingValueRegardlessOfCase)
 	EXPECT_FALSE(Mount("1 " + P("bootable.img") + " -Size -T hdd").has_value());
 }
 
+TEST_F(MountTest, RejectsUnknownOption)
+{
+	// Unknown options used to be collected as image paths and only failed
+	// later with a baffling "can't create drive from file"
+	const auto result = Mount("C " + P("image.img") + " -t hdd -bogus");
+	EXPECT_FALSE(result.has_value());
+}
+
+TEST_F(MountTest, RejectsMisspelledOption)
+{
+	const auto result = Mount("C " + P("image.img") + " -t hdd -siz 512,63,16,81");
+	EXPECT_FALSE(result.has_value());
+}
+
+TEST_F(MountTest, RejectsUnknownOptionBeforePath)
+{
+	const auto result = Mount("C -bogus " + P("image.img") + " -t hdd");
+	EXPECT_FALSE(result.has_value());
+}
+
+TEST_F(MountTest, RejectsUnknownOptionOnDirectoryMount)
+{
+	const auto result = Mount("C " + P("plain_dir") + " -bogus");
+	EXPECT_FALSE(result.has_value());
+}
+
+TEST_F(MountTest, AcceptsEveryKnownOptionTogether)
+{
+	// Guards the unknown option check against false positives: every
+	// option MOUNT understands must be removed from the command line
+	// before the check runs
+	const auto result = Mount("C " + P("image.img") +
+	                          " -t hdd -fs fat -ro -label MYLABEL"
+	                          " -size 512,63,16,81 -freesize 10"
+	                          " -chs 100,16,63 -pr -ide");
+
+	ASSERT_TRUE(result.has_value());
+
+	ASSERT_EQ(result->paths.size(), 1);
+	EXPECT_EQ(result->type, MountType::HardDiskImage);
+	EXPECT_EQ(result->fstype, MountFileSystemType::Fat16);
+	EXPECT_EQ(result->label, "MYLABEL");
+	EXPECT_TRUE(result->roflag);
+	EXPECT_TRUE(result->is_ide);
+
+	// -chs takes precedence over -size and -freesize
+	EXPECT_EQ(result->sizes[0], 512);
+	EXPECT_EQ(result->sizes[1], 63);
+	EXPECT_EQ(result->sizes[2], 16);
+	EXPECT_EQ(result->sizes[3], 100);
+}
+
 TEST_F(MountTest, RejectsMissingPath)
 {
 	const auto result = Mount("C");
