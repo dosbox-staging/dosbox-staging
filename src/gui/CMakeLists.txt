@@ -3,6 +3,7 @@ target_sources(dosboxcommon PRIVATE
   mapper.cpp
   sdl_gui.cpp
   titlebar.cpp
+  window_geometry.cpp
 
   render/auto_image_adjustments.cpp
   render/auto_shader_switcher.cpp
