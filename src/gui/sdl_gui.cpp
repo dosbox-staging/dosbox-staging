@@ -1311,17 +1311,9 @@ static SDL_Rect parse_window_size_pref(const std::string& window_size_pref,
 	} else if (pref == "desktop") {
 		return make_percent_size(DesktopPercent);
 
-	} else {
-		const auto parts = split(pref, "x");
-
-		if (parts.size() == 2) {
-			const auto w = parse_int(parts[0]);
-			const auto h = parse_int(parts[1]);
-
-			if (w && h) {
-				return SDL_Rect{0, 0, *w, *h};
-			}
-		}
+	} else if (const auto size = WindowGeometry::ParseWindowSizeSetting(pref);
+	           size) {
+		return WindowGeometry::SizeToLogicalUnits(*size, desktop);
 	}
 
 	// TODO convert to notification
