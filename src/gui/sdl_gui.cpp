@@ -644,14 +644,6 @@ static void enter_fullscreen()
 			return;
 		}
 
-		SDL_GetWindowSize(sdl.window,
-		                  &sdl.fullscreen.prev_window.width,
-		                  &sdl.fullscreen.prev_window.height);
-
-		SDL_GetWindowPosition(sdl.window,
-		                      &sdl.fullscreen.prev_window.x_pos,
-		                      &sdl.fullscreen.prev_window.y_pos);
-
 		SDL_SetWindowBordered(sdl.window, false);
 		SDL_SetWindowResizable(sdl.window, false);
 		if (!SDL_SetWindowPosition(sdl.window, 0, 0)) {
@@ -696,14 +688,14 @@ static void exit_fullscreen()
 		SDL_SetWindowResizable(sdl.window, true);
 
 		if (!SDL_SetWindowSize(sdl.window,
-		                  sdl.fullscreen.prev_window.width,
-		                  sdl.fullscreen.prev_window.height)) {
+		                       sdl.windowed.width,
+		                       sdl.windowed.height)) {
 			LOG_WARNING("SDL: Failed to set window size: %s", SDL_GetError());
 		}
 
 		if (!SDL_SetWindowPosition(sdl.window,
-		                      sdl.fullscreen.prev_window.x_pos,
-		                      sdl.fullscreen.prev_window.y_pos)) {
+		                           sdl.windowed.x_pos,
+		                           sdl.windowed.y_pos)) {
 			LOG_WARNING("SDL: Failed to set window position: %s", SDL_GetError());
 		}
 
@@ -1310,28 +1302,14 @@ static std::optional<SDL_Point> parse_window_position_conf(const std::string& wi
 
 static void save_window_position(const int x, const int y)
 {
-	if (sdl.fullscreen.mode == FullscreenMode::ForcedBorderless) {
-		sdl.fullscreen.prev_window.x_pos = x;
-		sdl.fullscreen.prev_window.y_pos = y;
-	} else {
-		sdl.windowed.x_pos = x;
-		sdl.windowed.y_pos = y;
-	}
+	sdl.windowed.x_pos = x;
+	sdl.windowed.y_pos = y;
 }
 
 static void save_default_window_position()
 {
-	if (sdl.fullscreen.mode == FullscreenMode::ForcedBorderless) {
-		sdl.fullscreen.prev_window.x_pos = SDL_WINDOWPOS_UNDEFINED_DISPLAY(
-		        sdl.display_number);
-
-		sdl.fullscreen.prev_window.y_pos = SDL_WINDOWPOS_UNDEFINED_DISPLAY(
-		        sdl.display_number);
-	} else {
-		sdl.windowed.x_pos = SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.display_number);
-
-		sdl.windowed.y_pos = SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.display_number);
-	}
+	save_window_position(SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.display_number),
+	                     SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.display_number));
 }
 
 // Writes to the window-size member should be done via this function
@@ -1411,13 +1389,8 @@ static void configure_window_size()
 
 static void set_window_size()
 {
-	if (sdl.fullscreen.mode == FullscreenMode::ForcedBorderless &&
-	    sdl.is_fullscreen) {
-
-		sdl.fullscreen.prev_window.width = sdl.windowed.width;
-
-		sdl.fullscreen.prev_window.height = sdl.windowed.height;
-	} else {
+	// The windowed size is restored when exiting fullscreen mode
+	if (!sdl.is_fullscreen) {
 		SDL_SetWindowSize(sdl.window, sdl.windowed.width, sdl.windowed.height);
 	}
 }
