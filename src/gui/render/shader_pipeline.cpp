@@ -40,7 +40,7 @@ std::string ShaderPass::ToString() const
 	        shader.program_object,
 
 	        to_string(in_textures).c_str(),
-	        out_size.ToString().c_str(),
+	        out_viewport.ToString().c_str(),
 	        out_fbo,
 	        out_texture);
 }
@@ -224,9 +224,9 @@ void ShaderPipeline::SetPassOutputSizes()
 		if (std::next(it) == shader_passes.end()) {
 			// The last pass is rendered directly to the window's
 			// framebuffer
-			pass.out_size = viewport;
+			pass.out_viewport = viewport;
 		} else {
-			pass.out_size = {width, height};
+			pass.out_viewport = {width, height};
 		}
 	}
 }
@@ -244,7 +244,7 @@ void ShaderPipeline::CreatePassOutputTextures()
 			// Create output texture
 			const auto& preset = pass.shader.info.default_preset;
 
-			pass.out_texture = CreateTexture(pass.out_size,
+			pass.out_texture = CreateTexture(pass.out_viewport,
 			                                 preset.settings.float_output_texture);
 
 			// Set up off-screen framebuffer
@@ -456,10 +456,10 @@ void ShaderPipeline::RenderPass(const ShaderPass& pass,
 	}
 
 	// Set up viewport
-	glViewport(static_cast<GLsizei>(pass.out_size.x),
-	           static_cast<GLsizei>(pass.out_size.y),
-	           static_cast<GLsizei>(pass.out_size.w),
-	           static_cast<GLsizei>(pass.out_size.h));
+	glViewport(static_cast<GLsizei>(pass.out_viewport.x),
+	           static_cast<GLsizei>(pass.out_viewport.y),
+	           static_cast<GLsizei>(pass.out_viewport.w),
+	           static_cast<GLsizei>(pass.out_viewport.h));
 
 	// Apply shader by drawing an oversized triangle
 	glBindVertexArray(vertex_array_object);
@@ -504,7 +504,7 @@ void ShaderPipeline::UpdateTextureUniforms(const std::vector<ShaderPass>::iterat
 				const auto& p = *it;
 				if (p.shader.info.pass_name == pass_id) {
 					in_texture      = p.out_texture;
-					in_texture_size = p.out_size;
+					in_texture_size = p.out_viewport;
 
 					found = true;
 					break;
@@ -532,8 +532,8 @@ void ShaderPipeline::UpdateTextureUniforms(const std::vector<ShaderPass>::iterat
 	}
 
 	shader.SetUniform2f("OUTPUT_SIZE",
-	                    pass->out_size.w,
-	                    pass->out_size.h);
+	                    pass->out_viewport.w,
+	                    pass->out_viewport.h);
 }
 
 void ShaderPipeline::UpdatePassTextureUniforms()
@@ -552,7 +552,7 @@ std::pair<GLuint, DosBox::Rect> ShaderPipeline::GetPreviousPassOutputTexture(
 	} else {
 		const auto prev_pass = std::prev(pass);
 
-		return {prev_pass->out_texture, prev_pass->out_size};
+		return {prev_pass->out_texture, prev_pass->out_viewport};
 	}
 }
 
