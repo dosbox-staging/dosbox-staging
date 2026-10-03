@@ -62,6 +62,8 @@ out vec4 FragColor;
 uniform vec2 INPUT_SIZE_0;
 uniform sampler2D INPUT_TEXTURE_0;
 
+uniform vec2 OUTPUT_START_OFFSET;
+
 uniform float BEAM_PROFILE;
 uniform float HFILTER_PROFILE;
 uniform float BEAM_MIN_WIDTH;
@@ -528,7 +530,7 @@ void main()
 	vec4 color = color_boost * (color0 * d0 + color1 * d1);
 
 	// Mask
-	vec2 mask_coords = gl_FragCoord.xy; // v_texCoord.xy * OutputSize.xy;
+	vec2 mask_coords = gl_FragCoord.xy - OUTPUT_START_OFFSET; // v_texCoord.xy * OutputSize.xy;
 	mask_coords      = mix(mask_coords.xy, mask_coords.yx, VSCANLINES);
 	color.rgb *= mask_weights(mask_coords, MASK_INTENSITY, int(PHOSPHOR_LAYOUT));
 

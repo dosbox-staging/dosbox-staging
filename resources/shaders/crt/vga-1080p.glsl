@@ -56,6 +56,8 @@ out vec4 FragColor;
 
 uniform sampler2D INPUT_TEXTURE_0;
 
+uniform vec2 OUTPUT_START_OFFSET;
+
 uniform float SPOT_WIDTH;
 uniform float SPOT_HEIGHT;
 uniform float PHOSPHOR_LAYOUT;
@@ -116,7 +118,7 @@ vec4 add_vga_overlay(vec4 color, float scanlineStrengthMin,
                      float color_boost_odd, float mask_strength)
 {
 	// scanlines
-	vec2 mask_coords = gl_FragCoord.xy;
+	vec2 mask_coords = gl_FragCoord.xy - OUTPUT_START_OFFSET;
 
 	vec3 lum_factors = vec3(0.2126, 0.7152, 0.0722);
 
