@@ -24,7 +24,7 @@ struct Shader {
 	 *
 	 * Returns a ready to use OpenGL shader program on success.
 	 */
-	bool BuildShaderProgram(const std::string& source);
+	bool BuildShaderProgram(const std::string& shader_source);
 
 	void SetUniform1i(const std::string& name, const int val) const;
 
@@ -38,7 +38,7 @@ struct Shader {
 
 private:
 	std::optional<GLuint> BuildShader(const GLenum type,
-	                                  const std::string& source) const;
+	                                  const std::string& shader_source) const;
 
 	GLint GetUniformLocation(const std::string& name) const;
 };
