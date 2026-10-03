@@ -812,11 +812,6 @@ float GFX_GetDpiScaleFactor()
 	return sdl.dpi_scale;
 }
 
-[[maybe_unused]] static bool operator!=(const SDL_Point lhs, const SDL_Point rhs)
-{
-	return lhs.x != rhs.x || lhs.y != rhs.y;
-}
-
 static void update_viewport()
 {
 	assert(sdl.renderer);
