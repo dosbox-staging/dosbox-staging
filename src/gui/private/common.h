@@ -107,6 +107,8 @@ void GFX_CaptureRenderedImage();
 
 DosBox::Rect GFX_GetDesktopSize();
 
+DosBox::Rect GFX_GetDesktopSizeInPixels();
+
 float GFX_GetDpiScaleFactor();
 
 DosBox::Rect GFX_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px);

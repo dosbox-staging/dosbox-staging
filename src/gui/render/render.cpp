@@ -1142,8 +1142,6 @@ static std::optional<ViewportSettings> parse_fit_viewport_modes(const std::strin
 	                   pref)) {
 		const auto p = *percentage;
 
-		const auto desktop = GFX_GetDesktopSize();
-
 		const bool is_out_of_bounds = (p < 1.0f || p > 100.0f);
 		if (is_out_of_bounds) {
 			const auto extra_info = "Desktop percentage is outside of the 1-100%% range";
@@ -1156,14 +1154,12 @@ static std::optional<ViewportSettings> parse_fit_viewport_modes(const std::strin
 		viewport.mode              = ViewportMode::Fit;
 		viewport.fit.desktop_scale = p / 100.0f;
 
-		const auto limit = desktop.Copy().ScaleSize(*viewport.fit.desktop_scale);
-		const auto limit_px = limit.Copy().ScaleSize(GFX_GetDpiScaleFactor());
+		const auto limit_px = GFX_GetDesktopSizeInPixels().ScaleSize(
+		        *viewport.fit.desktop_scale);
 
 		LOG_MSG("DISPLAY: Limiting viewport size to %2.4g%% of the "
-		        "desktop (%dx%d logical units, %dx%d pixels)",
+		        "desktop (%dx%d pixels)",
 		        p,
-		        iroundf(limit.w),
-		        iroundf(limit.h),
 		        iroundf(limit_px.w),
 		        iroundf(limit_px.h));
 
@@ -1423,10 +1419,7 @@ DosBox::Rect RENDER_CalcRestrictedViewportSizeInPixels(const DosBox::Rect& canva
 				        .ScaleSize(dpi_scale);
 
 			} else if (render.viewport_settings.fit.desktop_scale) {
-				auto desktop_size_px = GFX_GetDesktopSize().ScaleSize(
-				        dpi_scale);
-
-				return desktop_size_px.ScaleSize(
+				return GFX_GetDesktopSizeInPixels().ScaleSize(
 				        *render.viewport_settings.fit.desktop_scale);
 			} else {
 				// The viewport equals the canvas size

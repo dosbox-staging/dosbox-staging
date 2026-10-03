@@ -800,6 +800,22 @@ DosBox::Rect GFX_GetDesktopSize()
 	return to_rect(get_desktop_size());
 }
 
+DosBox::Rect GFX_GetDesktopSizeInPixels()
+{
+	assert(sdl.display_number > 0);
+
+	const auto* mode = SDL_GetDesktopDisplayMode(sdl.display_number);
+	if (!mode) {
+		LOG_ERR("SDL: Could not get the desktop display mode: %s",
+		        SDL_GetError());
+		return {640, 480};
+	}
+
+	// The mode size is in points on macOS and Wayland, and in pixels on
+	// Windows and X11; the pixel density converts it to pixels everywhere
+	return DosBox::Rect{mode->w, mode->h}.ScaleSize(mode->pixel_density);
+}
+
 DosBox::Rect GFX_GetViewportSizeInPixels()
 {
 	assert(sdl.renderer);
