@@ -3,6 +3,7 @@
 
 #include "private/window_geometry.h"
 
+#include <cmath>
 #include <string>
 #include <utility>
 
@@ -114,6 +115,66 @@ SDL_Point PositionToLogicalUnits(const Setting& position, const Desktop& desktop
 
 		return {iroundf(position.x * one_percent_x),
 		        iroundf(position.y * one_percent_y)};
+	}
+
+	default: assertm(false, "Invalid Unit value"); return {};
+	}
+}
+
+static std::string format_percentage(const float percentage)
+{
+	// One decimal place is precise enough
+	return format_str("%g", std::round(percentage * 10.0f) / 10.0f);
+}
+
+std::string FormatSize(const SDL_Point size, const Unit unit, const Desktop& desktop)
+{
+	switch (unit) {
+	case Unit::LogicalUnits: return format_str("%dx%d", size.x, size.y);
+
+	case Unit::Pixels:
+		return format_str(
+		        "%dx%dpx",
+		        iroundf(static_cast<float>(size.x) * desktop.dpi_scale),
+		        iroundf(static_cast<float>(size.y) * desktop.dpi_scale));
+
+	case Unit::Percentage: {
+		const auto one_percent = static_cast<float>(desktop.height) / 100.0f;
+
+		return format_percentage(static_cast<float>(size.x) / one_percent) +
+		       "x" +
+		       format_percentage(static_cast<float>(size.y) / one_percent) +
+		       "%";
+	}
+
+	default: assertm(false, "Invalid Unit value"); return {};
+	}
+}
+
+std::string FormatPosition(const SDL_Point position, const Unit unit,
+                           const Desktop& desktop)
+{
+	switch (unit) {
+	case Unit::LogicalUnits:
+		return format_str("%d,%d", position.x, position.y);
+
+	case Unit::Pixels:
+		return format_str("%d,%dpx",
+		                  iroundf(static_cast<float>(position.x) *
+		                          desktop.dpi_scale),
+		                  iroundf(static_cast<float>(position.y) *
+		                          desktop.dpi_scale));
+
+	case Unit::Percentage: {
+		const auto one_percent_x = static_cast<float>(desktop.width) / 100.0f;
+		const auto one_percent_y = static_cast<float>(desktop.height) / 100.0f;
+
+		return format_percentage(static_cast<float>(position.x) /
+		                         one_percent_x) +
+		       "," +
+		       format_percentage(static_cast<float>(position.y) /
+		                         one_percent_y) +
+		       "%";
 	}
 
 	default: assertm(false, "Invalid Unit value"); return {};
