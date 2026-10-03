@@ -268,8 +268,9 @@ void ShaderPipeline::SetPassOutputSizes()
 			using enum ShaderOutputSize;
 			switch (pass.shader.info.output_size) {
 			case Previous: {
-				const auto [_, size] = GetPreviousPassOutputTexture(it);
-				return {size.w, size.h};
+				const auto [_, viewport] =
+				        GetPreviousPassOutputTextureAndViewport(it);
+				return {viewport.w, viewport.h};
 			}
 
 			case Rendered:
@@ -543,11 +544,11 @@ void ShaderPipeline::UpdateTextureUniforms(const std::vector<ShaderPass>::iterat
 		DosBox::Rect in_texture_size = {};
 
 		if (pass_id == "Previous") {
-			const auto [texture,
-			            size] = GetPreviousPassOutputTexture(pass);
+			const auto [texture, viewport] =
+			        GetPreviousPassOutputTextureAndViewport(pass);
 
 			in_texture      = texture;
-			in_texture_size = size;
+			in_texture_size = {viewport.w, viewport.h};
 
 		} else {
 			// Only specifying the outputs of previous passes is
@@ -600,7 +601,7 @@ void ShaderPipeline::UpdatePassTextureUniforms()
 	}
 }
 
-std::pair<GLuint, DosBox::Rect> ShaderPipeline::GetPreviousPassOutputTexture(
+std::pair<GLuint, DosBox::Rect> ShaderPipeline::GetPreviousPassOutputTextureAndViewport(
         const std::vector<ShaderPass>::iterator pass) const
 {
 	if (pass == shader_passes.begin()) {
