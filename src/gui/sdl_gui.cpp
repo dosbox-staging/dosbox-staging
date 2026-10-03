@@ -578,8 +578,7 @@ static void set_minimum_window_size()
 	}
 }
 
-static void check_and_handle_dpi_change(SDL_Window* sdl_window,
-                                        [[maybe_unused]] const int _new_width = 0)
+static void check_and_handle_dpi_change(SDL_Window* sdl_window)
 {
 	assert(sdl_window);
 
@@ -2236,9 +2235,7 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 
 		// The window size has changed either as a result of an API call
 		// or through the system or user changing the window size.
-		const auto new_width = event.window.data1;
-
-		check_and_handle_dpi_change(sdl.window, new_width);
+		check_and_handle_dpi_change(sdl.window);
 		update_viewport();
 		RENDER_SetScanAndPixelDoubling();
 		GFX_ResetScreen();
