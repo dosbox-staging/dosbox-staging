@@ -28,6 +28,8 @@
 class OpenGlRenderer : public RenderBackend {
 
 public:
+	// `x`, `y`, `width`, and `height` must be in native units (logical
+	// units (points) on macOS and Wayland; pixels on Windows and X11)
 	OpenGlRenderer(const int x, const int y, const int width,
 	               const int height, SDL_WindowFlags sdl_window_flags);
 
