@@ -67,16 +67,20 @@ improve the situation:
 
 - **`vga-1080p-fake-double-scan`** --- Used for 320&times;200 content. Rather
   than treating the source image as 640&times;400, this shader treats it as
-  320&times;200 and applies a higher integer scale, then overlays an
-  alternating line pattern to simulate the double-scan look. It's not
-  pixel-perfect (or rather, scanline-perfect), but the feel is authentic and
-  the image fills the screen far better.
+  320&times;200, then overlays an alternating line pattern to simulate the
+  double-scan look. With only 200 lines to scale, the image is enlarged
+  5.4&times; and fills the screen vertically (integer scaling is switched off
+  above 5&times; as it's not needed at such high scaling factors). It's not
+  pixel-perfect (or rather, scanline-perfect), but the feel is authentic.
 
 - **`vga-1080p`** --- Used for 640&times;480 content. This mode upscales at
   exactly 2&times; to 1280&times;960 with the same alternating line overlay.
   Not fake double scanning --- 640&times;480 is a mode that doesn't
   double-scan --- just a purpose-built upscaler that makes the most of a
-  1080p viewport.
+  1080p viewport. Other 400 to 480-line modes are also displayed at 2&times;
+  with this shader, including the DOS prompt (80&times;25 text mode). That's
+  why the DOS prompt appears smaller on a 1080p screen than 320&times;200
+  games do.
 
 Both activate transparently under `crt-auto`. You can also set them explicitly
 via the [`shader`](#shader) setting, though in most cases there's no reason
@@ -84,8 +88,8 @@ to.
 
 !!! note
 
-    Technically, these two special shaders are actived when the "native
-    viewport height pixels" per "number of emulated scalines" ratio falls
+    Technically, these two special shaders are activated when the "native
+    viewport height pixels" per "number of emulated scanlines" ratio falls
     between 2.0 and 3.0 in the viewport. It's just easier to call them "1080p
     shaders" because they're most useful on 1080p monitors in fullscreen.
 
