@@ -313,3 +313,59 @@ TEST(WindowGeometry, PositionFromPercentageToLogicalUnits)
 	             640,
 	             360);
 }
+
+// ----------------------------------------------------------------------------
+// FormatSize
+// ----------------------------------------------------------------------------
+
+TEST(WindowGeometry, FormatSize)
+{
+	EXPECT_EQ(FormatSize({0, 0, 960, 720}, Unit::LogicalUnits, TestDesktop), "960x720");
+	EXPECT_EQ(FormatSize({0, 0, 960, 720}, Unit::Pixels, TestDesktop), "1440x1080px");
+
+	EXPECT_EQ(FormatSize({0, 0, 960, 720}, Unit::Percentage, TestDesktop),
+	          "133.33x100%");
+
+	EXPECT_EQ(FormatSize({0, 0, 360, 360}, Unit::Percentage, TestDesktop), "50x50%");
+}
+
+TEST(WindowGeometry, FormatSizeRoundTrip)
+{
+	for (const auto& value :
+	     {"1024x768", "1440x1080px", "50x50%", "133.33x100%"}) {
+		const auto size = ParseWindowSizeSetting(value);
+		ASSERT_TRUE(size.has_value());
+
+		const auto logical_size = SizeToLogicalUnits(*size, TestDesktop);
+		EXPECT_EQ(FormatSize(logical_size, size->unit, TestDesktop), value);
+	}
+}
+
+// ----------------------------------------------------------------------------
+// FormatPosition
+// ----------------------------------------------------------------------------
+
+TEST(WindowGeometry, FormatPosition)
+{
+	EXPECT_EQ(FormatPosition({250, 100}, Unit::LogicalUnits, TestDesktop),
+	          "250,100");
+
+	EXPECT_EQ(FormatPosition({250, 100}, Unit::Pixels, TestDesktop), "375,150px");
+	EXPECT_EQ(FormatPosition({640, 360}, Unit::Percentage, TestDesktop), "50,50%");
+
+	EXPECT_EQ(FormatPosition({100, 100}, Unit::Percentage, TestDesktop),
+	          "7.81,13.89%");
+}
+
+TEST(WindowGeometry, FormatPositionRoundTrip)
+{
+	for (const auto& value : {"250,100", "375,150px", "50,50%", "12.5,10%"}) {
+		const auto position = ParseWindowPositionSetting(value);
+		ASSERT_TRUE(position.has_value());
+
+		const auto logical_position = PositionToLogicalUnits(*position,
+		                                                     TestDesktop);
+		EXPECT_EQ(FormatPosition(logical_position, position->unit, TestDesktop),
+		          value);
+	}
+}
