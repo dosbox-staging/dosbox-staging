@@ -2,11 +2,15 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "dos/mount.h"
-#include "misc/support.h"
-#include "utils/string_utils.h"
 
 #include <optional>
 #include <string>
+
+#include "misc/support.h"
+#include "utils/checks.h"
+#include "utils/string_utils.h"
+
+CHECK_NARROWING();
 
 std::string to_string(const MountType& mount_type)
 {
