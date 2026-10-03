@@ -619,6 +619,28 @@ static void set_window_decorations()
 	}
 }
 
+// The windowed size and position are restored when exiting fullscreen mode
+static void apply_windowed_size()
+{
+	if (sdl.is_fullscreen) {
+		return;
+	}
+	if (!SDL_SetWindowSize(sdl.window, sdl.windowed.width, sdl.windowed.height)) {
+		LOG_WARNING("SDL: Failed to set window size: %s", SDL_GetError());
+	}
+}
+
+static void apply_windowed_position()
+{
+	if (sdl.is_fullscreen) {
+		return;
+	}
+	if (!SDL_SetWindowPosition(sdl.window, sdl.windowed.x_pos, sdl.windowed.y_pos)) {
+		LOG_WARNING("SDL: Failed to set window position: %s",
+		            SDL_GetError());
+	}
+}
+
 static void enter_fullscreen()
 {
 	assert(sdl.window);
@@ -683,17 +705,8 @@ static void exit_fullscreen()
 
 		SDL_SetWindowResizable(sdl.window, true);
 
-		if (!SDL_SetWindowSize(sdl.window,
-		                       sdl.windowed.width,
-		                       sdl.windowed.height)) {
-			LOG_WARNING("SDL: Failed to set window size: %s", SDL_GetError());
-		}
-
-		if (!SDL_SetWindowPosition(sdl.window,
-		                           sdl.windowed.x_pos,
-		                           sdl.windowed.y_pos)) {
-			LOG_WARNING("SDL: Failed to set window position: %s", SDL_GetError());
-		}
+		apply_windowed_size();
+		apply_windowed_position();
 
 		set_window_transparency();
 
@@ -708,11 +721,8 @@ static void exit_fullscreen()
 		// calls in fullscreen mode are no-ops, so we need to set the
 		// potentially changed window size and position when exiting
 		// fullscreen mode.
-		SDL_SetWindowSize(sdl.window, sdl.windowed.width, sdl.windowed.height);
-
-		SDL_SetWindowPosition(sdl.window,
-		                      sdl.windowed.x_pos,
-		                      sdl.windowed.y_pos);
+		apply_windowed_size();
+		apply_windowed_position();
 	}
 
 	// We need to disable transparency in fullscreen on macOS
@@ -1389,14 +1399,6 @@ static void configure_window_size()
 	        sdl.display_number);
 }
 
-static void set_window_size()
-{
-	// The windowed size is restored when exiting fullscreen mode
-	if (!sdl.is_fullscreen) {
-		SDL_SetWindowSize(sdl.window, sdl.windowed.width, sdl.windowed.height);
-	}
-}
-
 static void save_window_position_from_conf()
 {
 	if (const auto pos = parse_window_position_conf(
@@ -1915,16 +1917,11 @@ static void notify_sdl_setting_updated(SectionProp& section,
 
 	} else if (prop_name == "window_position") {
 		save_window_position_from_conf();
-
-		if (!sdl.is_fullscreen) {
-			SDL_SetWindowPosition(sdl.window,
-			                      sdl.windowed.x_pos,
-			                      sdl.windowed.y_pos);
-		}
+		apply_windowed_position();
 
 	} else if (prop_name == "window_size") {
 		configure_window_size();
-		set_window_size();
+		apply_windowed_size();
 
 	} else if (prop_name == "windowresolution") {
 		// Move setting from the legacy setting into the new one
@@ -1937,7 +1934,7 @@ static void notify_sdl_setting_updated(SectionProp& section,
 		set_section_property_value("sdl", NewPrefName, legacy_pref);
 
 		configure_window_size();
-		set_window_size();
+		apply_windowed_size();
 
 	} else if (prop_name == "window_titlebar") {
 		TITLEBAR_ReadConfig();
