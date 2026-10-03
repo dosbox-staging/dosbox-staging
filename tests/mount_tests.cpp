@@ -277,6 +277,35 @@ TEST_F(MountTest, RejectsUnknownOptionOnDirectoryMount)
 	EXPECT_FALSE(result.has_value());
 }
 
+TEST_F(MountTest, IgnoresLegacyCdRomOptions)
+{
+	// CD-ROM options of the original DOSBox are still common in old
+	// configs. They have no effect, so they're ignored instead of rejected.
+	const auto result = Mount("D " + P("image.iso") +
+	                          " -t iso -usecd 0 -ioctl -noioctl -ioctl_dx"
+	                          " -ioctl_dio -ioctl_mci -aspi");
+
+	ASSERT_TRUE(result.has_value());
+
+	ASSERT_EQ(result->paths.size(), 1);
+	EXPECT_EQ(result->type, MountType::CdRomImage);
+}
+
+TEST_F(MountTest, IgnoresLegacyCdRomOptionsOnDirectoryMount)
+{
+	const auto result = Mount("D " + P("plain_dir") + " -t cdrom -usecd 0 -IOCTL");
+
+	ASSERT_TRUE(result.has_value());
+	EXPECT_EQ(result->type, MountType::CdRomImage);
+}
+
+TEST_F(MountTest, RejectsLegacyUseCdOptionMissingValue)
+{
+	EXPECT_FALSE(Mount("D " + P("plain_dir") + " -t cdrom -usecd").has_value());
+	EXPECT_FALSE(
+	        Mount("D " + P("plain_dir") + " -t cdrom -usecd -ioctl").has_value());
+}
+
 TEST_F(MountTest, AcceptsEveryKnownOptionTogether)
 {
 	// Guards the unknown option check against false positives: every
