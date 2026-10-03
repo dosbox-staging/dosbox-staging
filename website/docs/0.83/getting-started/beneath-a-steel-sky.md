@@ -717,12 +717,20 @@ the patched game from the mounted CD with this command:
 
 ```
 d:
-c:\sky\skydrv cfg=c:\sky
+c:\sky\skydrv CFG=c:\sky
 ```
 
 Skip the intro and inspect the door again. Whoa, magic! MT-32 music _and_
 speech at the same time! Yikes! :sunglasses: Best put this into our
 `[autoexec]` section!
+
+!!! important
+
+    You *must* use uppercase `CFG=`! This is a quirk of the game --- the
+    game's code looks for the `CFG=` parameter in a case-sensitive manner and
+    will ignore lowercase `cfg=` (e.g., if you've configured the game for a
+    non-English language, using lowercase `cfg=` will _not_ load the
+    configuration and the game will revert to English subtitles).
 
 
 ## Aspect ratio correction
@@ -911,7 +919,10 @@ chorus = strong
 
 # patched game (MT-32 music & SB speech/sfx)
 d:
-c:\sky\skydrv cfg=c:\sky
+
+# 'CFG=' must be uppercase! The game will ignore lowercase 'cfg='
+# (this is a quirk of the game, nothing to do with DOSBox Staging)
+c:\sky\skydrv CFG=c:\sky
 
 exit
 ```
