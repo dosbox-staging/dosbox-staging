@@ -84,7 +84,7 @@ private:
 
 	ShaderPass& GetShaderPass(const std::string& name);
 
-	std::pair<GLuint, DosBox::Rect> GetPreviousPassOutputTexture(
+	std::pair<GLuint, DosBox::Rect> GetPreviousPassOutputTextureAndViewport(
 	        const std::vector<ShaderPass>::iterator pass) const;
 
 	GLuint CreateTexture(const DosBox::Rect& size, const bool float_texture) const;
