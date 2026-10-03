@@ -1298,43 +1298,43 @@ static std::optional<WindowGeometry::SizeSetting> parse_window_size_setting(
 	return size;
 }
 
-static std::optional<SDL_Point> parse_window_position_conf(const std::string& window_position_val)
+// Returns nullopt for 'auto' and invalid settings
+static std::optional<WindowGeometry::PositionSetting> parse_window_position_setting(
+        const std::string& window_position_pref, const WindowGeometry::Desktop& desktop)
 {
-	if (window_position_val == "auto") {
+	if (window_position_pref == "auto") {
 		return {};
 	}
 
-	int x, y;
-	const auto was_parsed = (sscanf(window_position_val.c_str(), "%d,%d", &x, &y) ==
-	                         2);
-	if (!was_parsed) {
+	const auto position = WindowGeometry::ParseWindowPositionSetting(
+	        window_position_pref);
+	if (!position) {
 		// TODO convert to notification
 		LOG_WARNING(
 		        "DISPLAY: Invalid 'window_position' setting: '%s'. "
 		        "Must be in X,Y format, using 'auto'.",
-		        window_position_val.c_str());
+		        window_position_pref.c_str());
 		return {};
 	}
 
-	const auto desktop = get_desktop_geometry();
+	// Negative positions are rejected by the parser
+	const auto [x, y] = WindowGeometry::PositionToLogicalUnits(*position, desktop);
 
-	const bool is_out_of_bounds = x < 0 ||
-	                              static_cast<float>(x) > desktop.width ||
-	                              y < 0 ||
-	                              static_cast<float>(y) > desktop.height;
+	const bool is_out_of_bounds = (static_cast<float>(x) > desktop.width ||
+	                               static_cast<float>(y) > desktop.height);
 	if (is_out_of_bounds) {
 		// TODO convert to notification
 		LOG_WARNING(
 		        "DISPLAY: Invalid 'window_position' setting: '%s'. "
 		        "Requested position is outside the bounds of the %dx%d "
 		        "desktop, using 'auto'.",
-		        window_position_val.c_str(),
+		        window_position_pref.c_str(),
 		        iroundf(desktop.width),
 		        iroundf(desktop.height));
 		return {};
 	}
 
-	return SDL_Point{x, y};
+	return position;
 }
 
 static void save_window_position(const int x, const int y)
@@ -1442,11 +1442,16 @@ static void configure_window_size()
 
 static void configure_window_position()
 {
-	if (const auto pos = parse_window_position_conf(
-	            get_sdl_section()->GetString("window_position"));
-	    pos) {
+	const auto window_position_pref = get_sdl_section()->GetString(
+	        "window_position");
 
-		save_window_position(pos->x, pos->y);
+	const auto desktop = get_desktop_geometry();
+	const auto position = parse_window_position_setting(window_position_pref,
+	                                                    desktop);
+	if (position) {
+		const auto [x, y] = WindowGeometry::PositionToLogicalUnits(*position,
+		                                                           desktop);
+		save_window_position(x, y);
 	} else {
 		save_default_window_position();
 	}
