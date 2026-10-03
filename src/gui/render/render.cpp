@@ -19,6 +19,7 @@
 #include "config/setup.h"
 #include "gui/common.h"
 #include "gui/mapper.h"
+#include "gui/private/window_geometry.h"
 #include "gui/render/render.h"
 #include "gui/render/render_backend.h"
 #include "hardware/video/vga.h"
@@ -1102,20 +1103,24 @@ static std::optional<ViewportSettings> parse_fit_viewport_modes(const std::strin
 		viewport.mode = ViewportMode::Fit;
 		return viewport;
 
-	} else if (const auto width_and_height = parse_int_dimensions(pref)) {
-		const auto [w, h] = *width_and_height;
+	} else if (const auto size = WindowGeometry::ParseSize(pref);
+	           size && size->unit != WindowGeometry::Unit::Percentage) {
 
-		const auto desktop = GFX_GetDesktopSizeInLogicalUnits();
+		const auto is_pixels = (size->unit == WindowGeometry::Unit::Pixels);
 
-		const bool is_out_of_bounds = (w <= 0 ||
-		                               static_cast<float>(w) > desktop.w ||
-		                               h <= 0 ||
-		                               static_cast<float>(h) > desktop.h);
+		const auto desktop = is_pixels
+		                           ? GFX_GetDesktopSizeInPixels()
+		                           : GFX_GetDesktopSizeInLogicalUnits();
+
+		// Non-positive sizes are rejected by the parser
+		const bool is_out_of_bounds = (size->x > desktop.w ||
+		                               size->y > desktop.h);
 		if (is_out_of_bounds) {
 			const auto extra_info = format_str(
-			        "Viewport size is outside of the %dx%d desktop bounds",
+			        "Viewport size is outside of the %dx%d%s desktop bounds",
 			        iroundf(desktop.w),
-			        iroundf(desktop.h));
+			        iroundf(desktop.h),
+			        is_pixels ? "px" : "");
 
 			log_invalid_viewport_setting_warning(pref, extra_info);
 			return {};
@@ -1124,8 +1129,11 @@ static std::optional<ViewportSettings> parse_fit_viewport_modes(const std::strin
 		ViewportSettings viewport = {};
 		viewport.mode             = ViewportMode::Fit;
 
-		const DosBox::Rect limit = {w, h};
-		viewport.fit.limit_size  = limit;
+		// The limit is stored in logical units
+		const auto limit = DosBox::Rect{size->x, size->y}.ScaleSize(
+		        is_pixels ? 1.0f / GFX_GetDpiScaleFactor() : 1.0f);
+
+		viewport.fit.limit_size = limit;
 
 		const auto limit_px = limit.Copy().ScaleSize(GFX_GetDpiScaleFactor());
 
