@@ -344,14 +344,16 @@ section.
     - `auto` *default*{ .default } -- Let the window manager decide the
       position.
     - `X,Y` -- Set window position in X,Y format in logical units (e.g.,
-      `250,100`). `0,0` is the top-left corner of the screen. The values
-      will be multiplied by the OS-level DPI scaling to get the window
-      position in pixels.
+      `250,100`). `0,0` is the top-left corner of the screen. The values are
+      multiplied by the OS-level DPI scale factor to get the window position
+      in pixels.
+    - `X,Ypx` -- Set window position in pixels (e.g., `375,150px`).
+    - `X,Y%` -- Set window position as a percentage of the desktop width and
+      height (e.g., `10,10%`).
 
     !!! note
 
-        If you want to use pixel coordinates instead and ignore DPI scaling,
-        set the `SDL_WINDOWS_DPI_SCALING` environment variable to `0`.
+        Moving the window updates this setting in the same format.
 
 
 ##### window_size
@@ -361,19 +363,21 @@ section.
 
     Possible values:
 
-    - `default` *default*{ .default } -- Select the best option based on
-      your environment and other factors (such as whether aspect ratio
-      correction is enabled).
+    - `default` *default*{ .default } -- Same as `medium`.
     - `small`, `medium`, `large` (`s`, `m`, `l`) -- Size the window
       relative to the desktop.
     - `WxH` -- Specify window size in WxH format in logical units (e.g.,
-      `1024x768`). The values will be multiplied by the OS-level DPI scaling
+      `1024x768`). The values are multiplied by the OS-level DPI scale factor
       to get the window size in pixels.
+    - `WxHpx` -- Specify window size in pixels (e.g., `1440x1080px`).
+    - `WxH%` -- Specify window size as a percentage of the desktop height
+      (e.g., `133x100%` for a 4:3 window as tall as the desktop). Both values
+      are relative to the desktop height, so the aspect ratio of the window
+      doesn't depend on the aspect ratio of the desktop.
 
     !!! note
 
-        If you want to use pixel coordinates instead and ignore DPI scaling,
-        set the `SDL_WINDOWS_DPI_SCALING` environment variable to `0`.
+        Resizing the window updates this setting in the same format.
 
 
 ##### window_titlebar
