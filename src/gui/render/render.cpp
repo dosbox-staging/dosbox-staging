@@ -19,6 +19,7 @@
 #include "config/setup.h"
 #include "gui/common.h"
 #include "gui/mapper.h"
+#include "gui/private/window_geometry.h"
 #include "gui/render/render.h"
 #include "gui/render/render_backend.h"
 #include "hardware/video/vga.h"
@@ -1102,20 +1103,24 @@ static std::optional<ViewportSettings> parse_fit_viewport_modes(const std::strin
 		viewport.mode = ViewportMode::Fit;
 		return viewport;
 
-	} else if (const auto width_and_height = parse_int_dimensions(pref)) {
-		const auto [w, h] = *width_and_height;
+	} else if (const auto size = WindowGeometry::ParseSize(pref);
+	           size && size->unit != WindowGeometry::Unit::Percentage) {
 
-		const auto desktop = GFX_GetDesktopSize();
+		const auto is_pixels = (size->unit == WindowGeometry::Unit::Pixels);
 
-		const bool is_out_of_bounds = (w <= 0 ||
-		                               static_cast<float>(w) > desktop.w ||
-		                               h <= 0 ||
-		                               static_cast<float>(h) > desktop.h);
+		const auto desktop = is_pixels
+		                           ? GFX_GetDesktopSizeInPixels()
+		                           : GFX_GetDesktopSizeInLogicalUnits();
+
+		// Non-positive sizes are rejected by the parser
+		const bool is_out_of_bounds = (size->x > desktop.w ||
+		                               size->y > desktop.h);
 		if (is_out_of_bounds) {
 			const auto extra_info = format_str(
-			        "Viewport size is outside of the %dx%d desktop bounds",
+			        "Viewport size is outside of the %dx%d%s desktop bounds",
 			        iroundf(desktop.w),
-			        iroundf(desktop.h));
+			        iroundf(desktop.h),
+			        is_pixels ? "px" : "");
 
 			log_invalid_viewport_setting_warning(pref, extra_info);
 			return {};
@@ -1124,8 +1129,11 @@ static std::optional<ViewportSettings> parse_fit_viewport_modes(const std::strin
 		ViewportSettings viewport = {};
 		viewport.mode             = ViewportMode::Fit;
 
-		const DosBox::Rect limit = {w, h};
-		viewport.fit.limit_size  = limit;
+		// The limit is stored in logical units
+		const auto limit = DosBox::Rect{size->x, size->y}.ScaleSize(
+		        is_pixels ? 1.0f / GFX_GetDpiScaleFactor() : 1.0f);
+
+		viewport.fit.limit_size = limit;
 
 		const auto limit_px = limit.Copy().ScaleSize(GFX_GetDpiScaleFactor());
 
@@ -1142,8 +1150,6 @@ static std::optional<ViewportSettings> parse_fit_viewport_modes(const std::strin
 	                   pref)) {
 		const auto p = *percentage;
 
-		const auto desktop = GFX_GetDesktopSize();
-
 		const bool is_out_of_bounds = (p < 1.0f || p > 100.0f);
 		if (is_out_of_bounds) {
 			const auto extra_info = "Desktop percentage is outside of the 1-100%% range";
@@ -1156,14 +1162,12 @@ static std::optional<ViewportSettings> parse_fit_viewport_modes(const std::strin
 		viewport.mode              = ViewportMode::Fit;
 		viewport.fit.desktop_scale = p / 100.0f;
 
-		const auto limit = desktop.Copy().ScaleSize(*viewport.fit.desktop_scale);
-		const auto limit_px = limit.Copy().ScaleSize(GFX_GetDpiScaleFactor());
+		const auto limit_px = GFX_GetDesktopSizeInPixels().ScaleSize(
+		        *viewport.fit.desktop_scale);
 
 		LOG_MSG("DISPLAY: Limiting viewport size to %2.4g%% of the "
-		        "desktop (%dx%d logical units, %dx%d pixels)",
+		        "desktop (%dx%d pixels)",
 		        p,
-		        iroundf(limit.w),
-		        iroundf(limit.h),
 		        iroundf(limit_px.w),
 		        iroundf(limit_px.h));
 
@@ -1423,10 +1427,7 @@ DosBox::Rect RENDER_CalcRestrictedViewportSizeInPixels(const DosBox::Rect& canva
 				        .ScaleSize(dpi_scale);
 
 			} else if (render.viewport_settings.fit.desktop_scale) {
-				auto desktop_size_px = GFX_GetDesktopSize().ScaleSize(
-				        dpi_scale);
-
-				return desktop_size_px.ScaleSize(
+				return GFX_GetDesktopSizeInPixels().ScaleSize(
 				        *render.viewport_settings.fit.desktop_scale);
 			} else {
 				// The viewport equals the canvas size
@@ -1842,6 +1843,9 @@ static void init_render_settings(SectionProp& section)
 	        "                     (e.g., 960x720). The specified size must not be larger than\n"
 	        "                     the desktop. If it's larger than the window size, it will\n"
 	        "                     be scaled to fit within the window.\n"
+	        "\n"
+	        "  WxHpx:             Same as 'WxH', but the size is specified in pixels\n"
+	        "                     (e.g., 1440x1080px).\n"
 	        "\n"
 	        "  N%%:                Similar to 'WxH', but the size is specified as a percentage\n"
 	        "                     of the desktop size.\n"
