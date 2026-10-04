@@ -4,6 +4,7 @@
 #ifndef DOSBOX_CLAP_LIBRARY_H
 #define DOSBOX_CLAP_LIBRARY_H
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <vector>
@@ -22,6 +23,15 @@ struct PluginInfo {
 	std::string name        = {};
 	std::string description = {};
 	std::string version     = {};
+
+	// Zero-based descriptor index within the library's plugin factory.
+	uint32_t index = 0;
+
+	// Empty selectors match any library or plugin. Library names are
+	// case-sensitive and can omit the .clap extension; plugins can be
+	// selected by a case-insensitive substring of their name or by index.
+	bool Matches(const std::string& library_name,
+	             const std::string& plugin_name_or_index) const;
 };
 
 // Encapsulates a dynamically-loaded CLAP library and manages its lifecycle.

@@ -17,6 +17,24 @@ CHECK_NARROWING();
 
 namespace Clap {
 
+bool PluginInfo::Matches(const std::string& library_name,
+                         const std::string& plugin_name_or_index) const
+{
+	if (!library_name.empty() &&
+	    library_path.filename().string() != library_name &&
+	    library_path.filename().string() != library_name + ".clap") {
+		return false;
+	}
+	if (plugin_name_or_index.empty()) {
+		return true;
+	}
+	if (const auto wanted_index = parse_int(plugin_name_or_index); wanted_index) {
+		return *wanted_index >= 0 &&
+		       check_cast<uint32_t>(*wanted_index) == index;
+	}
+	return find_in_case_insensitive(plugin_name_or_index, name);
+}
+
 [[maybe_unused]] static std::optional<std_fs::path> find_first_file(const std_fs::path& path)
 {
 	std::vector<std_fs::path> files = {};
@@ -135,7 +153,8 @@ std::vector<PluginInfo> Library::GetPluginInfos() const
 			                         desc->id,
 			                         desc->name,
 			                         desc->description,
-			                         desc->version};
+			                         desc->version,
+			                         check_cast<uint32_t>(plugin_index)};
 
 			plugin_infos.emplace_back(info);
 		}

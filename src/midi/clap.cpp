@@ -46,28 +46,32 @@ static void set_clap_environment(const std::string& settings)
 
 MidiDeviceClap::MidiDeviceClap()
 {
-	const auto section            = get_section("clap");
-	const std::string plugin_name = section->GetString("clap_plugin");
-	if (plugin_name.empty()) {
-		throw std::runtime_error("CLAP: No plugin selected in 'clap_plugin'");
-	}
+	const auto section             = get_section("clap");
+	const std::string library_name = section->GetString("clap_library");
+	const std::string plugin_name  = section->GetString("clap_plugin");
 
 	set_clap_environment(section->GetString("clap_env"));
 
 	auto& plugin_manager = Clap::PluginManager::GetInstance();
 	std::unique_ptr<Clap::Plugin> plugin = {};
 	for (const auto& info : plugin_manager.GetPluginInfos()) {
-		if (iequals(info.name, plugin_name)) {
+		if (info.Matches(library_name, plugin_name)) {
 			plugin = plugin_manager.LoadPlugin(info);
 			if (plugin) {
 				plugin_info = info;
+			}
+			// Explicit selectors choose the first match. Automatic
+			// selection skips plugins that cannot be loaded.
+			if (plugin || !plugin_name.empty()) {
 				break;
 			}
 		}
 	}
 	if (!plugin) {
-		throw std::runtime_error(format_str("CLAP: Failed to load plugin '%s'",
-		                                    plugin_name.c_str()));
+		throw std::runtime_error(format_str(
+		        "CLAP: Failed to load plugin '%s' (library: '%s')",
+		        plugin_name.empty() ? "first available" : plugin_name.c_str(),
+		        library_name.empty() ? "any" : library_name.c_str()));
 	}
 
 	Config config         = {};
@@ -91,16 +95,25 @@ void CLAP_ListDevices(MidiDeviceClap* device, MoreOutputStrings& output)
 	}
 
 	const auto active_plugin = device ? &device->GetPluginInfo() : nullptr;
+	std_fs::path current_library = {};
 	for (const auto& info : plugin_infos) {
+		if (info.library_path != current_library) {
+			current_library = info.library_path;
+			output.AddString("  %s\n",
+			                 current_library.filename().string().c_str());
+		}
 		const auto is_active = active_plugin &&
 		                       active_plugin->id == info.id &&
 		                       active_plugin->library_path == info.library_path;
 		if (is_active) {
 			output.AddString(convert_ansi_markup(
-			                         "[color=light-green]* %s[reset]\n"),
+			                         "  [color=light-green]* %u - %s[reset]\n"),
+			                 info.index,
 			                 info.name.c_str());
 		} else {
-			output.AddString("  %s\n", info.name.c_str());
+			output.AddString("    %u - %s\n",
+			                 info.index,
+			                 info.name.c_str());
 		}
 	}
 	output.AddString("\n");
@@ -123,10 +136,20 @@ void CLAP_AddConfigSection(const ConfigPtr& conf)
 
 	constexpr auto WhenIdle = Property::Changeable::WhenIdle;
 
-	auto sec_prop = section->AddString("clap_plugin", WhenIdle, "");
+	auto sec_prop = section->AddString("clap_library", WhenIdle, "");
 	sec_prop->SetHelp(
-		"CLAP plugin to load. The plugin must be in the 'plugins' directory in your DOSBox \n"
-		"installation or configuration directory.\n"
+		"CLAP library to load, with or without the '.clap' extension (case-sensitive).\n"
+		"The library must be in the 'plugins' directory in your DOSBox installation or\n"
+		"configuration directory. If empty, search all available libraries.\n"
+		"Run `MIXER /LISTMIDI` to see available libraries and plugins.\n"
+	);
+
+	sec_prop = section->AddString("clap_plugin", WhenIdle, "");
+	sec_prop->SetHelp(
+		"CLAP plugin name or zero-based index within the selected library. If empty,\n"
+		"load the first available plugin. Names are case-insensitive and can be partial;\n"
+		"the first matching plugin is selected.\n"
+		"Run `MIXER /LISTMIDI` to see plugin names and indices.\n"
 	);
 
 	auto* sample_rate = section->AddInt("clap_sample_rate", WhenIdle, 48000);
