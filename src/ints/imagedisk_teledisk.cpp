@@ -36,6 +36,21 @@ static uint16_t read_u16_le(const uint8_t *bytes)
 	                             static_cast<uint16_t>(bytes[1] << 8u));
 }
 
+// CRC-16 used by the TeleDisk format (polynomial 0xA097). The running CRC is
+// passed in 'crc' so several blocks can be chained.
+static uint16_t td0_crc16(const uint8_t *data, const size_t length, uint16_t crc = 0)
+{
+	for (size_t i = 0; i < length; ++i) {
+		crc = static_cast<uint16_t>(crc ^
+		                            static_cast<uint16_t>(data[i] << 8));
+		for (int bit = 0; bit < 8; ++bit) {
+			crc = static_cast<uint16_t>(
+			        (crc << 1) ^ ((crc & 0x8000) ? 0xa097 : 0));
+		}
+	}
+	return crc;
+}
+
 static std::optional<std::vector<uint8_t>> decode_raw(const std::vector<uint8_t>& encoded,
                                                       const uint16_t sector_size)
 {
@@ -346,8 +361,23 @@ ImageDiskTeledisk::ImageDiskTeledisk(FILE *img_file, const char *img_name)
 				const auto decoded = decode_sector_data(
 				        method, encoded, ent.sector_size);
 				if (decoded) {
-					ent.has_data = true;
-					ent.data     = *decoded;
+					// The CRC covers the decompressed
+					// payload only, not the sector header
+					// or the data header, despite what
+					// extant TeleDisk documentation claims.
+					const auto crc = td0_crc16(decoded->data(),
+					                           decoded->size());
+					if ((crc & 0xff) == sector_header.crc) {
+						ent.has_data = true;
+						ent.data     = *decoded;
+					} else {
+						LOG_WARNING("TD0: Bad CRC for sector C/H/S=%u/%u/%u at file offset %ld",
+						            ent.phys_track,
+						            ent.phys_head,
+						            ent.logical_sector,
+						            data_offset);
+						ent.data.assign(ent.sector_size, 0);
+					}
 				} else {
 					LOG_WARNING("TD0: Failed to decode sector C/H/S=%u/%u/%u (method %u) at file offset %ld",
 					            ent.phys_track,
