@@ -2001,43 +2001,52 @@ static void init_dos_settings(SectionProp& section)
 
 	// DOS locale settings
 
-	pstring = section.AddString("locale_period", WhenIdle, "native");
+	pstring = section.AddString("locale_period", WhenIdle, "historic");
 	pstring->SetHelp(
-	        "Set locale epoch ('native' by default). Possible values:\n"
+	        "Set which era of locale data to use ('historic' by default). Possible values:\n"
 	        "\n"
 	        "  historic:  If data is available for the given country, mimic old DOS behavior\n"
 	        "             when displaying time, dates, or numbers.\n"
 	        "\n"
 	        "  modern:    Follow current day practices for user experience more consistent\n"
-	        "             with typical host systems.\n"
-	        "\n"
-	        "  native:    Re-use current host OS settings, regardless of the country set;\n"
-	        "             use 'modern' data to fill-in the gaps when the DOS locale system\n"
-	        "             is too limited to follow the desktop settings.");
-	pstring->SetValues({"historic", "modern", "native"});
+	        "             with typical host systems.");
+	pstring->SetValues({"historic", "modern"});
 
-	pstring = section.AddString("country", WhenIdle, "auto");
+	pstring = section.AddString("country", WhenIdle, "1");
 	pstring->SetHelp(
-	        "Set DOS country code ('auto' by default). This affects country-specific\n"
-	        "information such as date, time, and decimal formats. If set to 'auto', it\n"
-	        "selects the country code reflecting the host OS settings.\n"
+	        "Set the DOS country code ('1' by default, which stands for US English). This\n"
+	        "affects country-specific information such as date, time, and decimal formats.\n"
 	        "\n"
-	        "The list of country codes can be displayed using '--list-countries' command-line\n"
-	        "argument.");
+	        "Note: The list of country codes can be displayed using the '--list-countries'\n"
+	        "      command-line argument.");
 
 	pstring = section.AddString("keyboardlayout", Deprecated, "");
 	pstring->SetHelp("Renamed to [color=light-green]'keyboard_layout'[reset].");
 
-	pstring = section.AddString("keyboard_layout", OnlyAtStart, "auto");
+	pstring = section.AddString("keyboard_layout", OnlyAtStart, "us");
 	pstring->SetHelp(
-	        "Keyboard layout code ('auto' by default). The list of supported keyboard layout\n"
-	        "codes can be displayed using the '--list-layouts' command-line argument, e.g.,\n"
-	        "'uk' is the British English layout. The layout can be followed by the code page\n"
-	        "number, e.g., 'uk 850' selects a Western European screen font.\n"
+	        "Set the keyboard layout ('us' by default). The layout can be followed by the\n"
+	        "code page number to override the default one selected by the layout; e.g.,\n"
+	        "'uk 850' sets the British layout with a Western European code page (screen\n"
+	        "font).\n"
 	        "\n"
-	        "Set to 'auto' to guess the values from the host OS settings. After startup, use\n"
-	        "the 'KEYB' command to manage keyboard layouts and code pages (run 'HELP KEYB'\n"
-	        "for details).");
+	        "Notes:\n"
+	        "  - On real MS-DOS, you must configure the keyboard layout and the screen font\n"
+	        "    separately; DOSBox Staging sets both from the provided layout and code.\n"
+	        "\n"
+	        "  - The list of keyboard layout codes can be displayed using the\n"
+	        "    '--list-layouts' command-line argument; e.g., 'uk' is the British English\n"
+	        "    layout. \n"
+	        "\n"
+	        "  - The list of code pages codes can be displayed using the\n"
+	        "    '--list-code-pages' command-line argument; e.g., `437` is the original\n"
+	        "    OEM-US code page.\n"
+	        "\n"
+	        "  - Use the 'KEYB' command to manage keyboard layouts and code pages at\n"
+	        "    runtime (run 'KEYB /?' for details).\n"
+	        "\n"
+	        "  - Use the 'CHCP' command to change the code page (screen font) only while\n"
+	        "    keeping the current keyboard layout (run 'CHCP /?' for details).");
 
 	// COMMAND.COM settings
 

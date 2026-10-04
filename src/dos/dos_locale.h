@@ -325,10 +325,6 @@ enum class DosCountry : uint16_t {
 // clang-format on
 
 enum class LocalePeriod : uint8_t {
-	// Tries to follow the host OS locale settings if only possible, gaps
-	// are filled-in using the 'Modern' settings.
-	Native,
-
 	// Values for Modern period reflect the KDE/Linux system settings and
 	// currency information from Wikipedia - they won't produce 100% same
 	// result as old MS-DOS systems, but should at least provide reasonably
