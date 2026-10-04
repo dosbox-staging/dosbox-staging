@@ -92,8 +92,14 @@ The following uniform are passed to the shader passes:
 
 - `INPUT_SIZE_N` — `vec2`; size of the Nth input texture (N starts from 0)
 
-- `OUTPUT_SIZE` — `vec2`; size of the output texture, or the viewport
-  for the last pass (always present)
+- `OUTPUT_SIZE` — `vec2`; size of the output texture in pixels, or the viewport
+  for the last pass. This uniform is always present.
+
+- `OUTPUT_START_OFFSET` — `vec2`; start offset of the output texture in pixels
+  relative to the window's framebuffer for the last pass; (0,0) for all
+  previous intermediate passes. Useful for ensuring screen-space drawing
+  aligns with the output image (e.g., for pixel mask overlays for RGB phosphor
+  emulation in CRT shaders). This uniform is always present.
 
 The shader's parameters that can be customised in the presets are also set via
 uniforms; see the description of the `parameter` custom shader pragma below

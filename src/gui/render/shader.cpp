@@ -89,24 +89,24 @@ bool Shader::BuildShaderProgram(const std::string& shader_source)
 }
 
 std::optional<GLuint> Shader::BuildShader(const GLenum type,
-                                          const std::string& source) const
+                                          const std::string& shader_source) const
 {
 	GLuint shader            = 0;
 	GLint is_shader_compiled = 0;
 
-	assert(!source.empty());
+	assert(!shader_source.empty());
 
-	const char* shaderSrc      = source.c_str();
+	const char* shader_src     = shader_source.c_str();
 	const char* src_strings[2] = {nullptr, nullptr};
 	std::string top;
 
 	// Look for "#version" because it has to occur first
-	if (const char* ver = strstr(shaderSrc, "#version "); ver) {
+	if (const char* ver = strstr(shader_src, "#version "); ver) {
 
 		const char* endline = strchr(ver + 9, '\n');
 		if (endline) {
-			top.assign(shaderSrc, endline - shaderSrc + 1);
-			shaderSrc = endline + 1;
+			top.assign(shader_src, endline - shader_src + 1);
+			shader_src = endline + 1;
 		}
 	}
 
@@ -114,7 +114,7 @@ std::optional<GLuint> Shader::BuildShader(const GLenum type,
 	                                  : "#define FRAGMENT 1\n";
 
 	src_strings[0] = top.c_str();
-	src_strings[1] = shaderSrc;
+	src_strings[1] = shader_src;
 
 	// Create the shader object
 	shader = glCreateShader(type);

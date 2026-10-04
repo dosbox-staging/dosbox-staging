@@ -29,7 +29,7 @@ struct ShaderPass {
 
 	// Output texture size for intermediate shader passes (width & height
 	// only), or the position and size of the viewport for the final pass.
-	DosBox::Rect out_size = {};
+	DosBox::Rect out_viewport = {};
 
 	// Textures and FBOs for intermediate shader passes. Both are 0 for the
 	// final pass that's rendered directly to the window's framebuffer.
@@ -84,7 +84,7 @@ private:
 
 	ShaderPass& GetShaderPass(const std::string& name);
 
-	std::pair<GLuint, DosBox::Rect> GetPreviousPassOutputTexture(
+	std::pair<GLuint, DosBox::Rect> GetPreviousPassOutputTextureAndViewport(
 	        const std::vector<ShaderPass>::iterator pass) const;
 
 	GLuint CreateTexture(const DosBox::Rect& size, const bool float_texture) const;
