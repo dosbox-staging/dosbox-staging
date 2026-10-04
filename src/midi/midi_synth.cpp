@@ -213,19 +213,29 @@ int MidiSynth::GetNumPendingAudioFrames()
 	// Wake up the channel and update the last rendered time datum.
 	assert(mixer_channel);
 	if (mixer_channel->WakeUp()) {
-		last_rendered_ms = now_ms;
-		return 0;
-	}
-	if (last_rendered_ms >= now_ms) {
+		last_rendered_ms.store(now_ms);
 		return 0;
 	}
 
-	// Return the number of audio frames needed to get current again
 	assert(ms_per_audio_frame > 0.0);
 
-	const auto elapsed_ms = now_ms - last_rendered_ms;
-	const auto num_audio_frames = iround(ceil(elapsed_ms / ms_per_audio_frame));
-	last_rendered_ms += (num_audio_frames * ms_per_audio_frame);
+	// `last_rendered_ms` is also updated by the mixer callback, so use a
+	// compare-exchange loop to avoid losing concurrent updates.
+	auto last_ms         = last_rendered_ms.load();
+	int num_audio_frames = 0;
+	double new_last_ms   = 0.0;
+
+	do {
+		if (last_ms >= now_ms) {
+			return 0;
+		}
+
+		// Number of audio frames needed to get current again
+		const auto elapsed_ms = now_ms - last_ms;
+		num_audio_frames = iround(ceil(elapsed_ms / ms_per_audio_frame));
+		new_last_ms = last_ms + (num_audio_frames * ms_per_audio_frame);
+
+	} while (!last_rendered_ms.compare_exchange_weak(last_ms, new_last_ms));
 
 	return num_audio_frames;
 }
@@ -263,7 +273,7 @@ void MidiSynth::MixerCallback(const int requested_audio_frames)
 		mixer_channel->AddSamples_sfloat(check_cast<int>(num_dequeued),
 		                                 &audio_frames[0][0]);
 
-		last_rendered_ms = PIC_AtomicIndex();
+		last_rendered_ms.store(PIC_AtomicIndex());
 	}
 
 	if (check_cast<int>(num_dequeued) < requested_audio_frames) {

@@ -6,6 +6,7 @@
 
 #include "midi_device.h"
 
+#include <atomic>
 #include <cstdint>
 
 #include "audio/mixer.h"
@@ -54,7 +55,9 @@ private:
 
 	// Used to track the balance of time between the last mixer
 	// callback versus the current MIDI SysEx or Msg event.
-	double last_rendered_ms = 0.0;
+	//
+	// Accessed from the emulator, renderer, and mixer threads.
+	std::atomic<double> last_rendered_ms = 0.0;
 
 	bool is_work_fifo_backlogged = false;
 
