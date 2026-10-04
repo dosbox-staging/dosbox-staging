@@ -1,6 +1,13 @@
 // SPDX-FileCopyrightText:  2026 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2026 The DOSBox-X Team
-// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-FileCopyrightText:  2013-2026 Michal Necasek
+// SPDX-FileCopyrightText:  2026 Michael Drüing
+// SPDX-License-Identifier: GPL-2.0-or-later AND MIT
+//
+// Portions of this file are derived from Michal Necasek's img_td.c TeleDisk
+// image reader (MIT): td0_crc16(), the header checks in IsTelediskImage(),
+// the track and comment CRC checks, and the 0xF6 fill for DOS-skipped
+// sectors. See LICENSES/MIT.txt.
 
 #include "ints/imagedisk_teledisk.h"
 
