@@ -177,9 +177,13 @@ bool IsTelediskImage(FILE *img_file)
 		return false;
 	}
 
-	// Only "TD" (normal compression) is decoded; "td" is the advanced
-	// compression variant.
-	if (header.signature[0] != 'T' || header.signature[1] != 'D') {
+	// "TD" is normal compression and "td" is the advanced compression
+	// variant. Both are TeleDisk images, so both are recognised here.
+	const auto is_normal   = header.signature[0] == 'T' &&
+	                         header.signature[1] == 'D';
+	const auto is_advanced = header.signature[0] == 't' &&
+	                         header.signature[1] == 'd';
+	if (!is_normal && !is_advanced) {
 		return false;
 	}
 
@@ -307,8 +311,14 @@ ImageDiskTeledisk::ImageDiskTeledisk(FILE *img_file, const char *img_name)
 		return;
 	}
 
-	// Only "TD" (normal compression) is decoded; "td" is the advanced
-	// compression variant.
+	// The advanced compression variant cannot be decoded, so fail here
+	// rather than letting the image fall through to the raw image path.
+	if (header.signature[0] == 't' && header.signature[1] == 'd') {
+		LOG_WARNING("TD0: Advanced compression is not supported");
+		return;
+	}
+
+	// Only "TD" (normal compression) is decoded.
 	if (header.signature[0] != 'T' || header.signature[1] != 'D') {
 		return;
 	}
