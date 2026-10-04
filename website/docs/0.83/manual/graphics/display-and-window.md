@@ -239,8 +239,9 @@ The [`window_size`](#window_size) and [`window_position`](#window_position)
 settings control where and how large the DOSBox Staging window appears on
 startup. You can still resize the window freely after launch --- these only set
 the initial state. The named sizes (`small`, `medium`, `large`) are relative to
-your desktop, while the `WxH` format lets you request an exact size in logical
-units.
+your desktop, while the `WxH` format lets you specify the size in logical
+units, pixels, or percentages (see [Logical units, pixels, and
+percentages](#logical-units-pixels-and-percentages) below).
 
 On multi-monitor setups, use [`display`](#display) to select which screen DOSBox
 opens on, and [`window_position`](#window_position) to fine-tune placement.
@@ -250,11 +251,40 @@ system's title bar and window borders are shown.
 [`window_transparency`](#window_transparency) sets the window transparency level
 (0--90%).
 
-!!! note
 
-    Both `window_size` and `window_position` use logical units that are
-    multiplied by your OS-level DPI scaling. To use raw pixel coordinates
-    instead, set the `SDL_WINDOWS_DPI_SCALING` environment variable to `0`.
+### Logical units, pixels, and percentages
+
+Most operating systems let you enlarge everything on the screen with a display
+scaling setting, which is especially useful on high-resolution monitors. For
+example, 4K monitors are typically used at 200% scaling. A window that is 1000
+*logical units* wide is 2000 pixels wide on such a monitor, but only 1000
+pixels wide on a 1080p monitor at 100% scaling. This way, the window appears
+roughly the same physical size on both.
+
+You can specify the window size and position, and the [viewport
+size](rendering/aspect-ratios-and-scaling.md#custom-viewport-size), in three
+different ways:
+
+- **Logical units** (e.g., `window_size = 1024x768`) --- The values are
+  multiplied by your operating system's display scaling factor, which is how
+  most programs size their windows.
+
+- **Pixels** (e.g., `window_size = 1440x1080px`) --- The values are in
+  pixels, and display scaling is not applied. This gives you precise control,
+  but the window will look smaller on a 4K monitor than on a 1080p one.
+
+- **Percentages** (e.g., `window_size = 120x90%` or `viewport = 89%`) --- The
+  values are relative to your desktop size, so they adapt to any monitor. For
+  window sizes, both values are relative to the desktop height; for example,
+  `120x90%` always gives you a 4:3 window that is 90% as tall as your desktop.
+
+For the least surprising results, use the same kind of unit for
+`window_size`, `window_position`, and `viewport`. Mixing them can have
+unexpected effects; for example, a viewport specified in logical units can end
+up larger than a window specified in pixels at high scaling factors. That said,
+mixing units is perfectly valid for more advanced use cases, such as combining
+a window size relative to your desktop with a viewport size in pixels to get a
+specific integer scaling factor on your monitor.
 
 
 ## Titlebar customisation
@@ -351,6 +381,9 @@ section.
     - `X,Y%` -- Set window position as a percentage of the desktop width and
       height (e.g., `10,10%`).
 
+    See [Logical units, pixels, and
+    percentages](#logical-units-pixels-and-percentages) for more details.
+
     !!! note
 
         Moving the window updates this setting in the same format.
@@ -374,6 +407,9 @@ section.
       (e.g., `133x100%` for a 4:3 window as tall as the desktop). Both values
       are relative to the desktop height, so the aspect ratio of the window
       doesn't depend on the aspect ratio of the desktop.
+
+    See [Logical units, pixels, and
+    percentages](#logical-units-pixels-and-percentages) for more details.
 
     !!! note
 
