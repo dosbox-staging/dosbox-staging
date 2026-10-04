@@ -808,7 +808,13 @@ fatDrive::fatDrive(const char* sysFilename, uint32_t bytesector,
 	/* Load disk image */
 	loadedDisk = std::make_shared<ImageDisk>(diskfile, sysFilename, filesize, is_hdd);
 
-	if(is_hdd) {
+	// Image formats that carry their own geometry decide this for
+	// themselves, and some of them cannot be written back at all.
+	if (loadedDisk->is_readonly) {
+		readonly = true;
+	}
+
+	if (is_hdd) {
 		/* Set user specified harddrive parameters */
 		loadedDisk->SetGeometry(headscyl, cylinders, cylsector, bytesector);
 

@@ -58,6 +58,7 @@ public:
 
 	bool hardDrive;
 	bool active;
+	bool is_readonly = false; // format cannot be written back
 	FILE *diskimg;
 	char diskname[512];
 	uint8_t floppytype;

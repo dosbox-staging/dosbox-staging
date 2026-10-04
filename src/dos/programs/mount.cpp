@@ -370,6 +370,11 @@ bool MOUNT::MountImageFat(MountParameters& params)
 	                                  ? MSG_Get("MOUNT_TYPE_FAT_PLURAL")
 	                                  : MSG_Get("MOUNT_TYPE_FAT");
 
+	// Reflect any read-only flag the image itself imposed
+	if (fat_images.front()->IsReadOnly()) {
+		params.roflag = true;
+	}
+
 	WriteMountStatus(mount_message, params.paths, params.drive, params.roflag);
 
 	const auto fat_image = std::dynamic_pointer_cast<fatDrive>(
@@ -520,6 +525,12 @@ bool MOUNT::MountImageRaw(MountParameters& params)
 
 	imageDiskList.at(drv_idx) = std::make_shared<ImageDisk>(
 	        new_disk, params.paths[0].c_str(), imagesize, is_hdd);
+
+	// Image formats that cannot be written back, such as TeleDisk images,
+	// are forced to mount read-only even if the user didn't specify it
+	if (imageDiskList.at(drv_idx)->is_readonly) {
+		params.roflag = true;
+	}
 
 	if (is_hdd) {
 		imageDiskList.at(drv_idx)->SetGeometry(params.sizes[2],
