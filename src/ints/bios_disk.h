@@ -31,10 +31,10 @@ const std::vector<DiskGeometry>& BIOS_GetDiskGeometryList();
 
 class imageDisk  {
 public:
-	uint8_t Read_Sector(uint32_t head,uint32_t cylinder,uint32_t sector,void * data);
-	uint8_t Write_Sector(uint32_t head,uint32_t cylinder,uint32_t sector,void * data);
-	uint8_t Read_AbsoluteSector(uint32_t sectnum, void * data);
-	uint8_t Write_AbsoluteSector(uint32_t sectnum, void * data);
+	virtual uint8_t Read_Sector(uint32_t head,uint32_t cylinder,uint32_t sector,void * data);
+	virtual uint8_t Write_Sector(uint32_t head,uint32_t cylinder,uint32_t sector,void * data);
+	virtual uint8_t Read_AbsoluteSector(uint32_t sectnum, void * data);
+	virtual uint8_t Write_AbsoluteSector(uint32_t sectnum, void * data);
 
 	void Set_Geometry(uint32_t setHeads, uint32_t setCyl, uint32_t setSect, uint32_t setSectSize);
 	void Get_Geometry(uint32_t * getHeads, uint32_t *getCyl, uint32_t *getSect, uint32_t *getSectSize);
@@ -45,7 +45,7 @@ public:
 	imageDisk(const imageDisk&) = delete; // prevent copy
 	imageDisk& operator=(const imageDisk&) = delete; // prevent assignment
 
-	~imageDisk()
+	virtual ~imageDisk()
 	{
 		if (diskimg != nullptr)
 			fclose(diskimg);
@@ -53,6 +53,7 @@ public:
 
 	bool hardDrive;
 	bool active;
+	bool is_readonly = false; // format cannot be written back
 	FILE *diskimg;
 	char diskname[512];
 	uint8_t floppytype;
@@ -63,6 +64,13 @@ private:
 	cross_off_t current_fpos;
 	enum { NONE,READ,WRITE } last_action;
 };
+
+// Opens an image file as a disk, picking the imageDisk subclass that matches
+// the file's signature. Only plain sector dumps and TeleDisk (.td0) archives
+// are recognised so far. 'img_size_k' and 'is_hdd' only apply to plain images;
+// formats carrying their own geometry decide those for themselves.
+std::shared_ptr<imageDisk> CreateImageDisk(FILE* img_file, const char* img_name,
+                                           uint32_t img_size_k, bool is_hdd);
 
 void updateDPT(void);
 void incrementFDD(void);

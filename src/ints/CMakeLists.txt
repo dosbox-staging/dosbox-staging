@@ -4,6 +4,7 @@ target_sources(dosboxcommon PRIVATE
   bios_keyboard.cpp
   bios_pci.cpp
   ems.cpp
+  imagedisk_teledisk.cpp
   int10.cpp
   int10_char.cpp
   int10_memory.cpp

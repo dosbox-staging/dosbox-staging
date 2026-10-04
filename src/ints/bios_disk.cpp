@@ -14,6 +14,7 @@
 #include "dos/drives.h"
 #include "gui/mapper.h"
 #include "hardware/memory.h"
+#include "ints/imagedisk_teledisk.h"
 #include "utils/string_utils.h"
 
 static const std::vector<DiskGeometry> disk_geometry_list = {
@@ -283,6 +284,35 @@ imageDisk::imageDisk(FILE* img_file, const char* img_name, uint32_t img_size_k,
 	}
 }
 
+// Formats that are not plain sector dumps identify themselves with a
+// signature at the head of the file. TeleDisk archives carry "TD" followed
+// by a zero sequence number.
+static bool has_teledisk_signature(FILE* img_file)
+{
+	uint8_t signature[3] = {};
+
+	if (fseek(img_file, 0, SEEK_SET) != 0) {
+		return false;
+	}
+	const auto num_read = fread(signature, 1, sizeof(signature), img_file);
+	if (num_read != sizeof(signature)) {
+		return false;
+	}
+	return signature[0] == 'T' && signature[1] == 'D' && signature[2] == 0;
+}
+
+std::shared_ptr<imageDisk> CreateImageDisk(FILE* img_file, const char* img_name,
+                                           uint32_t img_size_k, bool is_hdd)
+{
+	// Identify the image type. Currently we only check for TeleDisk (TD0)
+	// images, if it's not TD0 then it's assumed to be a raw sector image
+	if (has_teledisk_signature(img_file)) {
+		return std::make_shared<imageDiskTeledisk>(img_file, img_name);
+	}
+
+	return std::make_shared<imageDisk>(img_file, img_name, img_size_k, is_hdd);
+}
+
 void imageDisk::Set_Geometry(uint32_t setHeads, uint32_t setCyl,
                              uint32_t setSect, uint32_t setSectSize)
 {
@@ -470,7 +500,9 @@ static Bitu INT13_DiskHandler(void)
 			if ((last_status != 0x00) || killRead) {
 				LOG_MSG("Error in disk read");
 				killRead = false;
-				reg_ah   = 0x04;
+				// Report the status the image driver returned
+				// instead of always "sector not found".
+				reg_ah = last_status ? last_status : 0x04;
 				CALLBACK_SCF(true);
 				return CBRET_NONE;
 			}
