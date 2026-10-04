@@ -470,7 +470,9 @@ static Bitu INT13_DiskHandler(void)
 			if ((last_status != 0x00) || killRead) {
 				LOG_MSG("Error in disk read");
 				killRead = false;
-				reg_ah   = 0x04;
+				// Report the status the image driver returned
+				// instead of always "sector not found".
+				reg_ah = last_status ? last_status : 0x04;
 				CALLBACK_SCF(true);
 				return CBRET_NONE;
 			}
