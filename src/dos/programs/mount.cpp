@@ -14,6 +14,7 @@
 #include "config/config.h"
 #include "dos/cdrom.h"
 #include "dos/drives.h"
+#include "dos/mount.h"
 #include "gui/mapper.h"
 #include "hardware/ide.h"
 #include "ints/bios_disk.h"
@@ -582,28 +583,6 @@ bool MOUNT::HandleUnmount()
 	return false;
 }
 
-static std::optional<MountType> parse_mount_type(const std::string s)
-{
-	if (iequals(s, "floppy") || iequals(s, "fdd")) {
-		return MountType::FloppyImage;
-
-	} else if (iequals(s, "hdd")) {
-		return MountType::HardDiskImage;
-
-	} else if (iequals(s, "iso") || iequals(s, "cdrom")) {
-		return MountType::CdRomImage;
-
-	} else if (iequals(s, "dir")) {
-		return MountType::Directory;
-
-	} else if (iequals(s, "overlay")) {
-		return MountType::Overlay;
-
-	} else {
-		return {};
-	}
-}
-
 static std::optional<MountFileSystemType> parse_file_system_type(const std::string s)
 {
 	if (iequals(s, "fat")) {
@@ -634,13 +613,26 @@ static std::optional<uint16_t> parse_geometry_value(const std::string& s)
 	return static_cast<uint16_t>(*value);
 }
 
+// CD-ROM options of the original DOSBox. They have no effect in DOSBox Staging,
+// but they're still common in old configs, so they're ignored with a warning
+// instead of being rejected as unknown options.
+constexpr std::array LegacyCdRomFlags =
+        {"-ioctl", "-noioctl", "-ioctl_dx", "-ioctl_dio", "-ioctl_mci", "-aspi"};
+
+constexpr auto LegacyCdRomOptionWithValue = "-usecd";
+
 // Returns the first option that requires a value and is either the last
 // argument or is followed by another MOUNT option. Values can otherwise start
 // with a dash (e.g., `-label -DISK-`).
 static std::optional<std::string> find_option_missing_value(const CommandLine& cmd)
 {
-	constexpr std::array OptionsWithValue = {
-	        "-t", "-fs", "-label", "-freesize", "-size", "-chs"};
+	constexpr std::array OptionsWithValue = {"-t",
+	                                         "-fs",
+	                                         "-label",
+	                                         "-freesize",
+	                                         "-size",
+	                                         "-chs",
+	                                         LegacyCdRomOptionWithValue};
 
 	constexpr std::array Flags = {"-pr", "-ro", "-ide"};
 
@@ -660,7 +652,8 @@ static std::optional<std::string> find_option_missing_value(const CommandLine& c
 
 		const auto is_missing = !cmd.FindCommand(i + 1, next_arg) ||
 		                        is_one_of(next_arg, OptionsWithValue) ||
-		                        is_one_of(next_arg, Flags);
+		                        is_one_of(next_arg, Flags) ||
+		                        is_one_of(next_arg, LegacyCdRomFlags);
 		if (is_missing) {
 			return arg;
 		}
@@ -683,6 +676,26 @@ static std::optional<std::string> find_remove_option_value(CommandLine& cmd,
 	while (cmd.FindString(option, ignored_value, true)) {
 	}
 	return value;
+}
+
+static void remove_legacy_cdrom_options(CommandLine& cmd)
+{
+	const auto warn_ignored = [](const char* option) {
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "MOUNT",
+		                      "MSCDEX_WARNING_NO_OPTION",
+		                      option);
+	};
+
+	for (const auto option : LegacyCdRomFlags) {
+		if (cmd.FindExistRemoveAll(option)) {
+			warn_ignored(option);
+		}
+	}
+
+	if (find_remove_option_value(cmd, LegacyCdRomOptionWithValue)) {
+		warn_ignored(LegacyCdRomOptionWithValue);
+	}
 }
 
 // Sets:
@@ -708,6 +721,8 @@ bool MOUNT::ParseArguments(MountParameters& params, bool& explicit_fs,
 		                      option->c_str());
 		return false;
 	}
+
+	remove_legacy_cdrom_options(*cmd);
 
 	if (cmd->FindExistRemoveAll("-pr")) {
 		path_relative_to_last_config = true;
@@ -1507,6 +1522,19 @@ std::optional<MountParameters> MOUNT::ProcessArguments(CommandLine* cmd)
 	// mount type is known, so they are kept until after the paths have been
 	// processed.
 	const auto geometry_options = ParseGeometryOptions();
+
+	// All known options have been removed by now, so anything else starting
+	// with a dash is an unknown option, not a path
+	std::string unknown_option = {};
+	if (cmd->FindStringBegin("-", unknown_option)) {
+		unknown_option = "-" + unknown_option;
+
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "MOUNT",
+		                      "SHELL_ILLEGAL_SWITCH",
+		                      unknown_option.c_str());
+		return {};
+	}
 
 	// Get the first path argument
 	std::string first_path = {};
