@@ -31,12 +31,12 @@ const std::vector<DiskGeometry>& BIOS_GetDiskGeometryList();
 
 class ImageDisk {
 public:
-	uint8_t ReadSector(const uint32_t head, const uint32_t cylinder,
-	                   const uint32_t sector, void *data);
-	uint8_t WriteSector(const uint32_t head, const uint32_t cylinder,
-	                    const uint32_t sector, const void *data);
-	uint8_t ReadAbsoluteSector(const uint32_t sectnum, void *data);
-	uint8_t WriteAbsoluteSector(const uint32_t sectnum, const void *data);
+	virtual uint8_t ReadSector(const uint32_t head, const uint32_t cylinder,
+	                           const uint32_t sector, void *data);
+	virtual uint8_t WriteSector(const uint32_t head, const uint32_t cylinder,
+	                            const uint32_t sector, const void *data);
+	virtual uint8_t ReadAbsoluteSector(const uint32_t sectnum, void *data);
+	virtual uint8_t WriteAbsoluteSector(const uint32_t sectnum, const void *data);
 
 	void SetGeometry(const uint32_t setHeads, const uint32_t setCyl,
 	                 const uint32_t setSect, const uint32_t setSectSize);
@@ -50,7 +50,7 @@ public:
 	ImageDisk(const ImageDisk&)            = delete; // prevent copy
 	ImageDisk& operator=(const ImageDisk&) = delete; // prevent assignment
 
-	~ImageDisk()
+	virtual ~ImageDisk()
 	{
 		if (diskimg != nullptr)
 			fclose(diskimg);
