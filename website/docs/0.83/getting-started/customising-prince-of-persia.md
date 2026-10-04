@@ -62,6 +62,23 @@ game by pressing ++ctrl+q++. Not strictly necessary, but it's a nice touch.
     of the user manual for the full list of available shortcuts.
 
 
+!!! tip "Playing in a window"
+
+    If you'd rather play in a window, remove the `fullscreen = on` line. You
+    can also make the window larger with the `window_size` setting; for
+    example, this gives you a window that is 90% as tall as your desktop and
+    has the same 4:3 aspect ratio as most DOS games:
+
+    ```ini
+    [sdl]
+    window_size = 120x90%
+    ```
+
+    See the [Window
+    settings](../manual/graphics/display-and-window.md#window-settings)
+    section of the user manual for all the options.
+
+
 ## Graphics options
 
 DOSBox emulates a typical **SVGA (Super VGA)** display adapter from the
