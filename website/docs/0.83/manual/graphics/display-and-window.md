@@ -344,14 +344,16 @@ section.
     - `auto` *default*{ .default } -- Let the window manager decide the
       position.
     - `X,Y` -- Set window position in X,Y format in logical units (e.g.,
-      `250,100`). `0,0` is the top-left corner of the screen. The values
-      will be multiplied by the OS-level DPI scaling to get the window
+      `250,100`). `0,0` is the top-left corner of the screen. The values are
+      multiplied by the OS-level display scaling factor to get the window
       position in pixels.
+    - `X,Ypx` -- Set window position in pixels (e.g., `375,150px`).
+    - `X,Y%` -- Set window position as a percentage of the desktop width and
+      height (e.g., `10,10%`).
 
     !!! note
 
-        If you want to use pixel coordinates instead and ignore DPI scaling,
-        set the `SDL_WINDOWS_DPI_SCALING` environment variable to `0`.
+        Moving the window updates this setting in the same format.
 
 
 ##### window_size
@@ -361,19 +363,24 @@ section.
 
     Possible values:
 
-    - `default` *default*{ .default } -- Select the best option based on
-      your environment and other factors (such as whether aspect ratio
-      correction is enabled).
-    - `small`, `medium`, `large` (`s`, `m`, `l`) -- Size the window
-      relative to the desktop.
+    - `default` *default*{ .default } -- Same as `medium`.
+    - `small`, `medium`, `large` (`s`, `m`, `l`) -- 4:3 window sizes
+      relative to the desktop height (same as `66.67x50%`, `98.67x74%`, and
+      `120x90%`, respectively).
     - `WxH` -- Specify window size in WxH format in logical units (e.g.,
-      `1024x768`). The values will be multiplied by the OS-level DPI scaling
-      to get the window size in pixels.
+      `1024x768`). The values are multiplied by the OS-level display scaling
+      factor to get the window size in pixels.
+    - `WxHpx` -- Specify window size in pixels (e.g., `1440x1080px`). The
+      window keeps its size in pixels when moved to another display.
+    - `WxH%` -- Specify window size as a percentage of the desktop height
+      (e.g., `120x90%` for a 4:3 window 90% as tall as the desktop). Both
+      values are relative to the desktop height, so the aspect ratio of the
+      window doesn't depend on the aspect ratio of the desktop.
 
     !!! note
 
-        If you want to use pixel coordinates instead and ignore DPI scaling,
-        set the `SDL_WINDOWS_DPI_SCALING` environment variable to `0`.
+        Resizing the window updates this setting in the same format, except
+        for the named sizes, which are updated in `WxH%` format.
 
 
 ##### window_titlebar
