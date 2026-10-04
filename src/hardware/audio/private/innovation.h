@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2021-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2021-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DOSBOX_PRIVATE_INNOVATION_H
@@ -19,9 +19,12 @@
 class Innovation {
 public:
 	Innovation(const int sid_filter_strength,
-	           const std::string& channel_filter_choice);
+	           const std::string& channel_filter_prefs);
 
 	~Innovation();
+
+	void SetSidFilter(const int sid_filter_strength);
+	void SetChannelFilter(const std::string& channel_filter_prefs);
 
 private:
 	void AudioCallback(const int requested_frames);
@@ -35,11 +38,11 @@ private:
 	int16_t TallySilence(const int16_t sample);
 
 	// Managed objects
-	MixerChannelPtr channel               = nullptr;
+	MixerChannelPtr channel = nullptr;
 
-	IO_ReadHandleObject read_handler      = {};
+	IO_ReadHandleObject read_handler                = {};
 	IO_ReadHandleObject read_entertainer_id_handler = {};
-	IO_WriteHandleObject write_handler    = {};
+	IO_WriteHandleObject write_handler              = {};
 
 	std::unique_ptr<reSIDfp::SID> service = {};
 	std::queue<float> fifo                = {};

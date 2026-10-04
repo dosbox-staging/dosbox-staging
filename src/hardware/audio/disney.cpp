@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2021-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2021-2026 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -70,8 +70,9 @@ AudioFrame Disney::Render()
 {
 	assert(fifo.size());
 	const float sample = lut_u8to16[fifo.front()];
-	if (fifo.size() > 1)
+	if (fifo.size() > 1) {
 		fifo.pop();
+	}
 	return {sample, sample};
 }
 
@@ -104,9 +105,11 @@ void Disney::WriteControl(const io_port_t, const io_val_t value, const io_width_
 	// an RC lime constant. Ref:
 	// https://archive.org/stream/dss-programmers-guide/dss-programmers-guide_djvu.txt
 
-	if (!control_reg.select && new_control.select)
-		if (!IsFifoFull())
+	if (!control_reg.select && new_control.select) {
+		if (!IsFifoFull()) {
 			fifo.emplace(data_reg);
+		}
+	}
 
 	control_reg.data = new_control.data;
 }

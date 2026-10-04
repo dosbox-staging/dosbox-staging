@@ -1,8 +1,7 @@
 // SPDX-FileCopyrightText:  2023-2026 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2017-2020  Loris Chiocca
 // SPDX-FileCopyrightText:  1999-2000  Daisuke Nagano <breeze.nagano@nifty.ne.jp>
-// SPDX-FileCopyrightText:  1997-1999  Jarek Burczynski <s0246@priv4.onet.pl>
-// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-FileCopyrightText:  1997-1999  Jarek Burczynski <s0246@priv4.onet.pl> SPDX-License-Identifier: GPL-2.0-or-later
 
 // List of changes:
 //
@@ -63,8 +62,8 @@
 #include "shell/shell.h"
 #include "utils/math_utils.h"
 
-#include <SDL3/SDL_thread.h>
 #include <SDL3/SDL_mutex.h>
+#include <SDL3/SDL_thread.h>
 
 // Enable to activate IMF_LOG calls
 #define IMFC_VERBOSE_LOGGING 0
@@ -85,7 +84,7 @@ void IMF_LOG(std::string format, const Args&... args)
 	SDL_UnlockMutex(m_loggerMutex);
 }
 #else
-#	define IMF_LOG(...)
+#define IMF_LOG(...)
 #endif
 
 inline uint8_t leftRotate8(uint8_t n)
@@ -393,13 +392,13 @@ public:
 	{
 		// IMF_LOG("%s - reset()", m_name.c_str());
 		lock();
-		lastReadByteIndex               = 0;
-		indexForNextWriteByte           = 0;
-		flags._unused1                  = 0;
-		flags._hasOfflineError          = 0;
-		flags._hasOverflowError         = 0;
-		flags._hasReadError             = 0;
-		flags._isBufferEmpty            = 1;
+		lastReadByteIndex       = 0;
+		indexForNextWriteByte   = 0;
+		flags._unused1          = 0;
+		flags._hasOfflineError  = 0;
+		flags._hasOverflowError = 0;
+		flags._hasReadError     = 0;
+		flags._isBufferEmpty    = 1;
 		memset((void*)&m_buffer, 0xFF, sizeof(m_buffer));
 		unlock();
 	}
@@ -550,8 +549,6 @@ static constexpr FractionalNote to_fractional_note(const uint16_t value) noexcep
 	const auto [note, fraction] = split_uint16_t(value);
 	return {Note(note), ImfcFraction(fraction)};
 }
-
-
 
 constexpr bool operator==(const FractionalNote& a, const FractionalNote& b) noexcept
 {
@@ -1320,7 +1317,7 @@ public:
 
 	const uint8_t* SetFromStream(const uint8_t* data)
 	{
-		auto data_ptr            = data;
+		auto data_ptr = data;
 		auto get_and_check_range =
 		        [&data_ptr]([[maybe_unused]] const uint8_t val_min,
 		                    [[maybe_unused]] const uint8_t val_max) {
@@ -1615,8 +1612,8 @@ protected:
 	}
 
 public:
-	DataProvider()              = default;
-	virtual ~DataProvider()     = default;
+	DataProvider()          = default;
+	virtual ~DataProvider() = default;
 
 	virtual DataType getValue() const = 0;
 	void notifyOnChange(DataChangedConsumer<DataType>* dataConsumer)
@@ -1672,7 +1669,7 @@ private:
 
 public:
 	virtual ~InputPin() = default;
-	InputPin() = default;
+	InputPin()          = default;
 	explicit InputPin(const std::string& name) : m_name(name) {}
 	std::string getName() const
 	{
@@ -2846,7 +2843,7 @@ public:
 					// m_group1_writeInterruptEnable now set
 					// to %s", m_name.c_str(), bitValue ?
 					// "TRUE" : "FALSE");
-					m_group1_readInterruptEnable  = false;
+					m_group1_readInterruptEnable = false;
 					m_group1_writeInterruptEnable = bitValue;
 				}
 				updateInterruptLines();
@@ -2949,9 +2946,9 @@ private:
 	std::atomic<bool> m_enabled{false};
 	bool m_debug{false};
 	std::atomic<bool> m_interruptOutput{false};
-	std::deque<DataProvider<bool>*> m_interruptLines  = {};
-	std::function<void(void)> m_callbackOnLowToHigh   = {};
-	std::function<void(void)> m_callbackOnHighToLow   = {};
+	std::deque<DataProvider<bool>*> m_interruptLines = {};
+	std::function<void(void)> m_callbackOnLowToHigh  = {};
+	std::function<void(void)> m_callbackOnHighToLow  = {};
 
 	bool atLeastOneInterruptLineIsHigh()
 	{
@@ -3148,11 +3145,11 @@ private:
 	};
 
 	// Playback related
-	MixerChannelPtr audio_channel = nullptr;
+	MixerChannelPtr audio_channel      = nullptr;
 	std::queue<AudioFrame> fifo        = {};
 	std::vector<AudioFrame> render_buf = {};
 	double last_rendered_ms            = 0.0;
-	double ms_per_render          = 0.0;
+	double ms_per_render               = 0.0;
 
 	int tl_tab[TL_TAB_LEN]{};
 	unsigned int sin_tab[SIN_LEN]{};
@@ -3364,7 +3361,7 @@ constexpr uint8_t ym2151_device::eg_inc[19 * RATE_STEPS] = {
         // clang-format on
 };
 
-#define O(a) ((a)*RATE_STEPS)
+#define O(a) ((a) * RATE_STEPS)
 
 /*note that there is no O(17) in this table - it's directly in the code */
 constexpr uint8_t ym2151_device::eg_rate_select[32 + 64 + 32] = {
@@ -3417,7 +3414,7 @@ constexpr uint8_t ym2151_device::eg_rate_select[32 + 64 + 32] = {
 /*mask  2047, 1023, 511, 255, 127, 63, 31, 15, 7,  3, 1,  0,  0,  0,  0,  0 */
 // clang-format on
 
-#define O(a) ((a)*1)
+#define O(a) ((a) * 1)
 constexpr uint8_t ym2151_device::eg_rate_shift[32 + 64 + 32] = {
         // clang-format off
    /* Envelope Generator counter shifts (32 + 64 rates + 32 RKS) */
@@ -3710,9 +3707,9 @@ void ym2151_device::init_tables()
 
 	// calculate noise periods table
 	for (uint16_t i = 0; i < 32; i++) {
-		 // rate 30 and 31 are the same
+		// rate 30 and 31 are the same
 		uint16_t j = (i != 31 ? i : 30);
-		j = 32 - j;
+		j          = 32 - j;
 
 		// number of samples per one shift of the shift register
 		j = check_cast<uint16_t>(65536 / (j * 32));
@@ -4522,8 +4519,10 @@ void ym2151_device::chan7_calc()
 	env = volume_calc(op + 3); /* C2 */
 	if ((noise & 0x80) != 0U) {
 		if (env < 0x3ff) {
-			const auto noise_amplitude = static_cast<int16_t>(2 * (0x3ff - env));
-			const int8_t noise_direction = (noise_rng & 0x10000) ? 1 : -1;
+			const auto noise_amplitude = static_cast<int16_t>(
+			        2 * (0x3ff - env));
+			const int8_t noise_direction = (noise_rng & 0x10000) ? 1
+			                                                     : -1;
 
 			// Calculate the value of the noise signal
 			const int16_t noise_val = noise_amplitude * noise_direction;
@@ -5091,17 +5090,17 @@ private:
 		/* Switch is only used for state debugging
 		switch (m_state) {
 		case WAITING_FOR_WRITE_MODE:
-			// IMF_LOG("Midi State now WAITING_FOR_WRITE_MODE");
-			break;
+		        // IMF_LOG("Midi State now WAITING_FOR_WRITE_MODE");
+		        break;
 		case WAITING_FOR_SYNC_CHAR1:
-			// IMF_LOG("Midi State now WAITING_FOR_SYNC_CHAR1");
-			break;
+		        // IMF_LOG("Midi State now WAITING_FOR_SYNC_CHAR1");
+		        break;
 		case WAITING_FOR_SYNC_CHAR2:
-			// IMF_LOG("Midi State now WAITING_FOR_SYNC_CHAR2");
-			break;
+		        // IMF_LOG("Midi State now WAITING_FOR_SYNC_CHAR2");
+		        break;
 		case NORMAL_OPERATION:
-			// IMF_LOG("Midi State now NORMAL_OPERATION");
-			break;
+		        // IMF_LOG("Midi State now NORMAL_OPERATION");
+		        break;
 		}
 		*/
 	}
@@ -5240,13 +5239,13 @@ private:
 	IrqController m_irqTriggerImf;
 	TotalStatusRegister m_tsr;
 
-	std::atomic_bool keepRunning               = {};
-	std::atomic<bool> m_finishedBootupSequence = {};
-	SDL_Thread* m_mainThread                  = nullptr;
-	SDL_Thread* m_interruptThread             = nullptr;
-	bool m_interruptHandlerRunning            = {};
-	SDL_Mutex* m_interruptHandlerRunningMutex = nullptr;
-	SDL_Condition* m_interruptHandlerRunningCond    = nullptr;
+	std::atomic_bool keepRunning                 = {};
+	std::atomic<bool> m_finishedBootupSequence   = {};
+	SDL_Thread* m_mainThread                     = nullptr;
+	SDL_Thread* m_interruptThread                = nullptr;
+	bool m_interruptHandlerRunning               = {};
+	SDL_Mutex* m_interruptHandlerRunningMutex    = nullptr;
+	SDL_Condition* m_interruptHandlerRunningCond = nullptr;
 
 	static constexpr auto NumIoHandlers                           = 16;
 	std::array<IO_ReadHandleObject, NumIoHandlers> readHandlers   = {};
@@ -5340,7 +5339,8 @@ private:
 
 	bool currentThreadIsInterruptThread() const
 	{
-		return SDL_GetCurrentThreadID() == SDL_GetThreadID(m_interruptThread);
+		return SDL_GetCurrentThreadID() ==
+		       SDL_GetThreadID(m_interruptThread);
 	}
 
 	const char* getCurrentThreadName()
@@ -5656,22 +5656,22 @@ private:
 			                                                  value);
 			break;
 
-		/* Inactive cases
-		case 0x0F: break;
-		case 0x18: break;
-		case 0x19: break;
-		case 0x1A: break;
-		case 0x1B: break;
-		case 0x1C: break;
-		case 0x1D: break;
-		case 0x1E: break;
-		case 0x1F: break;
-		// don't know why these are here ?!
-		case 0x20: break;
-		case 0x21: break;
-		case 0x22: break;
-		case 0x23: break;
-		*/
+			/* Inactive cases
+			case 0x0F: break;
+			case 0x18: break;
+			case 0x19: break;
+			case 0x1A: break;
+			case 0x1B: break;
+			case 0x1C: break;
+			case 0x1D: break;
+			case 0x1E: break;
+			case 0x1F: break;
+			// don't know why these are here ?!
+			case 0x20: break;
+			case 0x21: break;
+			case 0x22: break;
+			case 0x23: break;
+			*/
 		}
 		stopMusicProcessing();
 	}
@@ -6109,14 +6109,16 @@ private:
 		case 0: processSystemRealTimeMessage_F8(); break;
 		case 2: processSystemRealTimeMessage_FA_and_FB(); break;
 		case 3: processSystemRealTimeMessage_FA_and_FB(); break;
-		case 4: processSystemRealTimeMessage_FC(); break;
+		case 4:
+			processSystemRealTimeMessage_FC();
+			break;
 
-		/* Inactive cases
-		case 1: break;
-		case 5: break;
-		case 6: break;
-		case 7: break;
-		*/
+			/* Inactive cases
+			case 1: break;
+			case 5: break;
+			case 6: break;
+			case 7: break;
+			*/
 		}
 		stopMusicProcessing();
 	}
@@ -6972,18 +6974,20 @@ private:
 		case 0x13: processMusicCardMessageSetNodeParameters(); break;
 		case 0x14: processMusicCardMessage1E4(); break;
 		case 0x15: processMusicCardMessageReboot(); break;
-		case 0x16: processMusicCardMessageDebugWriteToMemory(); break;
-		/* Inactive cases
-		case 0x17: break;
-		case 0x18: break;
-		case 0x19: break;
-		case 0x1A: break;
-		case 0x1B: break;
-		case 0x1C: break;
-		case 0x1D: break;
-		case 0x1E: break;
-		case 0x1F: break;
-		*/
+		case 0x16:
+			processMusicCardMessageDebugWriteToMemory();
+			break;
+			/* Inactive cases
+			case 0x17: break;
+			case 0x18: break;
+			case 0x19: break;
+			case 0x1A: break;
+			case 0x1B: break;
+			case 0x1C: break;
+			case 0x1D: break;
+			case 0x1E: break;
+			case 0x1F: break;
+			*/
 		}
 		stopMusicProcessing();
 	}
@@ -9624,7 +9628,7 @@ private:
 	void setNodeParameterMasterTune(uint8_t val)
 	{
 		log_debug("setNodeParameterMasterTune()");
-		m_masterTune             = val;
+		m_masterTune               = val;
 		const int16_t masterTune   = ((int8_t)(val << 1)) - 0x1EC;
 		m_masterTuneAsNoteFraction = to_fractional_note(masterTune);
 	}
@@ -9932,8 +9936,7 @@ private:
 			{ 0x24, 0x23, 0x22, 0x21, 0x20, 0x1F, 0x1E, 0x1D, 0x1C, 0x1B, 0x1B, 0x1A, 0x1A, 0x19, 0x19, 0x18, 0x18, 0x17, 0x17, 0x16, 0x16, 0x15, 0x15, 0x14, 0x13, 0x12, 0x11, 0x10, 0x0F, 0x0E, 0x0D, 0x0C },
 			{ 0x27, 0x26, 0x25, 0x24, 0x23, 0x22, 0x21, 0x20, 0x1F, 0x1E, 0x1D, 0x1C, 0x1B, 0x1A, 0x19, 0x18, 0x18, 0x17, 0x16, 0x15, 0x14, 0x13, 0x12, 0x11, 0x10, 0x0F, 0x0E, 0x0D, 0x0C, 0x0B, 0x0A, 0x09 },
 			{ 0x2A, 0x28, 0x27, 0x26, 0x25, 0x24, 0x22, 0x21, 0x20, 0x1F, 0x1D, 0x1C, 0x1B, 0x1A, 0x19, 0x18, 0x18, 0x17, 0x16, 0x15, 0x14, 0x13, 0x11, 0x10, 0x0F, 0x0E, 0x0C, 0x0B, 0x0A, 0x09, 0x07, 0x06 },
-			{ 0x2D, 0x2B, 0x2A, 0x28, 0x27, 0x25, 0x24, 0x22, 0x21, 0x1F, 0x1E, 0x1C, 0x1B, 0x1A, 0x19, 0x18, 0x18, 0x17, 0x15, 0x14, 0x13, 0x11, 0x10, 0x0E, 0x0D, 0x0B, 0x0A, 0x08, 0x06, 0x04, 0x02, 0x00 }
-		        // clang-format on
+			{ 0x2D, 0x2B, 0x2A, 0x28, 0x27, 0x25, 0x24, 0x22, 0x21, 0x1F, 0x1E, 0x1C, 0x1B, 0x1A, 0x19, 0x18, 0x18, 0x17, 0x15, 0x14, 0x13, 0x11, 0x10, 0x0E, 0x0D, 0x0B, 0x0A, 0x08, 0x06, 0x04, 0x02, 0x00 }  // clang-format on
 		};
 		static constexpr uint8_t modulatorTable[8][32] = {
 		        // clang-format off
@@ -9944,8 +9947,7 @@ private:
 			{ 12, 12, 12, 11, 11, 11, 10, 10, 10,  9,  9,  9,  9,  8,  8,  8,  8,  8,  8,  7,  7,  7,  7,  6,  6,  6,  5,  5,  5,  4,  4,  4 },
 			{ 13, 13, 12, 12, 12, 11, 11, 11, 10, 10, 10,  9,  9,  9,  8,  8,  8,  8,  7,  7,  7,  6,  6,  6,  5,  5,  5,  4,  4,  4,  3,  3 },
 			{ 14, 14, 13, 13, 12, 12, 11, 11, 10, 10, 10,  9,  9,  9,  8,  8,  8,  8,  7,  7,  7,  6,  6,  6,  5,  5,  4,  4,  3,  3,  2,  2 },
-			{ 15, 15, 14, 14, 13, 13, 12, 12, 11, 11, 10, 10,  9,  9,  8,  8,  8,  8,  7,  7,  6,  6,  5,  5,  4,  4,  3,  3,  2,  2,  1,  0 }
-		        // clang-format on
+			{ 15, 15, 14, 14, 13, 13, 12, 12, 11, 11, 10, 10,  9,  9,  8,  8,  8,  8,  7,  7,  6,  6,  5,  5,  4,  4,  3,  3,  2,  2,  1,  0 }  // clang-format on
 		};
 		if (operatorDefinition->getModulatorCarrierSelect() != 0U) {
 			return c +
@@ -9989,8 +9991,7 @@ private:
 				0xEB, 0xE4, 0xDC, 0xD2, 0xC6, 0xB9, 0xAB, 0x9C, 0x8E, 0x81, 0x75, 0x6A, 0x60, 0x57, 0x4F, 0x48,
 				0x41, 0x3B, 0x36, 0x31, 0x2D, 0x29, 0x25, 0x21, 0x1E, 0x1B, 0x17, 0x15, 0x12, 0x0F, 0x0D, 0x0B,
 				0x09, 0x07, 0x05, 0x04, 0x03, 0x02, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
-			}
-		        // clang-format on
+			}  // clang-format on
 		};
 		const uint16_t val =
 		        operatorDefinition->getKeyboardLevelScalingDepth() *
@@ -10446,7 +10447,8 @@ private:
 
 	// ROM Address: 0x24EA
 	void executeMidiCommand_NoteONOFF_internal(InstrumentParameters* instr,
-	                                           Note noteNumber, ImfcFraction fraction,
+	                                           Note noteNumber,
+	                                           ImfcFraction fraction,
 	                                           KeyVelocity velocity,
 	                                           Duration duration)
 	{
@@ -11172,7 +11174,7 @@ private:
 			// Template byte is of type InstrumentNumber
 			m_sysEx_InstrumentNumber = *actualMidiData & 0x07;
 			*expectedMidiData = ((*expectedMidiData << 4) & 0xF0) | 0x08;
-			*actualMidiData   = *actualMidiData & 0xF8; // clear the
+			*actualMidiData = *actualMidiData & 0xF8; // clear the
 			                                          // instrument
 			                                          // number from
 			                                          // the midi
@@ -12369,7 +12371,7 @@ private:
 		send_midi_byte_with_error_handling(numberOfBytesToSend & 0x7F);
 
 		// send data
-		checksum = 0;
+		checksum      = 0;
 		auto data_ptr = data;
 		do {
 			const uint8_t dataByte = *data_ptr;
@@ -12397,7 +12399,7 @@ private:
 
 		// send data
 		auto data_ptr = data;
-		checksum = 0;
+		checksum      = 0;
 		do {
 			const uint8_t dataByte = *data_ptr;
 			send_midi_byte_with_error_handling(dataByte);
@@ -12831,10 +12833,11 @@ private:
 					m_sp_SysExStateMatchTable[i] = b;
 					i++;
 
-					// Incrementing 'i' can technically exceed the
-					// loop's bounds, but the read-only table values
-					// mean 'i' will never be close to the loop end;
-					// guard defensively regardless:
+					// Incrementing 'i' can technically
+					// exceed the loop's bounds, but the
+					// read-only table values mean 'i' will
+					// never be close to the loop end; guard
+					// defensively regardless:
 					if (i >= sizeof(SP_SysExStateMatchTableTemplate)) {
 						break;
 					}
@@ -13061,7 +13064,7 @@ public:
 			SDL_LockMutex(m_interruptHandlerRunningMutex);
 			while (!m_interruptHandlerRunning) {
 				SDL_WaitCondition(m_interruptHandlerRunningCond,
-				             m_interruptHandlerRunningMutex);
+				                  m_interruptHandlerRunningMutex);
 			}
 			SDL_UnlockMutex(m_interruptHandlerRunningMutex);
 			interruptHandler();
@@ -13226,10 +13229,12 @@ public:
 		keepRunning = false;
 
 		// Remove access to the IO ports
-		for (auto& rh : readHandlers)
+		for (auto& rh : readHandlers) {
 			rh.Uninstall();
-		for (auto& wh : writeHandlers)
+		}
+		for (auto& wh : writeHandlers) {
 			wh.Uninstall();
+		}
 
 		// Give the threads a small bit of time to gracefully complete
 		std::this_thread::sleep_for(20ms);
@@ -13384,20 +13389,20 @@ void IMFC_Init()
 		channel->SetLowPassFilter(FilterState::On);
 	};
 
-	const std::string filter_choice = section->GetString("imfc_filter");
+	const std::string filter_prefs = section->GetString("imfc_filter");
 
-	if (const auto maybe_bool = parse_bool_setting(filter_choice)) {
+	if (const auto maybe_bool = parse_bool_setting(filter_prefs)) {
 		if (*maybe_bool) {
 			enable_filter();
 		} else {
 			channel->SetLowPassFilter(FilterState::Off);
 		}
-	} else if (!channel->TryParseAndSetCustomFilter(filter_choice)) {
+	} else if (!channel->TryParseAndSetCustomFilter(filter_prefs)) {
 		NOTIFY_DisplayWarning(Notification::Source::Console,
 		                      "IMFC",
 		                      "PROGRAM_CONFIG_INVALID_SETTING",
 		                      "imfc_filter",
-		                      filter_choice.c_str(),
+		                      filter_prefs.c_str(),
 		                      "on");
 
 		set_section_property_value("imfc", "imfc_filter", "on");
