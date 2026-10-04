@@ -10,6 +10,7 @@
 #include <cstdint>
 #include <cstdio>
 #include <optional>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -318,8 +319,28 @@ ImageDiskTeledisk::ImageDiskTeledisk(FILE *img_file, const char *img_name)
 		if (fread(&comment, 1, sizeof(comment), diskimg) != sizeof(comment)) {
 			return;
 		}
-		if (fseek(diskimg, read_u16_le(comment.length), SEEK_CUR) != 0) {
+
+		const auto length = read_u16_le(comment.length);
+		std::string text(length, '\0');
+		if (length != 0 && fread(text.data(), 1, length, diskimg) != length) {
 			return;
+		}
+
+		// The CRC covers the comment header from after its own CRC
+		// field, then the comment text. A mismatch only makes the text
+		// untrustworthy, so warn and keep going.
+		auto crc = td0_crc16(reinterpret_cast<const uint8_t*>(&comment) +
+		                             offsetof(Td0CommentHeader, length),
+		                     sizeof(comment) -
+		                             offsetof(Td0CommentHeader, length));
+		crc = td0_crc16(reinterpret_cast<const uint8_t*>(text.data()),
+		                length,
+		                crc);
+		if (crc != read_u16_le(comment.crc)) {
+			LOG_WARNING("TD0: Comment block CRC mismatch");
+		}
+		if (!text.empty()) {
+			LOG_MSG("TD0: Comment: %s", text.c_str());
 		}
 	}
 
