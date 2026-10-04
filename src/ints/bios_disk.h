@@ -70,6 +70,13 @@ private:
 	enum { NONE,READ,WRITE } last_action;
 };
 
+// Opens an image file as a disk, picking the ImageDisk subclass that matches
+// the file's signature. Only plain sector dumps and TeleDisk (.td0) archives
+// are recognised so far. 'img_size_k' and 'is_hdd' only apply to plain images;
+// formats carrying their own geometry decide those for themselves.
+std::shared_ptr<ImageDisk> CreateImageDisk(FILE *img_file, const char *img_name,
+                                           uint32_t img_size_k, bool is_hdd);
+
 void updateDPT(void);
 void incrementFDD(void);
 

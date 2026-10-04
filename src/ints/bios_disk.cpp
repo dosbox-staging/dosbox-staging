@@ -14,6 +14,7 @@
 #include "dos/drives.h"
 #include "gui/mapper.h"
 #include "hardware/memory.h"
+#include "ints/imagedisk_teledisk.h"
 #include "utils/string_utils.h"
 
 static const std::vector<DiskGeometry> disk_geometry_list = {
@@ -44,7 +45,7 @@ static uint8_t last_status;
 static uint8_t last_drive;
 uint16_t imgDTASeg;
 RealPt imgDTAPtr;
-DOS_DTA* imgDTA;
+DOS_DTA *imgDTA;
 bool killRead;
 static bool swapping_requested;
 
@@ -281,6 +282,35 @@ ImageDisk::ImageDisk(FILE *img_file, const char *img_name, uint32_t img_size_k,
 			incrementFDD();
 		}
 	}
+}
+
+// Formats that are not plain sector dumps identify themselves with a
+// signature at the head of the file. TeleDisk archives carry "TD" followed
+// by a zero sequence number.
+static bool has_teledisk_signature(FILE *img_file)
+{
+	uint8_t signature[3] = {};
+
+	if (fseek(img_file, 0, SEEK_SET) != 0) {
+		return false;
+	}
+	const auto num_read = fread(signature, 1, sizeof(signature), img_file);
+	if (num_read != sizeof(signature)) {
+		return false;
+	}
+	return signature[0] == 'T' && signature[1] == 'D' && signature[2] == 0;
+}
+
+std::shared_ptr<ImageDisk> CreateImageDisk(FILE *img_file, const char *img_name,
+                                           uint32_t img_size_k, bool is_hdd)
+{
+	// Identify the image type. Currently we only check for TeleDisk (TD0)
+	// images, if it's not TD0 then it's assumed to be a raw sector image
+	if (has_teledisk_signature(img_file)) {
+		return std::make_shared<ImageDiskTeledisk>(img_file, img_name);
+	}
+
+	return std::make_shared<ImageDisk>(img_file, img_name, img_size_k, is_hdd);
 }
 
 void ImageDisk::SetGeometry(const uint32_t setHeads, const uint32_t setCyl,
