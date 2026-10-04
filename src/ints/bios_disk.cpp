@@ -284,29 +284,12 @@ ImageDisk::ImageDisk(FILE *img_file, const char *img_name, uint32_t img_size_k,
 	}
 }
 
-// Formats that are not plain sector dumps identify themselves with a
-// signature at the head of the file. TeleDisk archives carry "TD" followed
-// by a zero sequence number.
-static bool has_teledisk_signature(FILE *img_file)
-{
-	uint8_t signature[3] = {};
-
-	if (fseek(img_file, 0, SEEK_SET) != 0) {
-		return false;
-	}
-	const auto num_read = fread(signature, 1, sizeof(signature), img_file);
-	if (num_read != sizeof(signature)) {
-		return false;
-	}
-	return signature[0] == 'T' && signature[1] == 'D' && signature[2] == 0;
-}
-
 std::shared_ptr<ImageDisk> CreateImageDisk(FILE *img_file, const char *img_name,
                                            uint32_t img_size_k, bool is_hdd)
 {
 	// Identify the image type. Currently we only check for TeleDisk (TD0)
 	// images, if it's not TD0 then it's assumed to be a raw sector image
-	if (has_teledisk_signature(img_file)) {
+	if (IsTelediskImage(img_file)) {
 		return std::make_shared<ImageDiskTeledisk>(img_file, img_name);
 	}
 

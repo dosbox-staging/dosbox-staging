@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cassert>
+#include <cstddef>
 #include <cstdint>
 #include <cstdio>
 #include <optional>
@@ -160,6 +161,40 @@ static std::optional<std::vector<uint8_t>> decode_sector_data(
 		// Unsupported/unknown encoding
 		return {};
 	}
+}
+
+// True if the file begins with a plausible TeleDisk image header. Leaves the
+// file position unspecified.
+bool IsTelediskImage(FILE *img_file)
+{
+	Td0ImageHeader header = {};
+
+	if (fseek(img_file, 0, SEEK_SET) != 0) {
+		return false;
+	}
+	if (fread(&header, 1, sizeof(header), img_file) != sizeof(header)) {
+		return false;
+	}
+
+	// Only "TD" (normal compression) is decoded; "td" is the advanced
+	// compression variant.
+	if (header.signature[0] != 'T' || header.signature[1] != 'D') {
+		return false;
+	}
+
+	// Only the first volume of a multi-volume set is useful on its own.
+	if (header.sequence != 0) {
+		return false;
+	}
+
+	// The stepping field's low 7 bits hold a drive step rate of 0, 1 or 2.
+	if ((header.stepping & 0x7f) > 2) {
+		return false;
+	}
+
+	const auto crc = td0_crc16(reinterpret_cast<const uint8_t*>(&header),
+	                           offsetof(Td0ImageHeader, crc));
+	return crc == read_u16_le(header.crc);
 }
 
 const ImageDiskTeledisk::Entry *ImageDiskTeledisk::FindSector(

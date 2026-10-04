@@ -80,6 +80,10 @@ static_assert(sizeof(Td0TrackHeader) == 4);
 static_assert(sizeof(Td0SectorHeader) == 6);
 static_assert(sizeof(Td0DataHeader) == 3);
 
+// True if the file begins with a plausible TeleDisk image header. Leaves the
+// file position unspecified.
+bool IsTelediskImage(FILE *img_file);
+
 // TeleDisk (.td0) floppy image. The archive is decoded into 'entries' when the
 // image is opened; sector I/O is then served from that list. TeleDisk images
 // are read-only, as the compressed track layout cannot be written back.
