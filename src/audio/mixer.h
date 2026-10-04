@@ -254,8 +254,8 @@ public:
 	                        const float release_time_ms);
 	void EnableNoiseGate(const bool enabled);
 
-	void SetHighPassFilter(const FilterState state);
-	void SetLowPassFilter(const FilterState state);
+	void SetHighPassFilter(const FilterState new_state);
+	void SetLowPassFilter(const FilterState new_state);
 	FilterState GetHighPassFilterState();
 	FilterState GetLowPassFilterState();
 	void ConfigureHighPassFilter(const int order, const int cutoff_freq_hz);
@@ -345,8 +345,8 @@ public:
 		float fadeout_decrement_per_ms = {};
 		int fadeout_or_sleep_after_ms  = {};
 
-		bool wants_fadeout = false;
-		bool had_signal    = false;
+		bool fadeout_enabled = false;
+		bool had_signal      = false;
 	};
 
 	Sleeper sleeper;

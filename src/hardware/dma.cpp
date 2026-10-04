@@ -114,10 +114,10 @@ static bool activate_secondary()
 
 	// The secondary controller and Tandy Sound device conflict in
 	// their use of the 0xc0 IO ports. This is a unique architectural
-	// conflict, so we explicitly shutdown the TandySound device (if
+	// conflict, so we explicitly evict the TandySound device (if
 	// it happens to be running) to meet this request.
 	//
-	TANDYSOUND_Destroy();
+	TANDYSOUND_Evict();
 
 	constexpr uint8_t secondary_index = 1;
 	secondary = std::make_unique<DmaController>(secondary_index);
