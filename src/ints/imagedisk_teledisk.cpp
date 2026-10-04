@@ -378,9 +378,12 @@ ImageDiskTeledisk::ImageDiskTeledisk(FILE *img_file, const char *img_name)
 				// No data block follows this header.
 				ent.data.assign(ent.sector_size, 0);
 			} else if (ent.HasFlag(Td0SectorFlags::DosSkipped)) {
-				// Skipped sectors read back as empty.
+				// TeleDisk omitted the data because the sector
+				// sat in an unallocated cluster; assume a
+				// freshly formatted disk, which DOS FORMAT
+				// fills with 0xF6.
 				ent.has_data = true;
-				ent.data.assign(ent.sector_size, 0);
+				ent.data.assign(ent.sector_size, 0xf6);
 			} else {
 				Td0DataHeader data_header = {};
 				const auto data_offset    = ftell(diskimg);
