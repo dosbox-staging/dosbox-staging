@@ -1,5 +1,10 @@
 {% extends "base.html" %}
 
+{% block extrahead %}
+  {{ super() }}
+  <link rel="icon" type="image/svg+xml" href="{{ 'assets/images/favicon.svg' | url }}">
+{% endblock %}
+
 {% block header %}
 
 <div class="dev-site" hidden>
