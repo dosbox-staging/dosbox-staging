@@ -337,6 +337,19 @@ ImageDiskTeledisk::ImageDiskTeledisk(FILE *img_file, const char *img_name)
 			break;
 		}
 
+		// A header with a bad CRC cannot be trusted to describe its
+		// sectors. The sector records are still consumed so the next
+		// track header can be found, but they stay out of the list.
+		const auto track_crc = td0_crc16(reinterpret_cast<const uint8_t*>(
+		                                         &track_header),
+		                                 offsetof(Td0TrackHeader, crc));
+		const auto skip_track = (track_crc & 0xff) != track_header.crc;
+		if (skip_track) {
+			LOG_WARNING("TD0: Bad track header CRC at C/H=%u/%u, skipping track",
+			            track_header.cylinder,
+			            track_header.head);
+		}
+
 		const auto phys_track = track_header.cylinder;
 		const auto phys_head = static_cast<uint8_t>(track_header.head & 1u);
 
@@ -424,7 +437,9 @@ ImageDiskTeledisk::ImageDiskTeledisk(FILE *img_file, const char *img_name)
 				}
 			}
 
-			entries.push_back(std::move(ent));
+			if (!skip_track) {
+				entries.push_back(std::move(ent));
+			}
 		}
 	}
 
