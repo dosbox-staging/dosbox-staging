@@ -137,6 +137,13 @@ void MidiSynth::RenderBacklogged()
 		// while in fast-forward mode. There would be a lot of hanging
 		// notes if we don't do this.
 		//
+		// We're on the renderer thread, which is the only consumer of
+		// `work_fifo`, so we must not go through `SendMidiMessage()`
+		// here as `Enqueue()` blocks when the FIFO is full. Hand the
+		// messages straight to the synth instead; the synth is already
+		// in sync at this point so there are no audio frames to render
+		// first.
+		//
 		for (uint8_t ch = 0; ch < NumMidiChannels; ++ch) {
 			const uint8_t status = MidiStatus::ControlChange | ch;
 
@@ -144,7 +151,13 @@ void MidiSynth::RenderBacklogged()
 			msg[0]          = status;
 			msg[1]          = MidiChannelMode::AllNotesOff;
 
-			SendMidiMessage(msg);
+			const MidiWork work{std::vector<uint8_t>(msg.data.begin(),
+			                                         msg.data.end()),
+			                    0,
+			                    MessageType::Channel,
+			                    PIC_AtomicIndex()};
+
+			ProcessWorkItem(work);
 		}
 	}
 }
