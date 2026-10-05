@@ -34,7 +34,7 @@ function(add_install_rules)
       RENAME "${INSTALL_ICON_NAME}.svg")
 
     # Bitmap icons
-    foreach(PX IN ITEMS 16 22 24 32 48 96 128 256 512 1024)
+    foreach(PX IN ITEMS 16 22 24 32 36 48 64 72 96 128 256 512 1024)
     install(FILES "extras/icons/png/icon_${PX}.png"
         DESTINATION "${INSTALL_DIR_ICONS}/${PX}x${PX}/apps"
         RENAME "${INSTALL_ICON_NAME}.png")
