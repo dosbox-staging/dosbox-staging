@@ -311,6 +311,9 @@ ImageDiskTeledisk::ImageDiskTeledisk(FILE *img_file, const char *img_name)
 	// A zero image size makes the base constructor skip its file-size
 	// geometry probe: the archive is compressed, so its size says nothing
 	// about the disk. Work the geometry out from the decoded sectors below.
+	//
+	// A parse failure returns early and leaves the image inactive with
+	// sector_size set to zero, which is how callers detect a failed open.
 	heads       = 1;
 	cylinders   = 0;
 	sectors     = 0;

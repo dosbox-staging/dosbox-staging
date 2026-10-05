@@ -528,6 +528,21 @@ bool MOUNT::MountImageRaw(MountParameters& params)
 	                                            imagesize,
 	                                            is_hdd);
 
+	// A floppy whose format failed to parse never becomes active and has
+	// no geometry. Reject it here instead of leaving a dead disk in the
+	// list. Hard disks are still inactive at this point; SetGeometry below
+	// is what activates them.
+	if (!is_hdd && !imageDiskList.at(drv_idx)->active) {
+		// Ownership of 'new_disk' went to the ImageDisk, so clearing
+		// the slot also closes the file.
+		imageDiskList.at(drv_idx) = nullptr;
+
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "MOUNT",
+		                      "PROGRAM_IMGMOUNT_CANT_CREATE");
+		return false;
+	}
+
 	// Image formats that cannot be written back, such as TeleDisk images,
 	// are forced to mount read-only even if the user didn't specify it
 	if (imageDiskList.at(drv_idx)->is_readonly) {

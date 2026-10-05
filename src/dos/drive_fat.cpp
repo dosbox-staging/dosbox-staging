@@ -845,6 +845,16 @@ fatDrive::fatDrive(const char* sysFilename, uint32_t bytesector,
 		partSectOff = 0;
 	}
 
+	// An image that never became active has no usable geometry, for example
+	// a TeleDisk archive whose parse failed. Report that clearly instead of
+	// falling through to the sector-size check below.
+	if (!loadedDisk->active) {
+		created_successfully = false;
+		LOG_WARNING("DOS: MOUNT - Disk image has no usable geometry, not mounting: %s",
+		            sysFilename);
+		return;
+	}
+
 	if (bytesector != BytePerSector) {
 		/* Non-standard sector sizes not implemented */
 		created_successfully = false;

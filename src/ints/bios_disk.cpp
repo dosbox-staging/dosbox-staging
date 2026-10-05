@@ -481,6 +481,16 @@ static Bitu INT13_DiskHandler(void)
 			        (uint32_t)((reg_cl & 63) + i),
 			        sectbuf);
 			if ((last_status != 0x00) || killRead) {
+				// A data error (0x10) still transfers the
+				// sector: the image driver has already filled
+				// sectbuf with the (flagged) payload. Other
+				// failures leave the guest buffer alone.
+				if (last_status == 0x10) {
+					for (t = 0; t < 512; t++) {
+						real_writeb(segat, bufptr, sectbuf[t]);
+						bufptr++;
+					}
+				}
 				LOG_MSG("Error in disk read");
 				killRead = false;
 				// Report the status the image driver returned
