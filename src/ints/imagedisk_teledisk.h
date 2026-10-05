@@ -1,5 +1,5 @@
-// SPDX-FileCopyrightText:  2026 The DOSBox Staging Team
-// SPDX-FileCopyrightText:  2026 The DOSBox-X Team
+// SPDX-FileCopyrightText:  2026-2026 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2026-2026 The DOSBox-X Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DOSBOX_IMAGEDISK_TELEDISK_H
@@ -13,13 +13,25 @@
 
 // TeleDisk sector flags (sector header, spec section 6.5). OR-combined.
 enum class Td0SectorFlags : uint8_t {
-	None        = 0x00,
-	Duplicate   = 0x01, // sector duplicated within a track
-	CrcError    = 0x02, // sector was read with a CRC error
-	DeletedMark = 0x04, // deleted-data address mark
-	DosSkipped  = 0x10, // skipped via DOS allocation; no data block follows
-	IdNoData    = 0x20, // had ID field but no data; no data block follows
-	DataNoId    = 0x40, // had data but no ID field (bogus header)
+	None = 0x00,
+
+	// sector duplicated within a track
+	Duplicate = 0x01,
+
+	// sector was read with a CRC error
+	CrcError = 0x02,
+
+	// deleted-data address mark
+	DeletedMark = 0x04,
+
+	// skipped via DOS allocation; no data block follows
+	DosSkipped = 0x10,
+
+	// had ID field but no data; no data block follows
+	IdNoData = 0x20,
+
+	// had data but no ID field (bogus header)
+	DataNoId = 0x40,
 };
 
 #pragma pack(push, 1)
@@ -28,23 +40,41 @@ enum class Td0SectorFlags : uint8_t {
 //
 // clang-format off
 struct Td0ImageHeader {
-	uint8_t signature[2]; // "TD" normal, "td" advanced compression
-	uint8_t sequence;     // 0 for first/only volume
+	// "TD" normal, "td" advanced compression
+	uint8_t signature[2];
+
+	uint8_t sequence;
 	uint8_t check_sequence;
-	uint8_t version;      // high.low nibble, e.g. 0x15 == 1.5
+
+	// high.low nibble, e.g. 0x15 == 1.5
+	uint8_t version;
+
 	uint8_t data_rate;
 	uint8_t drive_type;
-	uint8_t stepping;     // bit 7 set => optional comment block present
+
+	// bit 7 set => optional comment block present
+	uint8_t stepping;
+
 	uint8_t dos_alloc_flag;
-	uint8_t sides;        // 1 == one side, otherwise two
+
+	// 1 == one side, otherwise two
+	uint8_t sides;
+
 	uint8_t crc[2];
 };
 
 struct Td0CommentHeader {
 	uint8_t crc[2];
-	uint8_t length[2]; // size of comment data block that follows
-	uint8_t year;      // years since 1900
-	uint8_t month;     // 0 == January
+
+	// size of comment data block that follows
+	uint8_t length[2];
+
+	// years since 1900
+	uint8_t year;
+
+	// 0 == January
+	uint8_t month;
+
 	uint8_t day;
 	uint8_t hour;
 	uint8_t minute;
@@ -52,24 +82,41 @@ struct Td0CommentHeader {
 };
 
 struct Td0TrackHeader {
-	uint8_t num_sectors; // 0xff marks end of image
-	uint8_t cylinder;    // physical cylinder
-	uint8_t head;        // bit 0 == side; bit 7 == single-density
+	// 0xff marks end of image
+	uint8_t num_sectors;
+
+	// physical cylinder
+	uint8_t cylinder;
+
+	// bit 0 == side; bit 7 == single-density
+	uint8_t head;
+
 	uint8_t crc;
 };
 
 struct Td0SectorHeader {
-	uint8_t cylinder;  // logical cylinder in the sector ID field
-	uint8_t head;      // logical side/head
-	uint8_t sector;    // logical sector number
-	uint8_t size_code; // sector size = 128 << size_code
+	// logical cylinder in the sector ID field
+	uint8_t cylinder;
+
+	// logical side/head
+	uint8_t head;
+
+	// logical sector number
+	uint8_t sector;
+
+	// sector size = 128 << size_code
+	uint8_t size_code;
+
 	Td0SectorFlags flags;
 	uint8_t crc;
 };
 
 struct Td0DataHeader {
-	uint8_t block_size[2]; // size of data block including the method byte
-	uint8_t method;        // SectorEncodingMethod
+	// size of data block including the method byte
+	uint8_t block_size[2];
+
+	// SectorEncodingMethod
+	uint8_t method;
 };
 // clang-format on
 #pragma pack(pop)
@@ -82,7 +129,7 @@ static_assert(sizeof(Td0DataHeader) == 3);
 
 // True if the file begins with a plausible TeleDisk image header. Leaves the
 // file position unspecified.
-bool IsTelediskImage(FILE *img_file);
+bool is_teledisk_image(FILE *img_file);
 
 // TeleDisk (.td0) floppy image. The archive is decoded into 'entries' when the
 // image is opened; sector I/O is then served from that list. TeleDisk images

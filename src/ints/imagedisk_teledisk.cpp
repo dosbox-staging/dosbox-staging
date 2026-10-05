@@ -1,11 +1,11 @@
-// SPDX-FileCopyrightText:  2026 The DOSBox Staging Team
-// SPDX-FileCopyrightText:  2026 The DOSBox-X Team
+// SPDX-FileCopyrightText:  2026-2026 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2026-2026 The DOSBox-X Team
 // SPDX-FileCopyrightText:  2013-2026 Michal Necasek
-// SPDX-FileCopyrightText:  2026 Michael Drüing
+// SPDX-FileCopyrightText:  2026-2026 Michael Drüing
 // SPDX-License-Identifier: GPL-2.0-or-later AND MIT
 //
 // Portions of this file are derived from Michal Necasek's img_td.c TeleDisk
-// image reader (MIT): td0_crc16(), the header checks in IsTelediskImage(),
+// image reader (MIT): td0_crc16(), the header checks in is_teledisk_image(),
 // the track and comment CRC checks, and the 0xF6 fill for DOS-skipped
 // sectors. See LICENSES/MIT.txt.
 
@@ -173,7 +173,7 @@ static std::optional<std::vector<uint8_t>> decode_sector_data(
 
 // True if the file begins with a plausible TeleDisk image header. Leaves the
 // file position unspecified.
-bool IsTelediskImage(FILE *img_file)
+bool is_teledisk_image(FILE *img_file)
 {
 	Td0ImageHeader header = {};
 
@@ -239,7 +239,8 @@ uint8_t ImageDiskTeledisk::ReadSector(const uint32_t head, const uint32_t cylind
 	                             static_cast<uint8_t>(cylinder),
 	                             static_cast<uint8_t>(sector));
 	if (ent == nullptr || !ent->has_data) {
-		return 0x04; // Sector not found
+		// Sector not found
+		return 0x04;
 	}
 
 	// Copy the data regardless, mirroring real hardware which still
@@ -255,10 +256,12 @@ uint8_t ImageDiskTeledisk::ReadSector(const uint32_t head, const uint32_t cylind
 
 	// Convert sector flags recorded in the .td0 image to INT 13h status.
 	if (ent->HasFlag(Td0SectorFlags::CrcError)) {
-		return 0x10; // Data error
+		// Data error
+		return 0x10;
 	}
 	if (ent->HasFlag(Td0SectorFlags::DeletedMark)) {
-		return 0x02; // Address mark not found
+		// Address mark not found
+		return 0x02;
 	}
 	return 0x00;
 }
@@ -269,13 +272,14 @@ uint8_t ImageDiskTeledisk::WriteSector(const uint32_t, const uint32_t,
 	// TeleDisk images are read-only: writes cannot be re-encoded back into
 	// the .td0 archive, so accepting them in memory would silently discard
 	// the guest's data on remount. Report write protection instead.
-	return 0x03; // Write protected
+	return 0x03;
 }
 
 uint8_t ImageDiskTeledisk::ReadAbsoluteSector(const uint32_t sectnum, void *data)
 {
 	if (sectors == 0 || heads == 0) {
-		return 0x04; // Sector not found
+		// Sector not found
+		return 0x04;
 	}
 
 	const auto sector   = (sectnum % sectors) + 1u;
@@ -288,7 +292,8 @@ uint8_t ImageDiskTeledisk::ReadAbsoluteSector(const uint32_t sectnum, void *data
 uint8_t ImageDiskTeledisk::WriteAbsoluteSector(const uint32_t sectnum, const void *data)
 {
 	if (sectors == 0 || heads == 0) {
-		return 0x04; // Sector not found
+		// Sector not found
+		return 0x04;
 	}
 
 	const auto sector   = (sectnum % sectors) + 1u;

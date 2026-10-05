@@ -289,7 +289,7 @@ std::shared_ptr<ImageDisk> CreateImageDisk(FILE *img_file, const char *img_name,
 {
 	// Identify the image type. Currently we only check for TeleDisk (TD0)
 	// images, if it's not TD0 then it's assumed to be a raw sector image
-	if (IsTelediskImage(img_file)) {
+	if (is_teledisk_image(img_file)) {
 		return std::make_shared<ImageDiskTeledisk>(img_file, img_name);
 	}
 
