@@ -227,3 +227,85 @@ jobs:
           path: |
             dosbox-staging-macOS-universal-${{ env.DOSBOX_VERSION_AND_HASH }}.dmg
             release-notes.html
+
+
+  publish_dev_build:
+    name:    Publish dev build
+    needs:   publish_universal_build
+    if:      github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+
+    env:
+      DEV_RELEASE_TAG: dev-latest-macos
+      GH_TOKEN:        ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          submodules: false
+
+      - name: Set common vars
+        uses: ./.github/actions/set-common-vars
+
+      - name: Download DMG disk image
+        uses: actions/download-artifact@v8
+        with:
+          name: dosbox-staging-macOS-universal-${{ env.DOSBOX_VERSION_AND_HASH }}
+          path: dist
+
+      - name: Create release assets
+        run: |
+          # The release notes sit beside the DMG rather than inside it, so they
+          # have to be published as a separate asset. Including the version in
+          # the name keeps the pruning step below from treating them as stale.
+          notes_html="release-notes-$DOSBOX_VERSION_AND_HASH.html"
+          mv dist/release-notes.html "dist/$notes_html"
+
+      - name: Publish to the rolling dev release
+        run: |
+          # Skip if a newer build has already been published. This guards against
+          # a cancelled run whose steps still completed, and against an old run
+          # being re-run by hand -- either would otherwise prune the newer
+          # build's assets away.
+          tag_ref="repos/$GITHUB_REPOSITORY/git/ref/tags/$DEV_RELEASE_TAG"
+          published=$(gh api "$tag_ref" --jq .object.sha 2>/dev/null || true)
+
+          if [ -n "$published" ]; then
+              compare="repos/$GITHUB_REPOSITORY/compare/$published...${{ github.sha }}"
+              status=$(gh api "$compare" --jq .status)
+
+              if [ "$status" = "behind" ]; then
+                  echo "A newer build is already published; nothing to do."
+                  exit 0
+              fi
+          fi
+
+          # The release itself is created by hand once; CI only refreshes its
+          # assets, title and tag.
+          #
+          # Upload first. The release still advertises the previous build at
+          # this point, so failing here leaves the website untouched.
+          #
+          # The DMG is uploaded as-is, so users no longer have to unpack a zip
+          # to get at it.
+          gh release upload "$DEV_RELEASE_TAG" dist/*.dmg dist/*.html --clobber
+
+          # The website reads the title to decide which assets are current, so
+          # this single edit is the atomic switch over to the new build. Every
+          # asset it needs is already uploaded, and nothing before this line is
+          # visible to visitors.
+          gh release edit "$DEV_RELEASE_TAG" --title "$DOSBOX_VERSION_AND_HASH"
+
+          # A release follows its tag, so moving the tag re-points the release
+          # at this commit. Pushes made with GITHUB_TOKEN create no workflow
+          # runs, so this doesn't re-trigger any build.
+          git push --force origin ${{ github.sha }}:refs/tags/$DEV_RELEASE_TAG
+
+          # Nothing references the previous build's assets any more, so pruning
+          # them is housekeeping rather than part of the switch.
+          gh release view "$DEV_RELEASE_TAG" --json assets --jq '.assets[].name' \
+              | grep -v "$DOSBOX_VERSION_AND_HASH" \
+              | xargs -r -I{} gh release delete-asset "$DEV_RELEASE_TAG" {} --yes
