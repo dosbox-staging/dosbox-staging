@@ -69,10 +69,10 @@ Ps1Dac::Ps1Dac(const std::string& filter_choice)
 	constexpr bool SignedData = false;
 	constexpr bool NativeOrder = true;
 
-	const auto callback = std::bind(
-	        MIXER_PullFromQueueCallback<Ps1Dac, uint8_t, Stereo, SignedData, NativeOrder>,
-	        std::placeholders::_1,
-	        this);
+	const auto callback = [this](auto arg) {
+		return MIXER_PullFromQueueCallback<Ps1Dac, uint8_t, Stereo, SignedData, NativeOrder>(
+		        arg, this);
+	};
 
 	channel = MIXER_AddChannel(callback,
 	                           UseMixerRate,

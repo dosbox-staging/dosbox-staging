@@ -461,14 +461,14 @@ bool PcSpeakerDiscrete::TryParseAndSetCustomFilter(const std::string& filter_cho
 PcSpeakerDiscrete::PcSpeakerDiscrete()
 {
 	// Register the sound channel
-	constexpr bool Stereo      = false;
-	constexpr bool SignedData  = true;
-	constexpr bool NativeOrder = true;
+	const auto callback = [this](auto arg) {
+		constexpr bool Stereo      = false;
+		constexpr bool SignedData  = true;
+		constexpr bool NativeOrder = true;
 
-	const auto callback = std::bind(
-	        MIXER_PullFromQueueCallback<PcSpeakerDiscrete, float, Stereo, SignedData, NativeOrder>,
-	        std::placeholders::_1,
-	        this);
+		MIXER_PullFromQueueCallback<PcSpeakerDiscrete, float, Stereo, SignedData, NativeOrder>(
+		        arg, this);
+	};
 
 	channel = MIXER_AddChannel(callback,
 	                           UseMixerRate,
