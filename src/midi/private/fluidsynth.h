@@ -125,7 +125,10 @@ private:
 	void ProcessWorkItem(const MidiWork& work) override;
 	void RenderAudioFramesToFifo(const int num_audio_frames) override;
 
-	void CloseSynth() override {}
+	void CloseSynth() override
+	{
+		// no extra shutdown logic needed for FluidSynth
+	}
 
 	using FluidSynthSettingsPtr =
 	        std::unique_ptr<fluid_settings_t, decltype(&delete_fluid_settings)>;
