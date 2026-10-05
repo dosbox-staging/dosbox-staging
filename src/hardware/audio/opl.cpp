@@ -839,9 +839,7 @@ Opl::Opl(Section* configuration, const OplMode _opl_mode)
 		channel_features.emplace(ChannelFeature::Stereo);
 	}
 
-	const auto mixer_callback = std::bind(&Opl::AudioCallback,
-	                                      this,
-	                                      std::placeholders::_1);
+	const auto mixer_callback = std::bind_front(&Opl::AudioCallback, this);
 
 	// Register the audio channel
 	channel = MIXER_AddChannel(mixer_callback,
@@ -914,10 +912,8 @@ Opl::Opl(Section* configuration, const OplMode _opl_mode)
 
 	Init();
 
-	using namespace std::placeholders;
-
-	const auto read_from = std::bind(&Opl::PortRead, this, _1, _2);
-	const auto write_to  = std::bind(&Opl::PortWrite, this, _1, _2, _3);
+	const auto read_from = std::bind_front(&Opl::PortRead, this);
+	const auto write_to  = std::bind_front(&Opl::PortWrite, this);
 
 	// 0x388-0x38b ports (read/write)
 	WriteHandler[0].Install(Port::AdLib::Command, write_to, io_width_t::byte, 4);

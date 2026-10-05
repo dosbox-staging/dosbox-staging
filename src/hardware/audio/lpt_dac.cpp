@@ -27,9 +27,11 @@ LptDac::LptDac(const std::string_view name, const int channel_rate_hz,
 	constexpr bool Stereo = true;
 	constexpr bool SignedData = true;
 	constexpr bool NativeOrder = true;
-	const auto audio_callback = std::bind(MIXER_PullFromQueueCallback<LptDac, AudioFrame, Stereo, SignedData, NativeOrder>,
-	                                      std::placeholders::_1,
-	                                      this);
+
+	const auto audio_callback = std::bind(
+	        MIXER_PullFromQueueCallback<LptDac, AudioFrame, Stereo, SignedData, NativeOrder>,
+	        std::placeholders::_1,
+	        this);
 
 	std::set<ChannelFeature> features = {ChannelFeature::Sleep,
 	                                     ChannelFeature::ReverbSend,

@@ -37,8 +37,6 @@ Innovation::Innovation(const int sid_filter_strength,
                        const std::string& channel_filter_choice)
         : ms_per_clock{MillisInSecond / ChipClockHz}
 {
-	using namespace std::placeholders;
-
 	assert(ms_per_clock > 0);
 
 	auto sid_service = std::make_unique<reSIDfp::SID>();
@@ -54,7 +52,7 @@ Innovation::Innovation(const int sid_filter_strength,
 	MIXER_LockMixerThread();
 
 	// Setup the mixer and get it's sampling rate
-	const auto mixer_callback = std::bind(&Innovation::AudioCallback, this, _1);
+	const auto mixer_callback = std::bind_front(&Innovation::AudioCallback, this);
 
 	auto mixer_channel = MIXER_AddChannel(mixer_callback,
 	                                      UseMixerRate,
@@ -95,8 +93,8 @@ Innovation::Innovation(const int sid_filter_strength,
 	                                   passband);
 
 	// Setup and assign the port address
-	const auto read_from = std::bind(&Innovation::ReadFromPort, this, _1, _2);
-	const auto write_to = std::bind(&Innovation::WriteToPort, this, _1, _2, _3);
+	const auto read_from = std::bind_front(&Innovation::ReadFromPort, this);
+	const auto write_to  = std::bind_front(&Innovation::WriteToPort, this);
 
 	read_handler.Install(BasePort, read_from, io_width_t::byte, 0x20);
 
