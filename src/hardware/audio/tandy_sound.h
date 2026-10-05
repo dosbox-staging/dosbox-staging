@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2025-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2025-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DOSBOX_TANDY_SOUND_H
@@ -11,6 +11,7 @@ void TANDYSOUND_AddConfigSection(Section* sec);
 
 void TANDYSOUND_Init(SectionProp& section);
 void TANDYSOUND_Destroy();
+void TANDYSOUND_Evict();
 
 void TANDYSOUND_NotifySettingUpdated(SectionProp& section,
                                      const std::string& prop_name);
