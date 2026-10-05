@@ -18,7 +18,9 @@
 
 class Innovation {
 public:
-	Innovation(const int sid_filter_strength,
+	enum class Model { Ssi2001, Entertainer };
+
+	Innovation(const Model model, const int sid_filter_strength,
 	           const std::string& channel_filter_choice);
 
 	~Innovation();
@@ -35,11 +37,11 @@ private:
 	int16_t TallySilence(const int16_t sample);
 
 	// Managed objects
-	MixerChannelPtr channel               = nullptr;
+	MixerChannelPtr channel = nullptr;
 
-	IO_ReadHandleObject read_handler      = {};
+	IO_ReadHandleObject read_handler                = {};
 	IO_ReadHandleObject read_entertainer_id_handler = {};
-	IO_WriteHandleObject write_handler    = {};
+	IO_WriteHandleObject write_handler              = {};
 
 	std::unique_ptr<reSIDfp::SID> service = {};
 	std::queue<float> fifo                = {};
