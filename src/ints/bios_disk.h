@@ -29,23 +29,28 @@ struct DiskGeometry {
 
 const std::vector<DiskGeometry>& BIOS_GetDiskGeometryList();
 
-class imageDisk  {
+class ImageDisk {
 public:
-	uint8_t Read_Sector(uint32_t head,uint32_t cylinder,uint32_t sector,void * data);
-	uint8_t Write_Sector(uint32_t head,uint32_t cylinder,uint32_t sector,void * data);
-	uint8_t Read_AbsoluteSector(uint32_t sectnum, void * data);
-	uint8_t Write_AbsoluteSector(uint32_t sectnum, void * data);
+	uint8_t ReadSector(const uint32_t head, const uint32_t cylinder,
+	                   const uint32_t sector, void *data);
+	uint8_t WriteSector(const uint32_t head, const uint32_t cylinder,
+	                    const uint32_t sector, const void *data);
+	uint8_t ReadAbsoluteSector(const uint32_t sectnum, void *data);
+	uint8_t WriteAbsoluteSector(const uint32_t sectnum, const void *data);
 
-	void Set_Geometry(uint32_t setHeads, uint32_t setCyl, uint32_t setSect, uint32_t setSectSize);
-	void Get_Geometry(uint32_t * getHeads, uint32_t *getCyl, uint32_t *getSect, uint32_t *getSectSize);
+	void SetGeometry(const uint32_t setHeads, const uint32_t setCyl,
+	                 const uint32_t setSect, const uint32_t setSectSize);
+	void GetGeometry(uint32_t *getHeads, uint32_t *getCyl,
+	                 uint32_t *getSect, uint32_t *getSectSize);
 	uint8_t GetBiosType(void);
 	uint32_t getSectSize(void);
 
-	imageDisk(FILE *img_file, const char *img_name, uint32_t img_size_k, bool is_hdd);
-	imageDisk(const imageDisk&) = delete; // prevent copy
-	imageDisk& operator=(const imageDisk&) = delete; // prevent assignment
+	ImageDisk(FILE *img_file, const char *img_name, uint32_t img_size_k,
+	          bool is_hdd);
+	ImageDisk(const ImageDisk&)            = delete; // prevent copy
+	ImageDisk& operator=(const ImageDisk&) = delete; // prevent assignment
 
-	~imageDisk()
+	~ImageDisk()
 	{
 		if (diskimg != nullptr)
 			fclose(diskimg);
@@ -71,8 +76,8 @@ void incrementFDD(void);
 
 #define MAX_DISK_IMAGES (2 + MAX_HDD_IMAGES)
 
-extern std::array<std::shared_ptr<imageDisk>, MAX_DISK_IMAGES> imageDiskList;
-extern std::array<std::shared_ptr<imageDisk>, MAX_SWAPPABLE_DISKS> diskSwap;
+extern std::array<std::shared_ptr<ImageDisk>, MAX_DISK_IMAGES> imageDiskList;
+extern std::array<std::shared_ptr<ImageDisk>, MAX_SWAPPABLE_DISKS> diskSwap;
 
 extern uint16_t imgDTASeg; /* Real memory location of temporary DTA pointer for fat image disk access */
 extern RealPt imgDTAPtr; /* Real memory location of temporary DTA pointer for fat image disk access */

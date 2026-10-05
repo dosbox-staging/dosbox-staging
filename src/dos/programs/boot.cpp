@@ -246,7 +246,7 @@ void BOOT::Run(void)
 			FILE *usefile = getFSFile(temp_line.c_str(),
 			                          &floppysize, &rombytesize);
 			if (usefile != nullptr) {
-				diskSwap[i] = std::make_shared<imageDisk>(
+				diskSwap[i] = std::make_shared<ImageDisk>(
 				        usefile, temp_line.c_str(), floppysize, false);
 				if (usefile_1 == nullptr) {
 					usefile_1 = usefile;
@@ -273,7 +273,7 @@ void BOOT::Run(void)
 
 	bootSector bootarea;
 	imageDiskList.at(drive_index(drive))
-	        ->Read_Sector(0, 0, 1, reinterpret_cast<uint8_t*>(&bootarea));
+	        ->ReadSector(0, 0, 1, reinterpret_cast<uint8_t*>(&bootarea));
 	if ((bootarea.rawdata[0] == 0x50) && (bootarea.rawdata[1] == 0x43) &&
 	    (bootarea.rawdata[2] == 0x6a) && (bootarea.rawdata[3] == 0x72)) {
 		if (!is_machine_pcjr()) {

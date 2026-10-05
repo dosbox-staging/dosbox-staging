@@ -518,14 +518,14 @@ bool MOUNT::MountImageRaw(MountParameters& params)
 
 	const auto drv_idx = params.drive - '0';
 
-	imageDiskList.at(drv_idx) = std::make_shared<imageDisk>(
+	imageDiskList.at(drv_idx) = std::make_shared<ImageDisk>(
 	        new_disk, params.paths[0].c_str(), imagesize, is_hdd);
 
 	if (is_hdd) {
-		imageDiskList.at(drv_idx)->Set_Geometry(params.sizes[2],
-		                                        params.sizes[3],
-		                                        params.sizes[1],
-		                                        params.sizes[0]);
+		imageDiskList.at(drv_idx)->SetGeometry(params.sizes[2],
+		                                       params.sizes[3],
+		                                       params.sizes[1],
+		                                       params.sizes[0]);
 	}
 
 	if ((params.drive == '2' || params.drive == '3') && is_hdd) {

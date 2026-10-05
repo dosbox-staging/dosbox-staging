@@ -51,8 +51,8 @@ static bool swapping_requested;
 void BIOS_SetEquipment(uint16_t equipment);
 
 /* 2 floppys and 2 harddrives, max */
-std::array<std::shared_ptr<imageDisk>, MAX_DISK_IMAGES> imageDiskList = {};
-std::array<std::shared_ptr<imageDisk>, MAX_SWAPPABLE_DISKS> diskSwap  = {};
+std::array<std::shared_ptr<ImageDisk>, MAX_DISK_IMAGES> imageDiskList = {};
+std::array<std::shared_ptr<ImageDisk>, MAX_SWAPPABLE_DISKS> diskSwap  = {};
 
 unsigned int swapPosition;
 
@@ -61,7 +61,7 @@ void updateDPT(void)
 	uint32_t tmpheads, tmpcyl, tmpsect, tmpsize;
 	if (imageDiskList[2]) {
 		PhysPt dp0physaddr = CALLBACK_PhysPointer(diskparm0);
-		imageDiskList[2]->Get_Geometry(&tmpheads, &tmpcyl, &tmpsect, &tmpsize);
+		imageDiskList[2]->GetGeometry(&tmpheads, &tmpcyl, &tmpsect, &tmpsize);
 		phys_writew(dp0physaddr, (uint16_t)tmpcyl);
 		phys_writeb(dp0physaddr + 0x2, (uint8_t)tmpheads);
 		phys_writew(dp0physaddr + 0x3, 0);
@@ -77,7 +77,7 @@ void updateDPT(void)
 	}
 	if (imageDiskList[3]) {
 		PhysPt dp1physaddr = CALLBACK_PhysPointer(diskparm1);
-		imageDiskList[3]->Get_Geometry(&tmpheads, &tmpcyl, &tmpsect, &tmpsize);
+		imageDiskList[3]->GetGeometry(&tmpheads, &tmpcyl, &tmpsect, &tmpsize);
 		phys_writew(dp1physaddr, (uint16_t)tmpcyl);
 		phys_writeb(dp1physaddr + 0x2, (uint8_t)tmpheads);
 		phys_writeb(dp1physaddr + 0xe, (uint8_t)tmpsect);
@@ -164,17 +164,17 @@ void swapInNextDisk(bool pressed)
 	swapping_requested = true;
 }
 
-uint8_t imageDisk::Read_Sector(uint32_t head, uint32_t cylinder,
-                               uint32_t sector, void* data)
+uint8_t ImageDisk::ReadSector(const uint32_t head, const uint32_t cylinder,
+                              const uint32_t sector, void *data)
 {
 	uint32_t sectnum;
 
 	sectnum = ((cylinder * heads + head) * sectors) + sector - 1L;
 
-	return Read_AbsoluteSector(sectnum, data);
+	return ReadAbsoluteSector(sectnum, data);
 }
 
-uint8_t imageDisk::Read_AbsoluteSector(uint32_t sectnum, void* data)
+uint8_t ImageDisk::ReadAbsoluteSector(const uint32_t sectnum, void *data)
 {
 	const auto bytenum = check_cast<cross_off_t>(sectnum) * sector_size;
 
@@ -202,17 +202,17 @@ uint8_t imageDisk::Read_AbsoluteSector(uint32_t sectnum, void* data)
 	return 0x00;
 }
 
-uint8_t imageDisk::Write_Sector(uint32_t head, uint32_t cylinder,
-                                uint32_t sector, void* data)
+uint8_t ImageDisk::WriteSector(const uint32_t head, const uint32_t cylinder,
+                               const uint32_t sector, const void *data)
 {
 	uint32_t sectnum;
 
 	sectnum = ((cylinder * heads + head) * sectors) + sector - 1L;
 
-	return Write_AbsoluteSector(sectnum, data);
+	return WriteAbsoluteSector(sectnum, data);
 }
 
-uint8_t imageDisk::Write_AbsoluteSector(uint32_t sectnum, void* data)
+uint8_t ImageDisk::WriteAbsoluteSector(const uint32_t sectnum, const void *data)
 {
 	const auto bytenum = check_cast<cross_off_t>(sectnum) * sector_size;
 
@@ -242,7 +242,7 @@ uint8_t imageDisk::Write_AbsoluteSector(uint32_t sectnum, void* data)
 	return ((ret > 0) ? 0x00 : 0x05);
 }
 
-imageDisk::imageDisk(FILE* img_file, const char* img_name, uint32_t img_size_k,
+ImageDisk::ImageDisk(FILE *img_file, const char *img_name, uint32_t img_size_k,
                      bool is_hdd)
         : hardDrive(is_hdd),
           active(false),
@@ -283,8 +283,8 @@ imageDisk::imageDisk(FILE* img_file, const char* img_name, uint32_t img_size_k,
 	}
 }
 
-void imageDisk::Set_Geometry(uint32_t setHeads, uint32_t setCyl,
-                             uint32_t setSect, uint32_t setSectSize)
+void ImageDisk::SetGeometry(const uint32_t setHeads, const uint32_t setCyl,
+                            const uint32_t setSect, const uint32_t setSectSize)
 {
 	heads       = setHeads;
 	cylinders   = setCyl;
@@ -293,8 +293,8 @@ void imageDisk::Set_Geometry(uint32_t setHeads, uint32_t setCyl,
 	active      = true;
 }
 
-void imageDisk::Get_Geometry(uint32_t* getHeads, uint32_t* getCyl,
-                             uint32_t* getSect, uint32_t* getSectSize)
+void ImageDisk::GetGeometry(uint32_t *getHeads, uint32_t *getCyl,
+                            uint32_t *getSect, uint32_t *getSectSize)
 {
 	*getHeads    = heads;
 	*getCyl      = cylinders;
@@ -302,7 +302,7 @@ void imageDisk::Get_Geometry(uint32_t* getHeads, uint32_t* getCyl,
 	*getSectSize = sector_size;
 }
 
-uint8_t imageDisk::GetBiosType(void)
+uint8_t ImageDisk::GetBiosType(void)
 {
 	if (!hardDrive) {
 		return static_cast<uint8_t>(disk_geometry_list[floppytype].biosval);
@@ -311,7 +311,7 @@ uint8_t imageDisk::GetBiosType(void)
 	}
 }
 
-uint32_t imageDisk::getSectSize(void)
+uint32_t ImageDisk::getSectSize(void)
 {
 	return sector_size;
 }
@@ -462,7 +462,7 @@ static Bitu INT13_DiskHandler(void)
 		segat  = SegValue(es);
 		bufptr = reg_bx;
 		for (Bitu i = 0; i < reg_al; i++) {
-			last_status = imageDiskList[drivenum]->Read_Sector(
+			last_status = imageDiskList[drivenum]->ReadSector(
 			        (uint32_t)reg_dh,
 			        (uint32_t)(reg_ch | ((reg_cl & 0xc0) << 2)),
 			        (uint32_t)((reg_cl & 63) + i),
@@ -494,7 +494,7 @@ static Bitu INT13_DiskHandler(void)
 				sectbuf[t] = real_readb(SegValue(es), bufptr);
 				bufptr++;
 			}
-			last_status = imageDiskList[drivenum]->Write_Sector(
+			last_status = imageDiskList[drivenum]->WriteSector(
 			        (uint32_t)reg_dh,
 			        (uint32_t)(reg_ch | ((reg_cl & 0xc0) << 2)),
 			        (uint32_t)((reg_cl & 63) + i),
@@ -524,7 +524,7 @@ static Bitu INT13_DiskHandler(void)
 		bufptr = reg_bx;
 		for(i=0;i<reg_al;i++) {
 		        last_status =
-		imageDiskList[drivenum]->Read_Sector((uint32_t)reg_dh,
+		imageDiskList[drivenum]->ReadSector((uint32_t)reg_dh,
 		(uint32_t)(reg_ch | ((reg_cl & 0xc0)<< 2)), (uint32_t)((reg_cl &
 		63)+i), sectbuf); if(last_status != 0x00) { LOG_MSG("Error in
 		disk read"); CALLBACK_SCF(true); return CBRET_NONE;
@@ -560,10 +560,7 @@ static Bitu INT13_DiskHandler(void)
 		reg_ax = 0x00;
 		reg_bl = imageDiskList[drivenum]->GetBiosType();
 		uint32_t tmpheads, tmpcyl, tmpsect, tmpsize;
-		imageDiskList[drivenum]->Get_Geometry(&tmpheads,
-		                                      &tmpcyl,
-		                                      &tmpsect,
-		                                      &tmpsize);
+		imageDiskList[drivenum]->GetGeometry(&tmpheads, &tmpcyl, &tmpsect, &tmpsize);
 		if (tmpcyl == 0) {
 			LOG(LOG_BIOS,
 			    LOG_ERROR)("INT13 DrivParm: cylinder count zero!");
@@ -614,10 +611,10 @@ static Bitu INT13_DiskHandler(void)
 			}
 
 			uint32_t tmpheads, tmpcyl, tmpsect, tmpsize;
-			imageDiskList[drivenum]->Get_Geometry(&tmpheads,
-			                                      &tmpcyl,
-			                                      &tmpsect,
-			                                      &tmpsize);
+			imageDiskList[drivenum]->GetGeometry(&tmpheads,
+			                                     &tmpcyl,
+			                                     &tmpsect,
+			                                     &tmpsize);
 			// Store intermediate calculations in 64-bit to avoid
 			// accidental integer overflow on temporary value:
 			uint64_t largesize = tmpheads;
