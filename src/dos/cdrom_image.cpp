@@ -473,8 +473,9 @@ CDROM_Interface_Image::CDROM_Interface_Image()
 	if (refCount == 0) {
 		if (!player.channel) {
 			MIXER_LockMixerThread();
-			const auto mixer_callback = std::bind(&CDROM_Interface_Image::CDAudioCallback,
-			                                      this, std::placeholders::_1);
+
+			const auto mixer_callback = std::bind_front(
+			        &CDROM_Interface_Image::CDAudioCallback, this);
 
 			player.channel = MIXER_AddChannel(mixer_callback,
 			                                  UseMixerRate,

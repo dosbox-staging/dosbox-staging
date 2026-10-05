@@ -163,9 +163,10 @@ void CDROM_Interface_Physical::InitAudio()
 	}
 
 	MIXER_LockMixerThread();
-	auto callback = std::bind(&CDROM_Interface_Physical::CdAudioCallback,
-	                          this,
-	                          std::placeholders::_1);
+
+	auto callback = std::bind_front(&CDROM_Interface_Physical::CdAudioCallback,
+	                                this);
+
 	mixer_channel = MIXER_AddChannel(callback,
 	                                 REDBOOK_PCM_FRAMES_PER_SECOND,
 	                                 name,
@@ -173,6 +174,7 @@ void CDROM_Interface_Physical::InitAudio()
 	                                  ChannelFeature::DigitalAudio});
 
 	thread = std::thread(&CDROM_Interface_Physical::CdReaderLoop, this);
+
 	MIXER_UnlockMixerThread();
 }
 

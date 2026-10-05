@@ -68,9 +68,7 @@ DiskNoises::DiskNoises(const DiskNoiseMode floppy_disk_noise_mode,
 	// Start audio thread
 	MIXER_LockMixerThread();
 
-	const auto mixer_callback = std::bind(&DiskNoises::AudioCallback,
-	                                      this,
-	                                      std::placeholders::_1);
+	const auto mixer_callback = std::bind_front(&DiskNoises::AudioCallback, this);
 
 	mix_channel = MIXER_AddChannel(mixer_callback,
 	                               DiskNoiseSampleRateInHz,

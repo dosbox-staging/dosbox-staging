@@ -704,9 +704,7 @@ MidiDeviceMt32::MidiDeviceMt32()
 	MIXER_LockMixerThread();
 
 	// Set up the mixer callback
-	const auto mixer_callback = std::bind(&MidiSynth::MixerCallback,
-	                                      this,
-	                                      std::placeholders::_1);
+	const auto mixer_callback = std::bind_front(&MidiSynth::MixerCallback, this);
 
 	auto channel = MIXER_AddChannel(mixer_callback,
 	                                sample_rate_hz,
@@ -757,7 +755,7 @@ MidiDeviceMt32::MidiDeviceMt32()
 	model_and_dir = std::move(*loaded_model_and_dir);
 
 	// Start rendering audio
-	const auto render = std::bind(&MidiDeviceMt32::Render, this);
+	const auto render = std::bind_front(&MidiDeviceMt32::Render, this);
 	renderer          = std::thread(render);
 	set_thread_name(renderer, "dosbox:mt32");
 

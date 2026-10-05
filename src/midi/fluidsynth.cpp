@@ -730,9 +730,7 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	MIXER_LockMixerThread();
 
 	// Set up the mixer callback
-	const auto mixer_callback = std::bind(&MidiSynth::MixerCallback,
-	                                      this,
-	                                      std::placeholders::_1);
+	const auto mixer_callback = std::bind_front(&MidiSynth::MixerCallback, this);
 
 	mixer_channel = MIXER_AddChannel(mixer_callback,
 	                                 sample_rate_hz,
@@ -767,7 +765,7 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	work_fifo.Resize(MaxMidiWorkFifoSize);
 
 	// Start rendering audio
-	const auto render = std::bind(&MidiDeviceFluidSynth::Render, this);
+	const auto render = std::bind_front(&MidiDeviceFluidSynth::Render, this);
 	renderer          = std::thread(render);
 	set_thread_name(renderer, "dosbox:fsynth");
 

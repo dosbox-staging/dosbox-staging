@@ -117,8 +117,6 @@ static void setup_filter(MixerChannelPtr& channel, const bool filter_enabled)
 
 TandyDAC::TandyDAC(const ConfigProfile config_profile, const std::string& filter_choice)
 {
-	using namespace std::placeholders;
-
 	assert(config_profile != ConfigProfile::SoundCardRemoved);
 
 	MIXER_LockMixerThread();
@@ -127,7 +125,11 @@ TandyDAC::TandyDAC(const ConfigProfile config_profile, const std::string& filter
 	constexpr bool Stereo = false;
 	constexpr bool SignedData = false;
 	constexpr bool NativeOrder = true;
-	const auto callback = std::bind(MIXER_PullFromQueueCallback<TandyDAC, uint8_t, Stereo, SignedData, NativeOrder>, _1, this);
+
+	const auto callback = std::bind(
+	        MIXER_PullFromQueueCallback<TandyDAC, uint8_t, Stereo, SignedData, NativeOrder>,
+	        std::placeholders::_1,
+	        this);
 
 	channel = MIXER_AddChannel(callback,
 	                           UseMixerRate,
@@ -165,11 +167,11 @@ TandyDAC::TandyDAC(const ConfigProfile config_profile, const std::string& filter
 	}
 
 	// Register DAC per-port read handlers
-	const auto reader = std::bind(&TandyDAC::ReadFromPort, this, _1, _2);
+	const auto reader = std::bind_front(&TandyDAC::ReadFromPort, this);
 	read_handler.Install(io.base, reader, io_width_t::byte, 4);
 
 	// Register DAC per-port write handlers
-	const auto writer = std::bind(&TandyDAC::WriteToPort, this, _1, _2, _3);
+	const auto writer = std::bind_front(&TandyDAC::WriteToPort, this);
 	write_handlers[0].Install(io.base, writer, io_width_t::byte, 4);
 
 	if (config_profile == ConfigProfile::SoundCardOnly) {
@@ -272,8 +274,9 @@ void TandyDAC::ChangeMode()
 				dma.channel = DMA_GetChannel(io.dma);
 
 				if (dma.channel) {
-					const auto callback = std::bind(
-					        &TandyDAC::DmaCallback, this, _1, _2);
+					const auto callback = std::bind_front(
+					        &TandyDAC::DmaCallback, this);
+
 					dma.channel->RegisterCallback(callback);
 
 					channel->WakeUp();
@@ -419,8 +422,6 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile,
                    const bool is_dac_enabled, const std::string& fadeout_choice,
                    const std::string& filter_choice)
 {
-	using namespace std::placeholders;
-
 	assert(config_profile != ConfigProfile::SoundCardRemoved);
 
 	MIXER_LockMixerThread();
@@ -439,7 +440,7 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile,
 	}
 	// Register the write ports
 	constexpr io_port_t BaseAddress = 0xc0;
-	const auto writer = std::bind(&TandyPSG::WriteToPort, this, _1, _2, _3);
+	const auto writer = std::bind_front(&TandyPSG::WriteToPort, this);
 
 	write_handlers[0].Install(BaseAddress, writer, io_width_t::byte, 2);
 
@@ -451,7 +452,7 @@ TandyPSG::TandyPSG(const ConfigProfile config_profile,
 	}
 
 	// Run the audio channel at the mixer's native rate
-	const auto callback = std::bind(&TandyPSG::AudioCallback, this, _1);
+	const auto callback = std::bind_front(&TandyPSG::AudioCallback, this);
 
 	channel = MIXER_AddChannel(callback,
 	                           RenderRateHz,

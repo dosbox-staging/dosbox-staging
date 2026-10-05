@@ -1036,11 +1036,10 @@ uint16_t Gus::ReadFromRegister()
 
 void Gus::RegisterIoHandlers()
 {
-	using namespace std::placeholders;
-
 	// Register the IO read addresses
 	assert(read_handlers.size() > 7);
-	const auto read_from = std::bind(&Gus::ReadFromPort, this, _1, _2);
+	const auto read_from = std::bind_front(&Gus::ReadFromPort, this);
+
 	read_handlers.at(0).Install(0x302 + port_base, read_from, io_width_t::byte);
 	read_handlers.at(1).Install(0x303 + port_base, read_from, io_width_t::byte);
 	read_handlers.at(2).Install(0x304 + port_base, read_from, io_width_t::word);
@@ -1048,6 +1047,7 @@ void Gus::RegisterIoHandlers()
 	read_handlers.at(4).Install(0x206 + port_base, read_from, io_width_t::byte);
 	read_handlers.at(5).Install(0x208 + port_base, read_from, io_width_t::byte);
 	read_handlers.at(6).Install(0x307 + port_base, read_from, io_width_t::byte);
+
 	// Board Only
 	read_handlers.at(7).Install(0x20a + port_base, read_from, io_width_t::byte);
 
@@ -1056,7 +1056,8 @@ void Gus::RegisterIoHandlers()
 	// Ditto for the Joystick
 	// GF1 Synthesizer
 	assert(write_handlers.size() > 8);
-	const auto write_to = std::bind(&Gus::WriteToPort, this, _1, _2, _3);
+	const auto write_to = std::bind_front(&Gus::WriteToPort, this);
+
 	write_handlers.at(0).Install(0x302 + port_base, write_to, io_width_t::byte);
 	write_handlers.at(1).Install(0x303 + port_base, write_to, io_width_t::byte);
 	write_handlers.at(2).Install(0x304 + port_base, write_to, io_width_t::word);
@@ -1151,7 +1152,7 @@ void Gus::UpdatePlaybackDmaAddress(const uint8_t new_address)
 	assert(dma_channel);
 
 	dma_channel->ReserveFor(ChannelName::GravisUltrasound, gus_evict);
-	dma_channel->RegisterCallback(std::bind(&Gus::DmaCallback, this, _1, _2));
+	dma_channel->RegisterCallback(std::bind_front(&Gus::DmaCallback, this));
 
 #if LOG_GUS
 	LOG_MSG("GUS: Assigned playback DMA address to %u", dma1);
@@ -1339,7 +1340,7 @@ void Gus::WriteToRegister()
 		// write in bit 6 that can't be read back because this bit takes
 		// on a different meaning when reading the DMA control register.
 		//
-		PerformDmaTransfer = std::bind(
+		PerformDmaTransfer = std::bind_front(
 		        dma_control_register.are_samples_16bit
 		                ? &Gus::SizedDmaTransfer<SampleSize::Bits16>
 		                : &Gus::SizedDmaTransfer<SampleSize::Bits8>,

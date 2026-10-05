@@ -406,9 +406,7 @@ MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 	MIXER_LockMixerThread();
 
 	// Set up the mixer callback
-	const auto mixer_callback = std::bind(&MidiSynth::MixerCallback,
-	                                      this,
-	                                      std::placeholders::_1);
+	const auto mixer_callback = std::bind_front(&MidiSynth::MixerCallback, this);
 
 	mixer_channel = MIXER_AddChannel(mixer_callback,
 	                                 iroundf(sample_rate_hz),
@@ -481,7 +479,7 @@ MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 	clap.plugin->Activate(iroundf(sample_rate_hz));
 
 	// Start rendering audio
-	const auto render = std::bind(&MidiDeviceSoundCanvas::Render, this);
+	const auto render = std::bind_front(&MidiDeviceSoundCanvas::Render, this);
 	renderer          = std::thread(render);
 	set_thread_name(renderer, "dosbox:sndcanv");
 

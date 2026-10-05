@@ -3626,9 +3626,7 @@ SoundBlaster::SoundBlaster(Section* conf)
 		channel_features.insert(ChannelFeature::Stereo);
 	}
 
-	const auto callback = std::bind(&SoundBlaster::MixerCallback,
-	                                this,
-	                                std::placeholders::_1);
+	const auto callback = std::bind_front(&SoundBlaster::MixerCallback, this);
 
 	channel = MIXER_AddChannel(callback,
 	                           DefaultPlaybackRateHz,

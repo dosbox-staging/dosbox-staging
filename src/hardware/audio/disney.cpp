@@ -19,12 +19,10 @@ Disney::Disney() : LptDac(ChannelName::DisneySoundSourceDac, UseMixerRate)
 
 void Disney::BindToPort(const io_port_t lpt_port)
 {
-	using namespace std::placeholders;
-
 	// Register port handlers for 8-bit IO
-	const auto write_data = std::bind(&Disney::WriteData, this, _1, _2, _3);
-	const auto read_status = std::bind(&Disney::ReadStatus, this, _1, _2);
-	const auto write_control = std::bind(&Disney::WriteControl, this, _1, _2, _3);
+	const auto write_data    = std::bind_front(&Disney::WriteData, this);
+	const auto read_status   = std::bind_front(&Disney::ReadStatus, this);
+	const auto write_control = std::bind_front(&Disney::WriteControl, this);
 
 	BindHandlers(lpt_port, write_data, read_status, write_control);
 

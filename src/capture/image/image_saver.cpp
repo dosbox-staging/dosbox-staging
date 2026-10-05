@@ -30,7 +30,8 @@ void ImageSaver::Open()
 		Close();
 	}
 
-	const auto worker_function = std::bind(&ImageSaver::SaveQueuedImages, this);
+	const auto worker_function = std::bind_front(&ImageSaver::SaveQueuedImages,
+	                                             this);
 	renderer = std::thread(worker_function);
 	set_thread_name(renderer, "dosbox:imgcap");
 
