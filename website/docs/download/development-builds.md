@@ -14,7 +14,6 @@ span.error {
 </style>
 
 <script>
-
 // For local testing only: uncomment and replace API_TOKEN with a valid GitHub
 // API token. This is to bypass the low hourly rate limits for unauthenticated
 // API access during testing (only 60 requests per hour).
@@ -24,6 +23,43 @@ span.error {
 let headers = {
 //  "Authorization": "bearer API_TOKEN"
 }
+
+const gh_api_url = "https://api.github.com/repos/dosbox-staging/dosbox-staging/"
+
+// Our CI publishes each platform's latest successful build from 'main' to a
+// rolling prerelease, then moves that release's tag to the commit the build
+// came from (see the 'publish_dev_build' jobs in '.github/workflows').
+//
+// Reading those releases gives us a deterministic answer in a single request
+// per platform. Querying the list of CI builds instead would be unreliable:
+// that API provides no 'sort' parameter and the order of the returned results
+// is unspecified, so different visitors can end up seeing different builds.
+//
+const dev_builds = [
+  {
+    os_name:     "windows",
+    release_tag: "dev-latest-windows",
+    downloads: [
+      { label: "Installer",    re: /-setup\.exe$/ },
+      { label: "Portable ZIP", re: /\.zip$/ }
+    ]
+  },
+  {
+    os_name:     "macos",
+    release_tag: "dev-latest-macos",
+    downloads: [
+      { label: "Disk image",    re: /\.dmg$/ },
+      { label: "Release notes", re: /\.html$/ }
+    ]
+  },
+  {
+    os_name:     "linux",
+    release_tag: "dev-latest-linux",
+    downloads: [
+      { label: "Tarball", re: /\.tar\.xz$/ }
+    ]
+  }
+]
 
 function get_build_link_tr_el(os_name) {
   return document.getElementById(os_name + "-build-link")
@@ -35,133 +71,106 @@ function get_build_date_el(os_name) {
   return document.getElementById(os_name + "-build-date")
 }
 
-function set_build_version(gh_api_artifacts, os_name) {
-  fetch(gh_api_artifacts, { method: "GET", headers: headers })
-    .then(response => {
-      if (response.status !== 200) {
-        return
-      }
-
-      response.json().then(data => {
-        // Extract version and Git hash from the artifact name.
-        // Examples of valid artifact names:
-        //
-        //   dosbox-staging-linux-x86_64-0.84.0-RC1-c9524
-        //   dosbox-staging-macOS-universal-0.84.0-RC1-c9524
-        //   dosbox-staging-windows-x64-0.84.0-alpha-7342e
-        //
-        let platform_re = "[\\w-]*"
-        let version_re  = "(\\d+\\.\\d+\\.\\d+)"
-        let hash_re     = "((?:alpha|RC\\d*|rc\\d*)-[\\w]{5})"
-
-        let re = `dosbox-staging-${platform_re}-${version_re}-${hash_re}`
-        let release = data.artifacts.find(a => a.name.match(re))
-
-        if (release === undefined) {
-          return
-        }
-
-        let match = release.name.match(re)
-        let version = match[1]
-        let hash    = match[2]
-
-        get_build_version_el(os_name).textContent = `${version}-${hash}`
-      })
-    })
-    .catch(err => {
-      console.log("Fetch error", err)
-    })
-}
-
 function handle_error(msg1, msg2, msg3, os_name) {
-  console.log(get_build_link_tr_el(os_name));
-  get_build_link_tr_el(os_name).innerHTML = '<span class="error">' + msg1 + '</span>'
-  get_build_version_el(os_name).innerHTML = '<span class="error">' + msg2 + '</span>'
-  get_build_date_el(os_name).innerHTML    = '<span class="error">' + msg3 + '</span>'
+  get_build_link_tr_el(os_name).innerHTML  = '<span class="error">' + msg1 + '</span>'
+  get_build_version_el(os_name).innerHTML  = '<span class="error">' + msg2 + '</span>'
+  get_build_date_el(os_name).innerHTML     = '<span class="error">' + msg3 + '</span>'
 }
 
-// Fetch build status using GitHub API and update HTML
-function set_ci_status(workflow_file, os_name, description) {
+async function fetch_json(url, what) {
+  const response = await fetch(url, { method: "GET", headers: headers })
 
-  // GitHub has strict rate limits for anonymous users: 60 requests per hour.
-  // We are requesting only one page, with a limit of 1, with the filter query
-  // params.
-  let page = 1
-  let per_page = 1
-  let gh_api_url = "https://api.github.com/repos/dosbox-staging/dosbox-staging/"
+  if (response.status !== 200) {
+    throw new Error(`Could not fetch ${what} (status ${response.status})`)
+  }
 
-  let filter_branch = "main"
-  let filter_event  = "push"
-  let filter_status = "success"
+  return await response.json()
+}
 
-  const queryParams = new URLSearchParams()
-  queryParams.set("page",     page)
-  queryParams.set("per_page", per_page)
-  queryParams.set("branch",   filter_branch)
-  queryParams.set("event",    filter_event)
-  queryParams.set("status",   filter_status)
+function set_download_links(downloads, os_name) {
+  const el = get_build_link_tr_el(os_name)
+  el.innerHTML = ""
 
-  let gh_api_workflows = gh_api_url + "actions/workflows/" + workflow_file +
-                         "/runs?" + queryParams.toString()
+  downloads.forEach((download, i) => {
+    if (i > 0) {
+      el.appendChild(document.createElement("br"))
+    }
 
-  fetch(gh_api_workflows, { method: "GET", headers: headers })
-    .then(response => {
-      // Handle HTTP error
-      if (response.status !== 200) {
-        console.warn("Looks like there was a problem." +
-                     "Status Code: " + response.status)
+    const link = document.createElement("a")
+    link.textContent = download.label
+    link.setAttribute("href", download.asset.browser_download_url)
+    el.appendChild(link)
+  })
+}
 
-        handle_error('Error accessing GitHub API',
-                     'Please try again later',
-                     'Status: ' + response.status, os_name)
-        return
-      }
+function set_build_date(asset, os_name) {
+  // 'updated_at' is when the asset was uploaded, so it reflects when the
+  // build was published.
+  const date_string_utc = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'UTC',
+    timeZoneName: 'short',
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  }).format(new Date(asset.updated_at))
 
-      response.json().then(data => {
-        // console.log(data.workflow_runs)
-        const status = data.workflow_runs.length && data.workflow_runs[0]
+  get_build_date_el(os_name).textContent = date_string_utc
+}
 
-        // If result not found, query the next page
-        if (status == undefined) {
-            const error_message = `No builds found for ${workflow_file}`
-            console.warn(error_message)
-            handle_error(error_message, os_name)
-            return
-        }
+async function set_dev_build(build) {
+  try {
+    // The cache busting parameter is needed because GitHub serves these
+    // responses with an ETag.
+    const release = await fetch_json(
+      `${gh_api_url}releases/tags/${build.release_tag}?_=${Date.now()}`,
+      "the latest development build"
+    )
 
-        // Update HTML elements
-        let build_link = document.createElement("a")
-        build_link.textContent = description
-        build_link.setAttribute("href", status.html_url)
+    // Our CI sets the release title to the version of the build whose assets
+    // are current, and only once every one of them has finished uploading.
+    // Restricting ourselves to that version therefore always yields a single
+    // complete build, never a mix of the new and the previous one.
+    const version = release.name
+    const assets  = release.assets.filter(asset => asset.name.includes(version))
 
-        let build_link_tr_el = get_build_link_tr_el(os_name)
-        build_link_tr_el.innerHTML = ""
-        build_link_tr_el.appendChild(build_link)
+    const downloads = build.downloads
+      .map(download => ({
+        label: download.label,
+        asset: assets.find(asset => download.re.test(asset.name))
+      }))
+      .filter(download => download.asset !== undefined)
 
-        let build_date = new Date(status.updated_at)
+    if (downloads.length === 0) {
+      const error_message =
+        `No ${version} downloads found in ${build.release_tag}`
+      console.warn(error_message)
+      handle_error(error_message, "Please try again later", "", build.os_name)
+      return
+    }
 
-        let date_string_utc = new Intl.DateTimeFormat('en-GB', {
-            timeZone: 'UTC', timeZoneName: 'short',
-            year: 'numeric', month: 'short', day: '2-digit',
-            hour: '2-digit', minute: '2-digit', second: '2-digit'
-        }).format(build_date);
+    set_download_links(downloads, build.os_name)
+    set_build_date(downloads[0].asset, build.os_name)
 
-        get_build_date_el(os_name).textContent = date_string_utc
+    get_build_version_el(build.os_name).textContent = version
 
-        set_build_version(status.artifacts_url, os_name)
-      })
-    })
-    .catch(err => {
-      console.warn("Fetch error", err)
-    })
+  } catch (err) {
+    console.warn("Fetch error", err)
+
+    handle_error(
+      "Error accessing GitHub API",
+      "Please try again later",
+      err.message,
+      build.os_name
+    )
+  }
 }
 
 document.addEventListener("DOMContentLoaded", () => {
-  set_ci_status("windows.yml", "windows", "Windows")
-  set_ci_status("macos.yml",   "macos",   "macOS")
-  set_ci_status("linux.yml",   "linux",   "Linux")
+  dev_builds.forEach(build => set_dev_build(build))
 })
-
 </script>
 
 
@@ -177,21 +186,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
 !!! info
 
-    The **development builds** are hosted on GitHub; you'll need a GitHub
-    account to download them. If you're not logged in to GitHub, you will see
-    the build artifacts, but clicking on their names won't initiate the
-    download.
+    The **development builds** are hosted on GitHub; no GitHub account is
+    needed to download them.
 
     We release a new dev snapshot build whenever a PR is merged. Make sure to
-    check out the automaticaly generated **release notes HTML** included with
-    the snapshot builds. This lists all the changes since the last stable
-    release, with links to the individual PRs on GitHub.
+    check out the automatically generated **release notes HTML** included with
+    the snapshot builds (macOS users get it as a separate download). This
+    lists all the changes since the last stable release, with links to the
+    individual PRs on GitHub.
 
 
 <div class="compact">
 <table>
   <tr>
-    <th style="width: 240px">Download page</th>
+    <th style="width: 240px">Download</th>
     <th style="width: 250px">Build version</th>
     <th style="width: 300px">Date</th>
   </tr>
