@@ -350,10 +350,10 @@ Gus::Gus(const io_port_t port_pref, const uint8_t dma_pref, const uint8_t irq_pr
 	constexpr bool NativeOrder = true;
 
 	// Register the Audio and DMA channels
-	const auto mixer_callback = std::bind(
-	        MIXER_PullFromQueueCallback<Gus, AudioFrame, Stereo, SignedData, NativeOrder>,
-	        std::placeholders::_1,
-	        this);
+	const auto mixer_callback = [this](auto arg) {
+		MIXER_PullFromQueueCallback<Gus, AudioFrame, Stereo, SignedData, NativeOrder>(
+		        arg, this);
+	};
 
 	channel = MIXER_AddChannel(mixer_callback,
 	                           UseMixerRate,

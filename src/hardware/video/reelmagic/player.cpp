@@ -790,8 +790,8 @@ void ReelMagic_EnableAudioChannel(const bool should_enable)
 		return;
 	}
 
-	constexpr bool Stereo = true;
-	constexpr bool SignedData = true;
+	constexpr bool Stereo      = true;
+	constexpr bool SignedData  = true;
 	constexpr bool NativeOrder = true;
 
 	const auto audio_callback = std::bind(

@@ -122,14 +122,14 @@ TandyDAC::TandyDAC(const ConfigProfile config_profile, const std::string& filter
 	MIXER_LockMixerThread();
 
 	// Run the audio channel at the mixer's native rate
-	constexpr bool Stereo = false;
-	constexpr bool SignedData = false;
-	constexpr bool NativeOrder = true;
+	const auto callback = [this](auto arg) {
+		constexpr bool Stereo      = false;
+		constexpr bool SignedData  = false;
+		constexpr bool NativeOrder = true;
 
-	const auto callback = std::bind(
-	        MIXER_PullFromQueueCallback<TandyDAC, uint8_t, Stereo, SignedData, NativeOrder>,
-	        std::placeholders::_1,
-	        this);
+		MIXER_PullFromQueueCallback<TandyDAC, uint8_t, Stereo, SignedData, NativeOrder>(
+		        arg, this);
+	};
 
 	channel = MIXER_AddChannel(callback,
 	                           UseMixerRate,

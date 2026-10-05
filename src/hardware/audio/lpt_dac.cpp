@@ -24,14 +24,14 @@ LptDac::LptDac(const std::string_view name, const int channel_rate_hz,
 
 	assert(!dac_name.empty());
 
-	constexpr bool Stereo = true;
-	constexpr bool SignedData = true;
-	constexpr bool NativeOrder = true;
+	const auto audio_callback = [this](auto arg) {
+		constexpr bool Stereo      = true;
+		constexpr bool SignedData  = true;
+		constexpr bool NativeOrder = true;
 
-	const auto audio_callback = std::bind(
-	        MIXER_PullFromQueueCallback<LptDac, AudioFrame, Stereo, SignedData, NativeOrder>,
-	        std::placeholders::_1,
-	        this);
+		MIXER_PullFromQueueCallback<LptDac, AudioFrame, Stereo, SignedData, NativeOrder>(
+		        arg, this);
+	};
 
 	std::set<ChannelFeature> features = {ChannelFeature::Sleep,
 	                                     ChannelFeature::ReverbSend,
