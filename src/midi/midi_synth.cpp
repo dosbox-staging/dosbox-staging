@@ -38,16 +38,16 @@ void MidiSynth::Shutdown()
 		        upcase(GetName()).c_str());
 	}
 
+	// Stop queueing new MIDI work and audio frames
+	work_fifo.Stop();
+	audio_frame_fifo.Stop();
+
 	MIXER_LockMixerThread();
 
 	// Stop playback
 	if (mixer_channel) {
 		mixer_channel->Enable(false);
 	}
-
-	// Stop queueing new MIDI work and audio frames
-	work_fifo.Stop();
-	audio_frame_fifo.Stop();
 
 	// Wake the renderer via the pauser's condvar if it's parked (stopping
 	// `work_fifo` alone does not notify it); once unblocked it sees
@@ -108,9 +108,17 @@ void MidiSynth::ProcessWorkFromFifo()
 
 void MidiSynth::RenderBacklogged()
 {
-	// This will only keep the MIDI events we must process (e.g. program
-	// change and SysEx messages).
-	ProcessWorkFromFifoBacklogged();
+	if (work_fifo.IsEmpty()) {
+		// We've caught up. Render a frame instead of blocking in
+		// Dequeue(), exactly like the non-backlogged path does.
+		constexpr auto OneFrame = 1;
+		RenderAudioFramesToFifo(OneFrame);
+
+	} else {
+		// This will only keep the MIDI events we must process (e.g.
+		// program change and SysEx messages).
+		ProcessWorkFromFifoBacklogged();
+	}
 
 	// We must drip-feed these essential MIDI events to the MIDI synth
 	// while in fast-forward mode and render a nominal sample now and then
