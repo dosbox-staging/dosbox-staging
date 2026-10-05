@@ -34,7 +34,6 @@ protected:
 	RWQueue<MidiWork> work_fifo          = {1};
 
 	double ms_per_audio_frame = 0.0;
-	bool had_underruns        = false;
 
 	// MIDI synths run in a separate render thread
 	std::thread renderer = {};
@@ -59,6 +58,7 @@ private:
 	// Accessed from the emulator, renderer, and mixer threads.
 	std::atomic<double> last_rendered_ms = 0.0;
 
+	bool had_underruns           = false;
 	bool is_work_fifo_backlogged = false;
 
 	// Parks the renderer thread during a DOSBox pause.

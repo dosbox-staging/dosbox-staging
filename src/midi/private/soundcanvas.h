@@ -79,7 +79,10 @@ private:
 	void ProcessWorkItem(const MidiWork& work) override;
 	void RenderAudioFramesToFifo(const int num_frames) override;
 
-	void CloseSynth() override {}
+	void CloseSynth() override
+	{
+		// no extra shutdown logic needed for CLAP plugins
+	}
 
 	struct {
 		std::unique_ptr<Clap::Plugin> plugin = nullptr;
