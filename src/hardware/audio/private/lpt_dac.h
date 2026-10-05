@@ -1,4 +1,4 @@
-// SPDX-FileSPDText:X Identifier: GPL-2.0-or-later
+// SPDX-FileCopyrightText:  2022-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DOSBOX_PRIVATE_LPT_DAC_H
@@ -28,20 +28,20 @@ public:
 	virtual void ConfigureFilters(const FilterState state) = 0;
 	virtual void BindToPort(const io_port_t lpt_port)      = 0;
 
-	bool TryParseAndSetCustomFilter(const std::string& filter_choice);
+	bool TryParseAndSetCustomFilter(const std::string& filter_prefs);
 	void PicCallback(const int requested_frames);
+	std::string GetDacName();
 
 	LptDac() = delete;
 
 	// prevent copying
 	LptDac(const LptDac&) = delete;
-
 	// prevent assignment
 	LptDac& operator=(const LptDac&) = delete;
 
 	RWQueue<AudioFrame> output_queue{1};
 	MixerChannelPtr channel = {};
-	float frame_counter = 0.0f;
+	float frame_counter     = 0.0f;
 
 protected:
 	// Base LPT DAC functionality

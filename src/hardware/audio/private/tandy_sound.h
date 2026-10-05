@@ -46,7 +46,7 @@ public:
 	// There's only one Tandy sound's IO configuration, so make it permanent
 	static constexpr IoConfig io = {0xc4, 7, 1};
 
-	TandyDAC(const ConfigProfile config_profile, const std::string& filter_choice);
+	TandyDAC(const ConfigProfile config_profile, const std::string& filter_prefs);
 	~TandyDAC();
 
 	void PicCallback(const int requested);

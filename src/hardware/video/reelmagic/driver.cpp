@@ -1316,19 +1316,19 @@ void REELMAGIC_Init()
 	const auto section = get_section("reelmagic");
 
 	// Does the user want ReelMagic emulation?
-	const auto reelmagic_choice = section->GetString("reelmagic");
+	const auto reelmagic_prefs = section->GetString("reelmagic");
 
-	const auto wants_card_only = (reelmagic_choice == "cardonly");
+	const auto wants_card_only = (reelmagic_prefs == "cardonly");
 
-	const auto reelmagic_choice_has_bool = parse_bool_setting(reelmagic_choice);
+	const auto reelmagic_prefs_has_bool = parse_bool_setting(reelmagic_prefs);
 
-	const auto wants_card_and_driver = (reelmagic_choice_has_bool &&
-	                                    *reelmagic_choice_has_bool == true);
+	const auto wants_card_and_driver = (reelmagic_prefs_has_bool &&
+	                                    *reelmagic_prefs_has_bool == true);
 
 	if (!wants_card_only && !wants_card_and_driver) {
-		if (!reelmagic_choice_has_bool) {
-			LOG_WARNING("REELMAGIC: Invalid 'reelmagic' value: '%s', shutting down.",
-			            reelmagic_choice.c_str());
+		if (!reelmagic_prefs_has_bool) {
+			LOG_WARNING("REELMAGIC: Invalid 'reelmagic' value: '%s'",
+			            reelmagic_prefs.c_str());
 		}
 		return;
 	}
