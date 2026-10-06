@@ -12,6 +12,7 @@
 #include <memory>
 #include <string>
 
+#include "private/clap.h"
 #include "private/fluidsynth.h"
 #include "private/midi_device.h"
 #include "private/mt32.h"
@@ -83,6 +84,9 @@ static std::unique_ptr<MidiDevice> create_device(
 	using namespace MidiDeviceName;
 
 	// Internal MIDI synths
+	if (name == MidiDeviceName::Clap) {
+		return std::make_unique<MidiDeviceClap>();
+	}
 	if (name == MidiDeviceName::SoundCanvas) {
 		return std::make_unique<MidiDeviceSoundCanvas>();
 	}
@@ -757,6 +761,11 @@ void MIDI_ListDevices(MoreOutputStrings& output)
 	                           : nullptr,
 
 	                   output);
+
+	write_device_name(MidiDeviceName::Clap);
+
+	CLAP_ListDevices(dynamic_cast<MidiDeviceClap*>(device_ptr), output);
+
 #if defined(MACOSX)
 	write_device_name(MidiDeviceName::CoreMidi);
 
@@ -898,6 +907,9 @@ static void init_mididevice_settings(SectionProp& secprop)
 	                        "                (requires the FluidSynth dynamic-link library to be available;\n"
 	                        "                see the [fluidsynth] section).\n");
 
+	str_prop->SetOptionHelp(MidiDeviceName::Clap,
+	                        "  clap:         A CLAP MIDI synthesizer plugin (see the [clap] section).\n");
+
 	str_prop->SetOptionHelp("none", "  none:         Disable MIDI output.");
 
 	str_prop->SetValues({MidiDevicePortPref,
@@ -907,9 +919,10 @@ static void init_mididevice_settings(SectionProp& secprop)
 
 #if C_MT32EMU
 	                     MidiDeviceName::Mt32,
-	                     MidiDeviceName::SoundCanvas,
 #endif
+	                     MidiDeviceName::SoundCanvas,
 	                     MidiDeviceName::FluidSynth,
+	                     MidiDeviceName::Clap,
 	                     "none"});
 
 	str_prop->SetDeprecatedWithAlternateValue("alsa", DefaultMidiDevicePref);
@@ -948,7 +961,7 @@ static void init_midiconfig_settings(SectionProp& secprop)
 	str_prop->SetOptionHelp(
 	        "internal_synth",
 	        "  - The setting has no effect when using the internal synthesizers\n"
-	        "    ('mididevice = fluidsynth', 'mt32', or 'soundcanvas').\n");
+	        "    ('mididevice = mt32', 'soundcanvas', 'fluidsynth', or 'clap').\n");
 
 	str_prop->SetOptionHelp(
 	        "physical_mt32",
