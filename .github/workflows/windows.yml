@@ -3,6 +3,10 @@ permissions: read-all
 
 on:
   push:
+    branches:
+      - '**'
+    tags-ignore:
+      - dev-latest
     paths-ignore:
       - '.clang-format'
       - '.mdl-styles'
@@ -267,6 +271,9 @@ jobs:
     name:    Build installer (${{ matrix.arch }} )
     needs:   merge_artifacts
     runs-on: windows-2025-vs2026
+    permissions:
+      contents: read
+      statuses: write
     strategy:
       matrix:
         # We only provide x64 installers as ARM64 support is experimental
@@ -346,3 +353,26 @@ jobs:
             ${{ env.PACKAGE_DIR }}-setup.exe
             release-notes.html
           overwrite: true
+
+      # Reports this job's own pass/fail as a separate GitHub status, since
+      # the workflow as a whole also includes the debugger build above,
+      # which can fail without this release build failing.
+      - name:  Report dev build status
+        if:    success() && github.ref == 'refs/heads/main'
+        shell: bash
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/statuses/${{ github.sha }}" \
+              -f state=success -f context=dev-build/windows \
+              -f description="Windows release build succeeded"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name:  Report dev build failure
+        if:    failure() && github.ref == 'refs/heads/main'
+        shell: bash
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/statuses/${{ github.sha }}" \
+              -f state=failure -f context=dev-build/windows \
+              -f description="Windows release build failed"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}

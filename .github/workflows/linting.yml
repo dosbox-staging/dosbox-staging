@@ -1,7 +1,14 @@
 name: Lint scripts & Markdown
 permissions: read-all
 
-on: [push, pull_request, workflow_call]
+on:
+  push:
+    branches:
+      - '**'
+    tags-ignore:
+      - dev-latest
+  pull_request:
+  workflow_call:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

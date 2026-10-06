@@ -3,6 +3,10 @@ permissions: read-all
 
 on:
   push:
+    branches:
+      - '**'
+    tags-ignore:
+      - dev-latest
     paths-ignore:
       - '.clang-format'
       - '.mdl-styles'
@@ -147,6 +151,9 @@ jobs:
     name:    Publish universal build
     needs:   [build_macos_release, generate_release_notes]
     runs-on: macos-26
+    permissions:
+      contents: read
+      statuses: write
     steps:
       - name: Check out repository
         uses: actions/checkout@v7
@@ -227,3 +234,24 @@ jobs:
           path: |
             dosbox-staging-macOS-universal-${{ env.DOSBOX_VERSION_AND_HASH }}.dmg
             release-notes.html
+
+      # Reports this job's own pass/fail as a separate GitHub status, since
+      # the workflow as a whole also includes the compiler-matrix sanity
+      # builds above, which can fail without this release build failing.
+      - name: Report dev build status
+        if:   success() && github.ref == 'refs/heads/main'
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/statuses/${{ github.sha }}" \
+              -f state=success -f context=dev-build/macos \
+              -f description="macOS release build succeeded"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Report dev build failure
+        if:   failure() && github.ref == 'refs/heads/main'
+        run: |
+          gh api "repos/$GITHUB_REPOSITORY/statuses/${{ github.sha }}" \
+              -f state=failure -f context=dev-build/macos \
+              -f description="macOS release build failed"
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
