@@ -14,7 +14,6 @@ span.error {
 </style>
 
 <script>
-
 // For local testing only: uncomment and replace API_TOKEN with a valid GitHub
 // API token. This is to bypass the low hourly rate limits for unauthenticated
 // API access during testing (only 60 requests per hour).
@@ -24,6 +23,33 @@ span.error {
 let headers = {
 //  "Authorization": "bearer API_TOKEN"
 }
+
+const gh_api_url = "https://api.github.com/repos/dosbox-staging/dosbox-staging/"
+
+const DEV_RELEASE_TAG = "dev-latest"
+
+// The downloads are listed in the order they should appear in the table.
+const dev_builds = [
+  {
+    os_name: "windows",
+    downloads: [
+      { label: "Windows (installer)", re: /-setup\.exe$/ },
+      { label: "Windows (zip)",       re: /\.zip$/ }
+    ]
+  },
+  {
+    os_name: "macos",
+    downloads: [
+      { label: "macOS", re: /\.dmg$/ }
+    ]
+  },
+  {
+    os_name: "linux",
+    downloads: [
+      { label: "Linux", re: /\.tar\.xz$/ }
+    ]
+  }
+]
 
 function get_build_link_tr_el(os_name) {
   return document.getElementById(os_name + "-build-link")
@@ -35,133 +61,118 @@ function get_build_date_el(os_name) {
   return document.getElementById(os_name + "-build-date")
 }
 
-function set_build_version(gh_api_artifacts, os_name) {
-  fetch(gh_api_artifacts, { method: "GET", headers: headers })
-    .then(response => {
-      if (response.status !== 200) {
-        return
-      }
-
-      response.json().then(data => {
-        // Extract version and Git hash from the artifact name.
-        // Examples of valid artifact names:
-        //
-        //   dosbox-staging-linux-x86_64-0.84.0-RC1-c9524
-        //   dosbox-staging-macOS-universal-0.84.0-RC1-c9524
-        //   dosbox-staging-windows-x64-0.84.0-alpha-7342e
-        //
-        let platform_re = "[\\w-]*"
-        let version_re  = "(\\d+\\.\\d+\\.\\d+)"
-        let hash_re     = "((?:alpha|RC\\d*|rc\\d*)-[\\w]{5})"
-
-        let re = `dosbox-staging-${platform_re}-${version_re}-${hash_re}`
-        let release = data.artifacts.find(a => a.name.match(re))
-
-        if (release === undefined) {
-          return
-        }
-
-        let match = release.name.match(re)
-        let version = match[1]
-        let hash    = match[2]
-
-        get_build_version_el(os_name).textContent = `${version}-${hash}`
-      })
-    })
-    .catch(err => {
-      console.log("Fetch error", err)
-    })
-}
-
 function handle_error(msg1, msg2, msg3, os_name) {
-  console.log(get_build_link_tr_el(os_name));
-  get_build_link_tr_el(os_name).innerHTML = '<span class="error">' + msg1 + '</span>'
-  get_build_version_el(os_name).innerHTML = '<span class="error">' + msg2 + '</span>'
-  get_build_date_el(os_name).innerHTML    = '<span class="error">' + msg3 + '</span>'
+  get_build_link_tr_el(os_name).innerHTML  = '<span class="error">' + msg1 + '</span>'
+  get_build_version_el(os_name).innerHTML  = '<span class="error">' + msg2 + '</span>'
+  get_build_date_el(os_name).innerHTML     = '<span class="error">' + msg3 + '</span>'
 }
 
-// Fetch build status using GitHub API and update HTML
-function set_ci_status(workflow_file, os_name, description) {
+async function fetch_json(url, what) {
+  // The cache busting parameter is needed because GitHub serves these
+  // responses with an ETag.
+  const response = await fetch(`${url}?_=${Date.now()}`, { method: "GET", headers: headers })
 
-  // GitHub has strict rate limits for anonymous users: 60 requests per hour.
-  // We are requesting only one page, with a limit of 1, with the filter query
-  // params.
-  let page = 1
-  let per_page = 1
-  let gh_api_url = "https://api.github.com/repos/dosbox-staging/dosbox-staging/"
+  if (response.status !== 200) {
+    throw new Error(`Could not fetch ${what} (status ${response.status})`)
+  }
 
-  let filter_branch = "main"
-  let filter_event  = "push"
-  let filter_status = "success"
+  return await response.json()
+}
 
-  const queryParams = new URLSearchParams()
-  queryParams.set("page",     page)
-  queryParams.set("per_page", per_page)
-  queryParams.set("branch",   filter_branch)
-  queryParams.set("event",    filter_event)
-  queryParams.set("status",   filter_status)
+function set_download_links(downloads, os_name) {
+  const el = get_build_link_tr_el(os_name)
+  el.innerHTML = ""
 
-  let gh_api_workflows = gh_api_url + "actions/workflows/" + workflow_file +
-                         "/runs?" + queryParams.toString()
+  downloads.forEach((download, i) => {
+    if (i > 0) {
+      el.appendChild(document.createElement("br"))
+    }
 
-  fetch(gh_api_workflows, { method: "GET", headers: headers })
-    .then(response => {
-      // Handle HTTP error
-      if (response.status !== 200) {
-        console.warn("Looks like there was a problem." +
-                     "Status Code: " + response.status)
+    const link = document.createElement("a")
+    link.textContent = download.label
+    link.setAttribute("href", download.asset.browser_download_url)
+    el.appendChild(link)
+  })
+}
 
-        handle_error('Error accessing GitHub API',
-                     'Please try again later',
-                     'Status: ' + response.status, os_name)
+function set_build_date(asset, os_name) {
+  // 'updated_at' is when the asset was uploaded, so it reflects when the
+  // build was published.
+  const date_string_utc = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'UTC',
+    timeZoneName: 'short',
+    year: 'numeric',
+    month: 'short',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit'
+  }).format(new Date(asset.updated_at))
+
+  get_build_date_el(os_name).textContent = date_string_utc
+}
+
+function set_release_notes_link(html_url) {
+  const el = document.getElementById("dev-build-notes")
+
+  const link = document.createElement("a")
+  link.textContent = "Release notes"
+  link.setAttribute("href", html_url)
+
+  const small = document.createElement("small")
+  small.appendChild(link)
+
+  el.innerHTML = ""
+  el.appendChild(small)
+}
+
+async function set_dev_builds() {
+  try {
+    const release = await fetch_json(
+      `${gh_api_url}releases/tags/${DEV_RELEASE_TAG}`,
+      "the latest development build"
+    )
+
+    const version = release.name
+
+    dev_builds.forEach(build => {
+      const downloads = build.downloads
+        .map(download => ({
+          label: download.label,
+          asset: release.assets.find(asset => download.re.test(asset.name))
+        }))
+        .filter(download => download.asset !== undefined)
+
+      if (downloads.length === 0) {
+        const error_message = `No ${build.os_name} downloads found in ${DEV_RELEASE_TAG}`
+        console.warn(error_message)
+        handle_error(error_message, "Please try again later", "", build.os_name)
         return
       }
 
-      response.json().then(data => {
-        // console.log(data.workflow_runs)
-        const status = data.workflow_runs.length && data.workflow_runs[0]
+      set_download_links(downloads, build.os_name)
+      set_build_date(downloads[0].asset, build.os_name)
 
-        // If result not found, query the next page
-        if (status == undefined) {
-            const error_message = `No builds found for ${workflow_file}`
-            console.warn(error_message)
-            handle_error(error_message, os_name)
-            return
-        }
-
-        // Update HTML elements
-        let build_link = document.createElement("a")
-        build_link.textContent = description
-        build_link.setAttribute("href", status.html_url)
-
-        let build_link_tr_el = get_build_link_tr_el(os_name)
-        build_link_tr_el.innerHTML = ""
-        build_link_tr_el.appendChild(build_link)
-
-        let build_date = new Date(status.updated_at)
-
-        let date_string_utc = new Intl.DateTimeFormat('en-GB', {
-            timeZone: 'UTC', timeZoneName: 'short',
-            year: 'numeric', month: 'short', day: '2-digit',
-            hour: '2-digit', minute: '2-digit', second: '2-digit'
-        }).format(build_date);
-
-        get_build_date_el(os_name).textContent = date_string_utc
-
-        set_build_version(status.artifacts_url, os_name)
-      })
+      get_build_version_el(build.os_name).textContent = version
     })
-    .catch(err => {
-      console.warn("Fetch error", err)
-    })
+
+    set_release_notes_link(release.html_url)
+
+  } catch (err) {
+    console.warn("Fetch error", err)
+
+    dev_builds.forEach(build =>
+      handle_error(
+        "Error accessing GitHub API",
+        "Please try again later",
+        err.message,
+        build.os_name
+      )
+    )
+  }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-  set_ci_status("windows.yml", "windows", "Windows")
-  set_ci_status("macos.yml",   "macos",   "macOS")
-  set_ci_status("linux.yml",   "linux",   "Linux")
-})
-
+document.addEventListener("DOMContentLoaded", set_dev_builds)
 </script>
 
 
@@ -177,21 +188,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
 !!! info
 
-    The **development builds** are hosted on GitHub; you'll need a GitHub
-    account to download them. If you're not logged in to GitHub, you will see
-    the build artifacts, but clicking on their names won't initiate the
-    download.
+    The **development builds** are hosted on GitHub; no GitHub account is
+    needed to download them.
 
-    We release a new dev snapshot build whenever a PR is merged. Make sure to
-    check out the automaticaly generated **release notes HTML** included with
-    the snapshot builds. This lists all the changes since the last stable
-    release, with links to the individual PRs on GitHub.
+    We publish a new dev snapshot build whenever a PR is merged, as long as
+    the Windows, macOS, and Linux builds all succeed for it. Make sure to
+    check out the automatically generated **release notes**, which list all
+    the changes since the last stable release, with links to the individual
+    PRs on GitHub.
 
 
 <div class="compact">
 <table>
   <tr>
-    <th style="width: 240px">Download page</th>
+    <th style="width: 240px">Download</th>
     <th style="width: 250px">Build version</th>
     <th style="width: 300px">Date</th>
   </tr>
@@ -229,6 +239,10 @@ document.addEventListener("DOMContentLoaded", () => {
     </td>
   </tr>
 </table>
+</div>
+
+<div id="dev-build-notes">
+<img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
 </div>
 
 
