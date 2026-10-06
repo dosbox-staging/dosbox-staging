@@ -43,10 +43,12 @@ add_executable(dosbox_tests
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU" AND NOT MSVC)
     target_compile_options(dosbox_tests PRIVATE
         "-Wno-effc++"
-        "-Wno-gnu-zero-variadic-macro-arguments"
     )
-    # Clang does not support -Wno-format-overflow
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        target_compile_options(dosbox_tests PRIVATE
+            "-Wno-gnu-zero-variadic-macro-arguments"
+        )
+    else()
         target_compile_options(dosbox_tests PRIVATE
             "-Wno-format-overflow"
         )

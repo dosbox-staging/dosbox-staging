@@ -1,7 +1,15 @@
 // SPDX-FileCopyrightText:  2026-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
+// Keep the implementation's narrowing checks local to this include.
+#ifdef __GNUC__
+#pragma GCC diagnostic push
+#endif
 #include "audio/clap/plugin_manager.cpp"
+#ifdef __GNUC__
+#pragma GCC diagnostic pop
+#endif
+
 #include "midi/clap.cpp"
 #include "midi/private/clap_synth.h"
 
