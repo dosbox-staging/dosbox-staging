@@ -21,6 +21,9 @@ namespace Clap {
 class Plugin {
 
 public:
+	// Maximum number of audio frames accepted by Process().
+	static constexpr int MaxFrameCount = 8192;
+
 	Plugin(const std::shared_ptr<Library> library, const clap_plugin_t* plugin,
 	       const std::vector<uint32_t>& input_channel_counts,
 	       const std::vector<uint32_t>& output_channel_counts);
@@ -37,8 +40,6 @@ public:
 	Plugin& operator=(const Plugin&) = delete;
 
 private:
-	static constexpr int MaxFrameCount = 8192;
-
 	// Keep the CLAP port array contiguous, with separate sample storage and
 	// channel pointer arrays. All buffers are allocated before processing.
 	struct AudioBuffers {

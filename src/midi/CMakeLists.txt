@@ -1,4 +1,5 @@
 target_sources(dosboxcommon PRIVATE
+  clap_synth.cpp
   fluidsynth.cpp
   midi.cpp
   midi_synth.cpp
