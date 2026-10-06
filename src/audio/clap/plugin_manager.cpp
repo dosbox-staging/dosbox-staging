@@ -292,7 +292,8 @@ std::unique_ptr<Plugin> PluginManager::LoadPlugin(const PluginInfo& plugin_info)
 	                                         plugin,
 	                                         input_channel_counts,
 	                                         output_channel_counts);
-	plugin_guard.release();
+	// The wrapper now owns the plugin; disarm the temporary guard.
+	(void)plugin_guard.release();
 	return instance;
 }
 
