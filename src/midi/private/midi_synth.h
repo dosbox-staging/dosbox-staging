@@ -54,6 +54,8 @@ private:
 	virtual void RenderAudioFramesToFifo(const int num_frames) = 0;
 
 	virtual void CloseSynth() = 0;
+	// Runs on the render thread after it has finished processing.
+	virtual void CloseRenderer() {}
 
 	// Used to track the balance of time between the last mixer
 	// callback versus the current MIDI SysEx or Msg event.

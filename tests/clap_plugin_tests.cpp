@@ -26,6 +26,11 @@ struct TestPlugin {
 	const clap_process_t* last_process    = nullptr;
 	std::vector<uint32_t> block_sizes     = {};
 	std::vector<uint16_t> event_types     = {};
+	bool activate_succeeds                = true;
+	bool start_succeeds                   = true;
+	bool active                           = false;
+	bool processing                       = false;
+	std::vector<std::string> lifecycle    = {};
 
 	static TestPlugin& Get(const clap_plugin_t* plugin)
 	{
@@ -47,6 +52,9 @@ struct TestPlugin {
 
 	void Process(const clap_process_t* block)
 	{
+		EXPECT_TRUE(active);
+		EXPECT_TRUE(processing);
+		lifecycle.push_back("process");
 		last_process = block;
 		block_sizes.push_back(block->frames_count);
 		const auto* events = block->in_events;
@@ -159,9 +167,48 @@ struct TestPlugin {
 		return true;
 	}
 
-	static bool Activate(const clap_plugin_t*, double, uint32_t, uint32_t)
+	static bool Activate(const clap_plugin_t* p, double, uint32_t, uint32_t)
 	{
-		return true;
+		auto& state = Get(p);
+		EXPECT_FALSE(state.active);
+		state.lifecycle.push_back("activate");
+		state.active = state.activate_succeeds;
+		return state.active;
+	}
+
+	static bool Start(const clap_plugin_t* p)
+	{
+		auto& state = Get(p);
+		EXPECT_TRUE(state.active);
+		EXPECT_FALSE(state.processing);
+		state.lifecycle.push_back("start");
+		state.processing = state.start_succeeds;
+		return state.processing;
+	}
+
+	static void Stop(const clap_plugin_t* p)
+	{
+		auto& state = Get(p);
+		EXPECT_TRUE(state.processing);
+		state.lifecycle.push_back("stop");
+		state.processing = false;
+	}
+
+	static void Deactivate(const clap_plugin_t* p)
+	{
+		auto& state = Get(p);
+		EXPECT_TRUE(state.active);
+		EXPECT_FALSE(state.processing);
+		state.lifecycle.push_back("deactivate");
+		state.active = false;
+	}
+
+	static void Destroy(const clap_plugin_t* p)
+	{
+		auto& state = Get(p);
+		EXPECT_FALSE(state.active);
+		EXPECT_FALSE(state.processing);
+		state.lifecycle.push_back("destroy");
 	}
 
 	clap_plugin_note_ports_t note_ports   = {CountNotePorts, GetNotePort};
@@ -169,11 +216,11 @@ struct TestPlugin {
 	clap_plugin_t plugin                  = {.desc             = nullptr,
 	                                         .plugin_data      = this,
 	                                         .init             = Success,
-	                                         .destroy          = Noop,
+	                                         .destroy          = Destroy,
 	                                         .activate         = Activate,
-	                                         .deactivate       = Noop,
-	                                         .start_processing = Success,
-	                                         .stop_processing  = Noop,
+	                                         .deactivate       = Deactivate,
+	                                         .start_processing = Start,
+	                                         .stop_processing  = Stop,
 	                                         .reset            = Noop,
 	                                         .process          = ProcessBlock,
 	                                         .get_extension    = GetExtension,
@@ -293,6 +340,7 @@ TEST(ClapProcessing, SuppliesBuffersForAllPortLayouts)
 		EXPECT_EQ(state.last_process->audio_outputs[0].data32, next_stereo);
 		EXPECT_EQ(next_left, 1.0f);
 		EXPECT_EQ(next_right, 2.0f);
+		plugin.StopProcessing();
 	}
 }
 
@@ -317,6 +365,7 @@ TEST(ClapSynth, DeliversMidiOnceAndRendersStereoInBoundedBlocks)
 	RWQueue<AudioFrame> fifo(NumFrames + 1);
 	synth.RenderAudioFramesToFifo(NumFrames, fifo);
 	synth.RenderAudioFramesToFifo(1, fifo);
+	synth.StopProcessing();
 	ASSERT_FALSE(::testing::Test::HasFatalFailure());
 	EXPECT_EQ(state.block_sizes,
 	          (std::vector<uint32_t>{Clap::Plugin::MaxFrameCount, 1, 1}));
@@ -329,6 +378,60 @@ TEST(ClapSynth, DeliversMidiOnceAndRendersStereoInBoundedBlocks)
 	EXPECT_TRUE(std::all_of(frames.begin(), frames.end(), [](const auto& frame) {
 		return frame[0] == 1.0f && frame[1] == 2.0f;
 	}));
+}
+
+TEST(ClapLifecycle, FollowsActivationAndProcessingOrder)
+{
+	TestPlugin state = {};
+	{
+		Clap::Plugin plugin(nullptr, &state.plugin, {}, {2});
+		plugin.Activate(32000);
+		float left = 0.0f, right = 0.0f;
+		float* stereo[]        = {&left, &right};
+		Clap::EventList events = {};
+		plugin.Process(stereo, 1, events);
+		plugin.Process(stereo, 1, events);
+		plugin.StopProcessing();
+	}
+	EXPECT_EQ(state.lifecycle,
+	          (std::vector<std::string>{"activate",
+	                                    "start",
+	                                    "process",
+	                                    "process",
+	                                    "stop",
+	                                    "deactivate",
+	                                    "destroy"}));
+}
+
+TEST(ClapLifecycle, RejectsFailedActivation)
+{
+	TestPlugin state        = {};
+	state.activate_succeeds = false;
+	{
+		Clap::Plugin plugin(nullptr, &state.plugin, {}, {2});
+		EXPECT_THROW(plugin.Activate(32000), std::runtime_error);
+	}
+	EXPECT_EQ(state.lifecycle,
+	          (std::vector<std::string>{"activate", "destroy"}));
+}
+
+TEST(ClapLifecycle, RendersSilenceWhenProcessingCannotStart)
+{
+	TestPlugin state     = {};
+	state.start_succeeds = false;
+	{
+		Clap::Plugin plugin(nullptr, &state.plugin, {}, {2});
+		plugin.Activate(32000);
+		float left = 1.0f, right = 1.0f;
+		float* stereo[]        = {&left, &right};
+		Clap::EventList events = {};
+		plugin.Process(stereo, 1, events);
+		plugin.Process(stereo, 1, events);
+		EXPECT_EQ(left, 0.0f);
+		EXPECT_EQ(right, 0.0f);
+	}
+	EXPECT_EQ(state.lifecycle,
+	          (std::vector<std::string>{"activate", "start", "deactivate", "destroy"}));
 }
 
 TEST(ClapSelection, FindsFirstMatchingPlugin)

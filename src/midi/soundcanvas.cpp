@@ -395,6 +395,7 @@ MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 	// to avoid any extra resampling passes.
 	//
 	const auto sample_rate_hz = native_sample_rate_hz_for_model(model.model);
+	clap.Initialize(std::move(plugin_wrapper.plugin), iroundf(sample_rate_hz));
 
 	MIXER_LockMixerThread();
 
@@ -453,7 +454,6 @@ MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 		set_section_property_value("soundcanvas", "soundcanvas_filter", "off");
 	}
 
-	clap.Initialize(std::move(plugin_wrapper.plugin), iroundf(sample_rate_hz));
 	StartRenderer(iroundf(sample_rate_hz), "dosbox:sndcanv");
 
 	// Start playback

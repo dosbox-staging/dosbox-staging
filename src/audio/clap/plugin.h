@@ -33,6 +33,8 @@ public:
 	void Activate(const int sample_rate_hz);
 
 	void Process(float** audio_out, const int num_frames, EventList& event_list);
+	// Call on the render thread before deactivating or destroying the plugin.
+	void StopProcessing();
 
 	// prevent copying
 	Plugin(const Plugin&) = delete;
@@ -62,6 +64,9 @@ private:
 	std::shared_ptr<Library> library = nullptr;
 
 	const clap_plugin_t* plugin = nullptr;
+	bool is_active              = false;
+	bool is_processing          = false;
+	bool processing_failed      = false;
 
 	AudioBuffers audio_in;
 	AudioBuffers audio_out;

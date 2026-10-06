@@ -20,6 +20,7 @@ public:
 	                const int sample_rate_hz);
 
 	void ProcessWorkItem(const MidiWork& work);
+	void StopProcessing();
 	void RenderAudioFramesToFifo(const int num_frames,
 	                             RWQueue<AudioFrame>& audio_frame_fifo);
 
