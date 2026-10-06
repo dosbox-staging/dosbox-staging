@@ -6,6 +6,7 @@ add_executable(dosbox_tests
     batch_file_tests.cpp
     bit_view_tests.cpp
     bitops_tests.cpp
+    clap_plugin_tests.cpp
     cmd_move_tests.cpp
     config_tests.cpp
     dos_files_tests.cpp
@@ -44,10 +45,12 @@ add_executable(dosbox_tests
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU" AND NOT MSVC)
     target_compile_options(dosbox_tests PRIVATE
         "-Wno-effc++"
-        "-Wno-gnu-zero-variadic-macro-arguments"
     )
-    # Clang does not support -Wno-format-overflow
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        target_compile_options(dosbox_tests PRIVATE
+            "-Wno-gnu-zero-variadic-macro-arguments"
+        )
+    else()
         target_compile_options(dosbox_tests PRIVATE
             "-Wno-format-overflow"
         )
@@ -55,10 +58,27 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU" AND NOT MSVC)
 endif()
 
 target_link_libraries(dosbox_tests PRIVATE
+    clap
     GTest::gmock_main
     dosboxcommon
     SDL3::Headers
 )
+
+foreach(plugin_target IN ITEMS clap_test_plugin clap_test_incompatible_plugin)
+    add_library(${plugin_target} MODULE clap_test_plugin.cpp)
+    target_link_libraries(${plugin_target} PRIVATE clap)
+    set_target_properties(${plugin_target} PROPERTIES PREFIX "" SUFFIX ".clap")
+endforeach()
+
+target_compile_definitions(clap_test_incompatible_plugin PRIVATE
+    CLAP_TEST_INCOMPATIBLE_ENTRY
+)
+
+target_compile_definitions(dosbox_tests PRIVATE
+    CLAP_TEST_PLUGIN_PATH="$<TARGET_FILE:clap_test_plugin>"
+    CLAP_TEST_INCOMPATIBLE_PLUGIN_PATH="$<TARGET_FILE:clap_test_incompatible_plugin>"
+)
+add_dependencies(dosbox_tests clap_test_plugin clap_test_incompatible_plugin)
 
 include(GoogleTest)
 
