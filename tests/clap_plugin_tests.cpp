@@ -2,6 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "audio/clap/plugin_manager.cpp"
+#include "midi/private/clap_synth.h"
 
 #include <algorithm>
 #include <utility>
@@ -23,6 +24,8 @@ struct TestPlugin {
 	int failed_input_port                 = -1;
 	int failed_output_port                = -1;
 	const clap_process_t* last_process    = nullptr;
+	std::vector<uint32_t> block_sizes     = {};
+	std::vector<uint16_t> event_types     = {};
 
 	static TestPlugin& Get(const clap_plugin_t* plugin)
 	{
@@ -45,6 +48,13 @@ struct TestPlugin {
 	void Process(const clap_process_t* block)
 	{
 		last_process = block;
+		block_sizes.push_back(block->frames_count);
+		const auto* events = block->in_events;
+		for (uint32_t i = 0; i < events->size(events); ++i) {
+			const auto* header = events->get(events, i);
+			ASSERT_NE(header, nullptr);
+			event_types.push_back(header->type);
+		}
 		for (const bool is_input : {true, false}) {
 			const auto& counts   = is_input ? input_channels
 			                                : output_channels;
@@ -284,6 +294,41 @@ TEST(ClapProcessing, SuppliesBuffersForAllPortLayouts)
 		EXPECT_EQ(next_left, 1.0f);
 		EXPECT_EQ(next_right, 2.0f);
 	}
+}
+
+TEST(ClapSynth, DeliversMidiOnceAndRendersStereoInBoundedBlocks)
+{
+	TestPlugin state = {};
+	ClapSynth synth  = {};
+	synth.Initialize(std::make_unique<Clap::Plugin>(nullptr,
+	                                                &state.plugin,
+	                                                state.input_channels,
+	                                                state.output_channels),
+	                 32000);
+	const MidiWork midi({0x90, 60, 100}, 0, MessageType::Channel, 0.0);
+	const MidiWork sysex({0xf0, 0x7e, 0x7f, 0x09, 0x01, 0xf7},
+	                     0,
+	                     MessageType::SysEx,
+	                     0.0);
+	synth.ProcessWorkItem(midi);
+	synth.ProcessWorkItem(sysex);
+
+	constexpr auto NumFrames = Clap::Plugin::MaxFrameCount + 1;
+	RWQueue<AudioFrame> fifo(NumFrames + 1);
+	synth.RenderAudioFramesToFifo(NumFrames, fifo);
+	synth.RenderAudioFramesToFifo(1, fifo);
+	ASSERT_FALSE(::testing::Test::HasFatalFailure());
+	EXPECT_EQ(state.block_sizes,
+	          (std::vector<uint32_t>{Clap::Plugin::MaxFrameCount, 1, 1}));
+	EXPECT_EQ(state.event_types,
+	          (std::vector<uint16_t>{CLAP_EVENT_MIDI, CLAP_EVENT_MIDI_SYSEX}));
+
+	ASSERT_EQ(fifo.Size(), NumFrames + 1);
+	std::vector<AudioFrame> frames = {};
+	fifo.BulkDequeue(frames, NumFrames + 1);
+	EXPECT_TRUE(std::all_of(frames.begin(), frames.end(), [](const auto& frame) {
+		return frame[0] == 1.0f && frame[1] == 2.0f;
+	}));
 }
 
 TEST(ClapSelection, FindsFirstMatchingPlugin)
