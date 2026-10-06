@@ -401,8 +401,6 @@ MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 	//
 	const auto sample_rate_hz = native_sample_rate_hz_for_model(model.model);
 
-	ms_per_audio_frame = MillisInSecond / sample_rate_hz;
-
 	MIXER_LockMixerThread();
 
 	// Set up the mixer callback
@@ -460,28 +458,8 @@ MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 		set_section_property_value("soundcanvas", "soundcanvas_filter", "off");
 	}
 
-	// Double the baseline PCM prebuffer because MIDI is demanding and
-	// bursty. The mixer's default of ~20 ms becomes 40 ms here, which gives
-	// slower systems a better chance to keep up (and prevent their audio
-	// frame FIFO from running dry).
-	const auto render_ahead_ms = MIXER_GetPreBufferMs() * 2;
-
-	// Size the out-bound audio frame FIFO
-	assertm(sample_rate_hz >= 8000, "Sample rate must be at least 8 kHz");
-
-	const auto audio_frames_per_ms = iround(sample_rate_hz / MillisInSecond);
-	audio_frame_fifo.Resize(
-	        check_cast<size_t>(render_ahead_ms * audio_frames_per_ms));
-
-	// Size the in-bound work FIFO
-	work_fifo.Resize(MaxMidiWorkFifoSize);
-
 	clap.plugin->Activate(iroundf(sample_rate_hz));
-
-	// Start rendering audio
-	const auto render = std::bind_front(&MidiDeviceSoundCanvas::Render, this);
-	renderer          = std::thread(render);
-	set_thread_name(renderer, "dosbox:sndcanv");
+	StartRenderer(iroundf(sample_rate_hz), "dosbox:sndcanv");
 
 	// Start playback
 	MIXER_UnlockMixerThread();
