@@ -287,6 +287,8 @@ void OpenGlRenderer::NotifyViewportSizeChanged(const DosBox::Rect viewport_size_
 		// so let's hope that will get us closer to the "test once, run
 		// anywhere" paradigm.
 		//
+		// TODO: investigate whether SDL3 is any different
+		//
 		// It's rather tricky to solve this in a more elegant way, so
 		// this solution will do for now. This method will get called a
 		// second time after the video mode has been initialised which
