@@ -240,6 +240,14 @@ std::unique_ptr<Plugin> PluginManager::LoadPlugin(const PluginInfo& plugin_info)
 		        plugin_info.library_path.string().c_str());
 		return {};
 	}
+
+	const auto destroy_plugin = [](const clap_plugin_t* instance) {
+		instance->destroy(instance);
+	};
+
+	std::unique_ptr<const clap_plugin_t, decltype(destroy_plugin)> plugin_guard(
+	        plugin, destroy_plugin);
+
 	if (!plugin->init(plugin)) {
 		LOG_DEBUG("CLAP: Error initialising plugin with ID '%s' from library '%s'",
 		          plugin_info.id.c_str(),
@@ -262,10 +270,14 @@ std::unique_ptr<Plugin> PluginManager::LoadPlugin(const PluginInfo& plugin_info)
 	         plugin_info.name.c_str(),
 	         plugin_info.version.c_str());
 
-	return std::make_unique<Plugin>(library,
-	                                plugin,
-	                                input_channel_counts,
-	                                output_channel_counts);
+	auto instance = std::make_unique<Plugin>(library,
+	                                         plugin,
+	                                         input_channel_counts,
+	                                         output_channel_counts);
+	// The wrapper now owns the plugin; disarm the temporary guard.
+	(void)plugin_guard.release();
+
+	return instance;
 }
 
 } // namespace Clap
