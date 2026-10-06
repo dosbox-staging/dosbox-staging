@@ -7,14 +7,11 @@
 #include <set>
 #include <vector>
 
-#include "clap/all.h"
-
 #include "audio/channel_names.h"
 #include "audio/clap/library.h"
 #include "audio/clap/plugin_manager.h"
 #include "config/setup.h"
 #include "dos/programs.h"
-#include "hardware/pic.h"
 #include "misc/ansi_code_markup.h"
 #include "misc/std_filesystem.h"
 #include "utils/checks.h"
@@ -384,8 +381,6 @@ MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 
 	model = plugin_wrapper.model;
 
-	clap.plugin = std::move(plugin_wrapper.plugin);
-
 	const auto it = std::find_if(all_models.begin(),
 	                             all_models.end(),
 	                             [&](const SoundCanvas::SynthModel* m) {
@@ -458,7 +453,7 @@ MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 		set_section_property_value("soundcanvas", "soundcanvas_filter", "off");
 	}
 
-	clap.plugin->Activate(iroundf(sample_rate_hz));
+	clap.Initialize(std::move(plugin_wrapper.plugin), iroundf(sample_rate_hz));
 	StartRenderer(iroundf(sample_rate_hz), "dosbox:sndcanv");
 
 	// Start playback
@@ -467,37 +462,12 @@ MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 
 void MidiDeviceSoundCanvas::RenderAudioFramesToFifo(const int num_audio_frames)
 {
-	assert(num_audio_frames > 0);
-
-	static std::vector<float> left  = {};
-	static std::vector<float> right = {};
-
-	// Maybe expand the vectors
-	if (check_cast<int>(left.size()) < num_audio_frames) {
-		left.resize(num_audio_frames);
-		right.resize(num_audio_frames);
-	}
-
-	float* audio_out[] = {left.data(), right.data()};
-
-	clap.plugin->Process(audio_out, num_audio_frames, clap.event_list);
-	clap.event_list.Clear();
-
-	for (auto i = 0; i < num_audio_frames; ++i) {
-		audio_frame_fifo.Enqueue({left[i], right[i]});
-	}
+	clap.RenderAudioFramesToFifo(num_audio_frames, audio_frame_fifo);
 }
 
 void MidiDeviceSoundCanvas::ProcessWorkItem(const MidiWork& work)
 {
-	if (work.message_type == MessageType::Channel) {
-		assert(work.message.size() >= MaxMidiMessageLen);
-		clap.event_list.AddMidiEvent(work.message, 0);
-
-	} else {
-		assert(work.message_type == MessageType::SysEx);
-		clap.event_list.AddMidiSysExEvent(work.message, 0);
-	}
+	clap.ProcessWorkItem(work);
 }
 
 static std::set<const SoundCanvas::SynthModel*> available_models = {};

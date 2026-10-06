@@ -6,13 +6,7 @@
 
 #include "midi_synth.h"
 
-#include <memory>
-#include <optional>
-#include <thread>
-
-#include "audio/clap/event_list.h"
-#include "audio/clap/plugin.h"
-#include "audio/mixer.h"
+#include "clap_synth.h"
 #include "dos/programs/more_output.h"
 
 namespace SoundCanvas {
@@ -48,7 +42,7 @@ struct SynthModel {
 class MidiDeviceSoundCanvas final : public MidiSynth {
 public:
 	// Throws `std::runtime_error` if the MIDI device cannot be
-	// initialiased (e.g., the requested SoundFont cannot be loaded).
+	// initialised (e.g., the requested model cannot be loaded).
 	MidiDeviceSoundCanvas();
 
 	~MidiDeviceSoundCanvas()
@@ -74,8 +68,6 @@ public:
 	SoundCanvas::SynthModel GetModel() const;
 
 private:
-	void MixerCallback(const int requested_audio_frames);
-
 	void ProcessWorkItem(const MidiWork& work) override;
 	void RenderAudioFramesToFifo(const int num_frames) override;
 
@@ -84,10 +76,7 @@ private:
 		// no extra shutdown logic needed for CLAP plugins
 	}
 
-	struct {
-		std::unique_ptr<Clap::Plugin> plugin = nullptr;
-		Clap::EventList event_list           = {};
-	} clap = {};
+	ClapSynth clap = {};
 
 	SoundCanvas::SynthModel model = {};
 };
