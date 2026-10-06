@@ -2,9 +2,13 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "audio/clap/plugin_manager.cpp"
+#include "midi/clap.cpp"
 #include "midi/private/clap_synth.h"
 
 #include <algorithm>
+#include <cstdlib>
+#include <optional>
+#include <unordered_map>
 #include <utility>
 
 #include <gtest/gtest.h>
@@ -543,6 +547,135 @@ TEST(ClapLifecycle, RendersSilenceWhenProcessingCannotStart)
 	EXPECT_EQ(state.lifecycle,
 	          (std::vector<TestPlugin::State>{
 	                  Uninitialised, Activated, StartFailed, Deactivated, Destroyed}));
+}
+
+TEST(ClapConfiguration, ParsesQuotedEnvironmentAssignments)
+{
+	const auto actual = parse_clap_environment(
+	        R"(MODE=gm "SOUNDCANVAS_ROM_PATH=C:\Software\My ROMs" EMPTY= TOKEN=a=b MODE=gs)");
+	const std::unordered_map<std::string, std::string> expected = {
+	        {                "MODE",                     "gs"},
+	        {"SOUNDCANVAS_ROM_PATH", R"(C:\Software\My ROMs)"},
+	        {               "EMPTY",                       ""},
+	        {               "TOKEN",                    "a=b"}
+        };
+
+	EXPECT_EQ(actual, expected);
+	EXPECT_TRUE(parse_clap_environment(" \t").empty());
+
+	for (const auto* invalid :
+	     {"MISSING", "=value", "\"BAD NAME=value\"", "\"UNCLOSED=value"}) {
+		SCOPED_TRACE(invalid);
+
+		EXPECT_THROW(parse_clap_environment(invalid), std::runtime_error);
+	}
+}
+
+TEST(ClapConfiguration, ProvidesSelectorsAndSampleRate)
+{
+	SectionProp section("clap");
+	init_clap_config_settings(section);
+
+	EXPECT_EQ(section.GetString("clap_library"), "");
+	EXPECT_EQ(section.GetString("clap_plugin"), "");
+	EXPECT_EQ(section.GetString("clap_env"), "");
+	EXPECT_EQ(section.GetString("clap_sample_rate"), "auto");
+
+	EXPECT_TRUE(section.GetProperty("clap_plugin")->SetValue("2"));
+	EXPECT_EQ(section.GetString("clap_plugin"), "2");
+
+	EXPECT_TRUE(section.GetProperty("clap_sample_rate")->SetValue("33103"));
+	EXPECT_EQ(section.GetString("clap_sample_rate"), "33103");
+}
+
+TEST(ClapConfiguration, PreservesEnvironmentQuotesInConfigFiles)
+{
+	CommandLine command_line(0, nullptr);
+
+	struct RestoreControl {
+		ConfigPtr previous_control = std::move(control);
+
+		~RestoreControl()
+		{
+			control = std::move(previous_control);
+		}
+	} restore_control = {};
+
+	control = std::make_unique<Config>(&command_line);
+
+	CLAP_AddConfigSection(control);
+
+	const auto section = get_section("clap");
+	const std::string settings = R"("FIRST=C:\My ROMs" "SECOND=another value")";
+
+	ASSERT_TRUE(section->HandleInputLine("clap_env = " + settings));
+	EXPECT_EQ(section->GetString("clap_env"), settings);
+
+	const std::unordered_map<std::string, std::string> expected = {
+	        { "FIRST", R"(C:\My ROMs)"},
+                {"SECOND", "another value"}
+        };
+
+	EXPECT_EQ(parse_clap_environment(section->GetString("clap_env")), expected);
+
+	ASSERT_TRUE(section->HandleInputLine("clap_library = \"Example\""));
+	EXPECT_EQ(section->GetString("clap_library"), "Example");
+}
+
+TEST(ClapConfiguration, SetsEnvironmentForNativeAndCrtReaders)
+{
+	constexpr auto Name  = "DOSBOX_CLAP_ENV_TEST";
+	constexpr auto Value = "value with spaces=one";
+
+	struct RestoreEnvironment {
+		const char* name                 = nullptr;
+		std::optional<std::string> value = {};
+
+		~RestoreEnvironment()
+		{
+#if !defined(_WIN32)
+			if (!value) {
+				unsetenv(name);
+				return;
+			}
+#endif
+			set_env_var(name,
+			            value ? value->c_str() : nullptr,
+			            Env::Overwrite);
+		}
+	};
+
+	const auto previous_value                    = std::getenv(Name);
+	const RestoreEnvironment restore_environment = {
+	        Name,
+	        previous_value ? std::make_optional<std::string>(previous_value)
+	                       : std::nullopt};
+
+	set_env_var(Name, Value, Env::Overwrite);
+
+	EXPECT_EQ(get_env_var(Name), Value);
+	EXPECT_STREQ(std::getenv(Name), Value);
+}
+
+TEST(ClapListing, GroupsLibrariesAndHighlightsTheActiveInstance)
+{
+	const std::vector<Clap::PluginInfo> infos = {
+	        {"plugins/First.clap", 0,   "piano",         "Piano"},
+	        {"plugins/First.clap", 2, "strings",       "Strings"},
+	        {  "other/First.clap", 0,   "piano", "Another Piano"}
+        };
+	const std::string first_library = "  First.clap\n    0 - Piano\n    2 - Strings\n";
+
+	EXPECT_EQ(format_clap_plugin_list(infos, nullptr),
+	          first_library + "  First.clap\n    0 - Another Piano\n");
+
+	EXPECT_EQ(format_clap_plugin_list(infos, &infos.back()),
+	          first_library + "  First.clap\n" +
+	                  convert_ansi_markup("[color=light-green]") +
+	                  "  * 0 - Another Piano\n" +
+	                  convert_ansi_markup("[reset]"));
+
+	EXPECT_TRUE(format_clap_plugin_list({}, nullptr).empty());
 }
 
 TEST(ClapSelection, FindsFirstMatchingPlugin)

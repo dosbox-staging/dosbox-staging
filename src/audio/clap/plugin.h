@@ -14,6 +14,9 @@
 
 namespace Clap {
 
+inline constexpr int MinPluginRateHz = 8000;
+inline constexpr int MaxPluginRateHz = 192000;
+
 // Object-oriented wrapper to a CLAP MIDI synth. MIDI events target the first
 // note input port, and the first stereo audio output port is played back.
 // Additional audio inputs receive silence and additional outputs are discarded.
