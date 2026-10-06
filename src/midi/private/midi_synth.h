@@ -26,6 +26,9 @@ public:
 	void Resume() override;
 
 protected:
+	// Call with the mixer locked, after configuring the channel and synth.
+	void StartRenderer(const int sample_rate_hz, const char* thread_name);
+
 	void Render();
 	void Shutdown();
 
