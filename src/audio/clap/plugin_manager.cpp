@@ -19,6 +19,7 @@
 #include "misc/logging.h"
 #include "misc/support.h"
 #include "utils/checks.h"
+#include "utils/string_utils.h"
 
 CHECK_NARROWING();
 
@@ -82,6 +83,56 @@ std::vector<PluginInfo> PluginManager::GetPluginInfos()
 	}
 
 	return plugin_info_cache;
+}
+
+static std::optional<PluginInfo> find_plugin(const std::vector<PluginInfo>& plugin_infos,
+                                             const std::string& wanted_library_name,
+                                             const std::string& wanted_plugin_name_or_index)
+{
+	std::optional<uint32_t> wanted_plugin_index = {};
+
+	if (!wanted_plugin_name_or_index.empty() &&
+	    is_digits(wanted_plugin_name_or_index)) {
+		const auto index = parse_int(wanted_plugin_name_or_index);
+		if (!index) {
+			LOG_DEBUG("CLAP: Plugin index '%s' is out of range",
+			          wanted_plugin_name_or_index.c_str());
+			return {};
+		}
+
+		wanted_plugin_index = check_cast<uint32_t>(*index);
+	}
+
+	for (const auto& info : plugin_infos) {
+		if (!wanted_library_name.empty() &&
+		    !find_in_case_insensitive(wanted_library_name,
+		                              info.library_path.filename().string())) {
+			continue;
+		}
+
+		if (wanted_plugin_index) {
+			if (info.index != *wanted_plugin_index) {
+				continue;
+			}
+		} else if (!wanted_plugin_name_or_index.empty() &&
+		           !find_in_case_insensitive(wanted_plugin_name_or_index,
+		                                     info.name)) {
+			continue;
+		}
+
+		return info;
+	}
+
+	return {};
+}
+
+std::optional<PluginInfo> PluginManager::FindPlugin(
+        const std::string& wanted_library_name,
+        const std::string& wanted_plugin_name_or_index)
+{
+	return find_plugin(GetPluginInfos(),
+	                   wanted_library_name,
+	                   wanted_plugin_name_or_index);
 }
 
 static bool validate_note_ports(const clap_plugin_t* plugin)
