@@ -22,6 +22,9 @@ namespace Clap {
 class Plugin {
 
 public:
+	// Maximum number of audio frames accepted by Process().
+	static constexpr int MaxFrameCount = 8192;
+
 	// Each channel-count vector has one entry per audio port, in the order
 	// reported by the plugin. An empty input vector means no audio inputs;
 	// the output vector must start with a stereo port (two channels).
@@ -41,8 +44,6 @@ public:
 	Plugin& operator=(const Plugin&) = delete;
 
 private:
-	static constexpr int MaxFrameCount = 8192;
-
 	struct AudioBuffers {
 		AudioBuffers(const std::vector<uint32_t>& channel_counts);
 
