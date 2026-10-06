@@ -47,6 +47,9 @@ std::string get_env_var(const char* var_name)
 void set_env_var(const char* var_name, const char* value, [[maybe_unused]] int overwrite)
 {
 #ifdef _WIN32
+    // Plugins using the shared C runtime read its cached environment via
+    // getenv(), while others query the native Windows environment.
+    _putenv_s(var_name, value ? value : "");
     SetEnvironmentVariableA(var_name, value);
 #else
     setenv(var_name, value, overwrite);
