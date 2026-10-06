@@ -181,6 +181,16 @@ public:
 		return !valid_values.empty();
 	}
 
+	// Retain quoting for settings that contain a list of quoted arguments.
+	void SetPreserveQuotes(const bool enabled)
+	{
+		preserve_quotes = enabled;
+	}
+	bool PreservesQuotes() const
+	{
+		return preserve_quotes;
+	}
+
 	virtual bool IsValidValue(const Value& value);
 	virtual bool IsValueDeprecated(const Value& value) const;
 
@@ -226,6 +236,7 @@ protected:
 
 private:
 	void MaybeSetBoolValid(const std::string_view value);
+	bool preserve_quotes = false;
 };
 
 class PropInt final : public Property {
