@@ -6,6 +6,7 @@ add_executable(dosbox_tests
     batch_file_tests.cpp
     bit_view_tests.cpp
     bitops_tests.cpp
+    clap_plugin_tests.cpp
     cmd_move_tests.cpp
     dos_files_tests.cpp
     dos_memory_struct_tests.cpp
@@ -53,6 +54,7 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU" AND NOT MSVC)
 endif()
 
 target_link_libraries(dosbox_tests PRIVATE
+    clap
     GTest::gmock_main
     dosboxcommon
     SDL3::Headers
