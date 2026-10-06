@@ -4,10 +4,30 @@
 #include "private/midi_synth.h"
 
 #include "hardware/pic.h"
+#include "misc/support.h"
 #include "utils/math_utils.h"
 #include "utils/string_utils.h"
 
 // #define MIDI_SYNTH_DEBUG
+
+void MidiSynth::StartRenderer(const int sample_rate_hz, const char* thread_name)
+{
+	assert(mixer_channel);
+	assertm(sample_rate_hz >= 8000, "Sample rate must be at least 8 kHz");
+	ms_per_audio_frame = MillisInSecond / sample_rate_hz;
+
+	// Double the baseline PCM prebuffer because MIDI is demanding and
+	// bursty. The mixer's default of ~20 ms becomes 40 ms here, which gives
+	// slower systems a better chance to keep up.
+	const auto render_ahead_ms = MIXER_GetPreBufferMs() * 2;
+	const auto audio_frames_per_ms = iround(sample_rate_hz / MillisInSecond);
+	audio_frame_fifo.Resize(
+	        check_cast<size_t>(render_ahead_ms * audio_frames_per_ms));
+	work_fifo.Resize(MaxMidiWorkFifoSize);
+
+	renderer = std::thread(std::bind_front(&MidiSynth::Render, this));
+	set_thread_name(renderer, thread_name);
+}
 
 // Keep the FIFO populated with freshly rendered buffers
 void MidiSynth::Render()
