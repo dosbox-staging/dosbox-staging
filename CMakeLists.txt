@@ -61,7 +61,7 @@ else()
   # Warning flags common to C and C++ code
   set(WARNING_FLAGS_COMMON
       "-Wall" "-Wextra" "-Wdeprecated"
-      "-Wno-unknown-warning-option" "-Wno-unknown-pragmas"
+      "-Wno-unknown-pragmas"
       "-Wno-conversion" "-Wno-narrowing"
       "-Wdisabled-optimization" "-Wduplicated-branches" "-Wtrampolines" "-Wvla"
       "-Wlogical-op" "-Wduplicated-cond" "-Wpointer-arith"
@@ -121,6 +121,8 @@ else()
   endif()
 
   add_compile_options(
+    "$<$<COMPILE_LANG_AND_ID:C,Clang,AppleClang>:-Wno-unknown-warning-option>"
+    "$<$<COMPILE_LANG_AND_ID:CXX,Clang,AppleClang>:-Wno-unknown-warning-option>"
     "$<$<COMPILE_LANGUAGE:C>:${WARNING_FLAGS_C}>"
     "$<$<COMPILE_LANGUAGE:CXX>:${WARNING_FLAGS_CXX}>"
   )
