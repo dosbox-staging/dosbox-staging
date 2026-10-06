@@ -9,8 +9,8 @@
 #include <vector>
 
 #include "library.h"
-#include "plugin.h"
 #include "misc/std_filesystem.h"
+#include "plugin.h"
 
 namespace Clap {
 
@@ -29,12 +29,10 @@ public:
 	// Enumerates the list of available plugins only once during the
 	// lifecycle of the program, then it returns the cached results.
 	//
-	// Only supported plugins having a single MIDI input port and a single
-	// stereo audio output port and are enumerated.
-	//
 	std::vector<PluginInfo> GetPluginInfos();
 
-	// Loads and initialises a CLAP plugin.
+	// Loads and initialises a CLAP plugin. The first note input port must
+	// support MIDI and the first audio output port must be stereo.
 	std::unique_ptr<Plugin> LoadPlugin(const PluginInfo& plugin_info);
 
 private:
