@@ -5,6 +5,7 @@
 #define DOSBOX_CLAP_PLUGIN_MANAGER_H
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -30,6 +31,14 @@ public:
 	// lifecycle of the program, then it returns the cached results.
 	//
 	std::vector<PluginInfo> GetPluginInfos();
+
+	// Returns the first match in discovery order, or no value if none match.
+	// Empty selectors match any library/plugin. Names use case-insensitive
+	// partial matching against the library filename and plugin name.
+	// The library's .clap extension can be omitted.
+	// A numeric plugin selector matches its exact index within the library.
+	std::optional<PluginInfo> FindPlugin(const std::string& library_name = {},
+	                                     const std::string& plugin_name_or_index = {});
 
 	// Loads and initialises a CLAP plugin. The first note input port must
 	// support MIDI and the first audio output port must be stereo.
