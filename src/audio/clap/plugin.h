@@ -5,6 +5,7 @@
 #define DOSBOX_CLAP_PLUGIN_H
 
 #include <memory>
+#include <vector>
 
 #include "clap/all.h"
 
@@ -13,14 +14,16 @@
 
 namespace Clap {
 
-// Object-oriented wrapper to a CLAP plugin instance. Only plugins with
-// exactly two 32-bit float output channels are supported currently (i.e.,
-// MIDI synths).
+// Object-oriented wrapper to a CLAP MIDI synth. MIDI events target the first
+// note input port, and the first stereo audio output port is played back.
+// Additional audio inputs receive silence and additional outputs are discarded.
 //
 class Plugin {
 
 public:
-	Plugin(const std::shared_ptr<Library> library, const clap_plugin_t* plugin);
+	Plugin(const std::shared_ptr<Library> library, const clap_plugin_t* plugin,
+	       const std::vector<uint32_t>& input_channel_counts,
+	       const std::vector<uint32_t>& output_channel_counts);
 	~Plugin();
 
 	// Must be called before the first `Process()` call
@@ -34,6 +37,18 @@ public:
 	Plugin& operator=(const Plugin&) = delete;
 
 private:
+	static constexpr int MaxFrameCount = 8192;
+
+	// Keep the CLAP port array contiguous, with separate sample storage and
+	// channel pointer arrays. All buffers are allocated before processing.
+	struct AudioBuffers {
+		AudioBuffers(const std::vector<uint32_t>& channel_counts);
+
+		std::vector<clap_audio_buffer_t> ports = {};
+		std::vector<float> samples             = {};
+		std::vector<float*> channels           = {};
+	};
+
 	// Reference to the CLAP library that wraps the underlying dynamic-link
 	// library. A single library can contain multiple plugins, or the same
 	// plugin can be instantiated multiple times -- all these plugin
@@ -47,8 +62,8 @@ private:
 
 	const clap_plugin_t* plugin = nullptr;
 
-	clap_audio_buffer_t audio_in  = {};
-	clap_audio_buffer_t audio_out = {};
+	AudioBuffers audio_in;
+	AudioBuffers audio_out;
 
 	clap_process_t process = {};
 };

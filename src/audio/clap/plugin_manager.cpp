@@ -15,10 +15,10 @@
 
 #include "clap/all.h"
 
-#include "utils/checks.h"
 #include "misc/cross.h"
 #include "misc/logging.h"
 #include "misc/support.h"
+#include "utils/checks.h"
 
 CHECK_NARROWING();
 
@@ -50,8 +50,10 @@ void PluginManager::EnumeratePlugins()
 	constexpr auto OnlyRegularFiles = false;
 
 	for (const auto& dir : get_plugin_paths()) {
-		LOG_DEBUG("CLAP: Enumerating CLAP plugins in '%s'", dir.string().c_str());
-		for (const auto& name : get_directory_entries(dir, ".clap", OnlyRegularFiles)) {
+		LOG_DEBUG("CLAP: Enumerating CLAP plugins in '%s'",
+		          dir.string().c_str());
+		for (const auto& name :
+		     get_directory_entries(dir, ".clap", OnlyRegularFiles)) {
 			auto library_path = dir / name;
 
 			LOG_DEBUG("CLAP: Trying to load plugin library '%s'",
@@ -91,34 +93,32 @@ static bool validate_note_ports(const clap_plugin_t* plugin)
 		return false;
 	}
 
-	constexpr auto InputPort  = true;
-	constexpr auto OutputPort = false;
+	constexpr auto InputPort = true;
 
 	const auto num_in_ports = note_ports->count(plugin, InputPort);
-	if (num_in_ports != 1) {
-		LOG_DEBUG("CLAP: Only plugins with a single MIDI input ports are supported");
-		return false;
-	}
-
-	const auto num_out_ports = note_ports->count(plugin, OutputPort);
-	if (num_out_ports != 0) {
-		LOG_DEBUG("CLAP: Only plugins with no MIDI output ports are supported");
+	if (num_in_ports == 0) {
+		LOG_DEBUG("CLAP: Plugins must have at least one MIDI input port");
 		return false;
 	}
 
 	clap_note_port_info info = {};
 	const auto PortIndex     = 0;
-	note_ports->get(plugin, PortIndex, InputPort, &info);
+	if (!note_ports->get(plugin, PortIndex, InputPort, &info)) {
+		LOG_DEBUG("CLAP: Cannot get the first note input port");
+		return false;
+	}
 
 	if ((info.supported_dialects & CLAP_NOTE_DIALECT_MIDI) == 0) {
-		LOG_DEBUG("CLAP: Only plugins with MIDI dialect support are supported");
+		LOG_DEBUG("CLAP: The first note input port must support the MIDI dialect");
 		return false;
 	}
 
 	return true;
 }
 
-static bool validate_audio_ports(const clap_plugin_t* plugin)
+static bool validate_audio_ports(const clap_plugin_t* plugin,
+                                 std::vector<uint32_t>& input_channel_counts,
+                                 std::vector<uint32_t>& output_channel_counts)
 {
 	const auto audio_ports = static_cast<const clap_plugin_audio_ports_t*>(
 	        plugin->get_extension(plugin, CLAP_EXT_AUDIO_PORTS));
@@ -131,29 +131,38 @@ static bool validate_audio_ports(const clap_plugin_t* plugin)
 	constexpr auto InputPort  = true;
 	constexpr auto OutputPort = false;
 
-	const auto num_in_ports = audio_ports->count(plugin, InputPort);
-	if (num_in_ports != 0) {
-		LOG_DEBUG("CLAP: Only instrument plugins with no audio input ports are supported");
-		return false;
-	}
+	const auto scan_ports = [&](const bool is_input,
+	                            std::vector<uint32_t>& channel_counts) {
+		const auto num_ports = audio_ports->count(plugin, is_input);
+		if (!is_input && num_ports == 0) {
+			LOG_DEBUG("CLAP: Plugins must have at least one audio output port");
+			return false;
+		}
 
-	const auto num_out_ports = audio_ports->count(plugin, OutputPort);
-	if (num_out_ports != 1) {
-		LOG_DEBUG("CLAP: Only plugins with a single audio output port are supported");
-		return false;
-	}
+		channel_counts.clear();
+		channel_counts.reserve(num_ports);
+		for (uint32_t i = 0; i < num_ports; ++i) {
+			clap_audio_port_info port = {};
+			if (!audio_ports->get(plugin, i, is_input, &port) ||
+			    port.channel_count == 0) {
+				LOG_DEBUG("CLAP: Invalid audio %s port %u",
+				          is_input ? "input" : "output",
+				          i);
+				return false;
+			}
+			if (!is_input && i == 0 &&
+			    !(port.channel_count == 2 && port.port_type &&
+			      strcmp(port.port_type, CLAP_PORT_STEREO) == 0)) {
+				LOG_DEBUG("CLAP: The first audio output port must be stereo with two channels");
+				return false;
+			}
+			channel_counts.push_back(port.channel_count);
+		}
+		return true;
+	};
 
-	clap_audio_port_info info = {};
-	const auto PortIndex      = 0;
-	audio_ports->get(plugin, PortIndex, OutputPort, &info);
-
-	if (!(info.channel_count == 2 &&
-	      strcmp(info.port_type, CLAP_PORT_STEREO) == 0)) {
-		LOG_DEBUG("CLAP: Only stereo plugins with two audio output channels are supported");
-		return false;
-	}
-
-	return true;
+	return scan_ports(InputPort, input_channel_counts) &&
+	       scan_ports(OutputPort, output_channel_counts);
 }
 
 std::shared_ptr<Library> PluginManager::GetOrLoadLibrary(const std_fs::path& library_path)
@@ -214,6 +223,12 @@ std::unique_ptr<Plugin> PluginManager::LoadPlugin(const PluginInfo& plugin_info)
 		        plugin_info.library_path.string().c_str());
 		return {};
 	}
+	const auto destroy_plugin = [](const clap_plugin_t* instance) {
+		instance->destroy(instance);
+	};
+	std::unique_ptr<const clap_plugin_t, decltype(destroy_plugin)> plugin_guard(
+	        plugin, destroy_plugin);
+
 	if (!plugin->init(plugin)) {
 		LOG_DEBUG("CLAP: Error initialising plugin with ID '%s' from library '%s'",
 		          plugin_info.id.c_str(),
@@ -224,7 +239,9 @@ std::unique_ptr<Plugin> PluginManager::LoadPlugin(const PluginInfo& plugin_info)
 	if (!validate_note_ports(plugin)) {
 		return {};
 	}
-	if (!validate_audio_ports(plugin)) {
+	std::vector<uint32_t> input_channel_counts  = {};
+	std::vector<uint32_t> output_channel_counts = {};
+	if (!validate_audio_ports(plugin, input_channel_counts, output_channel_counts)) {
 		return {};
 	}
 
@@ -232,7 +249,12 @@ std::unique_ptr<Plugin> PluginManager::LoadPlugin(const PluginInfo& plugin_info)
 	         plugin_info.name.c_str(),
 	         plugin_info.version.c_str());
 
-	return std::make_unique<Plugin>(library, plugin);
+	auto instance = std::make_unique<Plugin>(library,
+	                                         plugin,
+	                                         input_channel_counts,
+	                                         output_channel_counts);
+	plugin_guard.release();
+	return instance;
 }
 
 } // namespace Clap
