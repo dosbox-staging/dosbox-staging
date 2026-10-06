@@ -14,6 +14,9 @@
 
 namespace Clap {
 
+inline constexpr int MinPluginRateHz = 8000;
+inline constexpr int MaxPluginRateHz = 192000;
+
 // Object-oriented wrapper to a CLAP MIDI synth. MIDI events target the first
 // note input port, which must support MIDI. The first audio output port must
 // be stereo and is played back. Audio inputs receive silence and additional
@@ -36,7 +39,12 @@ public:
 	// Must be called before the first `Process()` call
 	void Activate(const int sample_rate_hz);
 
+	// CLAP_PROCESS_ERROR silences the failed block; later blocks can
+	// recover. Logs once per run of consecutive processing errors.
 	void Process(float** audio_out, const int num_frames, EventList& event_list);
+
+	// Call on the render thread before deactivating or destroying the plugin.
+	void StopProcessing();
 
 	// prevent copying
 	Plugin(const Plugin&) = delete;
@@ -64,6 +72,10 @@ private:
 	std::shared_ptr<Library> library = nullptr;
 
 	const clap_plugin_t* plugin = nullptr;
+	bool is_active              = false;
+	bool is_processing          = false;
+	bool processing_failed      = false;
+	bool process_error_reported = false;
 
 	AudioBuffers audio_in;
 	AudioBuffers audio_out;

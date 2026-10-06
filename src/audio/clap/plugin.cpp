@@ -3,13 +3,16 @@
 
 #include "plugin.h"
 
+#include <algorithm>
 #include <cassert>
 #include <numeric>
+#include <stdexcept>
 
 #include "clap/all.h"
 
 #include "event_list.h"
 #include "library.h"
+#include "misc/logging.h"
 #include "misc/support.h"
 #include "utils/checks.h"
 
@@ -67,8 +70,11 @@ Plugin::~Plugin()
 {
 	assert(plugin);
 
-	plugin->reset(plugin);
-	plugin->deactivate(plugin);
+	assert(!is_processing);
+	if (is_active) {
+		plugin->deactivate(plugin);
+	}
+
 	plugin->destroy(plugin);
 	plugin = nullptr;
 }
@@ -77,12 +83,36 @@ void Plugin::Activate(const int sample_rate_hz)
 {
 	constexpr auto MinFrameCount = 1;
 
-	plugin->activate(plugin, sample_rate_hz, MinFrameCount, MaxFrameCount);
+	assert(!is_active);
+	if (!plugin->activate(plugin, sample_rate_hz, MinFrameCount, MaxFrameCount)) {
+		LOG_WARNING("CLAP: Plugin activation failed at %d Hz", sample_rate_hz);
+		throw std::runtime_error("CLAP: Plugin activation failed");
+	}
+	is_active = true;
 }
 
 void Plugin::Process(float** audio_out, const int num_frames, EventList& event_list)
 {
 	assert(num_frames > 0 && num_frames <= MaxFrameCount);
+	assert(is_active);
+
+	if (!is_processing && !processing_failed) {
+		is_processing = plugin->start_processing(plugin);
+		if (!is_processing) {
+			processing_failed = true;
+			LOG_ERR("CLAP: Plugin failed to start audio processing");
+		}
+	}
+
+	auto audio_out_fill_zero = [&]() {
+		std::fill_n(audio_out[0], num_frames, 0.0f);
+		std::fill_n(audio_out[1], num_frames, 0.0f);
+	};
+
+	if (processing_failed) {
+		audio_out_fill_zero();
+		return;
+	}
 
 	// Output metadata belongs to the plugin and may change on every call.
 	for (auto& port : this->audio_out.ports) {
@@ -98,7 +128,24 @@ void Plugin::Process(float** audio_out, const int num_frames, EventList& event_l
 	process.in_events  = event_list.GetInputEvents();
 	process.out_events = event_list.GetOutputEvents();
 
-	plugin->process(plugin, &process);
+	if (plugin->process(plugin, &process) == CLAP_PROCESS_ERROR) {
+		if (!process_error_reported) {
+			LOG_ERR("CLAP: Audio processing failed; discarding the output block");
+		}
+
+		process_error_reported = true;
+		audio_out_fill_zero();
+	} else {
+		process_error_reported = false;
+	}
+}
+
+void Plugin::StopProcessing()
+{
+	if (is_processing) {
+		plugin->stop_processing(plugin);
+		is_processing = false;
+	}
 }
 
 } // namespace Clap

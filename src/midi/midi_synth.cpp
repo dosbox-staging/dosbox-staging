@@ -48,6 +48,7 @@ void MidiSynth::Render()
 			                    : ProcessWorkFromFifo();
 		}
 	}
+	CloseRenderer();
 }
 
 void MidiSynth::Shutdown()
