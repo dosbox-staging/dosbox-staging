@@ -31,6 +31,11 @@ void ClapSynth::ProcessWorkItem(const MidiWork& work)
 	}
 }
 
+void ClapSynth::StopProcessing()
+{
+	plugin->StopProcessing();
+}
+
 void ClapSynth::RenderAudioFramesToFifo(const int num_frames,
                                         RWQueue<AudioFrame>& audio_frame_fifo)
 {

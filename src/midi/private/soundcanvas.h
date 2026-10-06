@@ -75,6 +75,10 @@ private:
 	{
 		// no extra shutdown logic needed for CLAP plugins
 	}
+	void CloseRenderer() override
+	{
+		clap.StopProcessing();
+	}
 
 	ClapSynth clap = {};
 

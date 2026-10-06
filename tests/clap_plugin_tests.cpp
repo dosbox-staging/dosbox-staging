@@ -12,6 +12,18 @@
 namespace {
 
 struct TestPlugin {
+	enum class State {
+		Uninitialised,
+		ActivationFailed,
+		Activated,
+		StartFailed,
+		Started,
+		Processing,
+		Stopped,
+		Deactivated,
+		Destroyed
+	};
+
 	std::vector<uint32_t> input_channels  = {};
 	std::vector<uint32_t> output_channels = {2};
 	uint32_t note_inputs                  = 1;
@@ -26,6 +38,14 @@ struct TestPlugin {
 	const clap_process_t* last_process    = nullptr;
 	std::vector<uint32_t> block_sizes     = {};
 	std::vector<uint16_t> event_types     = {};
+	State activation_result               = State::Activated;
+	State start_result                    = State::Started;
+	std::vector<State> lifecycle          = {State::Uninitialised};
+
+	State GetState() const
+	{
+		return lifecycle.back();
+	}
 
 	static TestPlugin& Get(const clap_plugin_t* plugin)
 	{
@@ -51,6 +71,10 @@ struct TestPlugin {
 
 	void Process(const clap_process_t* block)
 	{
+		EXPECT_TRUE(GetState() == State::Started ||
+		            GetState() == State::Processing);
+
+		lifecycle.push_back(State::Processing);
 		last_process = block;
 		block_sizes.push_back(block->frames_count);
 
@@ -186,9 +210,55 @@ struct TestPlugin {
 		return true;
 	}
 
-	static bool Activate(const clap_plugin_t*, double, uint32_t, uint32_t)
+	static bool Activate(const clap_plugin_t* p, double, uint32_t, uint32_t)
 	{
-		return true;
+		auto& state = Get(p);
+		EXPECT_TRUE(state.GetState() == State::Uninitialised ||
+		            state.GetState() == State::ActivationFailed ||
+		            state.GetState() == State::Deactivated);
+
+		state.lifecycle.push_back(state.activation_result);
+		return state.GetState() == State::Activated;
+	}
+
+	static bool Start(const clap_plugin_t* p)
+	{
+		auto& state = Get(p);
+		EXPECT_TRUE(state.GetState() == State::Activated ||
+		            state.GetState() == State::StartFailed ||
+		            state.GetState() == State::Stopped);
+
+		state.lifecycle.push_back(state.start_result);
+		return state.GetState() == State::Started;
+	}
+
+	static void Stop(const clap_plugin_t* p)
+	{
+		auto& state = Get(p);
+		EXPECT_TRUE(state.GetState() == State::Started ||
+		            state.GetState() == State::Processing);
+
+		state.lifecycle.push_back(State::Stopped);
+	}
+
+	static void Deactivate(const clap_plugin_t* p)
+	{
+		auto& state = Get(p);
+		EXPECT_TRUE(state.GetState() == State::Activated ||
+		            state.GetState() == State::StartFailed ||
+		            state.GetState() == State::Stopped);
+
+		state.lifecycle.push_back(State::Deactivated);
+	}
+
+	static void Destroy(const clap_plugin_t* p)
+	{
+		auto& state = Get(p);
+		EXPECT_TRUE(state.GetState() == State::Uninitialised ||
+		            state.GetState() == State::ActivationFailed ||
+		            state.GetState() == State::Deactivated);
+
+		state.lifecycle.push_back(State::Destroyed);
 	}
 
 	clap_plugin_note_ports_t note_ports   = {CountNotePorts, GetNotePort};
@@ -196,11 +266,11 @@ struct TestPlugin {
 	clap_plugin_t plugin                  = {.desc             = nullptr,
 	                                         .plugin_data      = this,
 	                                         .init             = Success,
-	                                         .destroy          = Noop,
+	                                         .destroy          = Destroy,
 	                                         .activate         = Activate,
-	                                         .deactivate       = Noop,
-	                                         .start_processing = Success,
-	                                         .stop_processing  = Noop,
+	                                         .deactivate       = Deactivate,
+	                                         .start_processing = Start,
+	                                         .stop_processing  = Stop,
 	                                         .reset            = Noop,
 	                                         .process          = ProcessBlock,
 	                                         .get_extension    = GetExtension,
@@ -349,6 +419,8 @@ TEST(ClapProcessing, SuppliesBuffersForAllPortLayouts)
 		EXPECT_EQ(state.last_process->audio_outputs[0].data32, next_stereo);
 		EXPECT_EQ(next_left, 1.0f);
 		EXPECT_EQ(next_right, 2.0f);
+
+		plugin.StopProcessing();
 	}
 }
 
@@ -377,6 +449,8 @@ TEST(ClapSynth, DeliversMidiOnceAndRendersStereoInBoundedBlocks)
 
 	synth.RenderAudioFramesToFifo(NumFrames, fifo);
 	synth.RenderAudioFramesToFifo(1, fifo);
+	synth.StopProcessing();
+
 	ASSERT_FALSE(::testing::Test::HasFatalFailure());
 
 	EXPECT_EQ(state.block_sizes,
@@ -392,6 +466,83 @@ TEST(ClapSynth, DeliversMidiOnceAndRendersStereoInBoundedBlocks)
 	EXPECT_TRUE(std::all_of(frames.begin(), frames.end(), [](const auto& frame) {
 		return frame[0] == 1.0f && frame[1] == 2.0f;
 	}));
+}
+
+TEST(ClapLifecycle, FollowsActivationAndProcessingOrder)
+{
+	using enum TestPlugin::State;
+
+	TestPlugin state = {};
+
+	{
+		Clap::Plugin plugin(nullptr, &state.plugin, {}, {2});
+		plugin.Activate(32000);
+
+		float left             = 0.0f;
+		float right            = 0.0f;
+		float* stereo[]        = {&left, &right};
+		Clap::EventList events = {};
+
+		plugin.Process(stereo, 1, events);
+		plugin.Process(stereo, 1, events);
+		plugin.StopProcessing();
+	}
+
+	EXPECT_EQ(state.lifecycle,
+	          (std::vector<TestPlugin::State>{Uninitialised,
+	                                          Activated,
+	                                          Started,
+	                                          Processing,
+	                                          Processing,
+	                                          Stopped,
+	                                          Deactivated,
+	                                          Destroyed}));
+}
+
+TEST(ClapLifecycle, RejectsFailedActivation)
+{
+	using enum TestPlugin::State;
+
+	TestPlugin state        = {};
+	state.activation_result = ActivationFailed;
+
+	{
+		Clap::Plugin plugin(nullptr, &state.plugin, {}, {2});
+		EXPECT_THROW(plugin.Activate(32000), std::runtime_error);
+	}
+
+	EXPECT_EQ(state.lifecycle,
+	          (std::vector<TestPlugin::State>{Uninitialised,
+	                                          ActivationFailed,
+	                                          Destroyed}));
+}
+
+TEST(ClapLifecycle, RendersSilenceWhenProcessingCannotStart)
+{
+	using enum TestPlugin::State;
+
+	TestPlugin state   = {};
+	state.start_result = StartFailed;
+
+	{
+		Clap::Plugin plugin(nullptr, &state.plugin, {}, {2});
+		plugin.Activate(32000);
+
+		float left             = 1.0f;
+		float right            = 1.0f;
+		float* stereo[]        = {&left, &right};
+		Clap::EventList events = {};
+
+		plugin.Process(stereo, 1, events);
+		plugin.Process(stereo, 1, events);
+
+		EXPECT_EQ(left, 0.0f);
+		EXPECT_EQ(right, 0.0f);
+	}
+
+	EXPECT_EQ(state.lifecycle,
+	          (std::vector<TestPlugin::State>{
+	                  Uninitialised, Activated, StartFailed, Deactivated, Destroyed}));
 }
 
 TEST(ClapSelection, FindsFirstMatchingPlugin)
