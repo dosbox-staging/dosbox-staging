@@ -63,6 +63,8 @@ SDL_Block sdl;
 
 static SDL_Point minimum_window_size = {640, 480};
 
+constexpr SDL_Rect DefaultDesktopSize = {0, 0, 640, 480};
+
 DosBox::Rect to_rect(const SDL_Rect r)
 {
 	return {r.x, r.y, r.w, r.h};
@@ -588,9 +590,10 @@ static void set_minimum_window_size()
 	// The SDL documentation is incorrect; this will set the minimum window
 	// size in logical units, not pixels.
 	if (!SDL_SetWindowMinimumSize(sdl.window,
-	                         minimum_window_size.x,
-	                         minimum_window_size.y)) {
-		LOG_WARNING("SDL: Failed to set window minimum size: %s", SDL_GetError());
+	                              minimum_window_size.x,
+	                              minimum_window_size.y)) {
+		LOG_WARNING("SDL: Failed to set window minimum size: %s",
+		            SDL_GetError());
 	}
 
 	// LOG_INFO("SDL: Updated window minimum size to %dx%d", width, height);
@@ -773,9 +776,7 @@ static SDL_Rect get_desktop_size()
 	if (!SDL_GetDisplayBounds(sdl.display_number, &desktop)) {
 		LOG_ERR("SDL: Could not get display bounds for display number %d: %s", sdl.display_number, SDL_GetError());
 		// Return a safe default
-		desktop.w = 640;
-		desktop.h = 480;
-		return desktop;
+		return DefaultDesktopSize;
 	}
 
 	// Deduct the border decorations from the desktop size
