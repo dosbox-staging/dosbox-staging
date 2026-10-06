@@ -286,4 +286,59 @@ TEST(ClapProcessing, SuppliesBuffersForAllPortLayouts)
 	}
 }
 
+TEST(ClapSelection, FindsFirstMatchingPlugin)
+{
+	// Factory indices can have gaps when descriptors cannot be retrieved.
+	const std::vector<Clap::PluginInfo> infos = {
+	        {"plugins/First.clap",           0,      "first-0",                  "Piano Lead", "", ""},
+	        {"plugins/First.clap",           2,      "first-2",       "Layered Strings v2.00", "", ""},
+	        {"plugins/First.clap",           5,      "first-5", "1 / 2147483648 / 4294967296", "", ""},
+	        { "other/Second.CLAP",           0,     "second-0",                  "Piano Bass", "", ""},
+	        { "other/Second.CLAP",           1,     "second-1",       "Layered Strings v1.00", "", ""},
+	        { "other/Second.CLAP", 2147483647u, "second-large",                  "High Index", "", ""}
+        };
+	struct Search {
+		const char* library;
+		const char* plugin;
+		const char* expected_id;
+	};
+	const Search searches[] = {
+	        {           "",	                       "",      "first-0"},
+	        {      "first",	                       "",      "first-0"},
+	        {"SECOND.clap",                               "",     "second-0"},
+	        {      "eCoNd",	                       "",     "second-0"},
+	        {           "",	                  "pIaNo",      "first-0"},
+	        {      "first",                        "STRINGS",      "first-2"},
+	        { "first.CLAP",                          "v2.00",      "first-2"},
+	        {     "second",                        "strings",     "second-1"},
+	        {           "",	                   "bass",     "second-0"},
+	        {      "first",	                      "0",      "first-0"},
+	        {      "first",	                      "2",      "first-2"},
+	        {      "first",	                   "0002",      "first-2"},
+	        {     "second",	                      "1",     "second-1"},
+	        {           "",	                      "1",     "second-1"},
+	        {     "second",                     "2147483647", "second-large"},
+	        {    "missing",	                       "",             ""},
+	        {    "plugins",	                       "",             ""},
+	        {      "first",	                   "bass",             ""},
+	        {      "first",	                      "1",             ""},
+	        {      "first",	                      "3",             ""},
+	        {      "first",                     "4294967296",             ""},
+	        {      "first",                     "2147483648",             ""},
+	        {           "", "999999999999999999999999999999",             ""}
+        };
+	for (const auto& search : searches) {
+		SCOPED_TRACE(std::string(search.library) + " / " + search.plugin);
+		const auto found = Clap::find_plugin(infos,
+		                                     search.library,
+		                                     search.plugin);
+		EXPECT_EQ(found ? found->id : "", search.expected_id);
+	}
+}
+
+TEST(ClapSelection, HandlesEmptyDiscoveryList)
+{
+	EXPECT_FALSE(Clap::find_plugin({}, "", ""));
+}
+
 } // namespace
