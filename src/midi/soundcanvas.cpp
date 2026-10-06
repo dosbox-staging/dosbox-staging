@@ -478,7 +478,11 @@ void SOUNDCANVAS_ListDevices(MidiDeviceSoundCanvas* device, MoreOutputStrings& o
 {
 	using namespace SoundCanvas;
 
-	set_soundcanvas_rom_dir_env_var();
+	// Preserve the ROM path supplied by the active generic CLAP device.
+	const auto current_device = MIDI_GetCurrentDevice();
+	if (!current_device || current_device->GetName() != MidiDeviceName::Clap) {
+		set_soundcanvas_rom_dir_env_var();
+	}
 
 	// Table layout constants
 	constexpr auto ColumnDelim = " ";
