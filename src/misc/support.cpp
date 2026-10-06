@@ -350,7 +350,6 @@ const std::vector<std_fs::path>& get_resource_parent_paths()
 // Searches mostly the same parent paths as get_resource_parent_paths()
 std::vector<std_fs::path> get_plugin_paths()
 {
-	// Intentionally not using the static cache as this function only gets called once.
 	std::vector<std_fs::path> paths = {};
 
 	// Current working directory

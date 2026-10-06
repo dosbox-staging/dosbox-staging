@@ -10,8 +10,10 @@
 
 #include "plugin_manager.h"
 
+#include <algorithm>
 #include <cassert>
 #include <optional>
+#include <string>
 
 #include "clap/all.h"
 
@@ -19,10 +21,14 @@
 #include "misc/logging.h"
 #include "misc/support.h"
 #include "utils/checks.h"
+#include "utils/string_utils.h"
+
+namespace Clap {
 
 CHECK_NARROWING();
 
-namespace Clap {
+// Keep these library filenames in sync with the dedicated MIDI synths.
+static const std::vector<std::string> DedicatedSynthLibraries = {"Nuked-SC55.clap"};
 
 static const clap_host_t dosbox_clap_host = {
         .clap_version = CLAP_VERSION,
@@ -43,9 +49,10 @@ static const clap_host_t dosbox_clap_host = {
         .request_process  = []([[maybe_unused]] const clap_host_t* host) {},
         .request_callback = []([[maybe_unused]] const clap_host_t* host) {}};
 
-void PluginManager::EnumeratePlugins()
+std::vector<PluginInfo> PluginManager::EnumeratePlugins(const std::string& wanted_library_name)
 {
-	plugin_info_cache.clear();
+	std::vector<PluginInfo> plugin_infos = {};
+	const auto wanted_filename = std_fs::path(wanted_library_name);
 
 	constexpr auto OnlyRegularFiles = false;
 
@@ -55,6 +62,11 @@ void PluginManager::EnumeratePlugins()
 
 		for (const auto& name :
 		     get_directory_entries(dir, ".clap", OnlyRegularFiles)) {
+			if (!wanted_filename.empty() &&
+			    name.filename() != wanted_filename) {
+				continue;
+			}
+
 			auto library_path = dir / name;
 
 			LOG_DEBUG("CLAP: Trying to load plugin library '%s'",
@@ -67,21 +79,137 @@ void PluginManager::EnumeratePlugins()
 
 			const auto pi = library->GetPluginInfos();
 
-			plugin_info_cache.insert(plugin_info_cache.end(),
-			                         pi.begin(),
-			                         pi.end());
+			plugin_infos.insert(plugin_infos.end(), pi.begin(), pi.end());
 		}
 	}
+
+	return plugin_infos;
 }
 
-std::vector<PluginInfo> PluginManager::GetPluginInfos()
+// infos is passed in by value to avoid modifying the original list
+static std::vector<PluginInfo> filter_plugin_infos(std::vector<PluginInfo> infos,
+                                                   const PluginFilter filter)
+{
+	if (filter == PluginFilter::GenericSynthOnly) {
+		const auto has_dedicated_synth = [](const PluginInfo& info) {
+			for (const auto& library_name : DedicatedSynthLibraries) {
+				if (library_name ==
+				    info.library_path.filename().string()) {
+					return true;
+				}
+			}
+			return false;
+		};
+
+		std::erase_if(infos, has_dedicated_synth);
+	}
+	return infos;
+}
+
+std::vector<PluginInfo> PluginManager::GetPluginInfos(const PluginFilter filter)
 {
 	if (!plugins_enumerated) {
-		EnumeratePlugins();
+		library_plugin_info_cache.clear();
+		plugin_info_cache  = EnumeratePlugins();
 		plugins_enumerated = true;
 	}
 
-	return plugin_info_cache;
+	return filter_plugin_infos(plugin_info_cache, filter);
+}
+
+static std::optional<PluginInfo> find_plugin(
+        const std::vector<PluginInfo>& plugin_infos,
+        const std::string& wanted_library_name,
+        const std::string& wanted_plugin_name_or_index,
+        const bool exact_library_match = false)
+{
+	if (wanted_library_name.empty() && wanted_plugin_name_or_index.empty()) {
+		return {};
+	}
+
+	std::optional<uint32_t> wanted_plugin_index = {};
+
+	if (!wanted_plugin_name_or_index.empty() &&
+	    is_digits(wanted_plugin_name_or_index)) {
+		if (wanted_library_name.empty()) {
+			return {};
+		}
+
+		const auto index = parse_int(wanted_plugin_name_or_index);
+		if (!index) {
+			LOG_DEBUG("CLAP: Plugin index '%s' is out of range",
+			          wanted_plugin_name_or_index.c_str());
+			return {};
+		}
+
+		wanted_plugin_index = check_cast<uint32_t>(*index);
+	}
+
+	for (const auto& info : plugin_infos) {
+		if (!wanted_library_name.empty()) {
+			const auto library_name = info.library_path.filename().string();
+			const auto matches =
+			        exact_library_match
+			                ? wanted_library_name == library_name
+			                : find_in_case_insensitive(wanted_library_name,
+			                                           library_name);
+
+			if (!matches) {
+				continue;
+			}
+		}
+
+		if (wanted_plugin_index) {
+			if (info.index != *wanted_plugin_index) {
+				continue;
+			}
+		} else if (!wanted_plugin_name_or_index.empty() &&
+		           !find_in_case_insensitive(wanted_plugin_name_or_index,
+		                                     info.name)) {
+			continue;
+		}
+
+		return info;
+	}
+
+	return {};
+}
+
+std::optional<PluginInfo> PluginManager::FindPlugin(
+        const std::string& wanted_library_name,
+        const std::string& wanted_plugin_name_or_index, 
+		const PluginFilter filter)
+{
+	return find_plugin(GetPluginInfos(filter),
+	                   wanted_library_name,
+	                   wanted_plugin_name_or_index);
+}
+
+std::optional<PluginInfo> PluginManager::FindPluginInLibrary(
+        const std::string& wanted_library_name,
+        const std::string& wanted_plugin_name_or_index)
+{
+	if (wanted_library_name.empty()) {
+		return {};
+	}
+
+	if (plugins_enumerated) {
+		return find_plugin(plugin_info_cache,
+		                   wanted_library_name,
+		                   wanted_plugin_name_or_index,
+		                   true);
+	}
+
+	const auto [it, inserted] = library_plugin_info_cache.try_emplace(
+	        wanted_library_name);
+	if (inserted) {
+		it->second = EnumeratePlugins(wanted_library_name);
+	}
+
+	return find_plugin(it->second,
+	                   wanted_library_name,
+	                   wanted_plugin_name_or_index,
+	                   true);
 }
 
 static bool validate_note_ports(const clap_plugin_t* plugin)
@@ -220,16 +348,17 @@ std::unique_ptr<Plugin> PluginManager::LoadPlugin(const PluginInfo& plugin_info)
 {
 	LOG_DEBUG("CLAP: Loading plugin with ID '%s' from library '%s'",
 	          plugin_info.id.c_str(),
-	          plugin_info.library_path.c_str());
+	          plugin_info.library_path.string().c_str());
 
 	const auto library = GetOrLoadLibrary(plugin_info.library_path);
 	if (!library) {
 		return {};
 	}
 
-	auto factory = static_cast<const clap_plugin_factory*>(
-	        library->GetPluginEntry()->get_factory(CLAP_PLUGIN_FACTORY_ID));
-	assert(factory);
+	const auto factory = library->GetPluginFactory();
+	if (!factory) {
+		return {};
+	}
 
 	const clap_plugin_t* plugin = factory->create_plugin(factory,
 	                                                     &dosbox_clap_host,
@@ -274,6 +403,7 @@ std::unique_ptr<Plugin> PluginManager::LoadPlugin(const PluginInfo& plugin_info)
 	                                         plugin,
 	                                         input_channel_counts,
 	                                         output_channel_counts);
+
 	// The wrapper now owns the plugin; disarm the temporary guard.
 	(void)plugin_guard.release();
 

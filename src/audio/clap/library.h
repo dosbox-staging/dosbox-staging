@@ -6,17 +6,21 @@
 
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #include "clap/all.h"
 
-#include "utils/dynlib.h"
 #include "misc/std_filesystem.h"
+#include "utils/dynlib.h"
 
 namespace Clap {
 
 struct PluginInfo {
 	std_fs::path library_path = {};
+
+	// The descriptor index within the library of the plugin to load.
+	uint32_t index = 0;
 
 	std::string id          = {};
 	std::string name        = {};
@@ -29,18 +33,17 @@ struct PluginInfo {
 //
 class Library {
 public:
-	// Loads and initialises a CLAP plugin. `library_path` must be:
+	// Loads and initialises a CLAP plugin library. `library_path` must be:
 	//
 	// - On Windows: the path of the `.clap` file (renamed DLL file)
 	//
-	// - On Linux: the path of the `.clap`  file (renamed .so file)
+	// - On Linux: the path of the `.clap` file (renamed .so file)
 	//
-	// - On macOS: the path of the application bundle. The actual
-	// dynamic-link library (.dynlib file) is in `Contents/MacOS` within the
-	// bundle. Passing in
+	// - On macOS: the path of the application bundle. The dynamic-link
+	//   library is in `Contents/MacOS` within the bundle.
 	//
-	// Throws `std::runtime_error` if the library cannot be loaded and
-	// initialiased.
+	// Throws `std::runtime_error` if the library cannot be loaded or
+	// initialised, or its CLAP API version is incompatible.
 	//
 	Library(const std_fs::path& library_path);
 
@@ -50,10 +53,14 @@ public:
 	// Returns the path passed into the constructor
 	std_fs::path GetPath() const;
 
-	// Get a list of all plugins in the library
+	// Returns compatible plugins declaring the instrument, synthesizer,
+	// and stereo features, with non-empty IDs and names. Missing
+	// descriptions and versions become empty strings. Returns an empty
+	// list if the library does not provide a plugin factory.
 	std::vector<PluginInfo> GetPluginInfos() const;
 
-	const clap_plugin_entry_t* GetPluginEntry() const;
+	// Returns the plugin factory, or nullptr if the library provides none.
+	const clap_plugin_factory_t* GetPluginFactory() const;
 
 	// prevent copying
 	Library(const Library&) = delete;
@@ -61,8 +68,11 @@ public:
 	Library& operator=(const Library&) = delete;
 
 private:
+	using LibraryHandle = std::unique_ptr<std::remove_pointer_t<dynlib_handle>,
+	                                      decltype(&dynlib_close)>;
+
 	std_fs::path library_path = {};
-	dynlib_handle lib_handle  = nullptr;
+	LibraryHandle lib_handle  = {nullptr, dynlib_close};
 
 	const clap_plugin_entry_t* plugin_entry = nullptr;
 };
