@@ -55,6 +55,12 @@ struct Desktop {
 int LogicalToNative(const int logical, const float content_scale);
 int NativeToLogical(const int native, const float content_scale);
 
+// Converts window sizes between unrounded logical units and native units.
+// Converting a size in native units to logical units and back results in the
+// original size.
+int LogicalSizeToNative(const float logical, const float content_scale);
+float NativeSizeToLogical(const int native, const float content_scale);
+
 // Calculates the desktop geometry of a display from its desktop display mode
 // (see `SDL_GetDesktopDisplayMode()`) and its content scale (see
 // `SDL_GetDisplayContentScale()`).
@@ -81,9 +87,10 @@ std::optional<SizeSetting> ParseWindowSizeSetting(const std::string_view value);
 std::optional<PositionSetting> ParseWindowPositionSetting(const std::string_view value);
 
 // Converts a window size setting to logical units. Both percentage values are
-// relative to the desktop height. Only the width and height of the returned
-// rectangle are set.
-SDL_Rect SizeToLogicalUnits(const SizeSetting& size, const Desktop& desktop);
+// relative to the desktop height. The result is not rounded, so sizes in
+// pixels can be converted back to pixels exactly. Only the width and height of
+// the returned rectangle are set.
+SDL_FRect SizeToLogicalUnits(const SizeSetting& size, const Desktop& desktop);
 
 // Converts a window position setting to logical units. The X percentage value
 // is relative to the desktop width, the Y value to the desktop height.
@@ -92,7 +99,7 @@ SDL_Point PositionToLogicalUnits(const PositionSetting& position,
 
 // Formats a window size in logical units as a setting value in the given unit
 // (the inverse of `SizeToLogicalUnits()`).
-std::string FormatSize(const SDL_Rect size, const Unit unit, const Desktop& desktop);
+std::string FormatSize(const SDL_FRect size, const Unit unit, const Desktop& desktop);
 
 // Formats a window position in logical units as a setting value in the given
 // unit (the inverse of `PositionToLogicalUnits()`).
