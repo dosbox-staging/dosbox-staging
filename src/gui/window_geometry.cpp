@@ -15,6 +15,20 @@ CHECK_NARROWING();
 
 namespace WindowGeometry {
 
+int LogicalToNative(const int logical, const float content_scale)
+{
+	// Special window position values must be passed to SDL unchanged
+	if (SDL_WINDOWPOS_ISUNDEFINED(logical) || SDL_WINDOWPOS_ISCENTERED(logical)) {
+		return logical;
+	}
+	return iroundf(static_cast<float>(logical) * content_scale);
+}
+
+int NativeToLogical(const int native, const float content_scale)
+{
+	return iroundf(static_cast<float>(native) / content_scale);
+}
+
 Desktop CalcDesktop(const SDL_DisplayMode& desktop_mode, const float content_scale)
 {
 	assert(content_scale > 0.0f);

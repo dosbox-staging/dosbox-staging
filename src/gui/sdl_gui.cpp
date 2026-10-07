@@ -110,16 +110,12 @@ static float get_content_scale()
 
 static int to_native(const int logical)
 {
-	// Special window position values must be passed to SDL unchanged
-	if (SDL_WINDOWPOS_ISUNDEFINED(logical) || SDL_WINDOWPOS_ISCENTERED(logical)) {
-		return logical;
-	}
-	return iroundf(static_cast<float>(logical) * get_content_scale());
+	return WindowGeometry::LogicalToNative(logical, get_content_scale());
 }
 
 static int to_logical(const int native)
 {
-	return iroundf(static_cast<float>(native) / get_content_scale());
+	return WindowGeometry::NativeToLogical(native, get_content_scale());
 }
 
 #if C_DEBUGGER

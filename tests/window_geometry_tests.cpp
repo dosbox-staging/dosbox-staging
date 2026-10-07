@@ -54,6 +54,49 @@ SDL_DisplayMode make_display_mode(const int w, const int h, const float pixel_de
 } // namespace
 
 // ----------------------------------------------------------------------------
+// LogicalToNative & NativeToLogical
+// ----------------------------------------------------------------------------
+
+TEST(WindowGeometry, LogicalToNative)
+{
+	EXPECT_EQ(LogicalToNative(1000, 1.0f), 1000);
+	EXPECT_EQ(LogicalToNative(1000, 1.5f), 1500);
+	EXPECT_EQ(LogicalToNative(853, 1.5f), 1280);
+}
+
+TEST(WindowGeometry, NativeToLogical)
+{
+	EXPECT_EQ(NativeToLogical(1000, 1.0f), 1000);
+	EXPECT_EQ(NativeToLogical(1500, 1.5f), 1000);
+	EXPECT_EQ(NativeToLogical(1280, 1.5f), 853);
+}
+
+TEST(WindowGeometry, LogicalToNativeKeepsSpecialPositions)
+{
+	for (const auto position : {static_cast<int>(SDL_WINDOWPOS_UNDEFINED),
+	                            static_cast<int>(SDL_WINDOWPOS_CENTERED),
+	                            static_cast<int>(SDL_WINDOWPOS_UNDEFINED_DISPLAY(2)),
+	                            static_cast<int>(SDL_WINDOWPOS_CENTERED_DISPLAY(2))}) {
+		EXPECT_EQ(LogicalToNative(position, 1.5f), position);
+	}
+}
+
+// Converting from logical units to native units and back must result in the
+// original value, otherwise window sizes and positions would change slightly
+// every time we convert them back and forth.
+TEST(WindowGeometry, LogicalToNativeRoundTrip)
+{
+	for (const auto content_scale : {1.0f, 1.25f, 1.5f, 1.75f, 2.0f, 2.25f, 2.5f, 3.0f}) {
+		for (auto logical = -4000; logical <= 8000; ++logical) {
+			const auto native = LogicalToNative(logical, content_scale);
+
+			ASSERT_EQ(NativeToLogical(native, content_scale), logical)
+			        << "content scale: " << content_scale;
+		}
+	}
+}
+
+// ----------------------------------------------------------------------------
 // CalcDesktop
 // ----------------------------------------------------------------------------
 
