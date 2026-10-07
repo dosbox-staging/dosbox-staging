@@ -1339,7 +1339,19 @@ void GFX_SaveCurrentWindowSizeAndPosition()
 	save_window_size(r.w, r.h);
 }
 
-static void handle_window_size_pref_after_config_load()
+// The `windowresolution` setting was renamed to `window_size` in 0.83.0, but
+// we still accept the legacy name. If both are set (e.g., in two different
+// config files), the one parsed last wins, as with any other setting that's
+// set more than once.
+//
+// This must only be called once at startup, right after loading the config
+// files, because the parse order is only known for settings read from config
+// files. Runtime changes to `windowresolution` are handled in
+// `notify_sdl_setting_updated()`.
+//
+// There's no equivalent for `window_position` as it has never been renamed.
+//
+static void migrate_legacy_window_size_setting()
 {
 	assert(control);
 
@@ -1385,7 +1397,7 @@ static void configure_window_size()
 	        sdl.display_number);
 }
 
-static void save_window_position_from_conf()
+static void configure_window_position()
 {
 	if (const auto pos = parse_window_position_conf(
 	            get_sdl_section()->GetString("window_position"));
@@ -1766,9 +1778,9 @@ void GFX_InitAndStartGui()
 	configure_presentation_mode();
 	configure_renderer();
 
-	save_window_position_from_conf();
+	configure_window_position();
 
-	handle_window_size_pref_after_config_load();
+	migrate_legacy_window_size_setting();
 	configure_window_size();
 
 	sdl.draw.render_width_px  = MinWindowSize.w;
@@ -1902,7 +1914,7 @@ static void notify_sdl_setting_updated(SectionProp& section,
 #endif
 
 	} else if (prop_name == "window_position") {
-		save_window_position_from_conf();
+		configure_window_position();
 		apply_windowed_position();
 
 	} else if (prop_name == "window_size") {
