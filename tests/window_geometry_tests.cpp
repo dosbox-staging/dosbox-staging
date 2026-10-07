@@ -98,6 +98,67 @@ TEST(WindowGeometry, LogicalToNativeRoundTrip)
 	}
 }
 
+// ----------------------------------------------------------------------------
+// DisplayPositionToNative & NativeToDisplayPosition
+// ----------------------------------------------------------------------------
+
+// Windows example: 4K primary display at 150% scaling, 1440p display at 100%
+// scaling to its left, and 1080p display at 125% scaling to its right (display
+// bounds are in pixels on Windows)
+constexpr SDL_Rect PrimaryDisplay = {0, 0, 3840, 2160};
+constexpr SDL_Rect LeftDisplay    = {-2560, 0, 2560, 1440};
+constexpr SDL_Rect RightDisplay   = {3840, 0, 1920, 1080};
+
+TEST(WindowGeometry, DisplayPositionToNative)
+{
+	expect_point(DisplayPositionToNative({100, 50}, PrimaryDisplay, 1.5f), 150, 75);
+	expect_point(DisplayPositionToNative({100, 50}, LeftDisplay, 1.0f), -2460, 50);
+	expect_point(DisplayPositionToNative({100, 50}, RightDisplay, 1.25f), 3965, 63);
+}
+
+TEST(WindowGeometry, NativeToDisplayPosition)
+{
+	expect_point(NativeToDisplayPosition({150, 75}, PrimaryDisplay, 1.5f), 100, 50);
+	expect_point(NativeToDisplayPosition({-2460, 50}, LeftDisplay, 1.0f), 100, 50);
+	expect_point(NativeToDisplayPosition({3965, 63}, RightDisplay, 1.25f), 100, 50);
+
+	// The window can be partially off-screen to the left or the top of the
+	// display
+	expect_point(NativeToDisplayPosition({-30, -15}, PrimaryDisplay, 1.5f), -20, -10);
+}
+
+TEST(WindowGeometry, DisplayPositionToNativeKeepsSpecialPositions)
+{
+	for (const auto position : {static_cast<int>(SDL_WINDOWPOS_UNDEFINED),
+	                            static_cast<int>(SDL_WINDOWPOS_CENTERED),
+	                            static_cast<int>(SDL_WINDOWPOS_UNDEFINED_DISPLAY(2)),
+	                            static_cast<int>(SDL_WINDOWPOS_CENTERED_DISPLAY(2))}) {
+		expect_point(DisplayPositionToNative({position, position}, RightDisplay, 1.25f),
+		             position,
+		             position);
+	}
+}
+
+TEST(WindowGeometry, DisplayPositionRoundTrip)
+{
+	for (const auto& display : {PrimaryDisplay, LeftDisplay, RightDisplay}) {
+		for (const auto content_scale : {1.0f, 1.25f, 1.5f, 2.0f, 2.25f, 3.0f}) {
+			for (auto logical = -1000; logical <= 4000; ++logical) {
+				const auto native = DisplayPositionToNative({logical, logical},
+				                                            display,
+				                                            content_scale);
+
+				const auto position = NativeToDisplayPosition(native,
+				                                              display,
+				                                              content_scale);
+
+				ASSERT_EQ(position.x, logical) << "content scale: " << content_scale;
+				ASSERT_EQ(position.y, logical) << "content scale: " << content_scale;
+			}
+		}
+	}
+}
+
 TEST(WindowGeometry, NativeSizeRoundTrip)
 {
 	for (const auto content_scale : {1.0f, 1.25f, 1.5f, 1.75f, 2.0f, 2.25f, 2.5f, 3.0f}) {
