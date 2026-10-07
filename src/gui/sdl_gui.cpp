@@ -84,22 +84,27 @@ SDL_Rect to_sdl_rect(const DosBox::Rect& r)
 //
 // See https://wiki.libsdl.org/SDL3/README-highdpi for details.
 
+// Returns the display the window is on, or the display we're about to create
+// the window on.
+//
+// This is more up-to-date than `sdl.display_number` when the window has just
+// been moved to a different display; we might process its move and resize
+// events before SDL_EVENT_WINDOW_DISPLAY_CHANGED updates
+// `sdl.display_number`.
+static SDL_DisplayID get_current_display()
+{
+	const auto window_display = sdl.window ? SDL_GetDisplayForWindow(sdl.window)
+	                                       : 0;
+
+	return (window_display != 0) ? window_display : sdl.display_number;
+}
+
 // Returns the number of native units per logical unit. This is always 1.0 on
 // macOS and Wayland, and the OS-level display scaling factor on Windows and
 // X11 (e.g., 2.0 at 200% scaling).
 static float get_content_scale()
 {
-	// Use the display the window is currently on rather than
-	// `sdl.display_number`. When the window is moved to a display with a
-	// different content scale, we might process its move and resize events
-	// before SDL_EVENT_WINDOW_DISPLAY_CHANGED updates `sdl.display_number`.
-	const auto window_display = sdl.window ? SDL_GetDisplayForWindow(sdl.window)
-	                                       : 0;
-
-	const auto display = (window_display != 0) ? window_display
-	                                           : sdl.display_number;
-
-	const auto scale = SDL_GetDisplayContentScale(display);
+	const auto scale = SDL_GetDisplayContentScale(get_current_display());
 	return (scale > 0.0f) ? scale : 1.0f;
 }
 
@@ -802,9 +807,7 @@ RenderBackendType GFX_GetRenderBackendType()
 // current display
 static WindowGeometry::Desktop get_desktop_geometry()
 {
-	assert(sdl.display_number > 0);
-
-	const auto* mode = SDL_GetDesktopDisplayMode(sdl.display_number);
+	const auto* mode = SDL_GetDesktopDisplayMode(get_current_display());
 	if (!mode) {
 		LOG_ERR("SDL: Could not get the desktop display mode: %s",
 		        SDL_GetError());
@@ -2035,7 +2038,7 @@ static void notify_sdl_setting_updated(SectionProp& section,
 static void handle_desktop_mode_changed(const SDL_DisplayEvent& event)
 {
 	// Percentage viewport sizes depend on the desktop size
-	if (event.displayID == sdl.display_number) {
+	if (event.displayID == get_current_display()) {
 		update_viewport_and_reset_screen();
 	}
 }
