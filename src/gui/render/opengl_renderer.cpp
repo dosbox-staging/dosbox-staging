@@ -102,8 +102,6 @@ SDL_Window* OpenGlRenderer::CreateSdlWindow(const int x, const int y,
 	SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_WIDTH_NUMBER, width);
 	SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_HEIGHT_NUMBER, height);
 	
-	// For window flags you should use separate window creation properties,
-	// but for easier migration from SDL2 you can use the following:
 	SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_FLAGS_NUMBER, flags);
 	auto window = SDL_CreateWindowWithProperties(props);
 	SDL_DestroyProperties(props);
