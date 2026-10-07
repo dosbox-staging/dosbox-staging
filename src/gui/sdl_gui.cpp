@@ -1354,28 +1354,61 @@ static void save_window_size(const int w, const int h)
 {
 	assert(w > 0 && h > 0);
 
-	// `sdl.window` size stores the user-configured window size. During
-	// runtime, the actual SDL window size might differ from this depending
-	// on the aspect ratio, window DPI, or manual resizing.
 	sdl.windowed.width  = w;
 	sdl.windowed.height = h;
+}
 
-	set_section_property_value("sdl", "window_size", format_str("%dx%d", w, h));
+// Called when the user or the OS has resized the window. We only update the
+// setting if the size has actually changed, so rounding errors won't alter
+// the user's setting, and named sizes (e.g., 'medium') are kept.
+static void handle_window_resized(const int w, const int h)
+{
+	if (sdl.is_fullscreen ||
+	    (w == sdl.windowed.width && h == sdl.windowed.height)) {
+		return;
+	}
+	save_window_size(w, h);
+
+	set_section_property_value("sdl",
+	                           "window_size",
+	                           WindowGeometry::FormatSize({0, 0, w, h},
+	                                                      sdl.windowed.size_unit,
+	                                                      get_desktop_geometry()));
+}
+
+// Called when the user or the OS has moved the window. We only update the
+// setting if the position has actually changed, so rounding errors won't
+// alter the user's setting.
+static void handle_window_moved(const int x, const int y)
+{
+	// We don't allow negative values for 'window_position', so this is the
+	// best we can do to keep things in sync.
+	const auto new_x = std::max(x, 0);
+	const auto new_y = std::max(y, 0);
+
+	if (sdl.is_fullscreen ||
+	    (new_x == sdl.windowed.x_pos && new_y == sdl.windowed.y_pos)) {
+		return;
+	}
+	save_window_position(new_x, new_y);
+
+	set_section_property_value(
+	        "sdl",
+	        "window_position",
+	        WindowGeometry::FormatPosition({new_x, new_y},
+	                                       sdl.windowed.position_unit,
+	                                       get_desktop_geometry()));
 }
 
 void GFX_SaveCurrentWindowSizeAndPosition()
 {
-	if (sdl.is_fullscreen) {
-		return;
-	}
-
 	SDL_Rect r = {};
 
 	SDL_GetWindowPosition(sdl.window, &r.x, &r.y);
 	SDL_GetWindowSize(sdl.window, &r.w, &r.h);
 
-	save_window_position(to_logical(r.x), to_logical(r.y));
-	save_window_size(to_logical(r.w), to_logical(r.h));
+	handle_window_moved(to_logical(r.x), to_logical(r.y));
+	handle_window_resized(to_logical(r.w), to_logical(r.h));
 }
 
 // The `windowresolution` setting was renamed to `window_size` in 0.83.0, but
@@ -1422,6 +1455,8 @@ static void configure_window_size()
 
 	const auto size = parse_window_size_setting(window_size_pref).value_or(default_size);
 
+	sdl.windowed.size_unit = size.unit;
+
 	const auto desktop = get_desktop_geometry();
 	const auto requested_size = WindowGeometry::SizeToLogicalUnits(size, desktop);
 
@@ -1448,6 +1483,9 @@ static void configure_window_position()
 	const auto desktop = get_desktop_geometry();
 	const auto position = parse_window_position_setting(window_position_pref,
 	                                                    desktop);
+
+	sdl.windowed.position_unit = position ? position->unit
+	                                      : WindowGeometry::Unit::LogicalUnits;
 	if (position) {
 		const auto [x, y] = WindowGeometry::PositionToLogicalUnits(*position,
 		                                                           desktop);
@@ -2117,9 +2155,7 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 
 		log_window_event("SDL: Window has been resized to %dx%d", width, height);
 
-		if (!sdl.is_fullscreen) {
-			save_window_size(width, height);
-		}
+		handle_window_resized(width, height);
 
 		// Resizing the window changes its size in pixels too, so SDL
 		// also sends an SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED event. We
@@ -2198,18 +2234,7 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 			update_viewport();
 		}
 #endif
-		// We don't allow negative values for 'window_position', so this
-		// is the best we can do to keep things in sync.
-		const auto new_x = std::max(x, 0);
-		const auto new_y = std::max(y, 0);
-
-		if (!sdl.is_fullscreen) {
-			save_window_position(new_x, new_y);
-
-			set_section_property_value("sdl",
-			                           "window_position",
-			                           format_str("%d,%d", new_x, new_y));
-		}
+		handle_window_moved(x, y);
 		return true;
 	}
 
