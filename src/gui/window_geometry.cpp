@@ -109,8 +109,32 @@ static std::optional<NumberPair> parse(const std::string_view value,
 	return NumberPair{*first, *second, unit};
 }
 
+static std::optional<SizeSetting> parse_named_size(const std::string_view name)
+{
+	const auto make_4x3_size = [](const float height_percentage) {
+		return SizeSetting{height_percentage * 4.0f / 3.0f,
+		                   height_percentage,
+		                   Unit::Percentage};
+	};
+
+	if (name == "s" || name == "small") {
+		return make_4x3_size(50.0f);
+	}
+	if (name == "m" || name == "medium" || name == "default") {
+		return make_4x3_size(74.0f);
+	}
+	if (name == "l" || name == "large") {
+		return make_4x3_size(90.0f);
+	}
+	return {};
+}
+
 std::optional<SizeSetting> ParseWindowSizeSetting(const std::string_view value)
 {
+	if (const auto named_size = parse_named_size(lowcase(value)); named_size) {
+		return named_size;
+	}
+
 	const auto size = parse(value, "x,");
 	if (!size || size->first <= 0.0f || size->second <= 0.0f) {
 		return {};
