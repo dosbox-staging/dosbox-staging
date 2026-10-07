@@ -133,7 +133,8 @@ struct SDL_Block {
 	// units. These are set from the `window_size` and `window_position`
 	// settings, then follow the actual window as the user resizes and moves
 	// it. We restore the window to this size and position when leaving
-	// fullscreen mode.
+	// fullscreen mode. With `window_position = auto`, the position is
+	// undefined until we learn where the window has been placed.
 	//
 	// When the display scale changes (e.g., the window is moved to a
 	// display with a different scale), we keep the window's size in logical

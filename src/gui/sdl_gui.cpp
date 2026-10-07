@@ -1383,13 +1383,24 @@ static void handle_window_resized(const int w, const int h)
 // alter the user's setting.
 static void handle_window_moved(const int x, const int y)
 {
+	if (sdl.is_fullscreen) {
+		return;
+	}
+
 	// We don't allow negative values for 'window_position', so this is the
 	// best we can do to keep things in sync.
 	const auto new_x = std::max(x, 0);
 	const auto new_y = std::max(y, 0);
 
-	if (sdl.is_fullscreen ||
-	    (new_x == sdl.windowed.x_pos && new_y == sdl.windowed.y_pos)) {
+	// With `window_position = auto`, the windowed position is undefined
+	// until we learn where the window has been placed. That's not a move by
+	// the user, so we keep the 'auto' setting.
+	if (SDL_WINDOWPOS_ISUNDEFINED(sdl.windowed.x_pos)) {
+		set_windowed_position(new_x, new_y);
+		return;
+	}
+
+	if (new_x == sdl.windowed.x_pos && new_y == sdl.windowed.y_pos) {
 		return;
 	}
 	set_windowed_position(new_x, new_y);
@@ -1913,6 +1924,14 @@ void GFX_InitAndStartGui()
 #endif
 
 	set_minimum_window_size();
+
+	// Record where the window has been placed if `window_position` is
+	// 'auto', so moving the window later updates the setting (see
+	// `handle_window_moved()`)
+	int window_x = 0;
+	int window_y = 0;
+	SDL_GetWindowPosition(sdl.window, &window_x, &window_y);
+	handle_window_moved(to_logical(window_x), to_logical(window_y));
 
 	// Assume focus on startup
 	constexpr auto FocusGained = true;
