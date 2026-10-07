@@ -1127,7 +1127,7 @@ static std::optional<ViewportSettings> parse_fit_viewport_modes(const std::strin
 		const DosBox::Rect limit = {w, h};
 		viewport.fit.limit_size  = limit;
 
-		const auto limit_px = limit.Copy().ScaleSize(GFX_GetDpiScaleFactor());
+		const auto limit_px = GFX_LogicalToPixels(limit);
 
 		LOG_MSG("DISPLAY: Limiting viewport size to %dx%d logical units "
 		        "(%dx%d pixels)",
@@ -1157,7 +1157,7 @@ static std::optional<ViewportSettings> parse_fit_viewport_modes(const std::strin
 		viewport.fit.desktop_scale = p / 100.0f;
 
 		const auto limit = desktop.Copy().ScaleSize(*viewport.fit.desktop_scale);
-		const auto limit_px = limit.Copy().ScaleSize(GFX_GetDpiScaleFactor());
+		const auto limit_px = GFX_LogicalToPixels(limit);
 
 		LOG_MSG("DISPLAY: Limiting viewport size to %2.4g%% of the "
 		        "desktop (%dx%d logical units, %dx%d pixels)",
@@ -1412,22 +1412,16 @@ static void set_dedithering()
 
 DosBox::Rect RENDER_CalcRestrictedViewportSizeInPixels(const DosBox::Rect& canvas_size_px)
 {
-	const auto dpi_scale = GFX_GetDpiScaleFactor();
-
 	switch (render.viewport_settings.mode) {
 	case ViewportMode::Fit: {
 		auto viewport_size_px = [&] {
 			if (render.viewport_settings.fit.limit_size) {
-				return render.viewport_settings.fit.limit_size
-				        ->Copy()
-				        .ScaleSize(dpi_scale);
+				return GFX_LogicalToPixels(
+				        *render.viewport_settings.fit.limit_size);
 
 			} else if (render.viewport_settings.fit.desktop_scale) {
-				auto desktop_size_px = GFX_GetDesktopSize().ScaleSize(
-				        dpi_scale);
-
-				return desktop_size_px.ScaleSize(
-				        *render.viewport_settings.fit.desktop_scale);
+				return GFX_LogicalToPixels(GFX_GetDesktopSize())
+				        .ScaleSize(*render.viewport_settings.fit.desktop_scale);
 			} else {
 				// The viewport equals the canvas size
 				// in Fit mode without parameters
