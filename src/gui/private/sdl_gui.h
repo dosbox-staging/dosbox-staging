@@ -128,6 +128,15 @@ struct SDL_Block {
 	// The DOS video mode is populated after we set up the SDL window.
 	std::optional<VideoMode> maybe_video_mode = {};
 
+	// The size and position of the window in windowed mode, in logical
+	// units. These are set from the `window_size` and `window_position`
+	// settings, then follow the actual window as the user resizes and moves
+	// it. We restore the window to this size and position when leaving
+	// fullscreen mode.
+	//
+	// When the display scale changes (e.g., the window is moved to a
+	// display with a different scale), we keep the window's size in logical
+	// units, like the OS does with other application windows.
 	struct {
 		int width  = 0;
 		int height = 0;

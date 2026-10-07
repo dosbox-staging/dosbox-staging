@@ -2236,6 +2236,21 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		// on the display scale on Windows and X11.
 		set_minimum_window_size();
 
+		// SDL3 keeps the window's size in pixels on Windows when the
+		// display scale changes, so we restore its size in logical
+		// units. There's nothing to restore on macOS and Wayland, where
+		// the OS keeps the window's size in logical units. We must not
+		// set the window size needlessly; that interferes with dragging
+		// the window to another display on macOS.
+		int native_w = 0;
+		int native_h = 0;
+		SDL_GetWindowSize(sdl.window, &native_w, &native_h);
+
+		if (native_w != to_native(sdl.windowed.width) ||
+		    native_h != to_native(sdl.windowed.height)) {
+			apply_windowed_size();
+		}
+
 		// Viewport sizes specified in logical units depend on the
 		// display scale.
 		update_viewport_and_reset_screen();
