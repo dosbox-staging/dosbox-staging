@@ -14,36 +14,34 @@
 // Pixels and logical units
 // ========================
 //
-// As high-DPI displays are becoming increasingly the norm, understanding the
-// difference between screen dimensions expressed as *logical units* versus
-// *pixels* is essential. We fully support high-DPI in DOSBox Staging, so a
-// good grasp of this topic essential when dealing with anything rendering
-// related.
+// High-DPI displays are the norm these days, so it's essential to understand
+// the difference between sizes and positions expressed in *logical units* and
+// in *pixels* when working on anything rendering related.
 //
-// The idea behind logical units is that a rectangle of say 200x300 *logical
-// units* in size should have the same physical dimensions when measured with
-// a ruler on a 1080p, a 4k, and an 8k screen (assuming that the physical
-// dimensions of the three screens are the same). When mapping these 200x300
-// logic units actual physical pixels the monitor is capable of displaying,
-// we'll get 200x300, 400x600, and 800x1200 pixel dimensions on 1080p, 4k, and
-// 8k screens, respectively. The *logical size* of the rectangle hasn't
-// changed, only its *resolution* expressed in raw native pixels has.
+// The idea behind logical units is that a rectangle of 200x300 logical units
+// should appear the same physical size on a 1080p, a 4K, and an 8K screen
+// (assuming the three screens have the same physical dimensions). With the
+// usual 100%, 200%, and 400% display scaling settings, the rectangle is
+// 200x300, 400x600, and 800x1200 pixels in size on these screens,
+// respectively. Its logical size is the same on all three; only its
+// resolution in pixels differs. The number of pixels per logical unit is
+// called the *display scale*.
 //
-// OSes and frameworks like SDL usually report windowing system related
-// coordinates and dimensions in logical units (e.g., window sizes, total
-// desktop size, mouse position, etc.). But OpenGL only deals with pixels,
-// never logical units, and in the core emulation layers we're only dealing
-// with "raw emulated pixels" too. Consequently, we'll always be dealing with
-// a mixture of logical units and pixels, so it's essential to make the
+// We use logical units for window sizes and positions and for the desktop
+// size (see `GFX_GetDesktopSize()`). But OpenGL and our rendering code only
+// deal with pixels, and in the core emulation layers we're only dealing with
+// "raw emulated pixels" too. Consequently, we'll always be dealing with a
+// mixture of logical units and pixels, so it's essential to make the
 // distinction between them clear:
 //
 // - We postfix every variable that holds a pixel dimension with `_px` (e.g.,
 //   `render_size_px`, `width_px`). Logical units get no postfix (e.g.,
-//   `window_size`, `mouse_pos`).
+//   `window_size`, `desktop_size`).
 //
 // - Functions and methods that return pixel dimensions are postfixed with
 //   `_in_pixels` and `InPixels`, respectively (e.g.,
-//   `GFX_GetViewportSizeInPixels()`).
+//   `GFX_GetViewportSizeInPixels()`). Use `GFX_LogicalToPixels()` to convert
+//   logical units to pixels.
 //
 // - We're always dealing with pixels in the core emulation layers (e.g., VGA
 //   code), so pixel postfixes are not necessary there in general. The exception
@@ -51,6 +49,19 @@
 //   e.g., by calling `GFX_*` methods that interact with SDL -- the use of pixel
 //   postfixes is highly recommended in such cases to remove ambiguity.
 //
+// SDL's window API works in the *native units* of the platform: logical units
+// on macOS and Wayland, and pixels on Windows and X11. We convert window sizes
+// and positions between native and logical units only when calling SDL or
+// handling SDL events (see `to_native()` and `to_logical()` in `sdl_gui.cpp`).
+// Mouse positions are an exception; the mouse emulation works with native
+// units directly.
+//
+// Settings that specify sizes or positions can usually be given in logical
+// units, pixels, or as percentages of the desktop size. We keep their values
+// in the unit the user specified them in and convert them only when they're
+// applied, so the conversion always uses the current display scale and
+// desktop size (see `gui/private/window_geometry.h` and `ViewportSettings` in
+// `gui/render/render.h`).
 
 // Graphics standards ordered by time of introduction (and roughly by
 // their capabilities)
