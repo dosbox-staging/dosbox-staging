@@ -15,6 +15,7 @@
 
 #include "dosbox_config.h"
 #include "gui/common.h"
+#include "gui/private/window_geometry.h"
 #include "gui/render/render.h"
 #include "gui/render/render_backend.h"
 #include "misc/video.h"
@@ -142,6 +143,13 @@ struct SDL_Block {
 		int height = 0;
 		int x_pos  = SDL_WINDOWPOS_UNDEFINED;
 		int y_pos  = SDL_WINDOWPOS_UNDEFINED;
+
+		// When the user resizes or moves the window, we write the new
+		// size and position back to the `window_size` and
+		// `window_position` settings in the unit the user specified
+		// them in.
+		WindowGeometry::Unit size_unit     = {};
+		WindowGeometry::Unit position_unit = {};
 	} windowed = {};
 
 	struct {
