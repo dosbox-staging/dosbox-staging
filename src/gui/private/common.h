@@ -105,9 +105,12 @@ void GFX_EndUpdate();
 
 void GFX_CaptureRenderedImage();
 
+// Returns the desktop size in logical units
 DosBox::Rect GFX_GetDesktopSize();
 
-float GFX_GetDpiScaleFactor();
+// Converts a rectangle from logical units to pixels using the display scale
+// of the display the window is on
+DosBox::Rect GFX_LogicalToPixels(const DosBox::Rect& rect);
 
 DosBox::Rect GFX_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px);
 

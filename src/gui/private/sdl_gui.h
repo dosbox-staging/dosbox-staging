@@ -93,7 +93,6 @@ struct SDL_Block {
 	SDL_Window* window = {};
 	SDL_DisplayID display_number = 0;
 
-	float dpi_scale    = 1.0f;
 	bool is_fullscreen = false;
 
 	bool is_mouse_captured = false;

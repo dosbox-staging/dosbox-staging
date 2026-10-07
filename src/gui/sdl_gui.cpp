@@ -616,25 +616,6 @@ static void set_minimum_window_size()
 	}
 }
 
-static void check_and_handle_dpi_change(SDL_Window* sdl_window)
-{
-	assert(sdl_window);
-
-	const auto new_dpi_scale = SDL_GetWindowDisplayScale(sdl_window);
-
-	if (std::abs(new_dpi_scale - sdl.dpi_scale) < FLT_EPSILON) {
-		log_window_event("SDL: DPI scale hasn't changed (still %g)",
-		                 sdl.dpi_scale);
-		return;
-	}
-
-	log_window_event("SDL: DPI scale updated from %g to %g",
-	                 sdl.dpi_scale,
-	                 new_dpi_scale);
-
-	sdl.dpi_scale = new_dpi_scale;
-}
-
 static void set_window_transparency()
 {
 	assert(sdl.window);
@@ -827,9 +808,11 @@ DosBox::Rect GFX_GetViewportSizeInPixels()
 	return RENDER_CalcRestrictedViewportSizeInPixels(canvas_size_px);
 }
 
-float GFX_GetDpiScaleFactor()
+DosBox::Rect GFX_LogicalToPixels(const DosBox::Rect& rect)
 {
-	return sdl.dpi_scale;
+	assert(sdl.window);
+
+	return rect.Copy().Scale(SDL_GetWindowDisplayScale(sdl.window));
 }
 
 static void update_viewport()
@@ -1874,7 +1857,6 @@ void GFX_InitAndStartGui()
 
 	set_window_transparency();
 
-	check_and_handle_dpi_change(sdl.window);
 	set_allow_screensaver();
 
 	add_default_sdl_section_mapper_bindings();
@@ -2216,12 +2198,10 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		log_window_event("SDL: Window has been moved to display %d",
 		                 new_display_number);
 
-		// New display might have a different resolution and DPI scaling
-		// set, so recalculate that and set viewport
-		check_and_handle_dpi_change(sdl.window);
-
 		sdl.display_number = new_display_number;
 
+		// The new display might have a different resolution and display
+		// scale, so we need to recalculate the viewport
 		update_viewport();
 		RENDER_SetScanAndPixelDoubling();
 		GFX_ResetScreen();
@@ -2235,7 +2215,6 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 
 		// The window size has changed either as a result of an API call
 		// or through the system or user changing the window size.
-		check_and_handle_dpi_change(sdl.window);
 		update_viewport();
 		RENDER_SetScanAndPixelDoubling();
 		GFX_ResetScreen();
