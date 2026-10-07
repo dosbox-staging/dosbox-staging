@@ -830,7 +830,14 @@ static void exit_fullscreen()
 
 	sdl.is_fullscreen = false;
 
-	if (sdl.fullscreen.mode == FullscreenMode::ForcedBorderless) {
+	// The window can be in "real" fullscreen mode in forced-borderless mode
+	// too if the user has made it fullscreen via the OS (see
+	// `handle_fullscreen_changed()`)
+	const auto is_real_fullscreen = (SDL_GetWindowFlags(sdl.window) &
+	                                 SDL_WINDOW_FULLSCREEN) != 0;
+
+	if (sdl.fullscreen.mode == FullscreenMode::ForcedBorderless &&
+	    !is_real_fullscreen) {
 		// Restore the previous window state when exiting our "fake"
 		// borderless fullscreen mode.
 		//
@@ -1164,6 +1171,27 @@ static void toggle_fullscreen_handler(bool pressed)
 	if (pressed) {
 		toggle_fullscreen();
 	}
+}
+
+// Called when the window has entered or left fullscreen mode. This usually
+// happens because we've requested it, but the user can also toggle fullscreen
+// mode via the OS (e.g., with the green button on macOS). The window is
+// already in the new mode then, so we only need to update our state.
+static void handle_fullscreen_changed(const bool is_fullscreen)
+{
+	if (is_fullscreen == sdl.is_fullscreen) {
+		return;
+	}
+	sdl.is_fullscreen = is_fullscreen;
+
+	if (is_fullscreen) {
+		// Transparency is disabled in fullscreen mode (see
+		// `enter_fullscreen()`)
+		SDL_SetWindowOpacity(sdl.window, 1.0f);
+	} else {
+		restore_windowed_state();
+	}
+	update_fullscreen_dependent_state();
 }
 
 // The function should return a writeable buffer for the VGA emulation to
@@ -2401,6 +2429,18 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		handle_window_moved(x, y);
 		return true;
 	}
+
+	case SDL_EVENT_WINDOW_ENTER_FULLSCREEN:
+		log_window_event("SDL: Window has entered fullscreen mode");
+
+		handle_fullscreen_changed(true);
+		return true;
+
+	case SDL_EVENT_WINDOW_LEAVE_FULLSCREEN:
+		log_window_event("SDL: Window has left fullscreen mode");
+
+		handle_fullscreen_changed(false);
+		return true;
 
 	case SDL_EVENT_WINDOW_DISPLAY_CHANGED: {
 		const auto new_display_number = event.window.data1;
