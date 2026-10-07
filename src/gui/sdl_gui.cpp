@@ -784,12 +784,13 @@ static void exit_fullscreen()
 		// fullscreen mode.
 		apply_windowed_size();
 		apply_windowed_position();
+
+		// Transparency is disabled in fullscreen mode (see
+		// `enter_fullscreen()`), so we need to restore it
+		set_window_transparency();
+
+		set_window_decorations();
 	}
-
-	// We need to disable transparency in fullscreen on macOS
-	set_window_transparency();
-
-	set_window_decorations();
 }
 
 DosBox::Rect GFX_GetCanvasSizeInPixels()
