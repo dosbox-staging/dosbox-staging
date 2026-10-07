@@ -49,9 +49,6 @@ struct Desktop {
 // API (logical units on macOS and Wayland, pixels on Windows and X11). The
 // content scale is the number of native units per logical unit (see
 // `SDL_GetDisplayContentScale()`).
-//
-// Special window position values (e.g., `SDL_WINDOWPOS_UNDEFINED`) are passed
-// through unchanged by `LogicalToNative()`.
 int LogicalToNative(const int logical, const float content_scale);
 int NativeToLogical(const int native, const float content_scale);
 
