@@ -118,6 +118,12 @@ static int to_logical(const int native)
 	return WindowGeometry::NativeToLogical(native, get_content_scale());
 }
 
+static int size_to_native(const float logical_size)
+{
+	return WindowGeometry::LogicalSizeToNative(logical_size,
+	                                           get_content_scale());
+}
+
 #if C_DEBUGGER
 
 static bool is_debugger_event(const SDL_Event& event)
@@ -671,8 +677,8 @@ static void apply_windowed_size()
 		return;
 	}
 	if (!SDL_SetWindowSize(sdl.window,
-	                       to_native(sdl.windowed.width),
-	                       to_native(sdl.windowed.height))) {
+	                       size_to_native(sdl.windowed.width),
+	                       size_to_native(sdl.windowed.height))) {
 		LOG_WARNING("SDL: Failed to set window size: %s", SDL_GetError());
 	}
 }
@@ -1246,11 +1252,10 @@ static bool check_kmsdrm_setting()
 	return false;
 }
 
-static void maybe_limit_window_size_kmsdrm_driver(int& w, int& h,
+static void maybe_limit_window_size_kmsdrm_driver(float& w, float& h,
                                                   const WindowGeometry::Desktop& desktop)
 {
-	if (static_cast<float>(w) <= desktop.width &&
-	    static_cast<float>(h) <= desktop.height) {
+	if (w <= desktop.width && h <= desktop.height) {
 		return;
 	}
 
@@ -1258,14 +1263,14 @@ static void maybe_limit_window_size_kmsdrm_driver(int& w, int& h,
 
 	// SDL KMSDRM limitations
 	if (is_using_kmsdrm_driver()) {
-		w = iroundf(desktop.width);
-		h = iroundf(desktop.height);
+		w = desktop.width;
+		h = desktop.height;
 
 		was_limited = true;
 
 		LOG_WARNING("DISPLAY: Limiting window size to %dx%d to avoid kmsdrm issues",
-		            w,
-		            h);
+		            iroundf(w),
+		            iroundf(h));
 	}
 
 	if (!was_limited) {
@@ -1274,8 +1279,8 @@ static void maybe_limit_window_size_kmsdrm_driver(int& w, int& h,
 		LOG_INFO(
 		        "DISPLAY: Accepted window size resolution %dx%d despite exceeding "
 		        "the %dx%d display",
-		        w,
-		        h,
+		        iroundf(w),
+		        iroundf(h),
 		        iroundf(desktop.width),
 		        iroundf(desktop.height));
 	}
@@ -1352,28 +1357,43 @@ static void set_default_windowed_position()
 }
 
 // Writes to the window-size member should be done via this function
-static void set_windowed_size(const int w, const int h)
+static void set_windowed_size(const float w, const float h)
 {
-	assert(w > 0 && h > 0);
+	assert(w > 0.0f && h > 0.0f);
 
 	sdl.windowed.width  = w;
 	sdl.windowed.height = h;
 }
 
-// Called when the user or the OS has resized the window. We only update the
-// setting if the size has actually changed, so rounding errors won't alter
-// the user's setting, and named sizes (e.g., 'medium') are kept.
-static void handle_window_resized(const int w, const int h)
+static bool is_windowed_size(const int native_w, const int native_h)
 {
-	if (sdl.is_fullscreen ||
-	    (w == sdl.windowed.width && h == sdl.windowed.height)) {
+	return native_w == size_to_native(sdl.windowed.width) &&
+	       native_h == size_to_native(sdl.windowed.height);
+}
+
+// Called when the user or the OS has resized the window. The new size is in
+// native units. We only update the setting if the size has actually changed,
+// so rounding errors won't alter the user's setting, and named sizes (e.g.,
+// 'medium') are kept.
+static void handle_window_resized(const int native_w, const int native_h)
+{
+	if (sdl.is_fullscreen || is_windowed_size(native_w, native_h)) {
 		return;
 	}
-	set_windowed_size(w, h);
+
+	const auto content_scale = get_content_scale();
+
+	const SDL_FRect size = {
+	        0.0f,
+	        0.0f,
+	        WindowGeometry::NativeSizeToLogical(native_w, content_scale),
+	        WindowGeometry::NativeSizeToLogical(native_h, content_scale)};
+
+	set_windowed_size(size.w, size.h);
 
 	set_section_property_value("sdl",
 	                           "window_size",
-	                           WindowGeometry::FormatSize({0, 0, w, h},
+	                           WindowGeometry::FormatSize(size,
 	                                                      sdl.windowed.size_unit,
 	                                                      get_desktop_geometry()));
 }
@@ -1423,7 +1443,7 @@ void GFX_SaveCurrentWindowSizeAndPosition()
 	SDL_GetWindowSize(sdl.window, &r.w, &r.h);
 
 	handle_window_moved(to_logical(r.x), to_logical(r.y));
-	handle_window_resized(to_logical(r.w), to_logical(r.h));
+	handle_window_resized(r.w, r.h);
 }
 
 // The `windowresolution` setting was renamed to `window_size` in 0.83.0, but
@@ -1475,8 +1495,8 @@ static void configure_window_size()
 	const auto desktop = get_desktop_geometry();
 	const auto requested_size = WindowGeometry::SizeToLogicalUnits(size, desktop);
 
-	auto w = std::max(requested_size.w, MinWindowSize.w);
-	auto h = std::max(requested_size.h, MinWindowSize.h);
+	auto w = std::max(requested_size.w, static_cast<float>(MinWindowSize.w));
+	auto h = std::max(requested_size.h, static_cast<float>(MinWindowSize.h));
 
 #if defined(LINUX)
 	maybe_limit_window_size_kmsdrm_driver(w, h, desktop);
@@ -1485,8 +1505,8 @@ static void configure_window_size()
 	set_windowed_size(w, h);
 
 	LOG_MSG("DISPLAY: Using %dx%d window size in windowed mode on display-%d",
-	        w,
-	        h,
+	        iroundf(w),
+	        iroundf(h),
 	        sdl.display_number);
 }
 
@@ -1545,8 +1565,8 @@ static RenderBackend* create_renderer()
 		try {
 			return new OpenGlRenderer(to_native(sdl.windowed.x_pos),
 			                          to_native(sdl.windowed.y_pos),
-			                          to_native(sdl.windowed.width),
-			                          to_native(sdl.windowed.height),
+			                          size_to_native(sdl.windowed.width),
+			                          size_to_native(sdl.windowed.height),
 			                          get_sdl_window_flags());
 
 		} catch (const std::runtime_error& ex) {
@@ -1575,8 +1595,8 @@ static RenderBackend* create_renderer()
 
 			return new SdlRenderer(to_native(sdl.windowed.x_pos),
 			                       to_native(sdl.windowed.y_pos),
-			                       to_native(sdl.windowed.width),
-			                       to_native(sdl.windowed.height),
+			                       size_to_native(sdl.windowed.width),
+			                       size_to_native(sdl.windowed.height),
 			                       get_sdl_window_flags(),
 			                       render_driver,
 			                       sdl.texture_filter_mode);
@@ -2173,8 +2193,9 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 	}
 
 	case SDL_EVENT_WINDOW_RESIZED: {
-		const auto width  = to_logical(event.window.data1);
-		const auto height = to_logical(event.window.data2);
+		// In native units
+		const auto width  = event.window.data1;
+		const auto height = event.window.data2;
 
 		log_window_event("SDL: Window has been resized to %dx%d", width, height);
 
@@ -2296,8 +2317,7 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		int native_h = 0;
 		SDL_GetWindowSize(sdl.window, &native_w, &native_h);
 
-		if (native_w != to_native(sdl.windowed.width) ||
-		    native_h != to_native(sdl.windowed.height)) {
+		if (!is_windowed_size(native_w, native_h)) {
 			apply_windowed_size();
 		}
 

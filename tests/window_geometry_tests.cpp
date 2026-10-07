@@ -27,10 +27,12 @@ void expect_position_setting(const std::optional<PositionSetting>& actual,
 	EXPECT_EQ(actual->unit, unit);
 }
 
-void expect_size(const SDL_Rect actual, const int w, const int h)
+void expect_size(const SDL_FRect actual, const float w, const float h)
 {
-	EXPECT_EQ(actual.w, w);
-	EXPECT_EQ(actual.h, h);
+	constexpr auto Tolerance = 0.001f;
+
+	EXPECT_NEAR(actual.w, w, Tolerance);
+	EXPECT_NEAR(actual.h, h, Tolerance);
 }
 
 void expect_point(const SDL_Point actual, const int x, const int y)
@@ -91,6 +93,35 @@ TEST(WindowGeometry, LogicalToNativeRoundTrip)
 			const auto native = LogicalToNative(logical, content_scale);
 
 			ASSERT_EQ(NativeToLogical(native, content_scale), logical)
+			        << "content scale: " << content_scale;
+		}
+	}
+}
+
+TEST(WindowGeometry, NativeSizeRoundTrip)
+{
+	for (const auto content_scale : {1.0f, 1.25f, 1.5f, 1.75f, 2.0f, 2.25f, 2.5f, 3.0f}) {
+		for (auto native = 1; native <= 8000; ++native) {
+			const auto logical = NativeSizeToLogical(native, content_scale);
+
+			ASSERT_EQ(LogicalSizeToNative(logical, content_scale), native)
+			        << "content scale: " << content_scale;
+		}
+	}
+}
+
+// Window sizes in pixels must be restored exactly on Windows and X11, where
+// the native units are pixels.
+TEST(WindowGeometry, PixelSizeRoundTrip)
+{
+	for (const auto content_scale : {1.0f, 1.25f, 1.5f, 1.75f, 2.0f, 2.25f, 2.5f, 3.0f}) {
+		const Desktop desktop = {2560.0f / content_scale, 1440.0f / content_scale, content_scale};
+
+		for (auto px = 1; px <= 8000; ++px) {
+			const auto px_float = static_cast<float>(px);
+			const auto size = SizeToLogicalUnits({px_float, px_float, Unit::Pixels}, desktop);
+
+			ASSERT_EQ(LogicalSizeToNative(size.w, content_scale), px)
 			        << "content scale: " << content_scale;
 		}
 	}
@@ -265,27 +296,27 @@ TEST(WindowGeometry, ParseWindowPositionSettingInvalid)
 TEST(WindowGeometry, SizeToLogicalUnits)
 {
 	expect_size(SizeToLogicalUnits({1024, 768, Unit::LogicalUnits}, TestDesktop),
-	             1024,
-	             768);
+	            1024,
+	            768);
 }
 
 TEST(WindowGeometry, SizeFromPixelsToLogicalUnits)
 {
 	expect_size(SizeToLogicalUnits({1440, 1080, Unit::Pixels}, TestDesktop),
-	             960,
-	             720);
+	            960,
+	            720);
 }
 
 TEST(WindowGeometry, SizeFromPercentageToLogicalUnits)
 {
 	// Both width and height are relative to the desktop height
 	expect_size(SizeToLogicalUnits({133.33f, 100, Unit::Percentage}, TestDesktop),
-	             960,
-	             720);
+	            959.976f,
+	            720);
 
 	expect_size(SizeToLogicalUnits({50, 50, Unit::Percentage}, TestDesktop),
-	             360,
-	             360);
+	            360,
+	            360);
 }
 
 // ----------------------------------------------------------------------------

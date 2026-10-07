@@ -30,6 +30,16 @@ int NativeToLogical(const int native, const float content_scale)
 	return iroundf(static_cast<float>(native) / content_scale);
 }
 
+int LogicalSizeToNative(const float logical, const float content_scale)
+{
+	return iroundf(logical * content_scale);
+}
+
+float NativeSizeToLogical(const int native, const float content_scale)
+{
+	return static_cast<float>(native) / content_scale;
+}
+
 Desktop CalcDesktop(const SDL_DisplayMode& desktop_mode, const float content_scale)
 {
 	assert(content_scale > 0.0f);
@@ -152,21 +162,20 @@ std::optional<PositionSetting> ParseWindowPositionSetting(const std::string_view
 	return PositionSetting{position->first, position->second, position->unit};
 }
 
-SDL_Rect SizeToLogicalUnits(const SizeSetting& size, const Desktop& desktop)
+SDL_FRect SizeToLogicalUnits(const SizeSetting& size, const Desktop& desktop)
 {
 	switch (size.unit) {
-	case Unit::LogicalUnits:
-		return {0, 0, iroundf(size.w), iroundf(size.h)};
+	case Unit::LogicalUnits: return {0.0f, 0.0f, size.w, size.h};
 
 	case Unit::Pixels:
-		return {0,
-		        0,
-		        iroundf(size.w / desktop.display_scale),
-		        iroundf(size.h / desktop.display_scale)};
+		return {0.0f,
+		        0.0f,
+		        size.w / desktop.display_scale,
+		        size.h / desktop.display_scale};
 
 	case Unit::Percentage: {
 		const auto one_percent = desktop.height / 100.0f;
-		return {0, 0, iroundf(size.w * one_percent), iroundf(size.h * one_percent)};
+		return {0.0f, 0.0f, size.w * one_percent, size.h * one_percent};
 	}
 
 	default: assertm(false, "Invalid Unit value"); return {};
@@ -201,25 +210,22 @@ static std::string format_percentage(const float percentage)
 	return format_str("%g", std::round(percentage * 100.0f) / 100.0f);
 }
 
-std::string FormatSize(const SDL_Rect size, const Unit unit, const Desktop& desktop)
+std::string FormatSize(const SDL_FRect size, const Unit unit, const Desktop& desktop)
 {
 	switch (unit) {
-	case Unit::LogicalUnits: return format_str("%dx%d", size.w, size.h);
+	case Unit::LogicalUnits:
+		return format_str("%dx%d", iroundf(size.w), iroundf(size.h));
 
 	case Unit::Pixels:
 		return format_str("%dx%dpx",
-		                  iroundf(static_cast<float>(size.w) *
-		                          desktop.display_scale),
-		                  iroundf(static_cast<float>(size.h) *
-		                          desktop.display_scale));
+		                  iroundf(size.w * desktop.display_scale),
+		                  iroundf(size.h * desktop.display_scale));
 
 	case Unit::Percentage: {
 		const auto one_percent = desktop.height / 100.0f;
 
-		return format_percentage(static_cast<float>(size.w) / one_percent) +
-		       "x" +
-		       format_percentage(static_cast<float>(size.h) / one_percent) +
-		       "%";
+		return format_percentage(size.w / one_percent) + "x" +
+		       format_percentage(size.h / one_percent) + "%";
 	}
 
 	default: assertm(false, "Invalid Unit value"); return {};

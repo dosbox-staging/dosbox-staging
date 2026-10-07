@@ -140,8 +140,11 @@ struct SDL_Block {
 	// display with a different scale), we keep the window's size in logical
 	// units, like the OS does with other application windows.
 	struct {
-		int width  = 0;
-		int height = 0;
+		// The size is not rounded, so window sizes specified in pixels
+		// are restored exactly
+		float width  = 0.0f;
+		float height = 0.0f;
+
 		int x_pos  = SDL_WINDOWPOS_UNDEFINED;
 		int y_pos  = SDL_WINDOWPOS_UNDEFINED;
 
