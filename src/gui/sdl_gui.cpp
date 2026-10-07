@@ -908,6 +908,17 @@ static void update_viewport()
 	}
 }
 
+// Recalculates the viewport and resets the screen after the size of the
+// canvas or the properties of the display the window is on have changed
+static void update_viewport_and_reset_screen()
+{
+	update_viewport();
+	RENDER_SetScanAndPixelDoubling();
+	GFX_ResetScreen();
+
+	notify_new_mouse_screen_params();
+}
+
 void GFX_SetSize(const int render_width_px, const int render_height_px,
                  const Fraction& render_pixel_aspect_ratio,
                  const bool double_width, const bool double_height,
@@ -2212,11 +2223,7 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 
 		// The new display might have a different resolution and display
 		// scale, so we need to recalculate the viewport
-		update_viewport();
-		RENDER_SetScanAndPixelDoubling();
-		GFX_ResetScreen();
-
-		notify_new_mouse_screen_params();
+		update_viewport_and_reset_screen();
 		return true;
 	}
 
@@ -2225,11 +2232,7 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 
 		// The window size has changed either as a result of an API call
 		// or through the system or user changing the window size.
-		update_viewport();
-		RENDER_SetScanAndPixelDoubling();
-		GFX_ResetScreen();
-
-		notify_new_mouse_screen_params();
+		update_viewport_and_reset_screen();
 		return true;
 	}
 
