@@ -1135,6 +1135,18 @@ static void focus_input()
 	}
 }
 
+// Updates the 'fullscreen' setting and everything else that depends on
+// whether we're in fullscreen mode
+static void update_fullscreen_dependent_state()
+{
+	set_section_property_value("sdl", "fullscreen", sdl.is_fullscreen ? "on" : "off");
+
+	focus_input();
+	setup_presentation_mode();
+
+	maybe_log_display_properties();
+}
+
 static void toggle_fullscreen()
 {
 	assert(sdl.renderer);
@@ -1144,13 +1156,7 @@ static void toggle_fullscreen()
 	} else {
 		enter_fullscreen();
 	}
-
-	set_section_property_value("sdl", "fullscreen", sdl.is_fullscreen ? "on" : "off");
-
-	focus_input();
-	setup_presentation_mode();
-
-	maybe_log_display_properties();
+	update_fullscreen_dependent_state();
 }
 
 static void toggle_fullscreen_handler(bool pressed)
