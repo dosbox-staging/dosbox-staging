@@ -56,6 +56,10 @@ We have a couple of reusable of composite actions in `.github/actions/`:
 - `retry/` -- runs a shell command with retries and linear backoff;
   used where the command has no native retry flag (e.g. `apt-get`)
 
+- `report-dev-build-status/` -- reports a platform's release build result as
+  a `dev-build/<platform>` [commit status](https://docs.github.com/en/rest/commits/statuses?apiVersion=2026-03-10#create-a-commit-status); `publish-dev-build.yml` publishes
+  the dev build once all three platforms report success
+
 ## External dependency surfaces
 
 Third-party services the CI touches that can flake or go down:

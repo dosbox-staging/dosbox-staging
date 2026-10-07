@@ -18,83 +18,76 @@ concurrency:
 jobs:
   check:
     name:    Check whether all three platforms succeeded
-    runs-on: ubuntu-24.04
-    # Narrows this down to a push to main. The 'status' step below is what
+    runs-on: ubuntu-slim
+    # Narrows this down to a push to main. The 'Check' step below is what
     # actually confirms each platform's release job succeeded.
     if: |
       github.event.workflow_run.event == 'push' &&
       github.event.workflow_run.head_branch == 'main'
-    permissions:
-      actions:  read
-      contents: read
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+    # Set by the 'Check' step through $GITHUB_ENV
     outputs:
-      ready:          ${{ steps.status.outputs.ready }}
-      stale:          ${{ steps.stale.outputs.stale }}
-      linux_run_id:   ${{ steps.runs.outputs.linux_run_id }}
-      macos_run_id:   ${{ steps.runs.outputs.macos_run_id }}
-      windows_run_id: ${{ steps.runs.outputs.windows_run_id }}
+      publish:        ${{ env.DEV_BUILD_PUBLISH }}
+      linux_run_id:   ${{ env.DEV_BUILD_LINUX_RUN_ID }}
+      macos_run_id:   ${{ env.DEV_BUILD_MACOS_RUN_ID }}
+      windows_run_id: ${{ env.DEV_BUILD_WINDOWS_RUN_ID }}
 
     steps:
-      # Requires exactly 3 successful 'dev-build/<platform>' statuses
-      - name: Check each platform's status for this commit
-        id:   status
-        run: |
-          sha="${{ github.event.workflow_run.head_sha }}"
+      - name: Check out the repository's actions
+        uses: actions/checkout@v7
+        with:
+          sparse-checkout: .github/actions
+          submodules:      false
 
-          statuses=$(gh api "repos/$GITHUB_REPOSITORY/commits/$sha/status" \
-              --jq '[.statuses[] | select(.context | startswith("dev-build/"))]')
+      # The retry action can't set step outputs, so using environment variables set through $GITHUB_ENV
+      - name: Check whether this commit should be published
+        uses: ./.github/actions/retry
+        with:
+          cmd: |
+            set -e
 
-          count=$(echo "$statuses" | jq 'length')
-          success_count=$(echo "$statuses" | jq '[.[] | select(.state == "success")] | length')
+            sha="${{ github.event.workflow_run.head_sha }}"
 
-          if [ "$count" -ge 3 ] && [ "$count" = "$success_count" ]; then
-            echo "ready=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "ready=false" >> "$GITHUB_OUTPUT"
-          fi
+            statuses=$(gh api "repos/$GITHUB_REPOSITORY/commits/$sha/status" \
+                --jq '[.statuses[] | select(.context | startswith("dev-build/"))]')
 
-      - name: Find each platform's workflow run for this commit
-        id:   runs
-        if:   steps.status.outputs.ready == 'true'
-        run: |
-          sha="${{ github.event.workflow_run.head_sha }}"
+            compare_status=$(gh api "repos/$GITHUB_REPOSITORY/compare/$DEV_RELEASE_TAG...$sha" --jq .status)
 
-          for workflow in linux.yml macos.yml windows.yml; do
-            # '-f' switches 'gh api' to POST unless the method is forced, so
-            # the filters are passed as a literal query string instead.
-            id=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/$workflow/runs?head_sha=$sha&event=push&status=completed" \
-                --jq '.workflow_runs[0].id // empty')
+            # Requires exactly 3 successful 'dev-build/<platform>' statuses
+            count=$(echo "$statuses" | jq 'length')
+            success_count=$(echo "$statuses" | jq '[.[] | select(.state == "success")] | length')
 
-            echo "${workflow%.yml}_run_id=$id" >> "$GITHUB_OUTPUT"
-          done
-
-      - name: Skip unless this commit is strictly ahead of what's published
-        id:   stale
-        if:   steps.status.outputs.ready == 'true'
-        run: |
-          published=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$DEV_RELEASE_TAG" --jq .object.sha 2>/dev/null || true)
-
-          if [ -n "$published" ]; then
-            compare="repos/$GITHUB_REPOSITORY/compare/$published...${{ github.event.workflow_run.head_sha }}"
-            status=$(gh api "$compare" --jq .status)
-
-            if [ "$status" != "ahead" ]; then
-              echo "Already published, or superseded; nothing to do."
-              echo "stale=true" >> "$GITHUB_OUTPUT"
+            if [ "$count" -lt 3 ] || [ "$count" != "$success_count" ]; then
+              echo "DEV_BUILD_PUBLISH=false" >> "$GITHUB_ENV"
               exit 0
             fi
-          fi
 
-          echo "stale=false" >> "$GITHUB_OUTPUT"
+            # Skip unless this commit is strictly ahead of what's published
+            if [ "$compare_status" != "ahead" ]; then
+              echo "Already published, or superseded; nothing to do."
+              echo "DEV_BUILD_PUBLISH=false" >> "$GITHUB_ENV"
+              exit 0
+            fi
+
+            # Fetch run_ids for the three platforms
+            for platform in linux macos windows; do
+              # '-f' switches 'gh api' to POST unless the method is forced, so
+              # the filters are passed as a literal query string instead.
+              run_id=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/$platform.yml/runs?head_sha=$sha&event=push" \
+                  --jq '.workflow_runs[0].id // empty')
+
+              echo "DEV_BUILD_${platform^^}_RUN_ID=$run_id" >> "$GITHUB_ENV"
+            done
+
+            echo "DEV_BUILD_PUBLISH=true" >> "$GITHUB_ENV"
 
   publish:
     name:    Publish dev build
     needs:   check
-    if:      needs.check.result == 'success' && needs.check.outputs.ready == 'true' && needs.check.outputs.stale == 'false'
-    runs-on: ubuntu-24.04
+    if:      needs.check.result == 'success' && needs.check.outputs.publish == 'true'
+    runs-on: ubuntu-slim
     permissions:
       contents: write
       actions:  read
@@ -131,10 +124,11 @@ jobs:
       - name: Download Windows portable build
         uses: actions/download-artifact@v8
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          run-id:       ${{ needs.check.outputs.windows_run_id }}
-          name:         dosbox-staging-windows-x64-${{ env.DOSBOX_VERSION_AND_HASH }}
-          path:         windows-zip-src/dosbox-staging-windows-x64-${{ env.DOSBOX_VERSION_AND_HASH }}
+          github-token:    ${{ secrets.GITHUB_TOKEN }}
+          run-id:          ${{ needs.check.outputs.windows_run_id }}
+          name:            dosbox-staging-windows-x64-${{ env.DOSBOX_VERSION_AND_HASH }}
+          path:            windows-portable
+          skip-decompress: true
 
       - name: Download Windows installer
         uses: actions/download-artifact@v8
@@ -146,46 +140,49 @@ jobs:
 
       - name: Assemble release assets
         run: |
-          mkdir -p dist
-
-          (cd windows-zip-src && \
-              zip -qr "../dist/dosbox-staging-windows-x64-$DOSBOX_VERSION_AND_HASH.zip" \
-                  "dosbox-staging-windows-x64-$DOSBOX_VERSION_AND_HASH")
-
+          mv windows-portable/* "dist/dosbox-staging-windows-x64-$DOSBOX_VERSION_AND_HASH.zip"
           mv "windows-setup/dosbox-staging-windows-x64-$DOSBOX_VERSION_AND_HASH-setup.exe" dist/
 
       - name: Generate release notes
+        uses: ./.github/actions/retry
         env:
           GITHUB_ACCESS_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          pip3 install markdown2 requests
-          ./scripts/tools/release-notes-drafter.py summary.query pull-requests.csv
-          ./scripts/tools/release-notes-drafter.py summary.process_markdown pull-requests.csv release-notes.md
+        with:
+          cmd: |
+            set -e
+            pip3 install markdown2 requests
+            ./scripts/tools/release-notes-drafter.py summary.query pull-requests.csv
+            ./scripts/tools/release-notes-drafter.py summary.process_markdown pull-requests.csv release-notes.md
 
-          # GitHub always shows this release's original publish date next to
-          # its title, which never changes as this same release gets
-          # repeatedly updated in place; this banner carries the info that
-          # actually matters for a rolling build.
-          sha="${{ github.event.workflow_run.head_sha }}"
-          updated_at=$(date -u +"%Y-%m-%d %H:%M UTC")
-          {
-            echo "> **Automated development build** — updated $updated_at from commit [\`${sha:0:9}\`](https://github.com/$GITHUB_REPOSITORY/commit/$sha)"
-            echo
-            cat release-notes.md
-          } > release-notes-final.md
-          mv release-notes-final.md release-notes.md
+            # GitHub always shows this release's original publish date next to
+            # its title, which never changes as this same release gets
+            # repeatedly updated in place; this banner carries the info that
+            # actually matters for a rolling build.
+            sha="${{ github.event.workflow_run.head_sha }}"
+            updated_at=$(date -u +"%Y-%m-%d %H:%M UTC")
+            {
+              echo "> **Automated development build** — updated $updated_at from commit [\`${sha:0:9}\`](https://github.com/$GITHUB_REPOSITORY/commit/$sha)"
+              echo
+              cat release-notes.md
+            } > release-notes-final.md
+            mv release-notes-final.md release-notes.md
 
       - name: Publish the rolling dev release
-        run: |
-          gh release upload "$DEV_RELEASE_TAG" dist/* --clobber
+        uses: ./.github/actions/retry
+        with:
+          cmd: |
+            set -e
+            gh release upload "$DEV_RELEASE_TAG" dist/* --clobber
 
-          gh release edit "$DEV_RELEASE_TAG" \
-              --title "$DOSBOX_VERSION_AND_HASH" \
-              --notes-file release-notes.md
+            gh release edit "$DEV_RELEASE_TAG" \
+                --title "$DOSBOX_VERSION_AND_HASH" \
+                --notes-file release-notes.md
 
-          gh release view "$DEV_RELEASE_TAG" --json assets --jq '.assets[].name' \
-              | grep -v -e "$DOSBOX_VERSION_AND_HASH" \
-              | xargs -r -I{} gh release delete-asset "$DEV_RELEASE_TAG" {} --yes
+            gh release view "$DEV_RELEASE_TAG" --json assets --jq '.assets[].name' \
+                | grep -v -e "$DOSBOX_VERSION_AND_HASH" \
+                | xargs -r -I{} gh release delete-asset "$DEV_RELEASE_TAG" {} --yes
 
       - name: Move the dev-latest tag to this commit
-        run: git push --force origin "${{ github.event.workflow_run.head_sha }}:refs/tags/$DEV_RELEASE_TAG"
+        uses: ./.github/actions/retry
+        with:
+          cmd: git push --force origin "${{ github.event.workflow_run.head_sha }}:refs/tags/$DEV_RELEASE_TAG"

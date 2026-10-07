@@ -239,19 +239,9 @@ jobs:
       # the workflow as a whole also includes the compiler-matrix sanity
       # builds above, which can fail without this release build failing.
       - name: Report dev build status
-        if:   success() && github.ref == 'refs/heads/main'
-        run: |
-          gh api "repos/$GITHUB_REPOSITORY/statuses/${{ github.sha }}" \
-              -f state=success -f context=dev-build/macos \
-              -f description="macOS release build succeeded"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Report dev build failure
-        if:   failure() && github.ref == 'refs/heads/main'
-        run: |
-          gh api "repos/$GITHUB_REPOSITORY/statuses/${{ github.sha }}" \
-              -f state=failure -f context=dev-build/macos \
-              -f description="macOS release build failed"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        if:   (success() || failure()) && github.ref == 'refs/heads/main'
+        uses: ./.github/actions/report-dev-build-status
+        with:
+          platform:     macos
+          job_status:   ${{ job.status }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
