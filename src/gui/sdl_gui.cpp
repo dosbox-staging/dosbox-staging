@@ -735,9 +735,6 @@ static void enter_fullscreen()
 			LOG_WARNING("SDL: Failed to set window size: %s", SDL_GetError());
 		}
 
-		// Disable transparency in fullscreen mode
-		SDL_SetWindowOpacity(sdl.window, 1.0f);
-
 		maybe_log_display_properties();
 
 	} else {
@@ -748,7 +745,8 @@ static void enter_fullscreen()
 		}
 	}
 
-	// We need to disable transparency in fullscreen on macOS
+	// Disable transparency in fullscreen mode (this is needed in standard
+	// fullscreen mode on macOS too)
 	SDL_SetWindowOpacity(sdl.window, 1.0f);
 }
 
