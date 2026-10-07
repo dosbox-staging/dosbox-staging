@@ -2008,6 +2008,14 @@ static void notify_sdl_setting_updated(SectionProp& section,
 	}
 }
 
+static void handle_desktop_mode_changed(const SDL_DisplayEvent& event)
+{
+	// Percentage viewport sizes depend on the desktop size
+	if (event.displayID == sdl.display_number) {
+		update_viewport_and_reset_screen();
+	}
+}
+
 static void handle_mouse_motion(SDL_MouseMotionEvent* motion)
 {
 	MOUSE_EventMoved(motion->xrel,
@@ -2446,6 +2454,10 @@ bool GFX_PollAndHandleEvents()
 		case SDL_EVENT_DISPLAY_ADDED:
 		case SDL_EVENT_DISPLAY_REMOVED:
 			notify_new_mouse_screen_params();
+			break;
+
+		case SDL_EVENT_DISPLAY_DESKTOP_MODE_CHANGED:
+			handle_desktop_mode_changed(event.display);
 			break;
 
 		case SDL_EVENT_MOUSE_MOTION: handle_mouse_motion(&event.motion); break;
