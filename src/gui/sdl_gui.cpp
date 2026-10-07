@@ -2103,30 +2103,15 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 
 		log_window_event("SDL: Window has been resized to %dx%d", width, height);
 
-		static int last_width  = 0;
-		static int last_height = 0;
-
-		// SDL_EVENT_WINDOW_RESIZED events are sent twice when resizing
-		// the window, but maybe_log_display_properties() will only
-		// output a log entry if the image dimensions have actually
-		// changed.
-		maybe_log_display_properties();
-
 		if (!sdl.is_fullscreen) {
 			save_window_size(width, height);
 		}
 
-		if (width != last_width && height != last_height) {
-			maybe_log_display_properties();
-
-			// Needed for aspect & viewport mode combinations where
-			// the pixel aspect ratio or viewport size is sized
-			// relatively to the window size.
-			GFX_ResetScreen();
-
-			last_width  = width;
-			last_height = height;
-		}
+		// Resizing the window changes its size in pixels too, so SDL
+		// also sends an SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED event. We
+		// update the viewport and reset the screen in response to that
+		// (this is needed for viewport and aspect ratio settings that
+		// depend on the window size).
 		return true;
 	}
 
