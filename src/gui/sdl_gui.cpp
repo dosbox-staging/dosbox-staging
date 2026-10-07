@@ -1617,7 +1617,7 @@ static RenderBackend* create_renderer()
 
 // Window-inactive coordinator. Single entry point for everything that
 // should happen when the host window loses focus.
-static void on_window_inactive()
+static void handle_window_inactive()
 {
 	MOUSE_NotifyWindowActive(false);
 
@@ -1640,7 +1640,7 @@ static void on_window_inactive()
 // Pause auto-resume runs on all three events, so a minimized/uncovered window
 // comes back up.
 //
-static void on_window_active(const bool focus_gained)
+static void handle_window_active(const bool focus_gained)
 {
 	if (sdl.pause_when_inactive) {
 		DOSBOX_RequestAutoResume();
@@ -1977,7 +1977,7 @@ void GFX_InitAndStartGui()
 
 	// Assume focus on startup
 	constexpr auto FocusGained = true;
-	on_window_active(FocusGained);
+	handle_window_active(FocusGained);
 
 	RENDER_SetShaderWithFallback();
 
@@ -2232,7 +2232,7 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		focus_input();
 
 		constexpr auto FocusGained = false;
-		on_window_active(FocusGained);
+		handle_window_active(FocusGained);
 		return true;
 	}
 
@@ -2270,7 +2270,7 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		// catch window startup and size toggles.
 
 		const bool focus_gained = (event.type == SDL_EVENT_WINDOW_FOCUS_GAINED);
-		on_window_active(focus_gained);
+		handle_window_active(focus_gained);
 
 		if (sdl.draw.callback) {
 			sdl.draw.callback(GFX_CallbackRedraw);
@@ -2283,11 +2283,11 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		log_window_event("SDL: Window has lost keyboard focus");
 
 		// `GFX_LosingFocus()` deactivates mapper events, which can
-		// enqueue key-up scancodes; `on_window_inactive()`'s
+		// enqueue key-up scancodes; `handle_window_inactive()`'s
 		// `KEYBOARD_ClrBuffer` must run after that so pause starts
 		// with an empty keyboard buffer.
 		GFX_LosingFocus();
-		on_window_inactive();
+		handle_window_inactive();
 		return false;
 
 	case SDL_EVENT_WINDOW_MOUSE_ENTER:
@@ -2376,7 +2376,7 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 	case SDL_EVENT_WINDOW_MINIMIZED:
 		log_window_event("SDL: Window has been minimized");
 
-		on_window_inactive();
+		handle_window_inactive();
 		return false;
 
 	case SDL_EVENT_WINDOW_MAXIMIZED:
