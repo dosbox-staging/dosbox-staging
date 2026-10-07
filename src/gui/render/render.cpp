@@ -1280,6 +1280,29 @@ static void set_viewport(SectionProp& section)
 	}
 }
 
+static void set_viewport_position(const SectionProp& section)
+{
+	constexpr auto SettingName  = "viewport_position";
+	constexpr auto DefaultValue = "0,0";
+
+	const auto pref = section.GetString(SettingName);
+
+	if (const auto position = WindowGeometry::ParseViewportPositionSetting(pref);
+	    position) {
+		render.viewport_position = *position;
+	} else {
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "RENDER",
+		                      "PROGRAM_CONFIG_INVALID_SETTING",
+		                      SettingName,
+		                      pref.c_str(),
+		                      DefaultValue);
+
+		render.viewport_position = {};
+		set_section_property_value("render", SettingName, DefaultValue);
+	}
+}
+
 static void set_integer_scaling(const SectionProp& section)
 {
 	using enum IntegerScalingMode;
@@ -1466,6 +1489,28 @@ DosBox::Rect RENDER_CalcRestrictedViewportSizeInPixels(const DosBox::Rect& canva
 	}
 }
 
+// Both percentage values are relative to the canvas height
+static DosBox::Rect calc_viewport_offset_in_pixels(const DosBox::Rect& canvas_size_px)
+{
+	using WindowGeometry::Unit;
+
+	const auto& position = render.viewport_position;
+
+	switch (position.unit) {
+	case Unit::LogicalUnits:
+		return GFX_LogicalToPixels({position.x, position.y, 0.0f, 0.0f});
+
+	case Unit::Pixels: return {position.x, position.y, 0.0f, 0.0f};
+
+	case Unit::Percentage: {
+		const auto one_percent = canvas_size_px.h / 100.0f;
+		return {position.x * one_percent, position.y * one_percent, 0.0f, 0.0f};
+	}
+
+	default: assertm(false, "Invalid Unit value"); return {};
+	}
+}
+
 DosBox::Rect RENDER_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
                                          const DosBox::Rect& render_size_px,
                                          const Fraction& render_pixel_aspect_ratio)
@@ -1581,7 +1626,12 @@ DosBox::Rect RENDER_CalcDrawRectInPixels(const DosBox::Rect& canvas_size_px,
 		}
 	}();
 
-	return draw_size_px.CenterTo(canvas_size_px.cx(), canvas_size_px.cy());
+	// The viewport position is applied last, so it never affects the size
+	// of the image
+	const auto offset_px = calc_viewport_offset_in_pixels(canvas_size_px);
+
+	return draw_size_px.CenterTo(canvas_size_px.cx() + offset_px.x,
+	                             canvas_size_px.cy() + offset_px.y);
 }
 
 static void init_color_space_setting(SectionProp& section)
@@ -1877,6 +1927,26 @@ static void init_render_settings(SectionProp& section)
 	        "  - Use the 'Stretch Axis', 'Inc Stretch', and 'Dec Stretch' hotkey actions to\n"
 	        "    adjust the image size in 'relative' mode in real-time, then copy the new\n"
 	        "    settings from the logs into your config.");
+
+	string_prop = section.AddString("viewport_position", Always, "0,0");
+	string_prop->SetHelp(
+	        "Set the position of the viewport relative to the centre of the window or\n"
+	        "screen ('0,0' by default). The image is always centred within the viewport, so\n"
+	        "this moves the image. Negative values move the viewport left and up, positive\n"
+	        "values right and down. Possible values:\n"
+	        "\n"
+	        "  X,Y:       Offset in logical units (e.g., -100,50). The values are\n"
+	        "             multiplied by the OS-level display scaling factor to get the\n"
+	        "             offset in pixels.\n"
+	        "\n"
+	        "  X,Ypx:     Offset in pixels (e.g., -150,75px).\n"
+	        "\n"
+	        "  X,Y%%:      Offset as a percentage of the window or screen height (e.g.,\n"
+	        "             -10,5%%). Both values are relative to the height, so the offset\n"
+	        "             scales with the window size.\n"
+	        "\n"
+	        "Note: Changing the position never changes the size of the image; the parts of\n"
+	        "      the image outside the window or screen are cut off.");
 
 	string_prop = section.AddString("monochrome_palette",
 	                                Always,
@@ -2913,6 +2983,7 @@ void RENDER_Init()
 
 	set_aspect_ratio_correction(*section);
 	set_viewport(*section);
+	set_viewport_position(*section);
 	set_integer_scaling(*section);
 
 	set_monochrome_palette(*section);
@@ -2988,6 +3059,10 @@ static void notify_render_setting_updated(SectionProp& section,
 
 	} else if (prop_name == "viewport") {
 		set_viewport(section);
+		reinit_drawing();
+
+	} else if (prop_name == "viewport_position") {
+		set_viewport_position(section);
 		reinit_drawing();
 
 	} else if (prop_name == "color_space") {

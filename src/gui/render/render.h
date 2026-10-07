@@ -13,6 +13,7 @@
 
 #include "private/deinterlacer.h"
 
+#include "gui/private/window_geometry.h"
 #include "gui/render/scaler/scalers.h"
 #include "hardware/video/vga.h"
 #include "utils/fraction.h"
@@ -159,6 +160,9 @@ struct Render {
 	IntegerScalingMode integer_scaling_mode                = {};
 
 	ViewportSettings viewport_settings = {};
+
+	// Offset of the viewport from the centre of the canvas
+	WindowGeometry::PositionSetting viewport_position = {};
 
 	std::unique_ptr<Deinterlacer> deinterlacer   = {};
 	DeinterlacingStrength deinterlacing_strength = {};
