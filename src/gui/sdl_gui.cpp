@@ -816,9 +816,6 @@ static WindowGeometry::Desktop get_desktop_geometry()
 
 	const auto desktop = WindowGeometry::CalcDesktop(*mode, get_content_scale());
 
-	assert(desktop.width >= MinWindowSize.w);
-	assert(desktop.height >= MinWindowSize.h);
-
 	if (!sdl.window) {
 		return desktop;
 	}
