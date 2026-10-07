@@ -1337,20 +1337,20 @@ static std::optional<WindowGeometry::PositionSetting> parse_window_position_sett
 	return position;
 }
 
-static void save_window_position(const int x, const int y)
+static void set_windowed_position(const int x, const int y)
 {
 	sdl.windowed.x_pos = x;
 	sdl.windowed.y_pos = y;
 }
 
-static void save_default_window_position()
+static void set_default_windowed_position()
 {
-	save_window_position(SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.display_number),
-	                     SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.display_number));
+	set_windowed_position(SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.display_number),
+	                      SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.display_number));
 }
 
 // Writes to the window-size member should be done via this function
-static void save_window_size(const int w, const int h)
+static void set_windowed_size(const int w, const int h)
 {
 	assert(w > 0 && h > 0);
 
@@ -1367,7 +1367,7 @@ static void handle_window_resized(const int w, const int h)
 	    (w == sdl.windowed.width && h == sdl.windowed.height)) {
 		return;
 	}
-	save_window_size(w, h);
+	set_windowed_size(w, h);
 
 	set_section_property_value("sdl",
 	                           "window_size",
@@ -1390,7 +1390,7 @@ static void handle_window_moved(const int x, const int y)
 	    (new_x == sdl.windowed.x_pos && new_y == sdl.windowed.y_pos)) {
 		return;
 	}
-	save_window_position(new_x, new_y);
+	set_windowed_position(new_x, new_y);
 
 	set_section_property_value(
 	        "sdl",
@@ -1467,7 +1467,7 @@ static void configure_window_size()
 	maybe_limit_window_size_kmsdrm_driver(w, h, desktop);
 #endif
 
-	save_window_size(w, h);
+	set_windowed_size(w, h);
 
 	LOG_MSG("DISPLAY: Using %dx%d window size in windowed mode on display-%d",
 	        w,
@@ -1489,9 +1489,9 @@ static void configure_window_position()
 	if (position) {
 		const auto [x, y] = WindowGeometry::PositionToLogicalUnits(*position,
 		                                                           desktop);
-		save_window_position(x, y);
+		set_windowed_position(x, y);
 	} else {
-		save_default_window_position();
+		set_default_windowed_position();
 	}
 }
 
