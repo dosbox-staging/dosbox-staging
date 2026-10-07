@@ -1387,23 +1387,25 @@ static void handle_window_moved(const int x, const int y)
 		return;
 	}
 
-	// We don't allow negative values for 'window_position', so this is the
-	// best we can do to keep things in sync.
-	const auto new_x = std::max(x, 0);
-	const auto new_y = std::max(y, 0);
-
 	// With `window_position = auto`, the windowed position is undefined
 	// until we learn where the window has been placed. That's not a move by
 	// the user, so we keep the 'auto' setting.
 	if (SDL_WINDOWPOS_ISUNDEFINED(sdl.windowed.x_pos)) {
-		set_windowed_position(new_x, new_y);
+		set_windowed_position(x, y);
 		return;
 	}
 
-	if (new_x == sdl.windowed.x_pos && new_y == sdl.windowed.y_pos) {
+	if (x == sdl.windowed.x_pos && y == sdl.windowed.y_pos) {
 		return;
 	}
-	set_windowed_position(new_x, new_y);
+	set_windowed_position(x, y);
+
+	// Positions on displays to the left of or above the primary display are
+	// negative, which 'window_position' doesn't support. We still remember
+	// them so we can restore the window there when leaving fullscreen mode,
+	// but we write 0 to the config settings.
+	auto new_x = std::max(x, 0);
+	auto new_y = std::max(y, 0);
 
 	set_section_property_value(
 	        "sdl",
