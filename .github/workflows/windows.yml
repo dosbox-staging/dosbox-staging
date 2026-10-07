@@ -357,22 +357,10 @@ jobs:
       # Reports this job's own pass/fail as a separate GitHub status, since
       # the workflow as a whole also includes the debugger build above,
       # which can fail without this release build failing.
-      - name:  Report dev build status
-        if:    success() && github.ref == 'refs/heads/main'
-        shell: bash
-        run: |
-          gh api "repos/$GITHUB_REPOSITORY/statuses/${{ github.sha }}" \
-              -f state=success -f context=dev-build/windows \
-              -f description="Windows release build succeeded"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name:  Report dev build failure
-        if:    failure() && github.ref == 'refs/heads/main'
-        shell: bash
-        run: |
-          gh api "repos/$GITHUB_REPOSITORY/statuses/${{ github.sha }}" \
-              -f state=failure -f context=dev-build/windows \
-              -f description="Windows release build failed"
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Report dev build status
+        if:   (success() || failure()) && github.ref == 'refs/heads/main'
+        uses: ./.github/actions/report-dev-build-status
+        with:
+          platform:     windows
+          job_status:   ${{ job.status }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,36 @@
+name: Report dev build status
+
+description: Report the calling job's result as a 'dev-build/<platform>' commit status, which is used by 'Publish dev build' workflow
+
+inputs:
+  platform:
+    description: 'Platform name used in the status context, e.g., linux'
+    required: true
+
+  job_status:
+    description: "Result of the calling job; pass 'job.status'"
+    required: true
+
+  github_token:
+    description: "GitHub token with the 'statuses: write' permission"
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Report status
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+        PLATFORM: ${{ inputs.platform }}
+        JOB_STATUS: ${{ inputs.job_status }}
+      run: |
+        if [ "$JOB_STATUS" = "success" ]; then
+          state=success
+        else
+          state=failure
+        fi
+
+        gh api "repos/$GITHUB_REPOSITORY/statuses/$GITHUB_SHA" \
+            -f state="$state" -f context="dev-build/$PLATFORM" \
+            -f description="$PLATFORM release build: $state"
