@@ -290,6 +290,31 @@ TEST(WindowGeometry, ParseWindowPositionSettingInvalid)
 }
 
 // ----------------------------------------------------------------------------
+// ParseViewportPositionSetting
+// ----------------------------------------------------------------------------
+
+TEST(WindowGeometry, ParseViewportPositionSetting)
+{
+	expect_position_setting(ParseViewportPositionSetting("0,0"), 0, 0, Unit::LogicalUnits);
+	expect_position_setting(ParseViewportPositionSetting("-100, 50"), -100, 50, Unit::LogicalUnits);
+	expect_position_setting(ParseViewportPositionSetting("10,-5px"), 10, -5, Unit::Pixels);
+	expect_position_setting(ParseViewportPositionSetting("-12.5,10%"), -12.5f, 10, Unit::Percentage);
+	expect_position_setting(ParseViewportPositionSetting("-65535,65535"), -65535, 65535, Unit::LogicalUnits);
+}
+
+TEST(WindowGeometry, ParseViewportPositionSettingInvalid)
+{
+	EXPECT_FALSE(ParseViewportPositionSetting(""));
+	EXPECT_FALSE(ParseViewportPositionSetting("100"));
+	EXPECT_FALSE(ParseViewportPositionSetting("100x50"));
+	EXPECT_FALSE(ParseViewportPositionSetting("1,2,3"));
+	EXPECT_FALSE(ParseViewportPositionSetting("-10.5,0px"));
+	EXPECT_FALSE(ParseViewportPositionSetting("-65536,0"));
+	EXPECT_FALSE(ParseViewportPositionSetting("-1001,0%"));
+	EXPECT_FALSE(ParseViewportPositionSetting("-inf,0%"));
+}
+
+// ----------------------------------------------------------------------------
 // SizeToLogicalUnits
 // ----------------------------------------------------------------------------
 
