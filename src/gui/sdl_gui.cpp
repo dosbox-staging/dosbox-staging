@@ -1298,11 +1298,12 @@ static std::optional<WindowGeometry::SizeSetting> parse_window_size_setting(
 {
 	const auto size = WindowGeometry::ParseWindowSizeSetting(window_size_pref);
 	if (!size) {
-		// TODO convert to notification
-		LOG_WARNING(
-		        "DISPLAY: Invalid 'window_size' setting: '%s', "
-		        "using 'default'",
-		        window_size_pref.c_str());
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "DISPLAY",
+		                      "PROGRAM_CONFIG_INVALID_SETTING",
+		                      "window_size",
+		                      window_size_pref.c_str(),
+		                      "default");
 	}
 	return size;
 }
@@ -1318,11 +1319,12 @@ static std::optional<WindowGeometry::PositionSetting> parse_window_position_sett
 	const auto position = WindowGeometry::ParseWindowPositionSetting(
 	        window_position_pref);
 	if (!position) {
-		// TODO convert to notification
-		LOG_WARNING(
-		        "DISPLAY: Invalid 'window_position' setting: '%s'. "
-		        "Must be in X,Y format, using 'auto'.",
-		        window_position_pref.c_str());
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "DISPLAY",
+		                      "PROGRAM_CONFIG_INVALID_SETTING",
+		                      "window_position",
+		                      window_position_pref.c_str(),
+		                      "auto");
 		return {};
 	}
 
@@ -1332,14 +1334,17 @@ static std::optional<WindowGeometry::PositionSetting> parse_window_position_sett
 	const bool is_out_of_bounds = (static_cast<float>(x) > desktop.width ||
 	                               static_cast<float>(y) > desktop.height);
 	if (is_out_of_bounds) {
-		// TODO convert to notification
-		LOG_WARNING(
-		        "DISPLAY: Invalid 'window_position' setting: '%s'. "
-		        "Requested position is outside the bounds of the %dx%d "
-		        "desktop, using 'auto'.",
-		        window_position_pref.c_str(),
-		        iroundf(desktop.width),
-		        iroundf(desktop.height));
+		const auto details = format_str("Window position is outside of the %dx%d desktop bounds",
+		                                iroundf(desktop.width),
+		                                iroundf(desktop.height));
+
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "DISPLAY",
+		                      "PROGRAM_CONFIG_INVALID_SETTING_WITH_DETAILS",
+		                      "window_position",
+		                      window_position_pref.c_str(),
+		                      details.c_str(),
+		                      "auto");
 		return {};
 	}
 
@@ -1702,8 +1707,17 @@ static void configure_display()
 	if ((display >= 0) && (display < num_displays)) {
 		sdl.display_number = displays[display];
 	} else {
-		// TODO convert to notification
-		LOG_WARNING("SDL: Display number out of bounds, using display 0");
+		const auto details = format_str("Display number must be between 0 and %d",
+		                                num_displays - 1);
+
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "DISPLAY",
+		                      "PROGRAM_CONFIG_INVALID_SETTING_WITH_DETAILS",
+		                      "display",
+		                      format_str("%d", display).c_str(),
+		                      details.c_str(),
+		                      "0");
+
 		sdl.display_number = displays[0];
 	}
 	assert(sdl.display_number != 0);
