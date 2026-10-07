@@ -44,6 +44,16 @@ struct Desktop {
 	float display_scale = 1.0f;
 };
 
+// Converts between logical units and the native units used by SDL's window
+// API (logical units on macOS and Wayland, pixels on Windows and X11). The
+// content scale is the number of native units per logical unit (see
+// `SDL_GetDisplayContentScale()`).
+//
+// Special window position values (e.g., `SDL_WINDOWPOS_UNDEFINED`) are passed
+// through unchanged by `LogicalToNative()`.
+int LogicalToNative(const int logical, const float content_scale);
+int NativeToLogical(const int native, const float content_scale);
+
 // Calculates the desktop geometry of a display from its desktop display mode
 // (see `SDL_GetDesktopDisplayMode()`) and its content scale (see
 // `SDL_GetDisplayContentScale()`).
