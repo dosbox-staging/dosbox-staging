@@ -606,8 +606,10 @@ static void notify_new_mouse_screen_params()
 	params.y_abs = abs_y;
 
 	params.is_fullscreen    = sdl.is_fullscreen;
+
+	// We only need the number of displays
 	int num_displays = 0;
-	SDL_GetDisplays(&num_displays);
+	SDL_free(SDL_GetDisplays(&num_displays));
 	params.is_multi_display = (num_displays > 1);
 
 	MOUSE_NewScreenParams(params);
@@ -1629,15 +1631,22 @@ static void configure_display()
 	const int display = get_sdl_section()->GetInt("display");
 
 	int num_displays = 0;
-	SDL_DisplayID *displays = SDL_GetDisplays(&num_displays);
+	const auto displays = SDL_GetDisplays(&num_displays);
+	if (!displays) {
+		E_Exit("SDL: Failed to get the list of displays: %s",
+		       SDL_GetError());
+	}
+
 	if ((display >= 0) && (display < num_displays)) {
 		sdl.display_number = displays[display];
-		assert(sdl.display_number != 0);
 	} else {
 		// TODO convert to notification
 		LOG_WARNING("SDL: Display number out of bounds, using display 0");
 		sdl.display_number = displays[0];
 	}
+	assert(sdl.display_number != 0);
+
+	SDL_free(displays);
 }
 
 static void set_allow_screensaver()
