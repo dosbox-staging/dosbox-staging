@@ -2390,13 +2390,6 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		GFX_RequestExit(true);
 		return false;
 
-	// case SDL_WINDOWEVENT_TAKE_FOCUS:
-	// 	log_window_event("SDL: Window is being offered a focus");
-
-		// 	focus_input();
-		// 	on_window_active(/* focus_gained = */ true);
-		// 	return true;
-
 	case SDL_EVENT_WINDOW_HIT_TEST:
 		log_window_event(
 		        "SDL: Window had a hit test that wasn't SDL_HITTEST_NORMAL");
