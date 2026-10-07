@@ -1079,9 +1079,6 @@ static void focus_input()
 	if (!SDL_RaiseWindow(sdl.window)) {
 		LOG_WARNING("SDL: Failed to raise window: %s", SDL_GetError());
 	}
-	if (!SDL_RaiseWindow(sdl.window)) {
-		LOG_WARNING("SDL: Failed to set window input focus: %s", SDL_GetError());
-	}
 }
 
 static void toggle_fullscreen()
