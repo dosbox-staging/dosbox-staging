@@ -64,8 +64,15 @@ int NativeToLogical(const int native, const float content_scale);
 // `SDL_WINDOW_HIGH_PIXEL_DENSITY` flag.
 Desktop CalcDesktop(const SDL_DisplayMode& desktop_mode, const float content_scale);
 
-// Parses window sizes in 'WxH', 'WxHpx', or 'WxH%' format (case
-// insensitive). Returns nullopt if the value is invalid or not positive.
+// Parses window sizes in 'WxH', 'WxHpx', or 'WxH%' format, or named window
+// sizes (case insensitive). The named sizes are aliases for 4:3 window sizes
+// relative to the desktop height:
+//
+//   small (s)               66.67x50%
+//   medium (m), default     98.67x74%
+//   large (l)               120x90%
+//
+// Returns nullopt if the value is invalid or not positive.
 std::optional<SizeSetting> ParseWindowSizeSetting(const std::string_view value);
 
 // Parses window positions in 'X,Y', 'X,Ypx', or 'X,Y%' format (case

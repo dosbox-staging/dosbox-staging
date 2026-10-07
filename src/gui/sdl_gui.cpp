@@ -1283,46 +1283,19 @@ static void maybe_limit_window_size_kmsdrm_driver(int& w, int& h,
 
 #endif
 
-static SDL_Rect parse_window_size_pref(const std::string& window_size_pref,
-                                       const WindowGeometry::Desktop& desktop)
+// Returns nullopt if the setting is invalid
+static std::optional<WindowGeometry::SizeSetting> parse_window_size_setting(
+        const std::string& window_size_pref)
 {
-	constexpr auto SmallPercent   = 50;
-	constexpr auto MediumPercent  = 74;
-	constexpr auto LargePercent   = 90;
-	constexpr auto DesktopPercent = 100;
-
-	const auto make_percent_size = [&](const int percent) -> SDL_Rect {
-		const int w = ceil_sdivide(iroundf(desktop.width) * percent, 100);
-		const int h = ceil_sdivide(iroundf(desktop.height) * percent, 100);
-		return {0, 0, w, h};
-	};
-
-	const auto pref = lowcase(window_size_pref);
-
-	if (pref == "s" || pref == "small") {
-		return make_percent_size(SmallPercent);
-
-	} else if (pref == "m" || pref == "medium" || pref == "default") {
-		return make_percent_size(MediumPercent);
-
-	} else if (pref == "l" || pref == "large") {
-		return make_percent_size(LargePercent);
-
-	} else if (pref == "desktop") {
-		return make_percent_size(DesktopPercent);
-
-	} else if (const auto size = WindowGeometry::ParseWindowSizeSetting(pref);
-	           size) {
-		return WindowGeometry::SizeToLogicalUnits(*size, desktop);
+	const auto size = WindowGeometry::ParseWindowSizeSetting(window_size_pref);
+	if (!size) {
+		// TODO convert to notification
+		LOG_WARNING(
+		        "DISPLAY: Invalid 'window_size' setting: '%s', "
+		        "using 'default'",
+		        window_size_pref.c_str());
 	}
-
-	// TODO convert to notification
-	LOG_WARNING(
-	        "DISPLAY: Invalid 'window_size' setting: '%s', "
-	        "using 'default'",
-	        pref.c_str());
-
-	return make_percent_size(MediumPercent);
+	return size;
 }
 
 static std::optional<SDL_Point> parse_window_position_conf(const std::string& window_position_val)
@@ -1445,14 +1418,18 @@ static void configure_window_size()
 {
 	const auto window_size_pref = get_sdl_section()->GetString("window_size");
 
-	const auto requested_size = parse_window_size_pref(window_size_pref,
-	                                                   get_desktop_geometry());
+	const auto default_size = *WindowGeometry::ParseWindowSizeSetting("default");
+
+	const auto size = parse_window_size_setting(window_size_pref).value_or(default_size);
+
+	const auto desktop = get_desktop_geometry();
+	const auto requested_size = WindowGeometry::SizeToLogicalUnits(size, desktop);
 
 	auto w = std::max(requested_size.w, MinWindowSize.w);
 	auto h = std::max(requested_size.h, MinWindowSize.h);
 
 #if defined(LINUX)
-	maybe_limit_window_size_kmsdrm_driver(w, h, get_desktop_geometry());
+	maybe_limit_window_size_kmsdrm_driver(w, h, desktop);
 #endif
 
 	save_window_size(w, h);

@@ -161,10 +161,31 @@ TEST(WindowGeometry, ParseWindowSizeSettingPercentage)
 	expect_size_setting(ParseWindowSizeSetting("1000x1000%"), 1000, 1000, Unit::Percentage);
 }
 
+TEST(WindowGeometry, ParseWindowSizeSettingNamedSizes)
+{
+	// Named sizes are 4:3 window sizes relative to the desktop height
+	constexpr auto Small  = 50.0f;
+	constexpr auto Medium = 74.0f;
+	constexpr auto Large  = 90.0f;
+
+	expect_size_setting(ParseWindowSizeSetting("small"), Small * 4 / 3, Small, Unit::Percentage);
+	expect_size_setting(ParseWindowSizeSetting("s"), Small * 4 / 3, Small, Unit::Percentage);
+
+	expect_size_setting(ParseWindowSizeSetting("medium"), Medium * 4 / 3, Medium, Unit::Percentage);
+	expect_size_setting(ParseWindowSizeSetting("m"), Medium * 4 / 3, Medium, Unit::Percentage);
+	expect_size_setting(ParseWindowSizeSetting("default"), Medium * 4 / 3, Medium, Unit::Percentage);
+
+	expect_size_setting(ParseWindowSizeSetting("large"), Large * 4 / 3, Large, Unit::Percentage);
+	expect_size_setting(ParseWindowSizeSetting("l"), Large * 4 / 3, Large, Unit::Percentage);
+
+	expect_size_setting(ParseWindowSizeSetting("Medium"), Medium * 4 / 3, Medium, Unit::Percentage);
+	expect_size_setting(ParseWindowSizeSetting("LARGE"), Large * 4 / 3, Large, Unit::Percentage);
+}
+
 TEST(WindowGeometry, ParseWindowSizeSettingInvalid)
 {
 	EXPECT_FALSE(ParseWindowSizeSetting(""));
-	EXPECT_FALSE(ParseWindowSizeSetting("default"));
+	EXPECT_FALSE(ParseWindowSizeSetting("desktop"));
 	EXPECT_FALSE(ParseWindowSizeSetting("1024"));
 	EXPECT_FALSE(ParseWindowSizeSetting("1024x"));
 	EXPECT_FALSE(ParseWindowSizeSetting("1024x768x2"));
