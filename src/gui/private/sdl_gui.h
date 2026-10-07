@@ -50,11 +50,11 @@
 // Canvas size
 // -----------
 //   The unrestricted total available drawing area of the emulator window or
-//   the screen in fullscreen. This is reported by SDL as logical units.
+//   the screen in fullscreen, in pixels.
 //
 // Viewport rectangle
 // ------------------
-//   The maximum area we can *potentially* draw into in logical units.
+//   The maximum area we can *potentially* draw into, in pixels.
 //   Normally, it's smaller than the canvas, but it can also be larger in
 //   certain viewport modes where we "zoom into" the image, or when we
 //   simulate the horiz/vert stretch controls of CRT monitors. In these cases,
