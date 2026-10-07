@@ -617,10 +617,22 @@ static void set_minimum_window_size()
 {
 	assert(sdl.window);
 
-	if (!SDL_SetWindowMinimumSize(sdl.window,
-	                              to_native(MinWindowSize.w),
-	                              to_native(MinWindowSize.h))) {
+	const auto min_w = to_native(MinWindowSize.w);
+	const auto min_h = to_native(MinWindowSize.h);
 
+	// `SDL_SetWindowMinimumSize()` always sets the window size as well,
+	// which interferes with dragging the window to another display on
+	// macOS. So we only call it when the minimum size in native units has
+	// changed.
+	int curr_min_w = 0;
+	int curr_min_h = 0;
+	SDL_GetWindowMinimumSize(sdl.window, &curr_min_w, &curr_min_h);
+
+	if (min_w == curr_min_w && min_h == curr_min_h) {
+		return;
+	}
+
+	if (!SDL_SetWindowMinimumSize(sdl.window, min_w, min_h)) {
 		LOG_WARNING("SDL: Failed to set window minimum size: %s",
 		            SDL_GetError());
 	}
@@ -2208,6 +2220,24 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 
 		// The new display might have a different resolution and display
 		// scale, so we need to recalculate the viewport
+		update_viewport_and_reset_screen();
+		return true;
+	}
+
+	case SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED: {
+		log_window_event("SDL: Window display scale has changed to %g",
+		                 SDL_GetWindowDisplayScale(sdl.window));
+
+		// This happens when the window is moved to a display with a
+		// different scale, or when the display scale of the current
+		// display is changed in the OS settings.
+		//
+		// The minimum window size is set in native units, which depend
+		// on the display scale on Windows and X11.
+		set_minimum_window_size();
+
+		// Viewport sizes specified in logical units depend on the
+		// display scale.
 		update_viewport_and_reset_screen();
 		return true;
 	}
