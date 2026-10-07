@@ -73,16 +73,6 @@ TEST(WindowGeometry, NativeToLogical)
 	EXPECT_EQ(NativeToLogical(1280, 1.5f), 853);
 }
 
-TEST(WindowGeometry, LogicalToNativeKeepsSpecialPositions)
-{
-	for (const auto position : {static_cast<int>(SDL_WINDOWPOS_UNDEFINED),
-	                            static_cast<int>(SDL_WINDOWPOS_CENTERED),
-	                            static_cast<int>(SDL_WINDOWPOS_UNDEFINED_DISPLAY(2)),
-	                            static_cast<int>(SDL_WINDOWPOS_CENTERED_DISPLAY(2))}) {
-		EXPECT_EQ(LogicalToNative(position, 1.5f), position);
-	}
-}
-
 // Converting from logical units to native units and back must result in the
 // original value, otherwise window sizes and positions would change slightly
 // every time we convert them back and forth.

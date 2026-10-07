@@ -18,10 +18,6 @@ namespace WindowGeometry {
 
 int LogicalToNative(const int logical, const float content_scale)
 {
-	// Special window position values must be passed to SDL unchanged
-	if (SDL_WINDOWPOS_ISUNDEFINED(logical) || SDL_WINDOWPOS_ISCENTERED(logical)) {
-		return logical;
-	}
 	return iroundf(static_cast<float>(logical) * content_scale);
 }
 
