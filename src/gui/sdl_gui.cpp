@@ -88,7 +88,17 @@ SDL_Rect to_sdl_rect(const DosBox::Rect& r)
 // X11 (e.g., 2.0 at 200% scaling).
 static float get_content_scale()
 {
-	const auto scale = SDL_GetDisplayContentScale(sdl.display_number);
+	// Use the display the window is currently on rather than
+	// `sdl.display_number`. When the window is moved to a display with a
+	// different content scale, we might process its move and resize events
+	// before SDL_EVENT_WINDOW_DISPLAY_CHANGED updates `sdl.display_number`.
+	const auto window_display = sdl.window ? SDL_GetDisplayForWindow(sdl.window)
+	                                       : 0;
+
+	const auto display = (window_display != 0) ? window_display
+	                                           : sdl.display_number;
+
+	const auto scale = SDL_GetDisplayContentScale(display);
 	return (scale > 0.0f) ? scale : 1.0f;
 }
 
