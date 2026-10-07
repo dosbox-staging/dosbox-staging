@@ -711,7 +711,9 @@ static void enter_fullscreen()
 
 		SDL_SetWindowBordered(sdl.window, false);
 		SDL_SetWindowResizable(sdl.window, false);
-		if (!SDL_SetWindowPosition(sdl.window, 0, 0)) {
+		if (!SDL_SetWindowPosition(sdl.window,
+		                           display_bounds.x,
+		                           display_bounds.y)) {
 			LOG_WARNING("SDL: Failed to set window position: %s", SDL_GetError());
 		}
 
