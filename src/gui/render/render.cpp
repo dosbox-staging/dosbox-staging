@@ -19,6 +19,7 @@
 #include "config/setup.h"
 #include "gui/common.h"
 #include "gui/mapper.h"
+#include "gui/private/window_geometry.h"
 #include "gui/render/render.h"
 #include "gui/render/render_backend.h"
 #include "hardware/video/vga.h"
@@ -1102,20 +1103,26 @@ static std::optional<ViewportSettings> parse_fit_viewport_modes(const std::strin
 		viewport.mode = ViewportMode::Fit;
 		return viewport;
 
-	} else if (const auto width_and_height = parse_int_dimensions(pref)) {
-		const auto [w, h] = *width_and_height;
+	} else if (const auto size = WindowGeometry::ParseWindowSizeSetting(pref);
+	           size && size->unit != WindowGeometry::Unit::Percentage) {
+
+		const auto is_pixels = (size->unit == WindowGeometry::Unit::Pixels);
+
+		const DosBox::Rect limit = {size->w, size->h};
 
 		const auto desktop = GFX_GetDesktopSize();
+		const auto bounds  = is_pixels ? GFX_LogicalToPixels(desktop)
+		                               : desktop;
 
-		const bool is_out_of_bounds = (w <= 0 ||
-		                               static_cast<float>(w) > desktop.w ||
-		                               h <= 0 ||
-		                               static_cast<float>(h) > desktop.h);
+		// Non-positive sizes are rejected by the parser
+		const bool is_out_of_bounds = (limit.w > bounds.w ||
+		                               limit.h > bounds.h);
 		if (is_out_of_bounds) {
 			const auto extra_info = format_str(
-			        "Viewport size is outside of the %dx%d desktop bounds",
-			        iroundf(desktop.w),
-			        iroundf(desktop.h));
+			        "Viewport size is outside of the %dx%d%s desktop bounds",
+			        iroundf(bounds.w),
+			        iroundf(bounds.h),
+			        is_pixels ? "px" : "");
 
 			log_invalid_viewport_setting_warning(pref, extra_info);
 			return {};
@@ -1124,17 +1131,24 @@ static std::optional<ViewportSettings> parse_fit_viewport_modes(const std::strin
 		ViewportSettings viewport = {};
 		viewport.mode             = ViewportMode::Fit;
 
-		const DosBox::Rect limit = {w, h};
-		viewport.fit.limit_size  = limit;
+		if (is_pixels) {
+			viewport.fit.limit_size_px = limit;
 
-		const auto limit_px = GFX_LogicalToPixels(limit);
+			LOG_MSG("DISPLAY: Limiting viewport size to %dx%d pixels",
+			        iroundf(limit.w),
+			        iroundf(limit.h));
+		} else {
+			viewport.fit.limit_size = limit;
 
-		LOG_MSG("DISPLAY: Limiting viewport size to %dx%d logical units "
-		        "(%dx%d pixels)",
-		        iroundf(limit.w),
-		        iroundf(limit.h),
-		        iroundf(limit_px.w),
-		        iroundf(limit_px.h));
+			const auto limit_px = GFX_LogicalToPixels(limit);
+
+			LOG_MSG("DISPLAY: Limiting viewport size to %dx%d logical units "
+			        "(%dx%d pixels)",
+			        iroundf(limit.w),
+			        iroundf(limit.h),
+			        iroundf(limit_px.w),
+			        iroundf(limit_px.h));
+		}
 
 		return viewport;
 
@@ -1418,6 +1432,9 @@ DosBox::Rect RENDER_CalcRestrictedViewportSizeInPixels(const DosBox::Rect& canva
 			if (render.viewport_settings.fit.limit_size) {
 				return GFX_LogicalToPixels(
 				        *render.viewport_settings.fit.limit_size);
+
+			} else if (render.viewport_settings.fit.limit_size_px) {
+				return *render.viewport_settings.fit.limit_size_px;
 
 			} else if (render.viewport_settings.fit.desktop_scale) {
 				return GFX_LogicalToPixels(GFX_GetDesktopSize())
