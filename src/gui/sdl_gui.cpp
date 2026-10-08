@@ -2113,7 +2113,14 @@ static void handle_desktop_mode_changed(const SDL_DisplayEvent& event)
 {
 	// Percentage viewport sizes depend on the desktop size
 	if (event.displayID == get_current_display()) {
-		update_viewport_and_reset_screen();
+		if (sdl.windowed.size_unit == WindowGeometry::Unit::Percentage) {
+			configure_window_size();
+			apply_windowed_size();
+		}
+		if (sdl.windowed.position_unit == WindowGeometry::Unit::Percentage) {
+			configure_window_position();
+			apply_windowed_position();
+		}
 	}
 }
 
