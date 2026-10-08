@@ -27,6 +27,7 @@ steps.
 | `windows.yml`               | Windows x64 release builds and installer packaging
 | `macos.yml`                 | macOS universal (x86_64 + arm64) builds and DMG packaging
 | `linux.yml`                 | Linux builds (multiple compiler combos) and release tarball
+| `publish-dev-build.yml`     | Publish dev builds from `main` under the `dev-latest` tag
 
 ## Website/documentation workflows
 
@@ -38,7 +39,6 @@ details the automatic website/documentation deploys.
 | Workflow                    | Purpose
 | ---                         | ---
 | `deploy-website*.yml`       | Website + preview deploys -- see [`workflows/deploy-website.md`](workflows/deploy-website.md)
-| `release-notes-preview.yml` | Generates release notes for upcoming versions
 
 ## Composite actions
 
@@ -50,15 +50,16 @@ We have a couple of reusable of composite actions in `.github/actions/`:
 - `set-common-vars/` -- exports shared env vars (versions of external
   artifact bundles, etc.)
 
-- `generate-release-notes/` -- generates the release notes used by the
-  release notes workflow
+- `generate-release-notes/` -- generate HTML release notes for inclusion in
+  build artifacts
 
 - `retry/` -- runs a shell command with retries and linear backoff;
   used where the command has no native retry flag (e.g. `apt-get`)
 
 - `report-dev-build-status/` -- reports a platform's release build result as
-  a `dev-build/<platform>` [commit status](https://docs.github.com/en/rest/commits/statuses?apiVersion=2026-03-10#create-a-commit-status); `publish-dev-build.yml` publishes
-  the dev build once all three platforms report success
+  a `dev-build/<platform>` [commit status](https://docs.github.com/en/rest/commits/statuses?apiVersion=2026-03-10#create-a-commit-status);
+  `publish-dev-build.yml` publishes the dev build once all three platforms
+  report success
 
 ## External dependency surfaces
 
