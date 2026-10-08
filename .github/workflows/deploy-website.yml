@@ -96,49 +96,16 @@ jobs:
           REV=$(git rev-parse --short HEAD)
           echo "source_git_hash=$REV" >> "$GITHUB_ENV"
 
-      - name: Delete existing documentation
-        run: |
-          cd dosbox-staging.github.io
-          if [[ -d ${{ env.dest_path_prefix }} ]]; then
-              cd ${{ env.dest_path_prefix }}
-              FILES=$(find . \
-                  -not -path '*/\.*'        `# ignore hidden files` \
-                  -not -path "."            `# ignore current dir` \
-                  -not -path "./static"     `# ignore manually managed 'static' dir` \
-                  -not -path "./static/*"   `# ignore manually managed 'static' dir contents` \
-                  -not -path "./tools"      `# ignore manually managed 'tools' dir` \
-                  -not -path "./tools/*"    `# ignore manually managed 'tools' dir contents` \
-                  -not -path "./preview"    `# ignore 'preview' dir` \
-                  -not -path "./preview/*"  `# ignore 'preview' dir contents` \
-                  -not -path "./README.md"  `# ignore 'README.md'` \
-                  -not -path "./CNAME"      `# ignore 'CNAME'` \
-                  -not -path "./0.82"       `# ignore earlier documentation versions` \
-                  -not -path "./0.82/*"
-              )
-              echo $FILES | xargs git rm -rf --
-          fi
-
       # The privacy plugin downloads every external URL referenced in the
       # docs at build time; a transient 5xx from any source crashes the
-      # whole build. Retry the build itself; staging below cannot fail
-      # transiently and stays a plain `run:`.
+      # whole build. Retry the build itself.
       - name: Build documentation
         uses: ./.github/actions/retry
         with:
           cmd: |
-            cd dosbox-staging.github.io
             mkdocs build \
-              --config-file ../dosbox-staging/website/mkdocs.yml \
-              --site-dir $(pwd)/temp-out
-
-      - name: Stage built documentation
-        run: |
-          cd dosbox-staging.github.io
-          DEST_PATH=$(pwd)/${{ env.dest_path_prefix }}
-          mkdir -p "$DEST_PATH"
-          cp -rf temp-out/* "$DEST_PATH"
-          rm -rf temp-out
-          touch "$DEST_PATH/.nojekyll"
+              --config-file dosbox-staging/website/mkdocs.yml \
+              --site-dir "$RUNNER_TEMP/site"
 
       - name: Set up Git config
         run: |
@@ -146,35 +113,57 @@ jobs:
           git config user.name "GitHub Actions Bot"
           git config user.email "<>"
 
-      - name: Commit new release
-        id:   commit_release
-        run: |
-          cd dosbox-staging.github.io
-          git add .
-          git add .nojekyll
-
-          # Skip if the rebuilt site is byte-identical (e.g. a PR push that
-          # only changed non-website files but the PR overall touches
-          # website/**, so the workflow still fires).
-          if git diff --cached --quiet; then
-            echo "No changes to publish."
-            echo "publish=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-
-          git commit -m "Deployed current website (${{ env.source_git_hash }})"
-          echo "publish=true" >> "$GITHUB_OUTPUT"
-
-      # Retry on non-fast-forward: a cancelled sibling run (cancel-in-progress
-      # is not synchronous) may land its push between our checkout and ours.
+      # Other deploys and the PR preview cleanup push to the same repo. Each
+      # attempt redoes the update on top of the latest master, so if another
+      # push lands first, ours is rejected and the next attempt starts over.
       - name: Publish new release
-        if:   steps.commit_release.outputs.publish == 'true'
         uses: ./.github/actions/retry
         with:
           cmd: |
+            set -e
             cd dosbox-staging.github.io
-            git push
-          on-retry: |
-            cd dosbox-staging.github.io
-            git pull --rebase
+
+            git fetch origin master
+            git reset --hard FETCH_HEAD
+            git clean -fdx
+
+            if [[ -d ${{ env.dest_path_prefix }} ]]; then
+              (
+                cd ${{ env.dest_path_prefix }}
+                FILES=$(find . \
+                    -not -path '*/\.*'        `# ignore hidden files` \
+                    -not -path "."            `# ignore current dir` \
+                    -not -path "./static"     `# ignore manually managed 'static' dir` \
+                    -not -path "./static/*"   `# ignore manually managed 'static' dir contents` \
+                    -not -path "./tools"      `# ignore manually managed 'tools' dir` \
+                    -not -path "./tools/*"    `# ignore manually managed 'tools' dir contents` \
+                    -not -path "./preview"    `# ignore 'preview' dir` \
+                    -not -path "./preview/*"  `# ignore 'preview' dir contents` \
+                    -not -path "./README.md"  `# ignore 'README.md'` \
+                    -not -path "./CNAME"      `# ignore 'CNAME'` \
+                    -not -path "./0.82"       `# ignore earlier documentation versions` \
+                    -not -path "./0.82/*"
+                )
+                echo $FILES | xargs git rm -rf --
+              )
+            fi
+
+            DEST_PATH=$(pwd)/${{ env.dest_path_prefix }}
+            mkdir -p "$DEST_PATH"
+            cp -rf "$RUNNER_TEMP"/site/* "$DEST_PATH"
+            touch "$DEST_PATH/.nojekyll"
+
+            git add .
+            git add .nojekyll
+
+            # Skip if the rebuilt site is byte-identical (e.g. a PR push that
+            # only changed non-website files but the PR overall touches
+            # website/**, so the workflow still fires).
+            if git diff --cached --quiet; then
+              echo "No changes to publish."
+              exit 0
+            fi
+
+            git commit -m "Deployed current website (${{ env.source_git_hash }})"
+            git push origin HEAD:master
 
