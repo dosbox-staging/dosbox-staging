@@ -218,16 +218,6 @@ def setup_arg_parser(parser):
     p.add_argument("in_pull_requests_csv", help="input CSV file")
     p.add_argument("out_categorised_csv",  help="output categorised CSV file")
 
-    # summary.publish
-    # -----------------------------------------------------------------
-    p = subparsers.add_parser(
-        "summary.publish",
-        description="Publish (create or update) the release notes draft.",
-        formatter_class=fmt,
-    )
-    p.add_argument("in_markdown",          help="input Markdown file")
-    p.add_argument("publish_version_tag",  help="version tag (e.g. v0.83.0-alpha)")
-
     # website.query
     # -----------------------------------------------------------------
     p = subparsers.add_parser(
@@ -302,40 +292,6 @@ def make_repository_query(body):
         }
       }
     """
-
-def get_latest_public_release():
-    query = make_repository_query("""
-          latestRelease {
-            name
-            createdAt
-            publishedAt
-          }
-    """)
-    response = execute_query(query)
-    return response["data"]["repository"]["latestRelease"]
-
-
-def get_prerelease_id_by_tag(tag):
-    query = make_repository_query("""
-      releases(first: 50, orderBy: {field: CREATED_AT, direction: DESC}) {
-        edges {
-          node {
-            databaseId
-            tagName
-            isPrerelease
-          }
-        }
-      }""")
-
-    releases = execute_query(query)
-
-    for edge in releases["data"]["repository"]["releases"]["edges"]:
-        item = edge["node"]
-        if item["isPrerelease"] and item["tagName"] == tag:
-            return item["databaseId"]
-
-    return None
-
 
 def get_pull_requests(start, end, cursor=None, include_body=False):
     after = f'"{cursor}"' if cursor else "null"
@@ -677,48 +633,6 @@ def make_upsert_release_payload(tag, name, description):
     })
 
 
-def update_release(release_id, tag, name, description):
-    url = f"{RELEASES_BASE_URL}/{release_id}"
-    data = make_upsert_release_payload(tag, name, description)
-
-    r = requests.patch(url, headers=create_headers(), data=data,
-                       timeout=HTTP_TIMEOUT_SEC)
-
-    if r.status_code != 200:
-        print_api_error(data, r)
-        sys.exit(1)
-
-    return json.loads(r.text)
-
-
-def create_release(tag, name, description):
-    url = RELEASES_BASE_URL
-    data = make_upsert_release_payload(tag, name, description)
-
-    r = requests.post(url, headers=create_headers(), data=data,
-                      timeout=HTTP_TIMEOUT_SEC)
-
-    if r.status_code != 201:
-        print_api_error(data, r)
-        sys.exit(1)
-
-    return json.loads(r.text)
-
-
-def summary_publish_prerelease(markdown_file, tag):
-    release_id = get_prerelease_id_by_tag(tag)
-
-    with open(markdown_file, encoding="UTF-8") as f:
-        description = f.read()
-
-    name = f"{tag} release notes preview"
-
-    if release_id:
-        update_release(release_id, tag, name, description)
-    else:
-        create_release(tag, name, description)
-
-
 def website_query_pull_requests(json_fname, start_time):
     items = fetch_all_pull_requests_since(start_time, include_body=True)
     write_json(items, json_fname)
@@ -932,7 +846,7 @@ def main():
 
     actions_requiring_token = [
         "summary.query", "summary.process_markdown", "summary.process_html",
-        "summary.process_csv", "summary.publish", "website.query"
+        "summary.process_csv", "website.query"
     ]
 
     global GITHUB_ACCESS_TOKEN
@@ -965,10 +879,6 @@ def main():
             items = read_csv(args.in_pull_requests_csv)
             summary_process_pull_requests_csv(items,
                                               args.out_categorised_csv)
-
-        case "summary.publish":
-            summary_publish_prerelease(args.in_markdown,
-                                       args.publish_version_tag)
 
         case "website.query":
             start_time = args.start_time or get_default_start_time()
