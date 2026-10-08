@@ -43,7 +43,7 @@ The workflow has two inputs:
   - If non-empty, deploys with the `preview/<prefix>/` to the preview website
     available at https://www.dosbos.staging.org/preview/<prefix>/
 
-When deploying to root, the deletion step explicitly preserves `./preview/*`,
+When deploying to root, the publish step explicitly preserves `./preview/*`,
 `./static`, `./tools`, and older version dirs like `./0.82`. That keeps
 release deploys from clobbering preview content.
 
@@ -71,7 +71,7 @@ number.
 
 ## Concurrency
 
-All four workflows use `cancel-in-progress: true` and the following
+The three wrapper workflows use `cancel-in-progress: true` and the following
 concurrency groups:
 
 - `deploy-website-preview-main` --- main auto-deploy and its manual trigger.
@@ -79,10 +79,19 @@ concurrency groups:
   cleanup. A `closed` event therefore cancels any in-flight deploy for the
   same PR.
 
-Because cancel-in-progress is not strictly synchronous (a cancelled step may
-still complete), the deploy and cleanup workflows both wrap their final `git
-push` in a bounded `pull --rebase` & retry loop. If a cancelled sibling lands
-its push first, the next one rebases and tries again.
+Manual `deploy-website.yml` runs are not in any group.
+
+Runs in different groups can still push to the Pages repo at the same time.
+For example, merging a website PR starts both the `main` preview deploy and
+the PR cleanup, and a live deploy can overlap with either. Cancellation is not
+synchronous either, so a cancelled run may still land a push that was already
+in flight.
+
+Because of this, the deploy and cleanup workflows publish in a bounded retry
+loop. Each attempt fetches the latest `master`, resets to it, redoes its
+change (replacing the destination directory, or removing the preview),
+commits, and pushes. If another push lands first, ours is rejected, and the
+next attempt starts over from the new `master`.
 
 ## Retrying a failed run
 
