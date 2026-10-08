@@ -2131,8 +2131,17 @@ static void notify_sdl_setting_updated(SectionProp& section,
 
 static void handle_desktop_mode_changed(const SDL_DisplayEvent& event)
 {
-	// Percentage viewport sizes depend on the desktop size
+	// Percentage window sizes, window positions, and viewport sizes depend
+	// on the desktop size
 	if (event.displayID == get_current_display()) {
+		if (sdl.windowed.size_unit == WindowGeometry::Unit::Percentage) {
+			configure_window_size();
+			apply_windowed_size();
+		}
+		if (sdl.windowed.position_unit == WindowGeometry::Unit::Percentage) {
+			configure_window_position();
+			apply_windowed_position();
+		}
 		update_viewport_and_reset_screen();
 	}
 }
