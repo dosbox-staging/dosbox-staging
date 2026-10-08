@@ -27,9 +27,6 @@ release process. It supports the following workflows:
   - <f>vcpkg.json</>
       "version" field
 
-  - <f>.github/workflows/release-notes-preview.yml</>
-      <c>PRE_RELEASE_TAG</> environment variable
-
   - <f>.github/ISSUE_TEMPLATE/bug_report.yml</>
   - <f>.github/ISSUE_TEMPLATE/feature_request.yml</>
   - <f>.github/ISSUE_TEMPLATE/question.yml</>
@@ -44,9 +41,6 @@ release process. It supports the following workflows:
   - <f>.github/actions/set-common-vars/action.yml</> (<c>VCPKG_EXT_DEPS_VERSION</>)
       External dependency version with its own iteration counter (e.g.,
       v0.83.0-4). Incremented independently when vcpkg deps change.
-
-  - <f>.github/workflows/release-notes-preview.yml</> (<c>RELEASE_START_TIME</>)
-      Must be set manually to the previous release's publish timestamp.
 
   - <f>.github/workflows/deploy-website.yml</> (release branch)
       Updated manually when creating a new release branch.
@@ -117,7 +111,6 @@ REPO_ROOT = Path(__file__).parent.parent.parent
 # Files to update
 CMAKE_FILE = REPO_ROOT / "CMakeLists.txt"
 VCPKG_FILE = REPO_ROOT / "vcpkg.json"
-RELEASE_NOTES_WORKFLOW = REPO_ROOT / ".github/workflows/release-notes-preview.yml"
 ISSUE_TEMPLATES = [
     REPO_ROOT / ".github/ISSUE_TEMPLATE/bug_report.yml",
     REPO_ROOT / ".github/ISSUE_TEMPLATE/feature_request.yml",
@@ -275,22 +268,6 @@ def update_vcpkg_json(full_version, dry_run=False):
     return False
 
 
-def update_release_notes_workflow(full_version, dry_run=False):
-    """Update PRE_RELEASE_TAG in release-notes-preview.yml."""
-    content = read_file(RELEASE_NOTES_WORKFLOW)
-
-    new_content = re.sub(
-        r'(PRE_RELEASE_TAG:\s*)\S+',
-        rf'\g<1>{full_version}',
-        content
-    )
-
-    if new_content != content:
-        write_file(RELEASE_NOTES_WORKFLOW, new_content, dry_run)
-        return True
-    return False
-
-
 def update_issue_templates(full_version, dry_run=False):
     """Update version placeholder in issue templates."""
     updated = False
@@ -364,13 +341,6 @@ def extract_version_from_vcpkg():
     return match.group(1) if match else ""
 
 
-def extract_version_from_workflow():
-    """Extract current version from release-notes-preview.yml."""
-    content = read_file(RELEASE_NOTES_WORKFLOW)
-    match = re.search(r'PRE_RELEASE_TAG:\s*(\S+)', content)
-    return match.group(1) if match else ""
-
-
 def extract_version_from_issue_template():
     """Extract current version from first issue template."""
     if not ISSUE_TEMPLATES[0].exists():
@@ -386,16 +356,14 @@ def check_versions():
     cmake_full = f"{base_version}{suffix}" if base_version else "NOT FOUND"
 
     vcpkg_version = extract_version_from_vcpkg()
-    workflow_version = extract_version_from_workflow()
     template_version = extract_version_from_issue_template()
 
     print("Current versions:")
     print(f"  {filepath('CMakeLists.txt')}:              {cmake_full}")
     print(f"  {filepath('vcpkg.json')}:                  {vcpkg_version}")
-    print(f"  {filepath('release-notes-preview.yml')}:   {workflow_version}")
     print(f"  {filepath('Issue templates')}:             {template_version}")
 
-    all_versions = [cmake_full, vcpkg_version, workflow_version, template_version]
+    all_versions = [cmake_full, vcpkg_version, template_version]
     all_versions = [v for v in all_versions if v and v != "NOT FOUND"]
 
     if all_versions and len(set(all_versions)) == 1:
@@ -426,7 +394,6 @@ def main():
     # Update all files
     update_cmake(base_version, suffix, args.dry_run)
     update_vcpkg_json(full_version, args.dry_run)
-    update_release_notes_workflow(full_version, args.dry_run)
     update_issue_templates(full_version, args.dry_run)
 
     # Optionally add metainfo release entry
@@ -437,9 +404,6 @@ def main():
     print()
     header = colorize("Files not updated", Colors.YELLOW, Colors.BOLD)
     print(f"{header} (require manual intervention):")
-
-    print(f"  - {const('RELEASE_START_TIME')} in "
-          f"{filepath(RELEASE_NOTES_WORKFLOW.relative_to(REPO_ROOT))}")
 
     print(f"  - {const('VCPKG_EXT_DEPS_VERSION')} in "
           f"{filepath('.github/actions/set-common-vars/action.yml')}")
