@@ -37,6 +37,14 @@ jobs:
       PR_NUMBER: ${{ github.event.pull_request.number || github.event.inputs.pr_number }}
 
     steps:
+      # Local actions are loaded from the workspace, so this repo's actions
+      # are checked out at its root and the Pages repo nests inside it.
+      - name: Check out the repository's actions
+        uses: actions/checkout@v7
+        with:
+          sparse-checkout: .github/actions
+          submodules: false
+
       - name: Check out Pages repo
         uses: actions/checkout@v7
         with:
@@ -44,9 +52,11 @@ jobs:
           repository: dosbox-staging/dosbox-staging.github.io
           ref: master
           submodules: false
+          path: dosbox-staging.github.io
 
       - name: Remove preview if present
         run: |
+          cd dosbox-staging.github.io
           PREVIEW_DIR="preview/pr-${PR_NUMBER}"
 
           if [[ -d "$PREVIEW_DIR" ]]; then
@@ -66,8 +76,12 @@ jobs:
         if:   env.cleaned == 'true'
         uses: ./.github/actions/retry
         with:
-          cmd: git push
-          on-retry: git pull --rebase
+          cmd: |
+            cd dosbox-staging.github.io
+            git push
+          on-retry: |
+            cd dosbox-staging.github.io
+            git pull --rebase
 
       - name: Update sticky comment
         if: env.cleaned == 'true'
