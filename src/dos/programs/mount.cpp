@@ -772,6 +772,31 @@ MOUNT::GeometryOptions MOUNT::ParseGeometryOptions()
 	        .chs      = find_remove_option_value(*cmd, "-chs")};
 }
 
+static bool safe_atoi(char *buf, uint16_t *dst)
+{
+	int val = 0;
+	char *c = buf;
+
+	if (!*buf)
+		return false;
+
+	if (strlen(buf) > 6)
+		return false;
+
+	while (*c) {
+		if (!isdigit(static_cast<unsigned char>(*c++)))
+			return false;
+	}
+
+	val = atoi(buf);
+
+	if (val < 0 || val > 65535)
+		return false;
+
+	*dst = static_cast<uint16_t>(val);
+	return true;
+}
+
 // Sets:
 //   params.mediaid
 //   params.sizes
@@ -872,7 +897,13 @@ bool MOUNT::ParseGeometry(MountParameters& params, const GeometryOptions& option
 		while (*scan && index < 20 && count < 4) {
 			if (*scan == ',') {
 				number[index]         = 0;
-				params.sizes[count++] = atoi(number);
+				if (!safe_atoi(number, &params.sizes[count++]))
+				{
+					NOTIFY_DisplayWarning(Notification::Source::Console,
+							      "MOUNT",
+							      "PROGRAM_IMGMOUNT_CANT_CREATE");
+					return false;
+				}
 				index                 = 0;
 			} else {
 				number[index++] = *scan;
@@ -884,7 +915,13 @@ bool MOUNT::ParseGeometry(MountParameters& params, const GeometryOptions& option
 			// always goes correct as index is max 20 at this point.
 			number[index] = 0;
 
-			params.sizes[count] = atoi(number);
+			if (!safe_atoi(number, &params.sizes[count]))
+			{
+				NOTIFY_DisplayWarning(Notification::Source::Console,
+						      "MOUNT",
+						      "PROGRAM_IMGMOUNT_CANT_CREATE");
+				return false;
+			}
 		}
 	}
 
@@ -913,6 +950,15 @@ bool MOUNT::ParseGeometry(MountParameters& params, const GeometryOptions& option
 		params.sizes[1] = *sectors;
 		params.sizes[2] = *heads;
 		params.sizes[3] = *cylinders;
+	}
+
+	if ((params.type != MountType::CdRomImage ||
+	     params.fstype != MountFileSystemType::Iso) &&
+	    params.sizes[0] > 512) {
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "MOUNT",
+		                      "PROGRAM_IMGMOUNT_CANT_CREATE");
+		return false;
 	}
 
 	return true;
