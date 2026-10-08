@@ -371,6 +371,11 @@ bool MOUNT::MountImageFat(MountParameters& params)
 	                                  ? MSG_Get("MOUNT_TYPE_FAT_PLURAL")
 	                                  : MSG_Get("MOUNT_TYPE_FAT");
 
+	// Reflect any read-only flag the image itself imposed
+	if (fat_images.front()->IsReadOnly()) {
+		params.roflag = true;
+	}
+
 	WriteMountStatus(mount_message, params.paths, params.drive, params.roflag);
 
 	const auto fat_image = std::dynamic_pointer_cast<fatDrive>(
@@ -519,14 +524,51 @@ bool MOUNT::MountImageRaw(MountParameters& params)
 
 	const auto drv_idx = params.drive - '0';
 
-	imageDiskList.at(drv_idx) = std::make_shared<imageDisk>(
-	        new_disk, params.paths[0].c_str(), imagesize, is_hdd);
+	imageDiskList.at(drv_idx) = CreateImageDisk(new_disk,
+	                                            params.paths[0].c_str(),
+	                                            imagesize,
+	                                            is_hdd);
+
+	// A floppy whose format failed to parse never becomes active and has
+	// no geometry. Reject it here instead of leaving a dead disk in the
+	// list. Hard disks are still inactive at this point; SetGeometry below
+	// is what activates them.
+	if (!is_hdd && !imageDiskList.at(drv_idx)->active) {
+		// Ownership of 'new_disk' went to the ImageDisk, so clearing
+		// the slot also closes the file.
+		imageDiskList.at(drv_idx) = nullptr;
+
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "MOUNT",
+		                      "PROGRAM_IMGMOUNT_CANT_CREATE");
+		return false;
+	}
+
+	// Image formats that cannot be written back, such as TeleDisk images,
+	// are forced to mount read-only even if the user didn't specify it
+	if (imageDiskList.at(drv_idx)->is_readonly) {
+		params.roflag = true;
+	}
 
 	if (is_hdd) {
-		imageDiskList.at(drv_idx)->Set_Geometry(params.sizes[2],
-		                                        params.sizes[3],
-		                                        params.sizes[1],
-		                                        params.sizes[0]);
+		imageDiskList.at(drv_idx)->SetGeometry(params.sizes[2],
+		                                       params.sizes[3],
+		                                       params.sizes[1],
+		                                       params.sizes[0]);
+	}
+
+	// The INT 13h sector buffer and the boot sector read are both
+	// 512 bytes. Match fatDrive, which refuses any other sector size
+	// rather than handing ReadSector a buffer it would overflow.
+	if (imageDiskList.at(drv_idx)->getSectSize() != 512) {
+		LOG_WARNING("DOS: MOUNT - Non-standard sector size detected: %u bytes per sector",
+		            imageDiskList.at(drv_idx)->getSectSize());
+		imageDiskList.at(drv_idx) = nullptr;
+
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "MOUNT",
+		                      "PROGRAM_IMGMOUNT_CANT_CREATE");
+		return false;
 	}
 
 	if ((params.drive == '2' || params.drive == '3') && is_hdd) {
@@ -1221,7 +1263,8 @@ void MOUNT::ProcessPaths(const std::string first_path, MountParameters& params,
 
 					} else if (ext == "vfd" || ext == "flp" ||
 					           ext == "360" || ext == "720" ||
-					           ext == "1200" || ext == "1440") {
+					           ext == "1200" || ext == "1440" ||
+					           ext == "td0") {
 						params.type = MountType::FloppyImage;
 
 					} else if (ext == "img" ||

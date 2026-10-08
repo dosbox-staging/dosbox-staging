@@ -31,7 +31,7 @@ bool filename_not_8x3(const char *n);
 bool filename_not_strict_8x3(const char *n);
 char *VFILE_Generate_8x3(const char *name, const unsigned int onpos);
 
-class imageDisk; // forward declare
+class ImageDisk; // forward declare
 
 class DriveManager {
 public:
@@ -225,7 +225,7 @@ public:
 	uint32_t getFirstFreeClust(void);
 	bool directoryBrowse(uint32_t dirClustNumber, direntry *useEntry, int32_t entNum, int32_t start=0);
 	bool directoryChange(uint32_t dirClustNumber, direntry *useEntry, int32_t entNum);
-	std::shared_ptr<imageDisk> loadedDisk;
+	std::shared_ptr<ImageDisk> loadedDisk;
 	bool created_successfully;
 	uint32_t partSectOff;
 
