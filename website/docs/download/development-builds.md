@@ -112,20 +112,6 @@ function set_build_date(asset, os_name) {
   get_build_date_el(os_name).textContent = date_string_utc
 }
 
-function set_release_notes_link(html_url) {
-  const el = document.getElementById("dev-build-notes")
-
-  const link = document.createElement("a")
-  link.textContent = "Release notes"
-  link.setAttribute("href", html_url)
-
-  const small = document.createElement("small")
-  small.appendChild(link)
-
-  el.innerHTML = ""
-  el.appendChild(small)
-}
-
 async function set_dev_builds() {
   try {
     const release = await fetch_json(
@@ -155,8 +141,6 @@ async function set_dev_builds() {
 
       get_build_version_el(build.os_name).textContent = version
     })
-
-    set_release_notes_link(release.html_url)
 
   } catch (err) {
     console.warn("Fetch error", err)
@@ -192,8 +176,11 @@ document.addEventListener("DOMContentLoaded", set_dev_builds)
     needed to download them.
 
     We publish a new dev snapshot build whenever a PR is merged, as long as
-    the Windows, macOS, and Linux builds all succeed for it. Make sure to
-    check out the automatically generated **release notes**, which list all
+    the Windows, macOS, and Linux builds all succeed for it.
+
+    Make sure to check out the automatically generated [release
+    notes](https://github.com/dosbox-staging/dosbox-staging/releases/tag/dev-latest)
+    (also included in the release artifacts in HTML format), which list all
     the changes since the last stable release, with links to the individual
     PRs on GitHub.
 
@@ -241,9 +228,8 @@ document.addEventListener("DOMContentLoaded", set_dev_builds)
 </table>
 </div>
 
-<div id="dev-build-notes">
-<img style="margin:auto;margin-left:0.1em;" src="../images/dots.svg">
-</div>
+You can read the release notes for the latest development build
+[here](https://github.com/dosbox-staging/dosbox-staging/releases/tag/dev-latest).
 
 
 ## Installation notes
