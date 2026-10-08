@@ -3,6 +3,8 @@
 
 #include "private/shader.h"
 
+#include <array>
+
 #if C_OPENGL
 
 // Build a OpenGL shader program.
@@ -91,44 +93,66 @@ bool Shader::BuildShaderProgram(const std::string& shader_source)
 std::optional<GLuint> Shader::BuildShader(const GLenum type,
                                           const std::string& shader_source) const
 {
-	GLuint shader            = 0;
-	GLint is_shader_compiled = 0;
-
 	assert(!shader_source.empty());
 
-	const char* shader_src     = shader_source.c_str();
-	const char* src_strings[2] = {nullptr, nullptr};
-	std::string top;
+	constexpr std::string_view VersionTag = "#version ";
+	constexpr std::string_view Newline    = "\n";
 
-	// Look for "#version" because it has to occur first
-	if (const char* ver = strstr(shader_src, "#version "); ver) {
+	std::string_view body = shader_source;
 
-		const char* endline = strchr(ver + 9, '\n');
-		if (endline) {
-			top.assign(shader_src, endline - shader_src + 1);
-			shader_src = endline + 1;
+	// Empty, but still pointing into the source (a default-constructed
+	// string_view has a null data pointer)
+	auto preamble = body.substr(0, 0);
+
+	// "#version" has to come first, so split the source after its line
+	if (const auto version_pos = body.find(VersionTag);
+	    version_pos != std::string_view::npos) {
+
+		if (const auto eol = body.find(Newline,
+		                               version_pos + VersionTag.size());
+		    eol != std::string_view::npos) {
+
+			const auto body_start = eol + Newline.size();
+
+			preamble = body.substr(0, body_start);
+			body.remove_prefix(body_start);
 		}
 	}
 
-	top += (type == GL_VERTEX_SHADER) ? "#define VERTEX 1\n"
-	                                  : "#define FRAGMENT 1\n";
+	constexpr std::string_view VertexDefine   = "#define VERTEX 1\n";
+	constexpr std::string_view FragmentDefine = "#define FRAGMENT 1\n";
 
-	src_strings[0] = top.c_str();
-	src_strings[1] = shader_src;
+	const std::string_view define = (type == GL_VERTEX_SHADER)
+	                                      ? VertexDefine
+	                                      : FragmentDefine;
 
-	// Create the shader object
-	shader = glCreateShader(type);
+	constexpr size_t NumParts = 3;
+	const std::array<std::string_view, NumParts> parts = {preamble, define, body};
+
+	std::array<const GLchar*, NumParts> sources = {};
+	std::array<GLint, NumParts> lengths         = {};
+
+	for (size_t i = 0; i < parts.size(); ++i) {
+		sources[i] = parts[i].data();
+		lengths[i] = check_cast<GLint>(parts[i].size());
+	}
+
+	const auto shader = glCreateShader(type);
 	if (shader == 0) {
 		return {};
 	}
 
-	// Load the shader source
-	glShaderSource(shader, 2, src_strings, nullptr);
+	glShaderSource(shader,
+	               check_cast<GLsizei>(parts.size()),
+	               sources.data(),
+	               lengths.data());
 
 	// Compile the shader
 	glCompileShader(shader);
 
 	// Check the compile status
+	GLint is_shader_compiled = 0;
+
 	glGetShaderiv(shader, GL_COMPILE_STATUS, &is_shader_compiled);
 
 	// The info log might contain warnings and info messages even if the
