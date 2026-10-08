@@ -127,7 +127,7 @@ jobs:
           github-token:    ${{ secrets.GITHUB_TOKEN }}
           run-id:          ${{ needs.check.outputs.windows_run_id }}
           name:            dosbox-staging-windows-x64-${{ env.DOSBOX_VERSION_AND_HASH }}
-          path:            windows-portable
+          path:            dist
           skip-decompress: true
 
       - name: Download Windows installer
@@ -136,12 +136,7 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id:       ${{ needs.check.outputs.windows_run_id }}
           name:         dosbox-staging-windows-x64-${{ env.DOSBOX_VERSION_AND_HASH }}-setup
-          path:         windows-setup
-
-      - name: Assemble release assets
-        run: |
-          mv windows-portable/* "dist/dosbox-staging-windows-x64-$DOSBOX_VERSION_AND_HASH.zip"
-          mv "windows-setup/dosbox-staging-windows-x64-$DOSBOX_VERSION_AND_HASH-setup.exe" dist/
+          path:         dist
 
       - name: Generate release notes
         uses: ./.github/actions/retry
