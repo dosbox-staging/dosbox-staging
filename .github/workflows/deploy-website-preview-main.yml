@@ -1,0 +1,21 @@
+name: Deploy website preview (main)
+permissions: read-all
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'website/**'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-website-preview-main
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    uses: ./.github/workflows/deploy-website.yml
+    with:
+      source_branch: main
+      destination_prefix: main
+    secrets: inherit
