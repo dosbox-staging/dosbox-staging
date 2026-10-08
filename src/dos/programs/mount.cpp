@@ -556,6 +556,20 @@ bool MOUNT::MountImageRaw(MountParameters& params)
 		                                       params.sizes[0]);
 	}
 
+	// The INT 13h sector buffer and the boot sector read are both
+	// 512 bytes. Match fatDrive, which refuses any other sector size
+	// rather than handing ReadSector a buffer it would overflow.
+	if (imageDiskList.at(drv_idx)->getSectSize() != 512) {
+		LOG_WARNING("DOS: MOUNT - Non-standard sector size detected: %u bytes per sector",
+		            imageDiskList.at(drv_idx)->getSectSize());
+		imageDiskList.at(drv_idx) = nullptr;
+
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "MOUNT",
+		                      "PROGRAM_IMGMOUNT_CANT_CREATE");
+		return false;
+	}
+
 	if ((params.drive == '2' || params.drive == '3') && is_hdd) {
 		updateDPT();
 	}

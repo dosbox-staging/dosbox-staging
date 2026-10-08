@@ -273,6 +273,15 @@ void BOOT::Run(void)
 		return;
 	}
 
+	// bootSector is a 512-byte buffer. Refuse a disk whose sectors
+	// would overflow it.
+	if (imageDiskList.at(drive_index(drive))->getSectSize() != 512) {
+		LOG_WARNING("BOOT: Non-standard sector size: %u bytes per sector",
+		            imageDiskList.at(drive_index(drive))->getSectSize());
+		WriteOut(MSG_Get("PROGRAM_BOOT_UNABLE"), drive);
+		return;
+	}
+
 	bootSector bootarea;
 	imageDiskList.at(drive_index(drive))
 	        ->ReadSector(0, 0, 1, reinterpret_cast<uint8_t*>(&bootarea));

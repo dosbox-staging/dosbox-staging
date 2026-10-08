@@ -583,6 +583,16 @@ ImageDiskTeledisk::ImageDiskTeledisk(FILE *img_file, const char *img_name)
 		}
 	}
 
+	// The INT 13h sector buffer and the boot sector read are both
+	// 512 bytes. Until ReadSector takes a buffer size, refuse a
+	// TeleDisk whose sectors would overflow them. This covers the
+	// standard-geometry probe and the fallback above, which
+	// otherwise accepts sector sizes up to 8192 bytes.
+	if (found_disk && sector_size != 512) {
+		LOG_WARNING("TD0: Unsupported sector size %u bytes", sector_size);
+		return;
+	}
+
 	LOG_MSG("TD0: Geometry C/H/S %u/%u/%u, %u bytes per sector, %u entries",
 	        cylinders,
 	        heads,
