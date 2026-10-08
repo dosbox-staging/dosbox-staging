@@ -37,6 +37,15 @@ jobs:
     if: ${{ always() && (needs.linting.result == 'success' || needs.linting.result == 'skipped') }}
     runs-on: ubuntu-slim
     steps:
+      # Local actions are loaded from the workspace. The MkDocs sources can be
+      # an older branch without them, so they come from the workflow's own
+      # commit. This checkout must come first, as the others nest inside it.
+      - name: Check out the repository's actions
+        uses: actions/checkout@v7
+        with:
+          sparse-checkout: .github/actions
+          submodules: false
+
       - name: Check out MkDocs sources
         uses: actions/checkout@v7
         with:
@@ -114,7 +123,7 @@ jobs:
       # whole build. Retry the build itself; staging below cannot fail
       # transiently and stays a plain `run:`.
       - name: Build documentation
-        uses: ./dosbox-staging/.github/actions/retry
+        uses: ./.github/actions/retry
         with:
           cmd: |
             cd dosbox-staging.github.io
@@ -160,7 +169,7 @@ jobs:
       # is not synchronous) may land its push between our checkout and ours.
       - name: Publish new release
         if:   steps.commit_release.outputs.publish == 'true'
-        uses: ./dosbox-staging/.github/actions/retry
+        uses: ./.github/actions/retry
         with:
           cmd: |
             cd dosbox-staging.github.io
