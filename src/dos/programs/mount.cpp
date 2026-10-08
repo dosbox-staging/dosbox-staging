@@ -915,6 +915,13 @@ bool MOUNT::ParseGeometry(MountParameters& params, const GeometryOptions& option
 		params.sizes[3] = *cylinders;
 	}
 
+	if (params.sizes[0] > 512) {
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "MOUNT",
+		                      "PROGRAM_IMGMOUNT_CANT_CREATE");
+		return false;
+	}
+
 	return true;
 }
 
