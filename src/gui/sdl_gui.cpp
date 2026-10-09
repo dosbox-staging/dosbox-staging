@@ -2270,15 +2270,6 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		//
 		GFX_ResetScreen();
 
-#if C_OPENGL && defined(MACOSX)
-		// TODO check if this workaround is still needed
-
-		log_window_event("SDL: Reset macOS's GL viewport after window-restore");
-
-		if (sdl.render_backend_type == RenderBackendType::OpenGl) {
-			update_viewport();
-		}
-#endif
 		focus_input();
 
 		constexpr auto FocusGained = false;
