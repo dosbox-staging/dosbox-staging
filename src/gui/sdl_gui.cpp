@@ -2353,16 +2353,6 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 
 		log_window_event("SDL: Window has been moved to %d, %d", x, y);
 
-#if C_OPENGL && defined(MACOSX)
-		// TODO This workaround is still needed on macOS 15.6. We'll be
-		// able to remove it once we always set the viewport to covert
-		// the full window (supporting overlay images and the OSD will
-		// necessitate this).
-		//
-		if (sdl.render_backend_type == RenderBackendType::OpenGl) {
-			update_viewport();
-		}
-#endif
 		handle_window_moved(x, y);
 		return true;
 	}
