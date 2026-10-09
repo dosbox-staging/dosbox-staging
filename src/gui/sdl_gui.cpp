@@ -112,6 +112,12 @@ static float get_content_scale()
 	return (scale > 0.0f) ? scale : 1.0f;
 }
 
+static float get_window_display_scale()
+{
+	const auto result = SDL_GetWindowDisplayScale(sdl.window);
+	return (result == 0.0f) ? 1.0f : result;
+}
+
 static int to_native(const int logical)
 {
 	return WindowGeometry::LogicalToNative(logical, get_content_scale());
@@ -674,15 +680,55 @@ static void set_window_decorations()
 	}
 }
 
+// Returns the index of the display as used by the `display` setting
+static std::optional<int> get_display_index(const SDL_DisplayID display)
+{
+	int num_displays    = 0;
+	const auto displays = SDL_GetDisplays(&num_displays);
+	if (!displays) {
+		return {};
+	}
+
+	std::optional<int> index = {};
+	for (auto i = 0; i < num_displays; ++i) {
+		if (displays[i] == display) {
+			index = i;
+			break;
+		}
+	}
+
+	SDL_free(displays);
+	return index;
+}
+
+// Logs the windowed size we've requested rather than the actual window size;
+// the latter can still be the fullscreen size right after exiting fullscreen
+// mode.
+static void log_window_size()
+{
+	const auto display_scale = get_window_display_scale();
+
+	LOG_MSG("DISPLAY: Using window size of %dx%d logical units "
+	        "(%dx%d pixels) on display %d",
+	        iroundf(sdl.windowed.width),
+	        iroundf(sdl.windowed.height),
+	        iroundf(sdl.windowed.width * display_scale),
+	        iroundf(sdl.windowed.height * display_scale),
+	        get_display_index(get_current_display()).value_or(0));
+}
+
 // The windowed size and position are restored when exiting fullscreen mode
 static void apply_windowed_size()
 {
 	if (sdl.is_fullscreen) {
 		return;
 	}
-	if (!SDL_SetWindowSize(sdl.window,
-	                       size_to_native(sdl.windowed.width),
-	                       size_to_native(sdl.windowed.height))) {
+
+	if (SDL_SetWindowSize(sdl.window,
+	                      size_to_native(sdl.windowed.width),
+	                      size_to_native(sdl.windowed.height))) {
+		log_window_size();
+	} else {
 		LOG_WARNING("SDL: Failed to set window size: %s", SDL_GetError());
 	}
 }
@@ -695,6 +741,7 @@ static void apply_windowed_position()
 	if (!SDL_SetWindowPosition(sdl.window,
 	                           to_native(sdl.windowed.x_pos),
 	                           to_native(sdl.windowed.y_pos))) {
+
 		LOG_WARNING("SDL: Failed to set window position: %s",
 		            SDL_GetError());
 	}
@@ -806,12 +853,6 @@ RenderBackend* GFX_GetRenderer()
 RenderBackendType GFX_GetRenderBackendType()
 {
 	return sdl.render_backend_type;
-}
-
-static float get_window_display_scale()
-{
-	const auto result = SDL_GetWindowDisplayScale(sdl.window);
-	return (result == 0.0f) ? 1.0f : result;
 }
 
 // Returns the desktop size in logical units and the display scale of the
@@ -1514,11 +1555,6 @@ static void configure_window_size()
 #endif
 
 	set_windowed_size(w, h);
-
-	LOG_MSG("DISPLAY: Using %dx%d window size in windowed mode on display-%d",
-	        iroundf(w),
-	        iroundf(h),
-	        sdl.display_number);
 }
 
 static void configure_window_position()
@@ -1947,6 +1983,8 @@ void GFX_InitAndStartGui()
 	sdl.window = sdl.renderer->GetWindow();
 	assert(sdl.window);
 
+	log_window_size();
+
 #ifdef MACOSX
 	// The window is not always brought to the foreground after startup with
 	// SDL 2.32.10 on macOS, hence this workaround. Both the OpenGL and SDL
@@ -2143,7 +2181,9 @@ static void maybe_restore_windowed_size()
 	int native_h = 0;
 	SDL_GetWindowSize(sdl.window, &native_w, &native_h);
 
-	if (!is_windowed_size(native_w, native_h)) {
+	if (is_windowed_size(native_w, native_h)) {
+		log_window_size();
+	} else {
 		apply_windowed_size();
 	}
 }
