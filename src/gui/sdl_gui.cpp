@@ -1994,16 +1994,14 @@ void GFX_InitAndStartGui()
 	apply_windowed_position();
 
 	// The window is not always brought to the foreground after startup with
-	// SDL 2.32.10 on macOS, hence this workaround. Both the OpenGL and SDL
+	// SDL 3.4.16 on macOS, hence this workaround. Both the OpenGL and SDL
 	// texture renderers are affected.
 	//
 	// SDL on Windows and Linux seems to always raise the window after
 	// creation.
 	//
-	// SDL issues:
-	//
-	// - https://github.com/libsdl-org/SDL/issues/14701
-	// - https://github.com/libsdl-org/SDL/issues/13920
+	// TODO Remove workaround when the SDL issue
+	// https://github.com/libsdl-org/SDL/issues/13920 is resolved
 	//
 	SDL_RaiseWindow(sdl.window);
 
