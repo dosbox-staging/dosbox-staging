@@ -2004,14 +2004,6 @@ void GFX_InitAndStartGui()
 	// https://github.com/libsdl-org/SDL/issues/13920 is resolved
 	//
 	SDL_RaiseWindow(sdl.window);
-
-	// Setting the SDL_WINDOW_BORDERLESS flag on window creation doesn't
-	// work on macOS.
-	//
-	// TODO Remove workaround when the SDL issue
-	// https://github.com/libsdl-org/SDL/issues/6172 is resolved.
-	//
-	set_window_decorations();
 #endif
 
 	set_minimum_window_size();
