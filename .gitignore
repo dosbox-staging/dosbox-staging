@@ -103,3 +103,6 @@ __pycache__
 
 # Zed text editor
 .zed
+
+# graft's local graph cache — regenerable, not committed (run `graft build`).
+/graft/
