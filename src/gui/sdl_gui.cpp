@@ -1985,7 +1985,14 @@ void GFX_InitAndStartGui()
 
 	log_window_size();
 
+
 #ifdef MACOSX
+	// The renderers create the windows with SDL_CreateWindowWithProperties()
+	// which appears to alter the provided window position so the window is
+	// fully within the desktop bounds. By setting the position explicitly
+	// here, we're forcing the requested window position.
+	apply_windowed_position();
+
 	// The window is not always brought to the foreground after startup with
 	// SDL 2.32.10 on macOS, hence this workaround. Both the OpenGL and SDL
 	// texture renderers are affected.
