@@ -1897,17 +1897,23 @@ bool DOS_IsFileLocking()
 
 void DOS_Files_Init(SectionProp& section)
 {
-	const auto locking = section.GetString("file_locking");
+	const auto locking    = section.GetString("file_locking");
 	const auto maybe_bool = parse_bool_setting(locking);
+
 	if (maybe_bool) {
 		if (*maybe_bool) {
 			emulate_file_locking = FileLockingConfig::On;
+			LOG_MSG("DOS: File locking enabled");
+
 		} else {
 			emulate_file_locking = FileLockingConfig::Off;
+			LOG_MSG("DOS: File locking disabled");
 		}
 	} else {
 		assertm(locking == "auto",
 		        "file_locking config set to invalid string");
+
 		emulate_file_locking = FileLockingConfig::Auto;
+		LOG_MSG("DOS: File locking set to auto");
 	}
 }
