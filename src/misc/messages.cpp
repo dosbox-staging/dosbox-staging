@@ -8,7 +8,6 @@
 #include "config/setup.h"
 #include "dos/dos_locale.h"
 #include "hardware/input/mouse.h"
-#include "host_locale.h"
 #include "misc/ansi_code_markup.h"
 #include "misc/cross.h"
 #include "misc/std_filesystem.h"
@@ -1120,10 +1119,6 @@ static std::optional<std::string> get_new_language_file()
 
 void MSG_LoadMessages()
 {
-	// Ensure autodetection happens the same time, regardless of the
-	// configuration
-	const auto& host_languages = GetHostLanguages();
-
 	// Check if the language configuration has changed
 	const auto new_language_file = get_new_language_file();
 	if (!new_language_file) {
@@ -1135,69 +1130,12 @@ void MSG_LoadMessages()
 	clear_translated_messages();
 
 	// If concrete language file is provided, load it
-	if (!language_file.empty() && language_file != "auto") {
+	if (!language_file.empty()) {
 		load_messages_by_name(language_file);
 		return;
 	}
 
-	// Get the list of autodetected languages
-	auto languages = host_languages.app_languages;
-	languages.insert(languages.end(),
-	                 host_languages.gui_languages.begin(),
-	                 host_languages.gui_languages.end());
-
-	std::vector<std::string> language_files = {};
-	for (const auto& language : languages) {
-		for (const auto& language_file : language.GetLanguageFiles()) {
-			if (contains(language_files, language_file)) {
-				continue;
-			}
-			language_files.push_back(language_file);
-		}
-	}
-
-	// If autodetection failed, use internal English messages
-	if (language_files.empty()) {
-		if (host_languages.log_info.empty()) {
-			LOG_MSG("LOCALE: Could not detect host langauge, "
-			        "using internal English language messages");
-		} else {
-			LOG_MSG("LOCALE: Could not detected language file from "
-			        "host value '%s', using internal English "
-			        "language messages",
-			        host_languages.log_info.c_str());
-		}
-		return;
-	}
-
-	// Use the first detected language for which we have a translation
-	for (const auto& detected_file : language_files) {
-		// If detected_file language is English, use internal messages
-		if (detected_file == InternalLangauge) {
-			LOG_MSG("LOCALE: Using internal English language "
-			        "messages (detected from '%s')",
-			        host_languages.log_info.c_str());
-			return;
-		}
-
-		const auto file_with_extension = get_file_name_with_extension(
-		        detected_file);
-		const auto file_path = get_resource_path(Subdirectory,
-		                                         file_with_extension);
-		if (file_path.empty()) {
-			continue;
-		}
-
-		if (load_messages_from_path(file_path)) {
-			LOG_MSG("LOCALE: Loaded language file '%s' "
-			        "(detected from '%s')",
-			        file_with_extension.c_str(),
-			        host_languages.log_info.c_str());
-			return;
-		}
-	}
-
-	LOG_MSG("LOCALE: Could not find a valid language file corresponding to "
-	        "'%s', using internal English language messages",
-	        host_languages.log_info.c_str());
+	LOG_WARNING(
+	        "LOCALE: Could not find a valid language file, using internal "
+	        "English language messages");
 }

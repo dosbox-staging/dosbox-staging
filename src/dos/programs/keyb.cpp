@@ -1,11 +1,11 @@
-// SPDX-FileCopyrightText:  2002-2025 The DOSBox Team
+// SPDX-FileCopyrightText:  2021-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "keyb.h"
 
-#include "misc/ansi_code_markup.h"
 #include "dos/dos_locale.h"
 #include "ints/int10.h"
+#include "misc/ansi_code_markup.h"
 #include "more_output.h"
 #include "shell/shell.h"
 #include "utils/string_utils.h"
@@ -22,8 +22,8 @@ void KEYB::Run()
 	}
 
 	constexpr bool RemoveIfFound = true;
-	const bool has_option_list = cmd->FindExist("/list", RemoveIfFound);
-	const bool has_option_rom  = cmd->FindExist("/rom", RemoveIfFound);
+	const bool has_option_list   = cmd->FindExist("/list", RemoveIfFound);
+	const bool has_option_rom    = cmd->FindExist("/rom", RemoveIfFound);
 
 	if (has_option_list && has_option_rom) {
 		WriteOut(MSG_Get("SHELL_ILLEGAL_SWITCH_COMBO"));
@@ -52,8 +52,9 @@ void KEYB::Run()
 		return;
 	}
 
-	// Fetch keyboard layout
-	const auto& keyboard_layout = params[0];
+	// Fetch keyboard layout. We strip the optional comma separator so `KEYB
+	// GR 437` and `KEYB GR, 437` are both accepted.
+	const auto& keyboard_layout = strip_suffix(params[0], ",");
 
 	// Fetch CPI file name
 	const std::string cpi_file = (params.size() >= 3) ? params[2] : "";
@@ -113,52 +114,66 @@ void KEYB::WriteOutFailure(const KeyboardLayoutResult error_code,
 	case KeyboardLayoutResult::CpiFileNotFound:
 		WriteOut(MSG_Get("PROGRAM_KEYB_CPI_FILE_NOT_FOUND"));
 		break;
+
 	case KeyboardLayoutResult::CpiReadError:
 		WriteOut(MSG_Get("PROGRAM_KEYB_CPI_READ_ERROR"));
 		break;
+
 	case KeyboardLayoutResult::InvalidCpiFile:
 		WriteOut(MSG_Get("PROGRAM_KEYB_INVALID_CPI_FILE"));
 		break;
+
 	case KeyboardLayoutResult::CpiFileTooLarge:
 		WriteOut(MSG_Get("PROGRAM_KEYB_CPI_FILE_TOO_LARGE"));
 		break;
+
 	case KeyboardLayoutResult::UnsupportedCpxFile:
 		WriteOut(MSG_Get("PROGRAM_KEYB_UNSUPPORTED_CPX_FILE"));
 		break;
+
 	case KeyboardLayoutResult::PrinterCpiFile:
 		WriteOut(MSG_Get("PROGRAM_KEYB_PRINTER_CPI_FILE"));
 		break;
+
 	case KeyboardLayoutResult::ScreenFontUnusable:
 		WriteOut(MSG_Get("PROGRAM_KEYB_SCREEN_FONT_UNUSABLE"),
 		         tried_code_page);
 		break;
+
 	case KeyboardLayoutResult::NoBundledCpiFileForCodePage:
 		WriteOut(MSG_Get("PROGRAM_KEYB_NO_BUNDLED_CPI_FILE"), tried_code_page);
 		break;
+
 	case KeyboardLayoutResult::NoCodePageInCpiFile:
 		WriteOut(MSG_Get("PROGRAM_KEYB_NO_CODE_PAGE_IN_FILE"),
 		         tried_code_page);
 		break;
+
 	case KeyboardLayoutResult::IncompatibleMachine:
 		WriteOut(MSG_Get("PROGRAM_KEYB_INCOMPATIBLE_MACHINE"));
 		break;
+
 	// Keyboard layout related errors
 	case KeyboardLayoutResult::LayoutFileNotFound:
 		WriteOut(MSG_Get("PROGRAM_KEYB_LAYOUT_FILE_NOT_FOUND"),
 		         layout.c_str());
 		break;
+
 	case KeyboardLayoutResult::InvalidLayoutFile:
 		WriteOut(MSG_Get("PROGRAM_KEYB_INVALID_LAYOUT_FILE"),
 		         layout.c_str());
 		break;
+
 	case KeyboardLayoutResult::LayoutNotKnown:
 		WriteOut(MSG_Get("PROGRAM_KEYB_LAYOUT_NOT_KNOWN"), layout.c_str());
 		break;
+
 	case KeyboardLayoutResult::NoLayoutForCodePage:
 		WriteOut(MSG_Get("PROGRAM_KEYB_NO_LAYOUT_FOR_CODE_PAGE"),
 		         layout.c_str(),
 		         requested_code_page);
 		break;
+
 	default:
 		LOG_WARNING("KEYB:Invalid return code %x", enum_val(error_code));
 		assert(false);
@@ -175,8 +190,8 @@ void KEYB::WriteOutSuccess()
 	const std::string AnsiYellow = "[color=yellow]";
 	const std::string AnsiReset  = "[reset]";
 
-	const auto layout       = DOS_GetLoadedLayout();
-	const bool show_layout  = !layout.empty();
+	const auto layout      = DOS_GetLoadedLayout();
+	const bool show_layout = !layout.empty();
 
 	// Prepare strings based on translation
 
@@ -239,8 +254,8 @@ void KEYB::WriteOutSuccess()
 	message += align_code_page;
 
 	const auto space_file_name = INT10_GetTextColumns() - 1 - target_len -
-		std::max(align_code_page.length() + space_code_page,
-		         align_layout.length() + space_layout);
+	                             std::max(align_code_page.length() + space_code_page,
+	                                      align_layout.length() + space_layout);
 
 	switch (dos.screen_font_type) {
 	case ScreenFontType::Rom:
@@ -337,37 +352,44 @@ void KEYB::WriteOutSuccess()
 void KEYB::AddMessages()
 {
 	MSG_Add("PROGRAM_KEYB_HELP_LONG",
-	        "Configure a keyboard layout and screen font.\n"
+	        "Configure a keyboard layout and code page (screen font).\n"
 	        "\n"
 	        "Usage:\n"
 	        "  [color=light-green]keyb[reset]\n"
 	        "  [color=light-green]keyb[reset] /list\n"
-	        "  [color=light-green]keyb[reset] [color=light-cyan]LAYOUT[reset] [[color=white]CODEPAGE[reset]] /rom\n"
-	        "  [color=light-green]keyb[reset] [color=light-cyan]LAYOUT[reset] [[color=white]CODEPAGE[reset] [[color=white]CPIFILE[reset]]]\n"
+	        "  [color=light-green]keyb[reset] [color=light-cyan]LAYOUT[reset][,] [[color=white]CODEPAGE[reset]] /rom\n"
+	        "  [color=light-green]keyb[reset] [color=light-cyan]LAYOUT[reset][,] [[color=white]CODEPAGE[reset] [[color=white]CPIFILE[reset]]]\n"
 	        "\n"
 	        "Parameters:\n"
 	        "  [color=light-cyan]LAYOUT[reset]    keyboard layout code\n"
 	        "  [color=white]CODEPAGE[reset]  code page number, e.g. [color=white]437[reset] or [color=white]850[reset]\n"
-	        "  [color=white]CPIFILE[reset]   screen font file, in CPI format\n"
+	        "  [color=white]CPIFILE[reset]   code page (screen font) file, in CPI format\n"
 	        "  /list     display available keyboard layout codes\n"
-	        "  /rom      use screen font from display adapter ROM if possible\n"
+	        "  /rom      use code page (screen font) from display adapter ROM if possible\n"
 	        "\n"
 	        "Notes:\n"
 	        "  - Running [color=light-green]keyb[reset] without an argument shows the currently loaded keyboard layout\n"
 	        "    and code page.\n"
+	        "\n"
 	        "  - The [color=white]CPIFILE[reset], if specified, must contain the screen font for the given\n"
 	        "    [color=white]CODEPAGE[reset].\n"
+	        "\n"
 	        "  - MS-DOS, DR-DOS, and Windows NT formats of the CPI files are supported\n"
 	        "    directly. The FreeDOS CPX files have to be uncompressed first with the 3rd\n"
 	        "    party [color=light-green]upx[reset] tool.\n"
+	        "\n"
 	        "  - If no custom [color=white]CPIFILE[reset] is specified, the command looks for a suitable screen\n"
 	        "    font in the bundled CPI files.\n"
+	        "\n"
 	        "  - If [color=white]CODEPAGE[reset] is not specified, and the screen font from the display adapter\n"
 	        "    ROM is suitable, it uses the ROM screen font.\n"
+	        "\n"
 	        "  - Only EGA or better display adapters allow to change the screen font; MDA,\n"
 	        "    CGA, or Hercules always use the ROM screen font.\n"
-	        "  - You can use the 'us' keyboard layout with any code page; all the other\n"
+	        "\n"
+	        "  - You can use the [color=light-cyan]'us'[reset] keyboard layout with any code page; all the other\n"
 	        "    layouts work with selected code pages only.\n"
+	        "\n"
 	        "  - Use the [color=light-green]chcp[reset] command to change the code page while keeping the\n"
 	        "    current keyboard layout.\n"
 	        "\n"
@@ -375,43 +397,60 @@ void KEYB::AddMessages()
 	        "  [color=light-green]KEYB[reset]\n"
 	        "  [color=light-green]KEYB[reset] [color=light-cyan]uk[reset]\n"
 	        "  [color=light-green]KEYB[reset] [color=light-cyan]sp[reset] [color=white]850[reset]\n"
-	        "  [color=light-green]KEYB[reset] [color=light-cyan]de[reset] [color=white]858[reset] mycp.cpi\n");
+	        "  [color=light-green]KEYB[reset] [color=light-cyan]gr[reset], [color=white]437[reset]\n"
+	        "  [color=light-green]KEYB[reset] [color=light-cyan]de[reset] [color=white]858[reset] mycp.cpi");
+
 	// Success/status message
 	MSG_Add("PROGRAM_KEYB_CODE_PAGE", "Code page");
 	MSG_Add("PROGRAM_KEYB_ROM_FONT", "ROM font");
 	MSG_Add("PROGRAM_KEYB_KEYBOARD_LAYOUT", "Keyboard layout");
 	MSG_Add("PROGRAM_KEYB_KEYBOARD_SCRIPT", "Keyboard script");
 	MSG_Add("PROGRAM_KEYB_NOT_LOADED", "not loaded");
+
 	// Error messages - KEYB program related
 	MSG_Add("PROGRAM_KEYB_INVALID_CODE_PAGE", "Invalid code page.\n");
+
 	// Error messages - CPI file related
 	MSG_Add("PROGRAM_KEYB_CPI_FILE_NOT_FOUND",
 	        "Code page information file not found.\n");
+
 	MSG_Add("PROGRAM_KEYB_CPI_READ_ERROR",
 	        "Error reading code page information file.\n");
+
 	MSG_Add("PROGRAM_KEYB_INVALID_CPI_FILE",
 	        "Invalid code page information file.\n");
+
 	MSG_Add("PROGRAM_KEYB_CPI_FILE_TOO_LARGE",
 	        "Code page information file too large.\n");
+
 	MSG_Add("PROGRAM_KEYB_UNSUPPORTED_CPX_FILE",
 	        "Unsupported FreeDOS CPX file format. Convert the file to the CPI format by\n"
 	        "uncompressing it with the 3rd party [color=light-green]upx[reset] tool.\n");
+
 	MSG_Add("PROGRAM_KEYB_PRINTER_CPI_FILE",
 	        "This is a printer code page information file, it does not contain screen fonts.\n");
+
 	MSG_Add("PROGRAM_KEYB_SCREEN_FONT_UNUSABLE",
 	        "Code page %d found, but the screen font could not be used.\n");
+
 	MSG_Add("PROGRAM_KEYB_NO_BUNDLED_CPI_FILE",
 	        "No bundled code page information file for code page %d.\n");
+
 	MSG_Add("PROGRAM_KEYB_NO_CODE_PAGE_IN_FILE",
 	        "No code page %d in the code page information file.\n");
+
 	MSG_Add("PROGRAM_KEYB_INCOMPATIBLE_MACHINE",
 	        "Can't change the screen font; EGA machine or better is required.\n");
+
 	// Error messages - keyboard layout file related
 	MSG_Add("PROGRAM_KEYB_LAYOUT_FILE_NOT_FOUND",
 	        "File with keyboard layout '%s' not found.\n");
+
 	MSG_Add("PROGRAM_KEYB_INVALID_LAYOUT_FILE",
 	        "Invalid file with keyboard layout '%s'.\n");
+
 	MSG_Add("PROGRAM_KEYB_LAYOUT_NOT_KNOWN", "Keyboard layout '%s' not known.\n");
+
 	MSG_Add("PROGRAM_KEYB_NO_LAYOUT_FOR_CODE_PAGE",
 	        "No keyboard layout '%s' for code page %d.\n");
 }
