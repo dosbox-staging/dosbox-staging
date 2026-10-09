@@ -363,7 +363,7 @@ StacksConfig parse_stacks_setting(const std::string& setting, const bool log_war
 		}
 	};
 
-	const auto parts = split_with_empties(setting, ',');
+	const auto parts = split_with_empties(setting, ",");
 	if (parts.size() != 2) {
 		warn_invalid();
 		return {};
