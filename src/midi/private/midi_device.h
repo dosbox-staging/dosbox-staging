@@ -12,6 +12,7 @@
 namespace MidiDeviceName {
 
 // Internal synths
+constexpr auto Clap        = "clap";
 constexpr auto FluidSynth  = "fluidsynth";
 constexpr auto SoundCanvas = "soundcanvas";
 constexpr auto Mt32        = "mt32";
@@ -24,7 +25,7 @@ constexpr auto Win32     = "win32";
 } // namespace MidiDeviceName
 
 // Generic interface for all MIDI devices. MIDI devices can be either internal
-// (our three MIDI synths: SoundCanvas, MT-32, and FluidSynth; see
+// (CLAP, SoundCanvas, MT-32, and FluidSynth; see
 // `midi_synth.cpp`), or external (various OS-specific ways to output raw MIDI
 // data from DOSBox Staging).
 class MidiDevice {
@@ -40,7 +41,7 @@ public:
 	virtual void SendSysExMessage(uint8_t* sysex, size_t len) = 0;
 
 	// Halt / resume the internal renderer thread (FluidSynth, MT-32,
-	// SoundCanvas).
+	// SoundCanvas, CLAP).
 	//
 	// No-op default for External devices, which don't run
 	// a renderer; their pause path is the volume-zero broadcast in

@@ -5,12 +5,13 @@
 #define DOSBOX_CLAP_PLUGIN_MANAGER_H
 
 #include <memory>
+#include <optional>
 #include <string>
 #include <vector>
 
 #include "library.h"
-#include "plugin.h"
 #include "misc/std_filesystem.h"
+#include "plugin.h"
 
 namespace Clap {
 
@@ -29,12 +30,18 @@ public:
 	// Enumerates the list of available plugins only once during the
 	// lifecycle of the program, then it returns the cached results.
 	//
-	// Only supported plugins having a single MIDI input port and a single
-	// stereo audio output port and are enumerated.
-	//
 	std::vector<PluginInfo> GetPluginInfos();
 
-	// Loads and initialises a CLAP plugin.
+	// Returns the first match in discovery order, or no value if none match.
+	// Empty selectors match any library/plugin. Names use case-insensitive
+	// partial matching against the library filename and plugin name.
+	// The library's .clap extension can be omitted.
+	// A numeric plugin selector matches its exact index within the library.
+	std::optional<PluginInfo> FindPlugin(const std::string& library_name = {},
+	                                     const std::string& plugin_name_or_index = {});
+
+	// Loads and initialises a CLAP plugin. The first note input port must
+	// support MIDI and the first audio output port must be stereo.
 	std::unique_ptr<Plugin> LoadPlugin(const PluginInfo& plugin_info);
 
 private:

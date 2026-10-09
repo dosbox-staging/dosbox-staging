@@ -657,7 +657,6 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 	// settings used to instantiate the synth, so we use the mixer's
 	// native rate to configure FluidSynth.
 	const auto sample_rate_hz = MIXER_GetSampleRate();
-	ms_per_audio_frame        = MillisInSecond / sample_rate_hz;
 
 	fluid_settings_setnum(fluid_settings.get(), "synth.sample-rate", sample_rate_hz);
 
@@ -748,26 +747,7 @@ MidiDeviceFluidSynth::MidiDeviceFluidSynth()
 
 	SetFilter();
 
-	// Double the baseline PCM prebuffer because MIDI is demanding
-	// and bursty. The mixer's default of ~20 ms becomes 40 ms here,
-	// which gives slower systems a better chance to keep up (and
-	// prevent their audio frame FIFO from running dry).
-	const auto render_ahead_ms = MIXER_GetPreBufferMs() * 2;
-
-	// Size the out-bound audio frame FIFO
-	assertm(sample_rate_hz >= 8000, "Sample rate must be at least 8 kHz");
-
-	const auto audio_frames_per_ms = iround(sample_rate_hz / MillisInSecond);
-	audio_frame_fifo.Resize(
-	        check_cast<size_t>(render_ahead_ms * audio_frames_per_ms));
-
-	// Size the in-bound work FIFO
-	work_fifo.Resize(MaxMidiWorkFifoSize);
-
-	// Start rendering audio
-	const auto render = std::bind_front(&MidiDeviceFluidSynth::Render, this);
-	renderer          = std::thread(render);
-	set_thread_name(renderer, "dosbox:fsynth");
+	StartRenderer(sample_rate_hz, "dosbox:fsynth");
 
 	// Start playback
 	MIXER_UnlockMixerThread();

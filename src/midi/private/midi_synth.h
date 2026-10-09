@@ -26,6 +26,9 @@ public:
 	void Resume() override;
 
 protected:
+	// Call with the mixer locked, after configuring the channel and synth.
+	void StartRenderer(const int sample_rate_hz, const char* thread_name);
+
 	void Render();
 	void Shutdown();
 
@@ -51,6 +54,8 @@ private:
 	virtual void RenderAudioFramesToFifo(const int num_frames) = 0;
 
 	virtual void CloseSynth() = 0;
+	// Runs on the render thread after it has finished processing.
+	virtual void CloseRenderer() {}
 
 	// Used to track the balance of time between the last mixer
 	// callback versus the current MIDI SysEx or Msg event.

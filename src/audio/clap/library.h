@@ -10,13 +10,15 @@
 
 #include "clap/all.h"
 
-#include "utils/dynlib.h"
 #include "misc/std_filesystem.h"
+#include "utils/dynlib.h"
 
 namespace Clap {
 
 struct PluginInfo {
 	std_fs::path library_path = {};
+	// The descriptor index within the library, not the discovery list.
+	uint32_t index = 0;
 
 	std::string id          = {};
 	std::string name        = {};
