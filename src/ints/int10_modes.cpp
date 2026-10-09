@@ -2232,7 +2232,7 @@ static cga_colors_t handle_cga_colors_prefs_tandy(const std::string& cga_colors_
 
 	auto brown_level = default_brown_level;
 
-	const auto tokens = split_with_empties(cga_colors_setting, ' ');
+	const auto tokens = split_with_empties(cga_colors_setting, " ");
 
 	if (tokens.size() > 1) {
 		auto brown_level_pref = tokens[1];
@@ -2263,7 +2263,7 @@ static cga_colors_t handle_cga_colors_prefs_ibm5153(const std::string& cga_color
 
 	auto contrast = default_contrast;
 
-	const auto tokens = split_with_empties(cga_colors_setting, ' ');
+	const auto tokens = split_with_empties(cga_colors_setting, " ");
 
 	if (tokens.size() > 1) {
 		auto contrast_pref = tokens[1];

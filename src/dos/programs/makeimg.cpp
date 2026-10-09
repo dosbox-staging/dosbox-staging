@@ -654,7 +654,7 @@ static ParseResult parse_args(const std::vector<std::string>& args)
 				return ErrorType::MissingArgument;
 			}
 			const auto& chs_str = args[++i];
-			auto parts          = split_with_empties(chs_str, ',');
+			auto parts          = split_with_empties(chs_str, ",");
 
 			if (parts.size() != 3) {
 				return ErrorType::InvalidValue;

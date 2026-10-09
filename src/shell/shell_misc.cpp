@@ -538,7 +538,7 @@ std::string DOS_Shell::ResolvePath(const std::string_view name) const
 	std::vector<std::string> prefixes = {""};
 
 	if (const auto path = psp->GetEnvironmentValue("PATH")) {
-		auto path_directories = split_with_empties(*path, ';');
+		auto path_directories = split_with_empties(*path, ";");
 
 		remove_empties(path_directories);
 

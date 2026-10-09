@@ -187,71 +187,80 @@ TEST(SafeStrlen, FixedSize)
 	EXPECT_EQ(N - 1, safe_strlen(buffer));
 }
 
-TEST(Split_delim, NoBoundingDelims)
+TEST(SplitDelim, NoBoundingDelims)
 {
 	const std::vector<std::string> expected({"a", "/b", "/c/d", "/e/f/"});
-	EXPECT_EQ(split_with_empties("a:/b:/c/d:/e/f/", ':'), expected);
-	EXPECT_EQ(split_with_empties("a /b /c/d /e/f/", ' '), expected);
-	EXPECT_EQ(split_with_empties("abc", 'x'), std::vector<std::string>{"abc"});
+	EXPECT_EQ(split_with_empties("a:/b:/c/d:/e/f/", ":"), expected);
+	EXPECT_EQ(split_with_empties("a /b /c/d /e/f/", " "), expected);
+	EXPECT_EQ(split_with_empties("abc", "x"), std::vector<std::string>{"abc"});
 }
 
-TEST(Split_delim, DelimAtStartNotEnd)
+TEST(SplitDelim, DelimAtStartNotEnd)
 {
 	const std::vector<std::string> expected({"", "a", "/b", "/c/d", "/e/f/"});
-	EXPECT_EQ(split_with_empties(":a:/b:/c/d:/e/f/", ':'), expected);
-	EXPECT_EQ(split_with_empties(" a /b /c/d /e/f/", ' '), expected);
+	EXPECT_EQ(split_with_empties(":a:/b:/c/d:/e/f/", ":"), expected);
+	EXPECT_EQ(split_with_empties(" a /b /c/d /e/f/", " "), expected);
 }
 
-TEST(Split_delim, DelimAtEndNotStart)
+TEST(SplitDelim, DelimAtEndNotStart)
 {
 	const std::vector<std::string> expected({"a", "/b", "/c/d", "/e/f/", ""});
-	EXPECT_EQ(split_with_empties("a:/b:/c/d:/e/f/:", ':'), expected);
-	EXPECT_EQ(split_with_empties("a /b /c/d /e/f/ ", ' '), expected);
+	EXPECT_EQ(split_with_empties("a:/b:/c/d:/e/f/:", ":"), expected);
+	EXPECT_EQ(split_with_empties("a /b /c/d /e/f/ ", " "), expected);
 }
 
-TEST(Split_delim, DelimsAtBoth)
+TEST(SplitDelim, DelimsAtBoth)
 {
 	const std::vector<std::string> expected({"", "a", "/b", "/c/d", "/e/f/", ""});
-	EXPECT_EQ(split_with_empties(":a:/b:/c/d:/e/f/:", ':'), expected);
-	EXPECT_EQ(split_with_empties(" a /b /c/d /e/f/ ", ' '), expected);
+	EXPECT_EQ(split_with_empties(":a:/b:/c/d:/e/f/:", ":"), expected);
+	EXPECT_EQ(split_with_empties(" a /b /c/d /e/f/ ", " "), expected);
 }
 
-TEST(Split_delim, MultiInternalDelims)
+TEST(SplitDelim, MultiInternalDelims)
 {
 	const std::vector<std::string> expected(
 	        {"a", "/b", "", "/c/d", "", "", "/e/f/"});
-	EXPECT_EQ(split_with_empties("a:/b::/c/d:::/e/f/", ':'), expected);
-	EXPECT_EQ(split_with_empties("a /b  /c/d   /e/f/", ' '), expected);
+	EXPECT_EQ(split_with_empties("a:/b::/c/d:::/e/f/", ":"), expected);
+	EXPECT_EQ(split_with_empties("a /b  /c/d   /e/f/", " "), expected);
 }
 
-TEST(Split_delim, MultiBoundingDelims)
+TEST(SplitDelim, MultiBoundingDelims)
 {
 	const std::vector<std::string> expected(
 	        {"", "", "a", "/b", "/c/d", "/e/f/", "", "", ""});
-	EXPECT_EQ(split_with_empties("::a:/b:/c/d:/e/f/:::", ':'), expected);
-	EXPECT_EQ(split_with_empties("  a /b /c/d /e/f/   ", ' '), expected);
+	EXPECT_EQ(split_with_empties("::a:/b:/c/d:/e/f/:::", ":"), expected);
+	EXPECT_EQ(split_with_empties("  a /b /c/d /e/f/   ", " "), expected);
 }
 
-TEST(Split_delim, MixedDelims)
+TEST(SplitDelim, MixedDelims1)
 {
 	const std::vector<std::string> expected(
 	        {"", "", "a", "/b", "", "/c/d", "/e/f/"});
-	EXPECT_EQ(split_with_empties("::a:/b::/c/d:/e/f/", ':'), expected);
-	EXPECT_EQ(split_with_empties("  a /b  /c/d /e/f/", ' '), expected);
+
+	EXPECT_EQ(split_with_empties("::a:/b::/c/d:/e/f/", ":"), expected);
+	EXPECT_EQ(split_with_empties("  a /b  /c/d /e/f/", " "), expected);
 }
 
-TEST(Split_delim, Empty)
+TEST(SplitDelim, MixedDelims2)
+{
+	const std::vector<std::string> expected(
+	        {"", "", "a", "", "b", "", "", "c", "d", "", "e", "f", ""});
+
+	EXPECT_EQ(split_with_empties("::a:/b::/c/d:/e/f/", ":/"), expected);
+}
+
+TEST(SplitDelim, Empty)
 {
 	const std::vector<std::string> empty;
 	const std::vector<std::string> two({"", ""});
 	const std::vector<std::string> three({"", "", ""});
 
-	EXPECT_EQ(split_with_empties("", ':'), empty);
-	EXPECT_EQ(split_with_empties(":", ':'), two);
-	EXPECT_EQ(split_with_empties("::", ':'), three);
-	EXPECT_EQ(split_with_empties("", ' '), empty);
-	EXPECT_EQ(split_with_empties(" ", ' '), two);
-	EXPECT_EQ(split_with_empties("  ", ' '), three);
+	EXPECT_EQ(split_with_empties("", ":"), empty);
+	EXPECT_EQ(split_with_empties(":", ":"), two);
+	EXPECT_EQ(split_with_empties("::", ":"), three);
+	EXPECT_EQ(split_with_empties("", " "), empty);
+	EXPECT_EQ(split_with_empties(" ", " "), two);
+	EXPECT_EQ(split_with_empties("  ", " "), three);
 }
 
 TEST(Split, NoBoundingWhitespace)
