@@ -989,9 +989,9 @@ static DesktopKeyboardLayouts get_keyboard_layouts_ini(
 			if (tokens[0] == model_key) {
 				keyboard_model = tokens[1];
 			} else if (tokens[0] == layouts_key) {
-				layouts = split_with_empties(tokens[1], ',');
+				layouts = split_with_empties(tokens[1], ",");
 			} else if (tokens[0] == variants_key) {
-				variants = split_with_empties(tokens[1], ',');
+				variants = split_with_empties(tokens[1], ",");
 			}
 		}
 	}

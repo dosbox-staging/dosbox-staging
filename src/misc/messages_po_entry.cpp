@@ -454,7 +454,7 @@ PoWriter::PoWriter(const std_fs::path& file_path)
 void PoWriter::WriteMultiLineString(std::string& value)
 {
 	// Split the whole text into lines
-	auto lines = split_with_empties(value, '\n');
+	auto lines = split_with_empties(value, "\n");
 
 	// Add end-of-line characters
 	for (size_t idx = 0; idx + 1 < lines.size(); ++idx) {
