@@ -15,6 +15,7 @@
 
 #include "dosbox_config.h"
 #include "gui/common.h"
+#include "gui/private/window_geometry.h"
 #include "gui/render/render.h"
 #include "gui/render/render_backend.h"
 #include "misc/video.h"
@@ -93,7 +94,6 @@ struct SDL_Block {
 	SDL_Window* window = {};
 	SDL_DisplayID display_number = 0;
 
-	float dpi_scale    = 1.0f;
 	bool is_fullscreen = false;
 
 	bool is_mouse_captured = false;
@@ -129,25 +129,44 @@ struct SDL_Block {
 	// The DOS video mode is populated after we set up the SDL window.
 	std::optional<VideoMode> maybe_video_mode = {};
 
+	// The size and position of the window in windowed mode, in logical
+	// units. These are set from the `window_size` and `window_position`
+	// settings, then follow the actual window as the user resizes and moves
+	// it. We restore the window to this size and position when leaving
+	// fullscreen mode. With `window_position = auto`, the position is
+	// undefined until we learn where the window has been placed.
+	//
+	// When the display scale changes (e.g., the window is moved to a
+	// display with a different scale), we keep the window's size in pixels
+	// if it was specified in pixels. Otherwise, we keep its size in logical
+	// units, like the OS does with other application windows.
 	struct {
-		int width  = 0;
-		int height = 0;
+		// The size is not rounded, so window sizes specified in pixels
+		// are restored exactly
+		float width  = 0.0f;
+		float height = 0.0f;
+
 		int x_pos  = SDL_WINDOWPOS_UNDEFINED;
 		int y_pos  = SDL_WINDOWPOS_UNDEFINED;
 
-		// Instantaneous canvas size of the window
-		SDL_Rect canvas_size = {};
+		// When the user resizes or moves the window, we write the new
+		// size and position back to the `window_size` and
+		// `window_position` settings in the unit the user specified
+		// them in.
+		WindowGeometry::Unit size_unit     = {};
+		WindowGeometry::Unit position_unit = {};
+
+		// Set when the window size needs to be restored after a display
+		// scale change
+		bool is_resize_pending = false;
+
+		// Set when the user or the OS has resized the window, so we can log
+		// the new size once the resizing has finished
+		std::optional<int64_t> resized_at_ms = {};
 	} windowed = {};
 
 	struct {
 		FullscreenMode mode = {};
-
-		struct {
-			int width  = 0;
-			int height = 0;
-			int x_pos  = 0;
-			int y_pos  = 0;
-		} prev_window;
 	} fullscreen = {};
 
 	struct {

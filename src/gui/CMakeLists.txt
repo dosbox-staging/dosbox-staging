@@ -3,6 +3,7 @@ target_sources(dosboxcommon PRIVATE
   mapper.cpp
   sdl_gui.cpp
   titlebar.cpp
+  window_geometry.cpp
 
   render/auto_image_adjustments.cpp
   render/auto_shader_switcher.cpp
@@ -19,6 +20,7 @@ target_sources(dosboxcommon PRIVATE
 
 if(APPLE)
 target_sources(dosboxcommon PRIVATE
+  macos_window.mm
   render/macos_colorspace.mm
 )
 endif()

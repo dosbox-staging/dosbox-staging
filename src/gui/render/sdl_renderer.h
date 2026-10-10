@@ -31,8 +31,11 @@ private:
 class SdlRenderer : public RenderBackend {
 
 public:
+	// `x`, `y`, `width`, and `height` must be in native units (logical
+	// units (points) on macOS and Wayland; pixels on Windows and X11)
 	SdlRenderer(const int x, const int y, const int width, const int height,
-	            const SDL_WindowFlags sdl_window_flags, const std::string& render_driver,
+	            const SDL_WindowFlags sdl_window_flags,
+	            const std::string& render_driver,
 	            TextureFilterMode texture_filter_mode);
 
 	~SdlRenderer() override;

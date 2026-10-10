@@ -1489,7 +1489,7 @@ bool MixerChannel::TryParseAndSetCustomFilter(const std::string& filter_prefs)
 		return false;
 	}
 
-	const auto parts = split_with_empties(filter_prefs, ' ');
+	const auto parts = split_with_empties(filter_prefs, " ");
 
 	const auto single_filter = (parts.size() == 3);
 	const auto dual_filter   = (parts.size() == 6);

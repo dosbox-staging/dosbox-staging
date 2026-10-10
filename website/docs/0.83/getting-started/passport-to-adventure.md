@@ -34,6 +34,9 @@ For example, this is the start of the description of the `viewport` setting:
                      the desktop. If it's larger than the window size, it will
                      be scaled to fit within the window.
 
+      WxHpx:         Same as 'WxH', but the size is specified in pixels
+                     (e.g., 1440x1080px).
+
       N%:            Similar to 'WxH', but the size is specified as a percentage
                      of the desktop size.
 

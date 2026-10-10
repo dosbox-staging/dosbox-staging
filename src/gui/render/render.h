@@ -24,11 +24,17 @@ enum class ViewportMode { Fit, Relative };
 struct ViewportSettings {
 	ViewportMode mode = ViewportMode::Fit;
 
-	// Either parameter can be set in Fit mode (but not both at the
-	// same time), or none
+	// At most one of the parameters can be set in Fit mode.
+	//
+	// The size limit is kept in the unit it was specified in (`limit_size`
+	// in logical units, `limit_size_px` in pixels, `desktop_scale` relative
+	// to the desktop size), and it's converted to pixels when calculating
+	// the viewport. This way, the viewport always reflects the current
+	// display scale and desktop size.
 	struct {
-		std::optional<DosBox::Rect> limit_size = {};
-		std::optional<float> desktop_scale     = {};
+		std::optional<DosBox::Rect> limit_size    = {};
+		std::optional<DosBox::Rect> limit_size_px = {};
+		std::optional<float> desktop_scale        = {};
 	} fit = {};
 
 	struct {
@@ -39,6 +45,7 @@ struct ViewportSettings {
 	constexpr bool operator==(const ViewportSettings& that) const
 	{
 		return (mode == that.mode && fit.limit_size == that.fit.limit_size &&
+		        fit.limit_size_px == that.fit.limit_size_px &&
 		        fit.desktop_scale == that.fit.desktop_scale &&
 		        relative.height_scale == that.relative.height_scale &&
 		        relative.width_scale == that.relative.width_scale);

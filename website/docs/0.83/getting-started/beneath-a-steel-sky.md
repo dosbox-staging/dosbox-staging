@@ -770,6 +770,20 @@ aspect = square-pixels
 viewport = 1280x800
 ```
 
+!!! info "Logical units"
+
+    The viewport size is specified in *logical units*, which are multiplied by
+    your operating system's display scaling factor. For example, the above
+    setting results in a viewport of 1280×800 pixels on a 1080p monitor at
+    100% scaling, and 2560×1600 pixels on a 4K monitor at 200% scaling. This
+    way, the image appears roughly the same size on both.
+
+    If you need exact pixel dimensions, add `px` to the end of the value
+    (e.g., `viewport = 1280x800px`), but then the image size will depend on
+    your monitor's resolution. See [Logical units, pixels, and
+    percentages](../manual/graphics/display-and-window.md#logical-units-pixels-and-percentages)
+    in the user manual for more details.
+
 <div class="image-grid" markdown>
 {{ figure(
     "https://www.dosbox-staging.org/static/images/getting-started/bass-ingame1.jpg",

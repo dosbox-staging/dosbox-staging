@@ -238,9 +238,10 @@ texture backends; the default `auto` value selects the best available driver.
 The [`window_size`](#window_size) and [`window_position`](#window_position)
 settings control where and how large the DOSBox Staging window appears on
 startup. You can still resize the window freely after launch --- these only set
-the initial state. The named sizes (`small`, `medium`, `large`) are relative to
-your desktop, while the `WxH` format lets you request an exact size in logical
-units.
+the initial state. The named sizes (`small`, `medium`, `large`) give you 4:3
+windows relative to your desktop height, while the `WxH` format lets you
+specify the size in logical units, pixels, or percentages (see [Logical units,
+pixels, and percentages](#logical-units-pixels-and-percentages) below).
 
 On multi-monitor setups, use [`display`](#display) to select which screen DOSBox
 opens on, and [`window_position`](#window_position) to fine-tune placement.
@@ -250,11 +251,44 @@ system's title bar and window borders are shown.
 [`window_transparency`](#window_transparency) sets the window transparency level
 (0--90%).
 
-!!! note
 
-    Both `window_size` and `window_position` use logical units that are
-    multiplied by your OS-level DPI scaling. To use raw pixel coordinates
-    instead, set the `SDL_WINDOWS_DPI_SCALING` environment variable to `0`.
+### Logical units, pixels, and percentages
+
+Most operating systems let you enlarge everything on the screen with a display
+scaling setting, which is especially useful on high-resolution monitors. For
+example, 4K monitors are typically used at 200% scaling. A window that is 1000
+*logical units* wide is 2000 pixels wide on such a monitor, but only 1000
+pixels wide on a 1080p monitor at 100% scaling. This way, the window appears
+roughly the same physical size on both.
+
+You can specify the window size and position, and the [viewport
+size](rendering/aspect-ratios-and-scaling.md#custom-viewport-size), in three
+different ways:
+
+- **Logical units** (e.g., `window_size = 1024x768`) --- The values are
+  multiplied by your operating system's display scaling factor, which is how
+  most programs size their windows.
+
+- **Pixels** (e.g., `window_size = 1440x1080px`) --- The values are in
+  pixels, and display scaling is not applied. This gives you precise control,
+  but the window will look smaller on a 4K monitor than on a 1080p one. A
+  window sized in pixels keeps its size in pixels when you move it to another
+  monitor, while windows sized in logical units or percentages keep their
+  size in logical units.
+
+- **Percentages** (e.g., `window_size = 120x90%` or `viewport = 89%`) --- The
+  values are relative to your desktop size, so they adapt to any monitor. For
+  window sizes, both values are relative to the desktop height; for example,
+  `120x90%` always gives you a 4:3 window that is 90% as tall as your desktop
+  (this is the same as `window_size = large`).
+
+For the least surprising results, use the same kind of unit for
+`window_size`, `window_position`, and `viewport`. Mixing them can have
+unexpected effects; for example, a viewport specified in logical units can end
+up larger than a window specified in pixels at high scaling factors. That said,
+mixing units is perfectly valid for more advanced use cases, such as combining
+a window size relative to your desktop with a viewport size in pixels to get a
+specific integer scaling factor on your monitor.
 
 
 ## Titlebar customisation
@@ -344,14 +378,19 @@ section.
     - `auto` *default*{ .default } -- Let the window manager decide the
       position.
     - `X,Y` -- Set window position in X,Y format in logical units (e.g.,
-      `250,100`). `0,0` is the top-left corner of the screen. The values
-      will be multiplied by the OS-level DPI scaling to get the window
+      `250,100`). `0,0` is the top-left corner of the screen. The values are
+      multiplied by the OS-level display scaling factor to get the window
       position in pixels.
+    - `X,Ypx` -- Set window position in pixels (e.g., `375,150px`).
+    - `X,Y%` -- Set window position as a percentage of the desktop width and
+      height (e.g., `10,10%`).
+
+    See [Logical units, pixels, and
+    percentages](#logical-units-pixels-and-percentages) for more details.
 
     !!! note
 
-        If you want to use pixel coordinates instead and ignore DPI scaling,
-        set the `SDL_WINDOWS_DPI_SCALING` environment variable to `0`.
+        Moving the window updates this setting in the same format.
 
 
 ##### window_size
@@ -361,19 +400,27 @@ section.
 
     Possible values:
 
-    - `default` *default*{ .default } -- Select the best option based on
-      your environment and other factors (such as whether aspect ratio
-      correction is enabled).
-    - `small`, `medium`, `large` (`s`, `m`, `l`) -- Size the window
-      relative to the desktop.
+    - `default` *default*{ .default } -- Same as `medium`.
+    - `small`, `medium`, `large` (`s`, `m`, `l`) -- 4:3 window sizes
+      relative to the desktop height (same as `66.67x50%`, `98.67x74%`, and
+      `120x90%`, respectively).
     - `WxH` -- Specify window size in WxH format in logical units (e.g.,
-      `1024x768`). The values will be multiplied by the OS-level DPI scaling
-      to get the window size in pixels.
+      `1024x768`). The values are multiplied by the OS-level display scaling
+      factor to get the window size in pixels.
+    - `WxHpx` -- Specify window size in pixels (e.g., `1440x1080px`). The
+      window keeps its size in pixels when moved to another display.
+    - `WxH%` -- Specify window size as a percentage of the desktop height
+      (e.g., `120x90%` for a 4:3 window 90% as tall as the desktop). Both
+      values are relative to the desktop height, so the aspect ratio of the
+      window doesn't depend on the aspect ratio of the desktop.
+
+    See [Logical units, pixels, and
+    percentages](#logical-units-pixels-and-percentages) for more details.
 
     !!! note
 
-        If you want to use pixel coordinates instead and ignore DPI scaling,
-        set the `SDL_WINDOWS_DPI_SCALING` environment variable to `0`.
+        Resizing the window updates this setting in the same format, except
+        for the named sizes, which are updated in `WxH%` format.
 
 
 ##### window_titlebar

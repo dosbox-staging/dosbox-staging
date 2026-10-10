@@ -117,7 +117,7 @@ std::deque<std_fs::path> get_xdg_data_dirs() noexcept
 	const auto data_dirs = ((var.size() > 0) ? var : "/usr/local/share:/usr/share");
 
 	std::deque<std_fs::path> paths{};
-	for (auto& dir : split_with_empties(data_dirs, ':')) {
+	for (auto& dir : split_with_empties(data_dirs, ":")) {
 		trim(dir);
 		if (!dir.empty()) {
 			paths.emplace_back(resolve_home(dir));

@@ -303,6 +303,12 @@ that size, the pixels would look too blocky.
     physical pixels. On a 1080p display with 100% scaling, it corresponds to
     1280&times;960 physical pixels.
 
+    To specify the viewport size in physical pixels instead, add `px` to the
+    end of the value (e.g., `viewport = 1280x960px`). See [Logical units,
+    pixels, and
+    percentages](../display-and-window.md#logical-units-pixels-and-percentages)
+    for more details and advice on choosing the right unit.
+
 
 !!! note "Why 89%?"
 
@@ -396,6 +402,9 @@ You can set these in the `[render]` configuration section.
       (e.g., `960x720`). The specified size must not be larger than the
       desktop. If it's larger than the window size, it will be scaled to fit
       within the window.
+
+    - `WxHpx` -- Same as `WxH`, but the size is specified in pixels (e.g.,
+      `1440x1080px`).
 
     - `N%` -- Similar to `WxH`, but the size is specified as a percentage of
       the desktop size.
