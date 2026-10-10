@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2020-2026 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -46,12 +46,8 @@ public:
 			return;
 		}
 
-		const auto str = format_str(format, args...);
-		CONSOLE_Write(str);
+		WriteToConsole(format_str(format, args...));
 	}
-
-	// TODO Only used by the unit tests, try to get rid of it later
-	virtual void WriteOut(const std::string& format, const char* arguments);
 
 	// Write string to DOS stdout
 	void WriteOut_NoParsing(const std::string& str);
@@ -68,6 +64,9 @@ public:
 	void AddToHelpList();
 
 protected:
+	// 'virtual' needed for unit tests
+	virtual void WriteToConsole(const std::string& str);
+
 	HELP_Detail help_detail{};
 };
 

@@ -49,8 +49,6 @@ using comdata_t = std::vector<uint8_t>;
 static std::vector<comdata_t> internal_progs_comdata;
 static std::vector<PROGRAMS_Creator> internal_progs;
 
-constexpr int WriteOutBufSize = 16384;
-
 void PROGRAMS_MakeFile(const char* name, PROGRAMS_Creator creator)
 {
 	comdata_t comdata(exe_block.begin(), exe_block.end());
@@ -186,25 +184,17 @@ bool Program::SuppressWriteOut(const std::string& format) const
 	return true;
 }
 
-// TODO Only used by the unit tests, try to get rid of it later
-void Program::WriteOut(const std::string& format, const char* arguments)
-{
-	if (SuppressWriteOut(format)) {
-		return;
-	}
-
-	char buf[WriteOutBufSize];
-	std::snprintf(buf, WriteOutBufSize, format.c_str(), arguments);
-
-	CONSOLE_Write(buf);
-}
-
 void Program::WriteOut_NoParsing(const std::string& str)
 {
 	if (SuppressWriteOut(str)) {
 		return;
 	}
 
+	WriteToConsole(str);
+}
+
+void Program::WriteToConsole(const std::string& str)
+{
 	CONSOLE_Write(str);
 }
 
