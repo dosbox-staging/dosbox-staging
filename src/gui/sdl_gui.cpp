@@ -471,6 +471,12 @@ static void maybe_log_display_properties()
 	assert(sdl.renderer);
 	assert(sdl.draw.render_width_px > 0 && sdl.draw.render_height_px > 0);
 
+	// We log the display properties once the user or the OS has finished
+	// resizing the window (see `maybe_log_resized_window_size()`)
+	if (sdl.windowed.resized_at_ms) {
+		return;
+	}
+
 	static DosBox::Rect last_draw_size_px = {};
 
 	const auto canvas_size_px = sdl.renderer->GetCanvasSizeInPixels();
@@ -1457,6 +1463,8 @@ static void handle_window_resized(const int native_w, const int native_h)
 	                           WindowGeometry::FormatSize(size,
 	                                                      sdl.windowed.size_unit,
 	                                                      get_desktop_geometry()));
+
+	sdl.windowed.resized_at_ms = GetTicks();
 }
 
 // Called when the user or the OS has moved the window. We only update the
@@ -2196,6 +2204,25 @@ static void maybe_restore_windowed_size()
 	}
 }
 
+// Live resizing and the OS's window tiling animations resize the window many
+// times in quick succession, so we only log the new window size and display
+// properties once all mouse buttons have been released and the window hasn't
+// been resized for a while.
+static void maybe_log_resized_window_size()
+{
+	constexpr auto QuietPeriodMs = 250;
+
+	if (!sdl.windowed.resized_at_ms ||
+	    SDL_GetGlobalMouseState(nullptr, nullptr) != 0 ||
+	    GetTicksSince(*sdl.windowed.resized_at_ms) < QuietPeriodMs) {
+		return;
+	}
+	sdl.windowed.resized_at_ms = {};
+
+	log_window_size();
+	maybe_log_display_properties();
+}
+
 static void handle_mouse_motion(SDL_MouseMotionEvent* motion)
 {
 	MOUSE_EventMoved(motion->xrel, motion->yrel, motion->x, motion->y);
@@ -2608,6 +2635,7 @@ bool GFX_PollAndHandleEvents()
 	}
 
 	maybe_restore_windowed_size();
+	maybe_log_resized_window_size();
 
 	return !DOSBOX_IsShutdownRequested();
 }

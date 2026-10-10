@@ -159,6 +159,10 @@ struct SDL_Block {
 		// Set when the window size needs to be restored after a display
 		// scale change
 		bool is_resize_pending = false;
+
+		// Set when the user or the OS has resized the window, so we can log
+		// the new size once the resizing has finished
+		std::optional<int64_t> resized_at_ms = {};
 	} windowed = {};
 
 	struct {
