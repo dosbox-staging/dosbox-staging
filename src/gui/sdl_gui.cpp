@@ -1347,6 +1347,8 @@ static void set_default_windowed_position()
 {
 	set_windowed_position(SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.display_number),
 	                      SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.display_number));
+
+	set_section_property_value("sdl", "window_position", "auto");
 }
 
 // Writes to the window-size member should be done via this function
