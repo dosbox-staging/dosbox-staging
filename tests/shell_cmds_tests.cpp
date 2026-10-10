@@ -4,6 +4,7 @@
 #include "shell/shell.h"
 
 #include <string>
+#include <utility>
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
@@ -39,12 +40,21 @@ public:
 	MOCK_METHOD(bool, ExecuteShellCommand,
 	            (const char* const name, char* arguments), (override));
 
-	// MOCK_METHOD(void, WriteOut,
-	//             (const char* format, const char* arguments),
-	//             (override));
+	void WriteToConsole(const std::string& str) override
+	{
+		output += str;
+	}
+
+	// Returns the console output written since the last call
+	std::string GetOutput()
+	{
+		return std::exchange(output, {});
+	}
 
 private:
 	DOS_Shell real_; // Keeps an instance of the real in the mock.
+
+	std::string output = {};
 };
 
 void assert_DoCommand(std::string input, std::string expected_name,
@@ -140,11 +150,11 @@ TEST_F(DOS_Shell_CMDSTest, CMD_ECHO_off_on)
 	MockDOS_Shell shell;
 	EXPECT_TRUE(shell.echo); // should be the default
 
-	//	EXPECT_CALL(shell, WriteOut(_, _)).Times(0);
 	EXPECT_NO_THROW({ shell.CMD_ECHO(const_cast<char*>("OFF")); });
 	EXPECT_FALSE(shell.echo);
 	EXPECT_NO_THROW({ shell.CMD_ECHO(const_cast<char*>("ON")); });
 	EXPECT_TRUE(shell.echo);
+	EXPECT_EQ(shell.GetOutput(), "");
 }
 
 TEST_F(DOS_Shell_CMDSTest, CMD_ECHO_space_handling)
@@ -152,27 +162,27 @@ TEST_F(DOS_Shell_CMDSTest, CMD_ECHO_space_handling)
 	MockDOS_Shell shell;
 
 	EXPECT_TRUE(shell.echo);
-	//	EXPECT_CALL(shell, WriteOut(_, StrEq("OFF "))).Times(1);
 	// this DOES NOT trigger ECHO OFF (trailing space causes it to not)
 	EXPECT_NO_THROW({ shell.CMD_ECHO(const_cast<char*>(" OFF ")); });
 	EXPECT_TRUE(shell.echo);
+	EXPECT_EQ(shell.GetOutput(), "OFF \r\n");
 
-	//	EXPECT_CALL(shell, WriteOut(_, StrEq("FF "))).Times(1);
 	// this DOES NOT trigger ECHO OFF (initial 'O' gets stripped)
 	EXPECT_NO_THROW({ shell.CMD_ECHO(const_cast<char*>("OFF ")); });
 	EXPECT_TRUE(shell.echo);
+	EXPECT_EQ(shell.GetOutput(), "FF \r\n");
 
 	// no trailing space, echo off should work
-	//	EXPECT_CALL(shell, WriteOut(_, _)).Times(0);
 	EXPECT_NO_THROW({ shell.CMD_ECHO(const_cast<char*>(" OFF")); });
 	// check that OFF worked properly, despite spaces
 	EXPECT_FALSE(shell.echo);
+	EXPECT_EQ(shell.GetOutput(), "");
 
 	// NOTE: the expected string here is missing the leading char of the
 	// input to ECHO. the first char is stripped as it's assumed it will be
 	// a space, period or slash.
-	//	EXPECT_CALL(shell, WriteOut(_, StrEq("    HI "))).Times(1);
 	EXPECT_NO_THROW({ shell.CMD_ECHO(const_cast<char*>(".    HI ")); });
+	EXPECT_EQ(shell.GetOutput(), "    HI \r\n");
 }
 
 TEST_F(DOS_Shell_CMDSTest, CMD_FOR_basic)
