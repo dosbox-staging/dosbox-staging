@@ -2091,6 +2091,30 @@ static void handle_desktop_mode_changed(const SDL_DisplayEvent& event)
 	}
 }
 
+// Restores the windowed size after a display scale change. SDL3 keeps the
+// window's size in pixels on Windows, and the OS keeps its size in logical
+// units on macOS and Wayland, so we only resize the window if needed.
+//
+// Resizing the window while the user is dragging it to another display
+// interferes with the drag on macOS, so we wait until all mouse buttons are
+// released.
+static void maybe_restore_windowed_size()
+{
+	if (!sdl.windowed.is_resize_pending ||
+	    SDL_GetGlobalMouseState(nullptr, nullptr) != 0) {
+		return;
+	}
+	sdl.windowed.is_resize_pending = false;
+
+	int native_w = 0;
+	int native_h = 0;
+	SDL_GetWindowSize(sdl.window, &native_w, &native_h);
+
+	if (!is_windowed_size(native_w, native_h)) {
+		apply_windowed_size();
+	}
+}
+
 static void handle_mouse_motion(SDL_MouseMotionEvent* motion)
 {
 	MOUSE_EventMoved(motion->xrel,
@@ -2307,19 +2331,12 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		// on the display scale on Windows and X11.
 		set_minimum_window_size();
 
-		// SDL3 keeps the window's size in pixels on Windows when the
-		// display scale changes, so we restore its size in logical
-		// units. There's nothing to restore on macOS and Wayland, where
-		// the OS keeps the window's size in logical units. We must not
-		// set the window size needlessly; that interferes with dragging
-		// the window to another display on macOS.
-		int native_w = 0;
-		int native_h = 0;
-		SDL_GetWindowSize(sdl.window, &native_w, &native_h);
-
-		if (!is_windowed_size(native_w, native_h)) {
-			apply_windowed_size();
+		// Window sizes specified in pixels keep their size in pixels
+		if (sdl.windowed.size_unit == WindowGeometry::Unit::Pixels) {
+			configure_window_size();
 		}
+		sdl.windowed.is_resize_pending = true;
+		maybe_restore_windowed_size();
 
 		// Viewport sizes specified in logical units depend on the
 		// display scale.
@@ -2533,6 +2550,9 @@ bool GFX_PollAndHandleEvents()
 		default: MAPPER_CheckEvent(&event);
 		}
 	}
+
+	maybe_restore_windowed_size();
+
 	return !DOSBOX_IsShutdownRequested();
 }
 
