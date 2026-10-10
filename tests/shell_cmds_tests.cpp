@@ -273,4 +273,34 @@ TEST_F(DOS_Shell_CMDSTest, CMD_FOR_for_not_allowed)
 	});
 }
 
+TEST_F(DOS_Shell_CMDSTest, ExecuteProgram_Relative_Path_Without_Extension)
+{
+	VFILE_Register("AA.BAT", nullptr, 0, "");
+	auto& z_drive   = Drives.at(drive_index('Z'));
+	DOS_Shell shell = {};
+
+	safe_strcpy(z_drive->curdir, "SUB");
+	EXPECT_TRUE(shell.ExecuteProgram("..\\AA.BAT", ""));
+	EXPECT_TRUE(shell.ExecuteProgram("..\\AA", ""));
+
+	safe_strcpy(z_drive->curdir, "SUB1\\SUB2");
+	EXPECT_TRUE(shell.ExecuteProgram("..\\..\\AA", ""));
+
+	safe_strcpy(z_drive->curdir, "");
+	VFILE_Remove("AA.BAT");
+}
+
+TEST_F(DOS_Shell_CMDSTest, ExecuteProgram_Prefers_Executable_Over_Extensionless_File)
+{
+	VFILE_Register("AB", nullptr, 0, "");
+	VFILE_Register("AB.BAT", nullptr, 0, "");
+	DOS_Shell shell = {};
+
+	EXPECT_TRUE(shell.ExecuteProgram("AB", ""));
+	EXPECT_TRUE(shell.ExecuteProgram("AB.BAT", ""));
+
+	VFILE_Remove("AB.BAT");
+	VFILE_Remove("AB");
+}
+
 } // namespace
