@@ -145,7 +145,8 @@ std::vector<PitCounter::Transition> PitCounter::WriteCount(const int count)
 
 	case PitMode::SquareWave:
 		new_period_ms = duration_ms;
-		new_half_ms   = MsPerTick * static_cast<float>((count + 1) / 2);
+		new_half_ms =
+		        MsPerTick * static_cast<float>((effective_count + 1) / 2);
 		if (!mode3_active) {
 			period_ms = new_period_ms;
 			half_ms   = new_half_ms;
