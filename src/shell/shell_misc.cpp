@@ -9,11 +9,11 @@
 #include <memory>
 
 #include "cpu/callback.h"
-#include "gui/clipboard.h"
-#include "file_reader.h"
-#include "ints/int10.h"
-#include "hardware/input/keyboard.h"
 #include "cpu/registers.h"
+#include "file_reader.h"
+#include "gui/clipboard.h"
+#include "hardware/input/keyboard.h"
+#include "ints/int10.h"
 #include "misc/unicode.h"
 
 [[nodiscard]] static std::vector<std::string> get_completions(std::string_view command);
@@ -126,8 +126,8 @@ std::string DOS_Shell::ReadCommand()
 			uint16_t dummy = 1;
 			DOS_CloseFile(input_handle);
 			DOS_OpenFile("con", 2, &dummy);
-			LOG(LOG_MISC, LOG_ERROR)
-			("Reopening the input handle. This is a bug!");
+			LOG(LOG_MISC, LOG_ERROR)(
+			        "Reopening the input handle. This is a bug!");
 		}
 
 		if (byte_count == 0) {
@@ -147,7 +147,8 @@ std::string DOS_Shell::ReadCommand()
 					break;
 				}
 
-				const auto suffix = last_command.substr(command.size());
+				const auto suffix = last_command.substr(
+				        command.size());
 				command += suffix;
 				cursor_position = command.size();
 				break;
@@ -501,18 +502,14 @@ bool DOS_Shell::ExecuteProgram(std::string_view name, std::string_view args)
 
 	if (iequals(extension, ".BAT")) {
 		const auto current_echo = batchfiles.empty()
-		                             ? echo
-		                             : batchfiles.top().Echo();
+		                                ? echo
+		                                : batchfiles.top().Echo();
 		if (!batchfiles.empty() && !call) {
 			batchfiles.pop();
 		}
 
 		if (auto reader = FileReader::GetFileReader(fullname)) {
-			batchfiles.emplace(*psp,
-			                   std::move(reader),
-			                   name,
-			                   args,
-			                   current_echo);
+			batchfiles.emplace(*psp, std::move(reader), name, args, current_echo);
 		} else {
 			WriteOut("Could not open %s", fullname.c_str());
 		}
@@ -564,7 +561,8 @@ std::string DOS_Shell::ResolvePath(const std::string_view name) const
 			// User typed in a command with no extension. Ex "DOOM".
 			// Try "DOOM.COM", "DOOM.EXE", "DOOM.BAT" in that order.
 			for (const auto& extension : Extensions) {
-				const std::string file = prefix + std::string(name) + extension;
+				const std::string file = prefix + std::string(name) +
+				                         extension;
 				if (DOS_FileExists(file.c_str())) {
 					return file;
 				}
