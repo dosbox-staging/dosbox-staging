@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2020-2026 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -9,11 +9,11 @@
 #include <memory>
 
 #include "cpu/callback.h"
-#include "gui/clipboard.h"
-#include "file_reader.h"
-#include "ints/int10.h"
-#include "hardware/input/keyboard.h"
 #include "cpu/registers.h"
+#include "file_reader.h"
+#include "gui/clipboard.h"
+#include "hardware/input/keyboard.h"
+#include "ints/int10.h"
 #include "misc/unicode.h"
 
 [[nodiscard]] static std::vector<std::string> get_completions(std::string_view command);
@@ -126,8 +126,8 @@ std::string DOS_Shell::ReadCommand()
 			uint16_t dummy = 1;
 			DOS_CloseFile(input_handle);
 			DOS_OpenFile("con", 2, &dummy);
-			LOG(LOG_MISC, LOG_ERROR)
-			("Reopening the input handle. This is a bug!");
+			LOG(LOG_MISC, LOG_ERROR)(
+			        "Reopening the input handle. This is a bug!");
 		}
 
 		if (byte_count == 0) {
@@ -147,7 +147,8 @@ std::string DOS_Shell::ReadCommand()
 					break;
 				}
 
-				const auto suffix = last_command.substr(command.size());
+				const auto suffix = last_command.substr(
+				        command.size());
 				command += suffix;
 				cursor_position = command.size();
 				break;
@@ -470,21 +471,18 @@ void CommandPrompt::SetCursor(const std::string::size_type index)
 	                   position_zero.page);
 }
 
-// Only for use in ExecuteProgram()
-// Not suitable for generic use as it only handles 3 letter file extensions.
-// It also doesn't look at space padding, which never happens here.
-// Space padding matters when dealing with internal DOS data strctures which we are not doing.
-static std::string_view get_executable_extension(const std::string_view filename)
+// Returns the extension of the last path element including the dot (e.g.,
+// ".EXE"), or an empty string if there is none. Like in COMMAND.COM, only the
+// last path element is considered, so "..\GAME" has no extension.
+static std::string_view get_extension(const std::string_view path)
 {
-	constexpr size_t ExtensionSize = 4;
-	if (filename.size() <= ExtensionSize) {
-		return "";
+	const auto filename = path.substr(path.find_last_of("\\/") + 1);
+
+	const auto dot_pos = filename.rfind('.');
+	if (dot_pos == std::string_view::npos) {
+		return {};
 	}
-	const auto dot_position = filename.size() - ExtensionSize;
-	if (filename[dot_position] != '.') {
-		return "";
-	}
-	return filename.substr(dot_position);
+	return filename.substr(dot_pos);
 }
 
 bool DOS_Shell::ExecuteProgram(std::string_view name, std::string_view args)
@@ -500,22 +498,18 @@ bool DOS_Shell::ExecuteProgram(std::string_view name, std::string_view args)
 	}
 
 	const auto fullname  = ResolvePath(name);
-	const auto extension = get_executable_extension(fullname);
+	const auto extension = get_extension(fullname);
 
 	if (iequals(extension, ".BAT")) {
 		const auto current_echo = batchfiles.empty()
-		                             ? echo
-		                             : batchfiles.top().Echo();
+		                                ? echo
+		                                : batchfiles.top().Echo();
 		if (!batchfiles.empty() && !call) {
 			batchfiles.pop();
 		}
 
 		if (auto reader = FileReader::GetFileReader(fullname)) {
-			batchfiles.emplace(*psp,
-			                   std::move(reader),
-			                   name,
-			                   args,
-			                   current_echo);
+			batchfiles.emplace(*psp, std::move(reader), name, args, current_echo);
 		} else {
 			WriteOut("Could not open %s", fullname.c_str());
 		}
@@ -553,7 +547,7 @@ std::string DOS_Shell::ResolvePath(const std::string_view name) const
 		                std::make_move_iterator(path_directories.end()));
 	}
 
-	const bool has_extension = !get_executable_extension(name).empty();
+	const bool has_extension = !get_extension(name).empty();
 
 	for (const auto& prefix : prefixes) {
 		if (has_extension) {
@@ -567,7 +561,8 @@ std::string DOS_Shell::ResolvePath(const std::string_view name) const
 			// User typed in a command with no extension. Ex "DOOM".
 			// Try "DOOM.COM", "DOOM.EXE", "DOOM.BAT" in that order.
 			for (const auto& extension : Extensions) {
-				const std::string file = prefix + std::string(name) + extension;
+				const std::string file = prefix + std::string(name) +
+				                         extension;
 				if (DOS_FileExists(file.c_str())) {
 					return file;
 				}
