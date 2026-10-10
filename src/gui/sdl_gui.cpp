@@ -385,11 +385,11 @@ void GFX_ResetScreen()
 	// The callback's `update_viewport()` may have triggered an auto-shader
 	// switch (e.g. resize crossed the scan-doubling threshold while the
 	// mapper was open). Push the new shader's `force_single_scan` into
-	// `vga.draw.scan_doubling_allowed` here so the `VGA_SetupDrawing()` call
-	// below sees it, otherwise `render.src.height` will stay wrong.
+	// `vga.draw.scan_doubling_allowed` here so the `VGA_SetupDrawing()`
+	// call below sees it, otherwise `render.src.height` will stay wrong.
 	//
-	// This matters even while paused: `RENDER_RescaleLastFrame()` below reads
-	// `render.src.height` as its destination height for the height
+	// This matters even while paused: `RENDER_RescaleLastFrame()` below
+	// reads `render.src.height` as its destination height for the height
 	// doubling/halving of the last latched frame. Stale height will mean
 	// stride mismatch, resulting in garbage output.
 	RENDER_SetScanAndPixelDoubling();
@@ -397,12 +397,12 @@ void GFX_ResetScreen()
 	VGA_SetupDrawing(0);
 	GFX_Start();
 
-	// While paused, we are not producing fresh frames, so the just recreated
-	// renderer would draw a blank or stale stretched framebuffer until
-	// resume. Drive a synthetic rescale of the latched last completed source
-	// frame at the new dimensions, then present immediately so the held frame
-	// shows correctly after viewport dimension updates (resizing the window,
-	// fullscreen/windowed toggle, etc.)
+	// While paused, we are not producing fresh frames, so the just
+	// recreated renderer would draw a blank or stale stretched framebuffer
+	// until resume. Drive a synthetic rescale of the latched last completed
+	// source frame at the new dimensions, then present immediately so the
+	// held frame shows correctly after viewport dimension updates (resizing
+	// the window, fullscreen/windowed toggle, etc.)
 	//
 	if (DOSBOX_IsPaused()) {
 		RENDER_RescaleLastFrame();
@@ -608,9 +608,9 @@ static void notify_new_mouse_screen_params()
 	MouseScreenParams params = {};
 
 	// The mouse position is in SDL's native units (logical units on macOS
-	// and Wayland, pixels on Windows and X11), so we need to convert both the
-	// size and the starting point of the rectangle from pixels to native
-	// units.
+	// and Wayland, pixels on Windows and X11), so we need to convert both
+	// the size and the starting point of the rectangle from pixels to
+	// native units.
 	const auto density       = SDL_GetWindowPixelDensity(sdl.window);
 	const auto pixel_density = (density > 0.0f) ? density : 1.0f;
 
@@ -623,7 +623,7 @@ static void notify_new_mouse_screen_params()
 	params.x_abs = abs_x;
 	params.y_abs = abs_y;
 
-	params.is_fullscreen    = sdl.is_fullscreen;
+	params.is_fullscreen = sdl.is_fullscreen;
 
 	// We only need the number of displays
 	int num_displays = 0;
@@ -675,7 +675,7 @@ static void set_window_decorations()
 	assert(sdl.window);
 
 	if (!SDL_SetWindowBordered(sdl.window,
-	                      get_sdl_section()->GetBool("window_decorations"))) {
+	                           get_sdl_section()->GetBool("window_decorations"))) {
 		LOG_WARNING("SDL: Failed to set window border: %s", SDL_GetError());
 	}
 }
@@ -764,7 +764,8 @@ static void enter_fullscreen()
 		//
 		SDL_Rect display_bounds = {};
 		if (!SDL_GetDisplayBounds(sdl.display_number, &display_bounds)) {
-			LOG_WARNING("SDL: Failed to get display bounds: %s", SDL_GetError());
+			LOG_WARNING("SDL: Failed to get display bounds: %s",
+			            SDL_GetError());
 			return;
 		}
 
@@ -773,22 +774,26 @@ static void enter_fullscreen()
 		if (!SDL_SetWindowPosition(sdl.window,
 		                           display_bounds.x,
 		                           display_bounds.y)) {
-			LOG_WARNING("SDL: Failed to set window position: %s", SDL_GetError());
+			LOG_WARNING("SDL: Failed to set window position: %s",
+			            SDL_GetError());
 		}
 
 		if (!SDL_SetWindowSize(sdl.window,
-		                  display_bounds.w + 1,
-		                  display_bounds.h)) {
-			LOG_WARNING("SDL: Failed to set window size: %s", SDL_GetError());
+		                       display_bounds.w + 1,
+		                       display_bounds.h)) {
+			LOG_WARNING("SDL: Failed to set window size: %s",
+			            SDL_GetError());
 		}
 
 		maybe_log_display_properties();
 
 	} else {
-		const auto fullscreen = (sdl.fullscreen.mode == FullscreenMode::Standard);
+		const auto fullscreen = (sdl.fullscreen.mode ==
+		                         FullscreenMode::Standard);
 
 		if (!SDL_SetWindowFullscreen(sdl.window, fullscreen)) {
-			LOG_WARNING("SDL: Failed to set fullscreen: %s", SDL_GetError());
+			LOG_WARNING("SDL: Failed to set fullscreen: %s",
+			            SDL_GetError());
 		}
 	}
 
@@ -820,7 +825,8 @@ static void exit_fullscreen()
 
 	} else {
 		if (!SDL_SetWindowFullscreen(sdl.window, false)) {
-			LOG_WARNING("SDL: Failed to exit fullscreen: %s", SDL_GetError());
+			LOG_WARNING("SDL: Failed to exit fullscreen: %s",
+			            SDL_GetError());
 		}
 
 		// On macOS, SDL_SetWindowSize() and SDL_SetWindowPosition()
@@ -1045,13 +1051,16 @@ void GFX_CenterMouse()
 
 	SDL_GetWindowSize(sdl.window, &width, &height);
 
-	SDL_WarpMouseInWindow(sdl.window, static_cast<float>(width) / 2.0f, static_cast<float>(height) / 2.0f);
+	SDL_WarpMouseInWindow(sdl.window,
+	                      static_cast<float>(width) / 2.0f,
+	                      static_cast<float>(height) / 2.0f);
 }
 
 void GFX_SetMouseRawInput([[maybe_unused]] const bool requested_raw_input)
 {
-	// TODO Raw mouse input is unsupported (and not needed) under SDL3. If this
-	// remains the case, remove the associated config option and related code.
+	// TODO Raw mouse input is unsupported (and not needed) under SDL3. If
+	// this remains the case, remove the associated config option and
+	// related code.
 }
 
 static void set_keyboard_capture()
@@ -1735,7 +1744,7 @@ static void configure_display()
 {
 	const int display = get_sdl_section()->GetInt("display");
 
-	int num_displays = 0;
+	int num_displays    = 0;
 	const auto displays = SDL_GetDisplays(&num_displays);
 	if (!displays) {
 		E_Exit("SDL: Failed to get the list of displays: %s",
@@ -1768,11 +1777,13 @@ static void set_allow_screensaver()
 	const std::string screensaver = get_sdl_section()->GetString("screensaver");
 	if (screensaver == "allow") {
 		if (!SDL_EnableScreenSaver()) {
-			LOG_WARNING("SDL: Failed to enable screensaver: %s", SDL_GetError());
+			LOG_WARNING("SDL: Failed to enable screensaver: %s",
+			            SDL_GetError());
 		}
 	} else {
 		if (!SDL_DisableScreenSaver()) {
-			LOG_WARNING("SDL: Failed to disable screensaver: %s", SDL_GetError());
+			LOG_WARNING("SDL: Failed to disable screensaver: %s",
+			            SDL_GetError());
 		}
 	}
 }
@@ -1905,7 +1916,8 @@ void GFX_InitSdl()
 
 	// Initialise SDL
 	if (!SDL_Init(SDL_INIT_VIDEO)) {
-		E_Exit("SDL: Failed to init SDL video and timer: %s", SDL_GetError());
+		E_Exit("SDL: Failed to init SDL video and timer: %s",
+		       SDL_GetError());
 	}
 
 #ifdef MACOSX
@@ -1984,7 +1996,6 @@ void GFX_InitAndStartGui()
 	assert(sdl.window);
 
 	log_window_size();
-
 
 #ifdef MACOSX
 	// The renderers create the windows with SDL_CreateWindowWithProperties()
@@ -2187,10 +2198,7 @@ static void maybe_restore_windowed_size()
 
 static void handle_mouse_motion(SDL_MouseMotionEvent* motion)
 {
-	MOUSE_EventMoved(motion->xrel,
-	                 motion->yrel,
-	                 motion->x,
-	                 motion->y);
+	MOUSE_EventMoved(motion->xrel, motion->yrel, motion->x, motion->y);
 }
 
 static void handle_mouse_wheel(SDL_MouseWheelEvent* wheel)
@@ -2545,7 +2553,7 @@ bool GFX_PollAndHandleEvents()
 	}
 
 	while (SDL_PollEvent(&event)) {
-		
+
 #if C_DEBUGGER
 		if (is_debugger_event(event)) {
 			if (event.type == SDL_EVENT_WINDOW_CLOSE_REQUESTED &&
@@ -2573,7 +2581,7 @@ bool GFX_PollAndHandleEvents()
 			}
 		}
 
-		switch(event.type) {
+		switch (event.type) {
 		case SDL_EVENT_DISPLAY_ADDED:
 		case SDL_EVENT_DISPLAY_REMOVED:
 			notify_new_mouse_screen_params();
@@ -2583,8 +2591,12 @@ bool GFX_PollAndHandleEvents()
 			handle_desktop_mode_changed(event.display);
 			break;
 
-		case SDL_EVENT_MOUSE_MOTION: handle_mouse_motion(&event.motion); break;
-		case SDL_EVENT_MOUSE_WHEEL: handle_mouse_wheel(&event.wheel); break;
+		case SDL_EVENT_MOUSE_MOTION:
+			handle_mouse_motion(&event.motion);
+			break;
+		case SDL_EVENT_MOUSE_WHEEL:
+			handle_mouse_wheel(&event.wheel);
+			break;
 		case SDL_EVENT_MOUSE_BUTTON_DOWN:
 		case SDL_EVENT_MOUSE_BUTTON_UP:
 			handle_mouse_button(&event.button);
@@ -2608,7 +2620,7 @@ static std::vector<std::string> get_sdl_texture_renderers()
 	drivers.reserve(n + 1);
 	drivers.emplace_back("auto");
 
-	const char *name;
+	const char* name;
 
 	for (int i = 0; i < n; i++) {
 		name = SDL_GetRenderDriver(i);

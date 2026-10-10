@@ -19,14 +19,14 @@ CHECK_NARROWING();
 
 static constexpr SDL_PixelFormat SdlPixelFormat = SDL_PIXELFORMAT_XRGB8888;
 
-SdlRenderer::SdlRenderer(const int x, const int y,
-						 const int width, const int height,
-						 const SDL_WindowFlags sdl_window_flags,
+SdlRenderer::SdlRenderer(const int x, const int y, const int width,
+                         const int height, const SDL_WindowFlags sdl_window_flags,
                          const std::string& render_driver,
                          TextureFilterMode texture_filter_mode)
         : texture_filter_mode(texture_filter_mode)
 {
-	SDL_WindowFlags flags = sdl_window_flags | OpenGlDriverCrashWorkaround(render_driver);
+	SDL_WindowFlags flags = sdl_window_flags |
+	                        OpenGlDriverCrashWorkaround(render_driver);
 
 	SDL_PropertiesID props = SDL_CreateProperties();
 	SDL_SetStringProperty(props, SDL_PROP_WINDOW_CREATE_TITLE_STRING, DOSBOX_NAME);
@@ -34,7 +34,7 @@ SdlRenderer::SdlRenderer(const int x, const int y,
 	SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_Y_NUMBER, y);
 	SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_WIDTH_NUMBER, width);
 	SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_HEIGHT_NUMBER, height);
-	
+
 	SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_FLAGS_NUMBER, flags);
 	window = SDL_CreateWindowWithProperties(props);
 
@@ -89,8 +89,9 @@ SDL_WindowFlags SdlRenderer::OpenGlDriverCrashWorkaround(const std::string_view 
 
 	// According to SDL3 all renderers support target textures; the default
 	// driver is the first in the list, so just query its name.
-	const char *name = SDL_GetRenderDriver(0);
-	default_driver_is_opengl = (name && std::string_view(name).starts_with("opengl"));
+	const char* name         = SDL_GetRenderDriver(0);
+	default_driver_is_opengl = (name &&
+	                            std::string_view(name).starts_with("opengl"));
 
 	return (default_driver_is_opengl ? SDL_WINDOW_OPENGL : 0);
 }
@@ -208,7 +209,7 @@ void SdlRenderer::NotifyRenderSizeChanged(const int render_width_px,
 	switch (texture_filter_mode) {
 	case TextureFilterMode::NearestNeighbour:
 		if (!SDL_SetTextureScaleMode(texture,
-		                            SDL_ScaleMode::SDL_SCALEMODE_NEAREST)) {
+		                             SDL_ScaleMode::SDL_SCALEMODE_NEAREST)) {
 			LOG_ERR("SDL: Error setting texture filtering mode: %s",
 			        SDL_GetError());
 		}
@@ -216,7 +217,7 @@ void SdlRenderer::NotifyRenderSizeChanged(const int render_width_px,
 
 	case TextureFilterMode::Bilinear:
 		if (!SDL_SetTextureScaleMode(texture,
-		                            SDL_ScaleMode::SDL_SCALEMODE_LINEAR)) {
+		                             SDL_ScaleMode::SDL_SCALEMODE_LINEAR)) {
 			LOG_ERR("SDL: Error setting texture filtering mode: %s",
 			        SDL_GetError());
 		}
@@ -234,15 +235,13 @@ void SdlRenderer::NotifyRenderSizeChanged(const int render_width_px,
 		last_framebuf = {};
 	}
 
-	curr_framebuf.surface = SDL_CreateSurface(
-	                                               render_width_px,
-	                                               render_height_px,
-	                                               SdlPixelFormat);
+	curr_framebuf.surface = SDL_CreateSurface(render_width_px,
+	                                          render_height_px,
+	                                          SdlPixelFormat);
 
-	last_framebuf.surface = SDL_CreateSurface(
-	                                               render_width_px,
-	                                               render_height_px,
-	                                               SdlPixelFormat);
+	last_framebuf.surface = SDL_CreateSurface(render_width_px,
+	                                          render_height_px,
+	                                          SdlPixelFormat);
 
 	if (!curr_framebuf.surface || !last_framebuf.surface) {
 		SDL_DestroyTexture(texture);
@@ -369,8 +368,8 @@ void SdlRenderer::SetVsync(const bool is_enabled)
 {
 	if (!SDL_SetRenderVSync(renderer, (is_enabled ? 1 : 0))) {
 		LOG_WARNING("SDL: Error %s vsync: %s",
-		        (is_enabled ? "enabling" : "disabling"),
-		        SDL_GetError());
+		            (is_enabled ? "enabling" : "disabling"),
+		            SDL_GetError());
 	}
 }
 
@@ -413,7 +412,7 @@ RenderedImage SdlRenderer::ReadPixelsPostShader(const DosBox::Rect output_rect_p
 	const auto image_size_bytes = check_cast<uint32_t>(image.params.height *
 	                                                   image.pitch);
 
-	image.image_data   = new uint8_t[image_size_bytes];
+	image.image_data = new uint8_t[image_size_bytes];
 
 	image.is_flipped_vertically = false;
 
