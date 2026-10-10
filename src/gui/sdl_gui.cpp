@@ -44,6 +44,10 @@
 #include "utils/rect.h"
 #include "utils/string_utils.h"
 
+#ifdef MACOSX
+#include "gui/private/macos_window.h"
+#endif
+
 // must be included after dosbox_config.h
 #include <SDL3/SDL.h>
 
@@ -1851,6 +1855,12 @@ void GFX_InitSdl()
 	if (!SDL_Init(SDL_INIT_VIDEO)) {
 		E_Exit("SDL: Failed to init SDL video and timer: %s", SDL_GetError());
 	}
+
+#ifdef MACOSX
+	// Otherwise, macOS can restore stale window sizes when the user drags
+	// the window to another display
+	DisableWindowFrameRestoreOnDisplayChange();
+#endif
 
 #if defined(LINUX)
 	if (is_using_kmsdrm_driver() && !check_kmsdrm_setting()) {
