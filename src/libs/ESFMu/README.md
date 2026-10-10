@@ -27,7 +27,7 @@ I'd like to thank:
   - For kickstarting the ESFM research project and compiling rainwarrior's findings and more in an accessible document ("ESFM Demystified").
 - **pachuco/CatButts**
   - For documenting ESS's patent on ESFM's feedback implementation, which was vital in getting **ESFMu**'s sound output to be accurate.
-- **akumanatt**
+- **tgies**
   - For helping out with code optimization.
 - **shadex/shidzy13**
   - For helping out with the nifty logo above, thanks!
