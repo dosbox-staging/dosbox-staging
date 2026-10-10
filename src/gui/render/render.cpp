@@ -396,8 +396,8 @@ void RENDER_EndUpdate(const bool abort)
 	RENDER_DrawLine = empty_line_handler;
 
 	// Latch the just-finished frame before any consumer (capture,
-	// deinterlace) runs, so anything that reads via the latch sees the fresh
-	// frame, not the previous one.
+	// deinterlace) runs, so anything that reads via the latch sees the
+	// fresh frame, not the previous one.
 	if (!abort) {
 		latch_last_complete_source();
 	}
