@@ -137,7 +137,8 @@ struct SDL_Block {
 	// undefined until we learn where the window has been placed.
 	//
 	// When the display scale changes (e.g., the window is moved to a
-	// display with a different scale), we keep the window's size in logical
+	// display with a different scale), we keep the window's size in pixels
+	// if it was specified in pixels. Otherwise, we keep its size in logical
 	// units, like the OS does with other application windows.
 	struct {
 		// The size is not rounded, so window sizes specified in pixels
@@ -154,6 +155,10 @@ struct SDL_Block {
 		// them in.
 		WindowGeometry::Unit size_unit     = {};
 		WindowGeometry::Unit position_unit = {};
+
+		// Set when the window size needs to be restored after a display
+		// scale change
+		bool is_resize_pending = false;
 	} windowed = {};
 
 	struct {
