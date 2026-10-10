@@ -130,11 +130,13 @@ struct SDL_Block {
 	std::optional<VideoMode> maybe_video_mode = {};
 
 	// The size and position of the window in windowed mode, in logical
-	// units. These are set from the `window_size` and `window_position`
-	// settings, then follow the actual window as the user resizes and moves
-	// it. We restore the window to this size and position when leaving
-	// fullscreen mode. With `window_position = auto`, the position is
-	// undefined until we learn where the window has been placed.
+	// units. The position is relative to the top-left corner of the
+	// window's display. These are set from the `window_size` and
+	// `window_position` settings, then follow the actual window as the user
+	// resizes and moves it. We restore the window to this size and position
+	// when leaving fullscreen mode. With `window_position = auto`, the
+	// position is undefined until we learn where the window has been
+	// placed.
 	//
 	// When the display scale changes (e.g., the window is moved to a
 	// display with a different scale), we keep the window's size in pixels
@@ -145,6 +147,9 @@ struct SDL_Block {
 		// are restored exactly
 		float width  = 0.0f;
 		float height = 0.0f;
+
+		// The display the position is relative to
+		SDL_DisplayID display = 0;
 
 		int x_pos  = SDL_WINDOWPOS_UNDEFINED;
 		int y_pos  = SDL_WINDOWPOS_UNDEFINED;
