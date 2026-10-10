@@ -20,6 +20,7 @@ target_sources(dosboxcommon PRIVATE
 
 if(APPLE)
 target_sources(dosboxcommon PRIVATE
+  macos_window.mm
   render/macos_colorspace.mm
 )
 endif()
