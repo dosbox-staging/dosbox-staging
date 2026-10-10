@@ -74,13 +74,12 @@ static std::optional<float> parse_number(const std::string& s, const Unit unit)
 {
 	switch (unit) {
 	case Unit::Percentage: {
-		constexpr auto MinPercentage = 0.0f;
 		constexpr auto MaxPercentage = 1000.0f;
 
+		// Also rejects NaN and infinity
 		const auto percentage = parse_float(s);
 
-		if (percentage && *percentage >= MinPercentage &&
-		    *percentage <= MaxPercentage) {
+		if (percentage && std::abs(*percentage) <= MaxPercentage) {
 			return percentage;
 		}
 		return {};
@@ -92,7 +91,8 @@ static std::optional<float> parse_number(const std::string& s, const Unit unit)
 		// integer overflows when converting between units
 		constexpr auto MaxValue = 65535;
 
-		if (const auto number = parse_int(s); number && *number <= MaxValue) {
+		if (const auto number = parse_int(s);
+		    number && *number >= -MaxValue && *number <= MaxValue) {
 			return static_cast<float>(*number);
 		}
 		return {};
@@ -157,6 +157,15 @@ std::optional<PositionSetting> ParseWindowPositionSetting(const std::string_view
 {
 	const auto position = parse(value, ",");
 	if (!position || position->first < 0.0f || position->second < 0.0f) {
+		return {};
+	}
+	return PositionSetting{position->first, position->second, position->unit};
+}
+
+std::optional<PositionSetting> ParseViewportPositionSetting(const std::string_view value)
+{
+	const auto position = parse(value, ",");
+	if (!position) {
 		return {};
 	}
 	return PositionSetting{position->first, position->second, position->unit};
