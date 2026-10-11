@@ -360,6 +360,15 @@ void VGA_DAC_SetEntry(const uint8_t color_idx, const uint8_t red,
 	}
 }
 
+// In 16-colour modes only the attribute-linked DAC entries reach the screen
+// palette: send them all on entering a 256-colour mode.
+void VGA_DAC_SetEntirePalette()
+{
+	for (auto i = 0u; i < NumVgaColors; ++i) {
+		vga_dac_update_color(check_cast<uint8_t>(i));
+	}
+}
+
 void VGA_SetupDAC(void)
 {
 	vga.dac.bits        = 6;
