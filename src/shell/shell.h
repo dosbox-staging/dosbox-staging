@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2020-2026 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -15,13 +15,13 @@
 #include "cpu/callback.h"
 #include "dos/programs.h"
 
-class DOS_Shell;
+class DosShell;
 
 constexpr auto CMD_MAXLINE = 4096;
 
 extern callback_number_t call_shellstop;
 
-DOS_Shell* DOS_GetFirstShell();
+DosShell* DOS_GetFirstShell();
 
 class LineReader {
 public:
@@ -62,8 +62,8 @@ class AutoexecEditor;
 class MoreOutputStrings;
 
 struct SHELL_Cmd {
-	void (DOS_Shell::*handler)(char* args) = nullptr; // Handler for this
-	                                                  // command
+	void (DosShell::*handler)(char* args) = nullptr; // Handler for this
+	                                                 // command
 	const char* help       = ""; // String with command help
 	HELP_Filter filter     = HELP_Filter::Common;
 	HELP_Category category = HELP_Category::Misc;
@@ -86,7 +86,7 @@ private:
 	std_fs::path path;
 };
 
-class DOS_Shell : public Program {
+class DosShell : public Program {
 private:
 	void PrintHelpForCommands(MoreOutputStrings& output, HELP_Filter req_filter);
 	void AddShellCmdsToHelpList();
@@ -107,10 +107,10 @@ private:
 	static inline bool help_list_populated = false;
 
 public:
-	DOS_Shell();
-	~DOS_Shell() override                  = default;
-	DOS_Shell(const DOS_Shell&)            = delete; // prevent copy
-	DOS_Shell& operator=(const DOS_Shell&) = delete; // prevent assignment
+	DosShell();
+	~DosShell() override                 = default;
+	DosShell(const DosShell&)            = delete; // prevent copy
+	DosShell& operator=(const DosShell&) = delete; // prevent assignment
 	void Run() override;
 	void RunBatchFile();
 

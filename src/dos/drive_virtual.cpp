@@ -30,7 +30,7 @@ uint16_t fztime = 0;
 uint16_t fzdate = 0;
 char sfn[DOS_NAMELENGTH_ASCII];
 
-extern DOS_Shell *first_shell;
+extern DosShell* first_shell;
 
 class VFILE_Block;
 using vfile_block_t = std::shared_ptr<VFILE_Block>;

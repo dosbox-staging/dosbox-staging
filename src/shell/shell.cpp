@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2021-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2021-2026 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -27,9 +27,9 @@ callback_number_t call_shellstop = 0;
 
 // Larger scope so shell_del autoexec can use it to
 // remove things from the environment
-static DOS_Shell *first_shell = nullptr;
+static DosShell* first_shell = nullptr;
 
-DOS_Shell* DOS_GetFirstShell()
+DosShell* DOS_GetFirstShell()
 {
 	return first_shell;
 }
@@ -42,10 +42,10 @@ static Bitu shellstop_handler()
 }
 
 std::unique_ptr<Program> SHELL_ProgramCreate() {
-	return ProgramCreate<DOS_Shell>();
+	return ProgramCreate<DosShell>();
 }
 
-DOS_Shell::DOS_Shell()
+DosShell::DosShell()
 {
 	AddShellCmdsToHelpList();
 	help_detail = {HELP_Filter::All,
@@ -72,8 +72,7 @@ DOS_Shell::DOS_Shell()
 // This behavior is replicated here; see the shell_redirection_tests for more
 // examples.
 //
-std::optional<DOS_Shell::RedirectionResults> DOS_Shell::GetRedirection(
-        const std::string_view line)
+std::optional<DosShell::RedirectionResults> DosShell::GetRedirection(const std::string_view line)
 {
 	// Returned results and quick-access references to members.
 	RedirectionResults results = {};
@@ -266,7 +265,7 @@ uint16_t get_tick_random_number() {
 #pragma pvs(push)
 #pragma pvs(disable: 1020)
 
-void DOS_Shell::ParseLine(char *line)
+void DosShell::ParseLine(char* line)
 {
 	LOG(LOG_EXEC, LOG_ERROR)("Parsing command line: %s", line);
 	/* Check for a leading @ */
@@ -402,7 +401,7 @@ void DOS_Shell::ParseLine(char *line)
 
 #pragma clang diagnostic pop
 
-void DOS_Shell::RunBatchFile()
+void DosShell::RunBatchFile()
 {
 	char input_line[CMD_MAXLINE] = {0};
 	while (!batchfiles.empty() && !DOSBOX_IsShutdownRequested() &&
@@ -424,7 +423,7 @@ void DOS_Shell::RunBatchFile()
 
 static bool is_shell_running = false;
 
-void DOS_Shell::Run()
+void DosShell::Run()
 {
 	// COMMAND.COM's /C and /INIT spawn sub-commands. When parsing help, we need
 	// to be sure the /? and -? are intended for us and not part of the
@@ -441,7 +440,7 @@ void DOS_Shell::Run()
 		safe_strcpy(input_line, line.c_str());
 		char* sep = strpbrk(input_line, "\r\n"); //GTA installer
 		if (sep) *sep = 0;
-		DOS_Shell temp;
+		DosShell temp;
 		temp.echo = echo;
 		temp.ParseLine(input_line);
 		temp.RunBatchFile();
@@ -499,7 +498,7 @@ bool SHELL_IsRunning()
 	return is_shell_running;
 }
 
-void DOS_Shell::SyntaxError()
+void DosShell::SyntaxError()
 {
 	WriteOut(MSG_Get("SHELL_SYNTAX_ERROR"));
 }
@@ -529,7 +528,7 @@ static Bitu INT2E_Handler()
 
 	/* Execute command */
 	if (safe_strlen(tail.buffer)) {
-		DOS_Shell temp;
+		DosShell temp;
 		temp.ParseLine(tail.buffer);
 		temp.RunBatchFile();
 	}
@@ -1403,7 +1402,7 @@ void SHELL_InitAndRun()
 
 	// first_shell is only setup here, so may as well invoke
 	// it's constructor directly
-	first_shell = new DOS_Shell;
+	first_shell = new DosShell;
 	first_shell->Run();
 	delete first_shell;
 	first_shell = nullptr; // Make clear that it shouldn't be used anymore
