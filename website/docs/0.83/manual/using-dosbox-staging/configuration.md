@@ -36,6 +36,13 @@ command-line option to see the exact path on your system. The
 [`--editconf`](command-line.md#-editconf) option opens the primary
 configuration in your default text editor.
 
+!!! tip "Tip for non-English speakers"
+
+    If you're a non-native English speaker, you might want to change the
+    [interface language](../system/localisation.md#interface-language) to your
+    native language in your primary configuration. 
+
+
 ## Local configuration
 
 DOSBox Staging also supports **local configurations**, which are also called
@@ -307,9 +314,9 @@ CONFIG -h gus
   configuration to settings that affect the emulator's general behaviour ---
   things like [`fullscreen`](../graphics/display-and-window.md#fullscreen),
   [`pause_when_inactive`](../system/overview.md#pause_when_inactive),
-  [`language`](../system/localisation.md#language), and setting the [master
-  volume](../sound/mixer.md#volume). Settings that configure the hardware a
-  particular game needs can then go into the local per-game configurations. If
-  you change the emulated hardware in the primary configuration, you risk
-  breaking games that were configured for a specific hardware setup using
-  their own setup utilities.
+  interface [`language`](../system/localisation.md#language), and setting the
+  [master volume](../sound/mixer.md#volume). Settings that configure the
+  hardware a particular game needs can then go into the local per-game
+  configurations. If you change the emulated hardware in the primary
+  configuration, you risk breaking games that were configured for a specific
+  hardware setup using their own setup utilities.
