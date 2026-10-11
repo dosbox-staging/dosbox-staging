@@ -1298,18 +1298,12 @@ void GFX_Destroy()
 
 #if defined(LINUX)
 
-static bool is_using_kmsdrm_driver()
+static bool is_using_video_driver(const std::string_view driver_name)
 {
 	assert(SDL_WasInit(SDL_INIT_VIDEO));
 
 	const auto driver = SDL_GetCurrentVideoDriver();
-	if (!driver) {
-		return false;
-	}
-
-	std::string driver_str = driver;
-	lowcase(driver_str);
-	return driver_str == "kmsdrm";
+	return driver && iequals(driver, driver_name);
 }
 
 static bool check_kmsdrm_setting()
@@ -1335,7 +1329,7 @@ static void maybe_limit_window_size_kmsdrm_driver(float& w, float& h,
 	bool was_limited = false;
 
 	// SDL KMSDRM limitations
-	if (is_using_kmsdrm_driver()) {
+	if (is_using_video_driver("kmsdrm")) {
 		w = desktop.width;
 		h = desktop.height;
 
@@ -1946,7 +1940,7 @@ void GFX_InitSdl()
 #endif
 
 #if defined(LINUX)
-	if (is_using_kmsdrm_driver() && !check_kmsdrm_setting()) {
+	if (is_using_video_driver("kmsdrm") && !check_kmsdrm_setting()) {
 		E_Exit("SDL: /dev/input/event0 is not readable, quitting early to prevent TTY input lockup.\n"
 		       "Please run: 'sudo usermod -aG input $(whoami)', then re-login and try again.");
 	}
