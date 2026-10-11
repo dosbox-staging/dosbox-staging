@@ -54,6 +54,9 @@ void VGA_SetMode(VGAModes mode) {
 	if (vga.mode == mode) return;
 	vga.mode=mode;
 	VGA_SetupHandlers();
+	if (mode == M_EGA) {
+		VGA_RebuildEgaPixelBuffer();
+	}
 	VGA_StartResize();
 }
 

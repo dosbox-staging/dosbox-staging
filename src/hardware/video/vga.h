@@ -1098,6 +1098,7 @@ Rgb888 VGA_GetBlackLevelColor();
 void VGA_SetMode(VGAModes mode);
 void VGA_DetermineMode(void);
 void VGA_SetupHandlers(void);
+void VGA_RebuildEgaPixelBuffer();
 const char* to_string(const VGAModes mode);
 
 void VGA_StartResize();
