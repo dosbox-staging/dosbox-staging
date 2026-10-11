@@ -76,217 +76,218 @@ changes and improvements introduced in this version.
 
 ## Older versions
 
-!!! warning
+These older versions are mainly provided for regression testing. You can also
+use them if you're on a legacy operating system unsupported by the latest
+release, but the core team doesn't offer any help with these earlier releases.
+Our recommendation is to upgrade your operating system and use the latest
+version.
 
-    These older versions are mainly provided for regression testing. You can also
-    use them if you're on a legacy operating system unsupported by the latest
-    release, but the core team doesn't offer any help with these earlier releases.
-    Our recommendation is to upgrade your operating system and use the latest
-    version.
+??? note "List of older Windows versions"
 
-- [DOSBox Staging 0.82.2 (x86_64, Installer)][0_82_2_INSTALLER] (Windows 8 or newer)
-  <br>
-  <small>
-  sha256: 8f8cd565a171c7dcedbda9a28f162c1d<wbr>464c20f688765eea4cddfc1f3205914e
-  </small>
+    - [DOSBox Staging 0.82.2 (x86_64, Installer)][0_82_2_INSTALLER] (Windows 8 or newer)
+      <br>
+      <small>
+      sha256: 8f8cd565a171c7dcedbda9a28f162c1d<wbr>464c20f688765eea4cddfc1f3205914e
+      </small>
 
-- [DOSBox Staging 0.82.2 (x86_64, Portable ZIP)][0_82_2_ZIP] (Windows 8 or newer)
-  <br>
-  <small>
-  sha256: 9fa55dcbacc2e5565ac4be63b5cfa4e7<wbr>d50dc9adb9f9cb53f506d973af567f3a
-  </small>
+    - [DOSBox Staging 0.82.2 (x86_64, Portable ZIP)][0_82_2_ZIP] (Windows 8 or newer)
+      <br>
+      <small>
+      sha256: 9fa55dcbacc2e5565ac4be63b5cfa4e7<wbr>d50dc9adb9f9cb53f506d973af567f3a
+      </small>
 
-- [DOSBox Staging 0.82.1 (x86_64, Installer)][0_82_1_INSTALLER] (Windows 8 or newer)
-  <br> 
-  <small>
-  sha256: c69e67cbda6a44019d5a6b44d53cf353<wbr>56209cb28e835c2538ed3b2ad017c5b6
-  </small>
+    - [DOSBox Staging 0.82.1 (x86_64, Installer)][0_82_1_INSTALLER] (Windows 8 or newer)
+      <br> 
+      <small>
+      sha256: c69e67cbda6a44019d5a6b44d53cf353<wbr>56209cb28e835c2538ed3b2ad017c5b6
+      </small>
 
-- [DOSBox Staging 0.82.1 (x86_64, Portable ZIP)][0_82_1_ZIP] (Windows 8 or newer)
-  <br>
-  <small>
-  sha256: a8d4452801f4dde295d1e0835826878e<wbr>710d1a14a9e2525b190347c9f38a13a2
-  </small>
+    - [DOSBox Staging 0.82.1 (x86_64, Portable ZIP)][0_82_1_ZIP] (Windows 8 or newer)
+      <br>
+      <small>
+      sha256: a8d4452801f4dde295d1e0835826878e<wbr>710d1a14a9e2525b190347c9f38a13a2
+      </small>
 
-- [DOSBox Staging 0.82.0 (x86_64, Installer)][0_82_0_INSTALLER] (Windows 8 or newer)
-  <br>
-  <small>
-  sha256: fa041173e55fba9873be0a85734a09a3<wbr>f54b466c95ff8f1b8aa1a84cd3347729
-  </small>
+    - [DOSBox Staging 0.82.0 (x86_64, Installer)][0_82_0_INSTALLER] (Windows 8 or newer)
+      <br>
+      <small>
+      sha256: fa041173e55fba9873be0a85734a09a3<wbr>f54b466c95ff8f1b8aa1a84cd3347729
+      </small>
 
-- [DOSBox Staging 0.82.0 (x86_64, Portable ZIP)][0_82_0_ZIP] (Windows 8 or newer)
-  <br>
-  <small>
-  sha256: b558efff258a7bd5f05cf61f1fddffcd<wbr>e8385e04c9b27bb29854bd13a708fbe1
-  </small>
+    - [DOSBox Staging 0.82.0 (x86_64, Portable ZIP)][0_82_0_ZIP] (Windows 8 or newer)
+      <br>
+      <small>
+      sha256: b558efff258a7bd5f05cf61f1fddffcd<wbr>e8385e04c9b27bb29854bd13a708fbe1
+      </small>
 
-- [DOSBox Staging 0.81.2 (x86_64, Installer)][0_81_2_INSTALLER] (Windows 8 or newer)
-  <br>
-  <small>
-  sha256: 7c23512666f694420e5e2612742de5fb<wbr>64b32d336e54359b65fd21e7107ef51c
-  </small>
+    - [DOSBox Staging 0.81.2 (x86_64, Installer)][0_81_2_INSTALLER] (Windows 8 or newer)
+      <br>
+      <small>
+      sha256: 7c23512666f694420e5e2612742de5fb<wbr>64b32d336e54359b65fd21e7107ef51c
+      </small>
 
-- [DOSBox Staging 0.81.2 (x86_64, Portable ZIP)][0_81_2_ZIP] (Windows 8 or newer)
-  <br>
-  <small>
-  sha256: d7ec6054ae58d287c3ad5fbf4c3df732<wbr>ea3fd75ae828c8f4481fcf7c6203d168
-  </small>
+    - [DOSBox Staging 0.81.2 (x86_64, Portable ZIP)][0_81_2_ZIP] (Windows 8 or newer)
+      <br>
+      <small>
+      sha256: d7ec6054ae58d287c3ad5fbf4c3df732<wbr>ea3fd75ae828c8f4481fcf7c6203d168
+      </small>
 
-- [DOSBox Staging 0.81.1 (Installer)][0_81_1_INSTALLER] (Windows 8 or newer)
-  <br>
-  <small>
-  sha256: 4bb5e63bfef41d4a6ee8f7af3b8c5ee6<wbr>756987c4247197db0b16d888c6ac0705
-  </small>
+    - [DOSBox Staging 0.81.1 (Installer)][0_81_1_INSTALLER] (Windows 8 or newer)
+      <br>
+      <small>
+      sha256: 4bb5e63bfef41d4a6ee8f7af3b8c5ee6<wbr>756987c4247197db0b16d888c6ac0705
+      </small>
 
-- [DOSBox Staging 0.81.1 (Portable ZIP)][0_81_1_ZIP] (Windows 8 or newer)
-  <br>
-  <small>
-  sha256: cb45e4e56b85cac7b8b1eb63a1bbd934<wbr>30a226215a5c04f2700076c279d10e12
-  </small>
+    - [DOSBox Staging 0.81.1 (Portable ZIP)][0_81_1_ZIP] (Windows 8 or newer)
+      <br>
+      <small>
+      sha256: cb45e4e56b85cac7b8b1eb63a1bbd934<wbr>30a226215a5c04f2700076c279d10e12
+      </small>
 
-- [DOSBox Staging 0.81.0 (Installer)][0_81_0_INSTALLER] (Windows 8 or newer)
-  <br>
-  <small>
-  sha256: 7de2cbdd8b320017dcf904c3df58b150<wbr>88047954b053757c870279cbbb301393
-  </small>
+    - [DOSBox Staging 0.81.0 (Installer)][0_81_0_INSTALLER] (Windows 8 or newer)
+      <br>
+      <small>
+      sha256: 7de2cbdd8b320017dcf904c3df58b150<wbr>88047954b053757c870279cbbb301393
+      </small>
 
-- [DOSBox Staging 0.81.0 (Portable ZIP)][0_81_0_ZIP] (Windows 8 or newer)
-  <br>
-  <small>
-  sha256: ce772a963716d63610e6cb0e817b16f1<wbr>b5a3cbfd3d5ad802726ddd583f32b79d
-  </small>
+    - [DOSBox Staging 0.81.0 (Portable ZIP)][0_81_0_ZIP] (Windows 8 or newer)
+      <br>
+      <small>
+      sha256: ce772a963716d63610e6cb0e817b16f1<wbr>b5a3cbfd3d5ad802726ddd583f32b79d
+      </small>
 
-- [DOSBox Staging 0.80.1 64-bit (Installer)][0_80_1_x64_INSTALLER] (Windows 8 or newer)
-  <br>
-  <small>
-  sha256: 94b961f397f3b70a13daf3b573857b52<wbr>62515e75d490bfc19f019479fe1694f8
-  </small>
+    - [DOSBox Staging 0.80.1 64-bit (Installer)][0_80_1_x64_INSTALLER] (Windows 8 or newer)
+      <br>
+      <small>
+      sha256: 94b961f397f3b70a13daf3b573857b52<wbr>62515e75d490bfc19f019479fe1694f8
+      </small>
 
-- [DOSBox Staging 0.80.1 64-bit (Portable ZIP)][0_80_1_x64_ZIP] (Windows 8 or newer)
-  <br>
-  <small>
-  sha256: e7ab98013b55f6fd6db1f529574b8f29<wbr>05d374225f532ce0905666281cbe32af
-  </small>
+    - [DOSBox Staging 0.80.1 64-bit (Portable ZIP)][0_80_1_x64_ZIP] (Windows 8 or newer)
+      <br>
+      <small>
+      sha256: e7ab98013b55f6fd6db1f529574b8f29<wbr>05d374225f532ce0905666281cbe32af
+      </small>
 
-- [DOSBox Staging 0.80.1 32-bit (Portable ZIP)][0_80_1_x32_ZIP] (Windows 8 or newer)
-  <br>
-  <small>
-  sha256: 63a8c5b084231364961f7c8b6415e446<wbr>22c5ab9822e49839c2aca1bddd3a9459
-  </small>
+    - [DOSBox Staging 0.80.1 32-bit (Portable ZIP)][0_80_1_x32_ZIP] (Windows 8 or newer)
+      <br>
+      <small>
+      sha256: 63a8c5b084231364961f7c8b6415e446<wbr>22c5ab9822e49839c2aca1bddd3a9459
+      </small>
 
-- [DOSBox Staging 0.80.0 64-bit (Installer)][0_80_0_x64_INSTALLER] (Windows 7 or newer)
-  <br>
-  <small>
-  sha256: 84445c869e58f6b4591484f6178c7b5b<wbr>3c8f284bf9460e9afc4502ba842ab039
-  </small>
+    - [DOSBox Staging 0.80.0 64-bit (Installer)][0_80_0_x64_INSTALLER] (Windows 7 or newer)
+      <br>
+      <small>
+      sha256: 84445c869e58f6b4591484f6178c7b5b<wbr>3c8f284bf9460e9afc4502ba842ab039
+      </small>
 
-- [DOSBox Staging 0.80.0 64-bit (Portable ZIP)][0_80_0_x64_ZIP] (Windows 7 or newer)
-  <br>
-  <small>
-  sha256: 075be379ed4475615e0e86953eb21f02<wbr>4c74b4cafd6914e9cf5ef40e3d9e26cd
-  </small>
+    - [DOSBox Staging 0.80.0 64-bit (Portable ZIP)][0_80_0_x64_ZIP] (Windows 7 or newer)
+      <br>
+      <small>
+      sha256: 075be379ed4475615e0e86953eb21f02<wbr>4c74b4cafd6914e9cf5ef40e3d9e26cd
+      </small>
 
-- [DOSBox Staging 0.79.1 64-bit (Installer)][0_79_1_x64_INSTALLER] (Windows 7 or newer)
-  <br>
-  <small>
-  sha256: 0045ac995ada0af955681983ae86c969<wbr>a05030c25173618f8b1547a267046a27
-  </small>
+    - [DOSBox Staging 0.79.1 64-bit (Installer)][0_79_1_x64_INSTALLER] (Windows 7 or newer)
+      <br>
+      <small>
+      sha256: 0045ac995ada0af955681983ae86c969<wbr>a05030c25173618f8b1547a267046a27
+      </small>
 
-- [DOSBox Staging 0.79.1 64-bit (Portable ZIP)][0_79_1_x64_ZIP] (Windows 7 or newer)
-  <br>
-  <small>
-  sha256: 8c7045dfea6dc20bb985cff516d2faee<wbr>51d2ecaf054db60632857b6941d3d648
-  </small>
+    - [DOSBox Staging 0.79.1 64-bit (Portable ZIP)][0_79_1_x64_ZIP] (Windows 7 or newer)
+      <br>
+      <small>
+      sha256: 8c7045dfea6dc20bb985cff516d2faee<wbr>51d2ecaf054db60632857b6941d3d648
+      </small>
 
-- [DOSBox Staging 0.78.1 64-bit (Portable ZIP)][0_78_1_x64_MSYS2] (Windows Vista or newer)
-  <br>
-  <small>
-  sha256: 3c2f408125351154a37e93de8a4bd05d<wbr>0c722bbf53e1f583909e4ca6c3eb9204
-  </small>
+    - [DOSBox Staging 0.78.1 64-bit (Portable ZIP)][0_78_1_x64_MSYS2] (Windows Vista or newer)
+      <br>
+      <small>
+      sha256: 3c2f408125351154a37e93de8a4bd05d<wbr>0c722bbf53e1f583909e4ca6c3eb9204
+      </small>
 
-- [DOSBox Staging with built-in debugger 0.78.1 64-bit (Portable ZIP)][0_78_1_x64_MSVC] (Windows Vista or newer)
-  <br>
-  <small>
-  sha256: b99f3c354f831ed2b0ed04d215170f69<wbr>6b6fc18285b0c7192c0abab62c41bbc8
-  </small>
+    - [DOSBox Staging with built-in debugger 0.78.1 64-bit (Portable ZIP)][0_78_1_x64_MSVC] (Windows Vista or newer)
+      <br>
+      <small>
+      sha256: b99f3c354f831ed2b0ed04d215170f69<wbr>6b6fc18285b0c7192c0abab62c41bbc8
+      </small>
 
-- [DOSBox Staging 0.78.0 64-bit (Portable ZIP)][0_78_0_x64] (Windows Vista or newer)
-  <br>
-  <small>
-  sha256: f13cba664259fdb0db5e32826e13dcde<wbr>d4270557963f6e823a4731129f23a8a3
-  </small>
+    - [DOSBox Staging 0.78.0 64-bit (Portable ZIP)][0_78_0_x64] (Windows Vista or newer)
+      <br>
+      <small>
+      sha256: f13cba664259fdb0db5e32826e13dcde<wbr>d4270557963f6e823a4731129f23a8a3
+      </small>
 
-- [DOSBox Staging 0.78.0 32-bit (Portable ZIP)][0_78_0_x86] (Windows Vista or newer)
-  <br>
-  <small>
-  sha256: 0ca9201cdf3f3a1576b97b0de0e87280<wbr>b75c633976f0b179ba33a68d44f5ba56
-  </small>
+    - [DOSBox Staging 0.78.0 32-bit (Portable ZIP)][0_78_0_x86] (Windows Vista or newer)
+      <br>
+      <small>
+      sha256: 0ca9201cdf3f3a1576b97b0de0e87280<wbr>b75c633976f0b179ba33a68d44f5ba56
+      </small>
 
-- [DOSBox Staging 0.77.1 64-bit (Portable ZIP)][0_77_1_x64] (Windows Vista or newer)
-  <br>
-  <small>
-  sha256: 11ba992ece6d3e4ef2046fcdb6d842da<wbr>364b69720a921d61fdcc793eb52e7051
-  </small>
+    - [DOSBox Staging 0.77.1 64-bit (Portable ZIP)][0_77_1_x64] (Windows Vista or newer)
+      <br>
+      <small>
+      sha256: 11ba992ece6d3e4ef2046fcdb6d842da<wbr>364b69720a921d61fdcc793eb52e7051
+      </small>
 
-- [DOSBox Staging 0.77.1 32-bit (Portable ZIP)][0_77_1_x86] (Windows Vista or newer)
-  <br>
-  <small>
-  sha256: a34883101486ce2af071a29c6390f203<wbr>8889fc519e042101284f2a6999d9f0ef
-  </small>
+    - [DOSBox Staging 0.77.1 32-bit (Portable ZIP)][0_77_1_x86] (Windows Vista or newer)
+      <br>
+      <small>
+      sha256: a34883101486ce2af071a29c6390f203<wbr>8889fc519e042101284f2a6999d9f0ef
+      </small>
 
-- [DOSBox Staging 0.77.0 64-bit (Portable ZIP)][0_77_0_x64] (Windows Vista or newer)
-  <br>
-  <small>
-  sha256: cacdac418642fd8c7faf1e5955110c35<wbr>d0c207392ae20835707fd2a1e1114b82
-  </small>
+    - [DOSBox Staging 0.77.0 64-bit (Portable ZIP)][0_77_0_x64] (Windows Vista or newer)
+      <br>
+      <small>
+      sha256: cacdac418642fd8c7faf1e5955110c35<wbr>d0c207392ae20835707fd2a1e1114b82
+      </small>
 
-- [DOSBox Staging 0.77.0 32-bit (Portable ZIP)][0_77_0_x86] (Windows Vista or newer)
-  <br>
-  <small>
-  sha256: f718d07bab69e3e1be0b28207039cea2<wbr>746c7e45b8ba7a19b625011f477e609a
-  </small>
+    - [DOSBox Staging 0.77.0 32-bit (Portable ZIP)][0_77_0_x86] (Windows Vista or newer)
+      <br>
+      <small>
+      sha256: f718d07bab69e3e1be0b28207039cea2<wbr>746c7e45b8ba7a19b625011f477e609a
+      </small>
 
-- [DOSBox Staging 0.76.0 32-bit (Portable ZIP)][0_76_0_x86] (Windows Vista or newer)
-  <br>
-  <small>
-  sha256: 646d2f3fa8189e411589fedcb8148a29<wbr>5361693a6ce95d08e06f4a70e5a36b16
-  </small>
+    - [DOSBox Staging 0.76.0 32-bit (Portable ZIP)][0_76_0_x86] (Windows Vista or newer)
+      <br>
+      <small>
+      sha256: 646d2f3fa8189e411589fedcb8148a29<wbr>5361693a6ce95d08e06f4a70e5a36b16
+      </small>
 
-- [DOSBox Staging 0.75.2 64-bit (Portable ZIP)][0_75_2_x64] (Windows Vista or newer)
-  <br>
-  <small>
-  sha256: 09f0ca911813a64b8814880eb6e49ad4<wbr>dcdac9a5bb9263c4887ad82b71fad292
-  </small>
+    - [DOSBox Staging 0.75.2 64-bit (Portable ZIP)][0_75_2_x64] (Windows Vista or newer)
+      <br>
+      <small>
+      sha256: 09f0ca911813a64b8814880eb6e49ad4<wbr>dcdac9a5bb9263c4887ad82b71fad292
+      </small>
 
-- [DOSBox Staging 0.75.2 32-bit (Portable ZIP)][0_75_2_x86] (Windows Vista or newer)
-  <br>
-  <small>
-  sha256: 51dc171ff52ea395c6a22f09ebb98a93<wbr>974a95c701ca81008368c22a66deced2
-  </small>
+    - [DOSBox Staging 0.75.2 32-bit (Portable ZIP)][0_75_2_x86] (Windows Vista or newer)
+      <br>
+      <small>
+      sha256: 51dc171ff52ea395c6a22f09ebb98a93<wbr>974a95c701ca81008368c22a66deced2
+      </small>
 
-- [DOSBox Staging 0.75.1 64-bit (Portable ZIP)][0_75_1_x64] (Windows Vista or newer)
-  <br>
-  <small>
-  sha256: 80c60c4377ff2882649f113b3cb3bcd4<wbr>07c17acaac344c49fa1fc4229813f012
-  </small>
+    - [DOSBox Staging 0.75.1 64-bit (Portable ZIP)][0_75_1_x64] (Windows Vista or newer)
+      <br>
+      <small>
+      sha256: 80c60c4377ff2882649f113b3cb3bcd4<wbr>07c17acaac344c49fa1fc4229813f012
+      </small>
 
-- [DOSBox Staging 0.75.1 32-bit (Portable ZIP)][0_75_1_x86] (Windows Vista or newer)
-  <br>
-  <small>
-  sha256: 843c742a348f575862e152e02cf174be<wbr>0ea1c52bdb6e4bffd65f34af88b566b7
-  </small>
+    - [DOSBox Staging 0.75.1 32-bit (Portable ZIP)][0_75_1_x86] (Windows Vista or newer)
+      <br>
+      <small>
+      sha256: 843c742a348f575862e152e02cf174be<wbr>0ea1c52bdb6e4bffd65f34af88b566b7
+      </small>
 
-- [DOSBox Staging 0.75.0 32-bit (Portable ZIP)][0_75_0_x86] (Windows Vista or newer, supports CPUs without SSE4.2)
-  <br>
-  <small>
-  sha256: 69046adcef2ef9920fbba8d40fc9e51f<wbr>3dd144ba4549787e1816cf1c2ae87d71
-  </small>
+    - [DOSBox Staging 0.75.0 32-bit (Portable ZIP)][0_75_0_x86] (Windows Vista or newer, supports CPUs without SSE4.2)
+      <br>
+      <small>
+      sha256: 69046adcef2ef9920fbba8d40fc9e51f<wbr>3dd144ba4549787e1816cf1c2ae87d71
+      </small>
 
-- [DOSBox Staging 0.75.0-rc1 32-bit (Portable ZIP)][0_75_0_rc1_x86] (Windows Vista or newer, supports CPUs without SSE4.2)
-  <br>
-  <small>
-  sha256: 738d2ae2101384f2eeaf1895de64cf1b<wbr>4c76eaf7873de7e15b7f52145dfed7e7
-  </small>
+    - [DOSBox Staging 0.75.0-rc1 32-bit (Portable ZIP)][0_75_0_rc1_x86] (Windows Vista or newer, supports CPUs without SSE4.2)
+      <br>
+      <small>
+      sha256: 738d2ae2101384f2eeaf1895de64cf1b<wbr>4c76eaf7873de7e15b7f52145dfed7e7
+      </small>
+
 
 [0_83_0-installer]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.83.0/dosbox-staging-windows-x64-v0.83.0-setup.exe
 [0_83_0-zip]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.83.0/dosbox-staging-windows-x64-v0.83.0.zip

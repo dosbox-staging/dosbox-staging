@@ -879,8 +879,8 @@ small {
 /*--------------------------------------------------------------------------*/
 .md-content .release-downloads {
   padding: 0.1rem 1.2rem;
-  background-color: rgba(0, 0, 0, 0.04);
-  border-radius: 0.6em;
+  background-color: rgba(245, 0, 86, 0.1411764706);
+  border-radius: 0.7em;
 }
 .md-content .release-downloads ul {
   list-style: none;
