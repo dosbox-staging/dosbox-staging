@@ -25,7 +25,7 @@ DosShell* DOS_GetFirstShell();
 
 class LineReader {
 public:
-	virtual void Reset()       = 0;
+	virtual void Reset()                      = 0;
 	virtual std::optional<std::string> Read() = 0;
 
 	virtual ~LineReader() = default;
