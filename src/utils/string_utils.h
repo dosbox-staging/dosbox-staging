@@ -363,7 +363,6 @@ std::optional<std::pair<int, int>> parse_int_dimensions(const std::string_view s
 
 // Returned percentage values are unscaled.
 std::optional<float> parse_percentage_with_percent_sign(const std::string_view s);
-std::optional<float> parse_percentage_with_optional_percent_sign(const std::string_view s);
 
 template <typename... Args>
 std::string format_str(const std::string& format, const Args&... args) noexcept
