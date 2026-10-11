@@ -1202,11 +1202,11 @@ static std::optional<ViewportSettings> parse_relative_viewport_modes(const std::
 	const auto parts = split(pref);
 
 	if (parts.size() == 3 && parts[0] == "relative") {
-		const auto maybe_width_percentage =
-		        parse_percentage_with_optional_percent_sign(parts[1]);
+		const auto maybe_width_percentage = parse_percentage_with_percent_sign(
+		        parts[1]);
 
-		const auto maybe_height_percentage =
-		        parse_percentage_with_optional_percent_sign(parts[2]);
+		const auto maybe_height_percentage = parse_percentage_with_percent_sign(
+		        parts[2]);
 
 		if (!maybe_width_percentage) {
 			const auto extra_info = "Invalid horizontal scale";
