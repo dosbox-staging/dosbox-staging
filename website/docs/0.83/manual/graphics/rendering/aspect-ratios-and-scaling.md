@@ -410,13 +410,13 @@ You can set these in the `[render]` configuration section.
       the desktop size.
 
     - `relative H% V%` -- The viewport is set to a 4:3 aspect ratio rectangle
-      fit into the available window or screen, then is scaled by the H and V
-      horizontal and vertical scaling factors (valid range is from 20% to
-      300%). The resulting viewport is allowed to extend beyond the bounds of
-      the window or screen. Useful to force arbitrary display aspect ratios
-      with [`aspect`](#aspect) set to `stretch` and to "zoom" into the image.
-      This effectively emulates the horizontal and vertical stretch controls
-      of CRT monitors.
+       fit into the available window or screen, then is scaled by the `H` and
+       `V` horizontal and vertical scaling factors (valid range is from 20%
+       to 300%). The resulting viewport is allowed to extend beyond the
+       bounds of the window or screen. Useful to force arbitrary display
+       aspect ratios with [`aspect`](#aspect) set to `stretch` and to "zoom"
+       into the image. This effectively emulates the horizontal and vertical
+       stretch controls of CRT monitors.
 
     !!! note "Notes"
 
