@@ -509,21 +509,21 @@ def summary_query_pull_requests(csv_fname, start_time):
 
 
 MARKDOWN_HEADER = """> [!WARNING]
-> **These are the automatically generated release notes of the latest development snapshot builds!** This is not a stable release; things might blow up! 💣 🔥 💀
+> **These are the automatically generated release notes of the latest development snapshot build!** This is not a stable release; things might blow up! 💣 🔥 💀
 >
-> You can download the latest development builds from here:
-> https://www.dosbox-staging.org/download/development-builds/
+> You can download the latest official stable release [from our website](https://www.dosbox-staging.org/download/).
+> 
 
 """
 
 HTML_HEADER = """
 <div class="warning">
-<p><strong>These are automatically generated release notes for this development
+<p><strong>These are automatically generated release notes of this development
 snapshot build!</strong><br>This is not a stable release; things might blow
 up! 💣 🔥 💀</p>
 
-<p>You can download the latest stable builds <a href="https://www.dosbox-staging.org/download/">from our
-website</a>.</p>
+<p>You can download the latest official stable release
+<a href="https://www.dosbox-staging.org/download/">from our website</a>.</p>
 </div>
 """
 
