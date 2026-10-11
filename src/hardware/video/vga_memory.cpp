@@ -960,6 +960,24 @@ void VGA_ChangedBank(void) {
 	VGA_SetupHandlers();
 }
 
+// The 16-colour modes are drawn from vga.fastmem, which only the EGA write
+// handlers update: re-expand video memory into it on entering such a mode.
+void VGA_RebuildEgaPixelBuffer()
+{
+	const auto expand = [](const uint32_t nibbles) {
+		uint32_t pixels = 0;
+		for (auto plane = 0; plane < 4; ++plane) {
+			pixels |= Expand16Table[plane][(nibbles >> (plane * 8)) & 0xff];
+		}
+		return pixels;
+	};
+	for (auto i = 0u; i < vga.vmemsize / 4; ++i) {
+		const auto planes = host_readd_at(vga.mem.linear, i);
+		host_writed_at(vga.fastmem, i * 2, expand((planes >> 4) & 0x0f0f0f0f));
+		host_writed_at(vga.fastmem, i * 2 + 1, expand(planes & 0x0f0f0f0f));
+	}
+}
+
 void VGA_SetupHandlers(void) {
 	vga.svga.bank_read_full = vga.svga.bank_read*vga.svga.bank_size;
 	vga.svga.bank_write_full = vga.svga.bank_write*vga.svga.bank_size;
