@@ -1149,7 +1149,7 @@ void VGA_SetClock(Bitu which, uint32_t target);
 void VGA_SetRefreshRateMode(const std::string& pref);
 double VGA_GetRefreshRate();
 
-void VGA_DACSetEntirePalette(void);
+void VGA_DAC_SetEntirePalette(void);
 void VGA_StartRetrace(void);
 void VGA_StartUpdateLFB(void);
 void VGA_SetBlinking(uint8_t enabled);
