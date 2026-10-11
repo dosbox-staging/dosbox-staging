@@ -5,6 +5,43 @@ hide:
 
 # Linux releases
 
+!!! danger "READ THIS FIRST!"
+
+    📖 **Read the [0.83.0 release
+    notes](https://www.dosbox-staging.org/download/release-notes/0.83.0/)**.
+    They explain what's new, what's changed, and what may behave differently
+    from previous versions.
+
+    🚀 **New to DOSBox Staging? Read the [Getting Started
+    guide](https://www.dosbox-staging.org/getting-started/).** This is **not
+    optional** --- it covers the basics that most first-time questions are about.
+
+    📚 **Check the [user
+    manual](https://www.dosbox-staging.org/0.83/manual/introduction/about-this-manual/)**
+    to learn how the new features work and how to configure them.
+
+    🔍 **Search the [project website](https://www.dosbox-staging.org/)** using
+    the search box in the top-right corner. It searches the *entire* site,
+    including the Getting Started guide and the user manual.
+
+    🧩 **Check the
+    [wiki](https://github.com/dosbox-staging/dosbox-staging/wiki) and the
+    [Game
+    issues](https://github.com/dosbox-staging/dosbox-staging/wiki/Game-issues)
+    page.** Your problem may already be known, and there may be a workaround.
+
+
+!!! important
+
+    **Only ask a question or raise an issue ticket after you've done ALL of
+    the above.** When you do post, tell us what you've already read and tried.
+    It saves everyone time and gets you an answer faster.
+
+    **Most questions we receive are already answered in the documentation.**
+    Questions and issue tickets that are clearly covered by the docs may be
+    closed without further discussion.
+
+
 ## Latest version
 
 <section class="release-downloads" markdown>
@@ -24,11 +61,6 @@ A dedicated graphics adapter is recommended for laptops.
 
 Read the [0.83.0 release notes](release-notes/0.83.0.md) to learn about the
 changes and improvements introduced in this version.
-
-!!! tip
-
-    If you're new to DOSBox Staging, we highly recommend reading the
-    [Getting Started guide](../getting-started/index.md) first.
 
 Run the `install-icons.sh` script included with the release to install
 the application icons.
