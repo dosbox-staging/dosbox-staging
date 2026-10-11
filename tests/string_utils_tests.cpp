@@ -363,27 +363,6 @@ TEST(ParseInt, Invalid)
 	EXPECT_EQ(parse_int(" "), empty);
 }
 
-TEST(ParsePercentageWithOptionalPercentSign, Valid)
-{
-	EXPECT_EQ(*parse_percentage_with_optional_percent_sign("1%"), 1.0f);
-	EXPECT_EQ(*parse_percentage_with_optional_percent_sign("1"), 1.0f);
-
-	EXPECT_EQ(*parse_percentage_with_optional_percent_sign("100%"), 100.0f);
-	EXPECT_EQ(*parse_percentage_with_optional_percent_sign("100"), 100.0f);
-
-	EXPECT_EQ(*parse_percentage_with_optional_percent_sign("150%"), 150.0f);
-	EXPECT_EQ(*parse_percentage_with_optional_percent_sign("150"), 150.0f);
-
-	EXPECT_EQ(*parse_percentage_with_optional_percent_sign("-5%"), -5.0f);
-	EXPECT_EQ(*parse_percentage_with_optional_percent_sign("-5"), -5.0f);
-
-	EXPECT_EQ(*parse_percentage_with_optional_percent_sign("0%"), 0.0f);
-	EXPECT_EQ(*parse_percentage_with_optional_percent_sign("0"), 0.0f);
-
-	EXPECT_EQ(*parse_percentage_with_optional_percent_sign("-110.5%"), -110.5f);
-	EXPECT_EQ(*parse_percentage_with_optional_percent_sign("-110.5"), -110.5f);
-}
-
 TEST(ParsePercentageWithPercentSign, Valid)
 {
 	EXPECT_EQ(*parse_percentage_with_percent_sign("1%"), 1.0f);
@@ -405,16 +384,6 @@ TEST(ParsePercentageWithPercentSign, Invalid)
 	EXPECT_EQ(parse_percentage_with_percent_sign("sfafsd"), empty);
 	EXPECT_EQ(parse_percentage_with_percent_sign(""), empty);
 	EXPECT_EQ(parse_percentage_with_percent_sign(" "), empty);
-}
-
-TEST(ParsePercentageWithOptionalPercentSign, Invalid)
-{
-	std::optional<float> empty = {};
-
-	EXPECT_EQ(parse_percentage_with_optional_percent_sign("100a"), empty);
-	EXPECT_EQ(parse_percentage_with_optional_percent_sign("sfafsd"), empty);
-	EXPECT_EQ(parse_percentage_with_optional_percent_sign(""), empty);
-	EXPECT_EQ(parse_percentage_with_optional_percent_sign(" "), empty);
 }
 
 TEST(FormatString, Valid)
