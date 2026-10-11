@@ -293,10 +293,13 @@ TEST_F(DosShell_CMDSTest, ExecuteProgram_Relative_Path_Without_Extension)
 
 	safe_strcpy(z_drive->curdir, "SUB");
 	EXPECT_TRUE(shell.ExecuteProgram("..\\AA.BAT", ""));
+	EXPECT_EQ(shell.GetOutput(), "");
 	EXPECT_TRUE(shell.ExecuteProgram("..\\AA", ""));
+	EXPECT_EQ(shell.GetOutput(), "");
 
 	safe_strcpy(z_drive->curdir, "SUB1\\SUB2");
 	EXPECT_TRUE(shell.ExecuteProgram("..\\..\\AA", ""));
+	EXPECT_EQ(shell.GetOutput(), "");
 
 	safe_strcpy(z_drive->curdir, "");
 	VFILE_Remove("AA.BAT");
@@ -309,7 +312,9 @@ TEST_F(DosShell_CMDSTest, ExecuteProgram_Prefers_Executable_Over_Extensionless_F
 	MockDosShell shell = {};
 
 	EXPECT_TRUE(shell.ExecuteProgram("AB", ""));
+	EXPECT_EQ(shell.GetOutput(), "");
 	EXPECT_TRUE(shell.ExecuteProgram("AB.BAT", ""));
+	EXPECT_EQ(shell.GetOutput(), "");
 
 	VFILE_Remove("AB.BAT");
 	VFILE_Remove("AB");
