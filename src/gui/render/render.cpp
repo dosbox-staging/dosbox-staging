@@ -1158,8 +1158,7 @@ static std::optional<ViewportSettings> parse_fit_viewport_modes(const std::strin
 
 		return viewport;
 
-	} else if (const auto percentage = parse_percentage_with_optional_percent_sign(
-	                   pref)) {
+	} else if (const auto percentage = parse_percentage_with_percent_sign(pref)) {
 		const auto p = *percentage;
 
 		const auto desktop = GFX_GetDesktopSize();
