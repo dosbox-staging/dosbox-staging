@@ -3365,7 +3365,7 @@ public:
 		uint32_t oldesp = reg_esp;
 
 		// Start shell
-		DOS_Shell shell;
+		DosShell shell;
 		if (!shell.ExecuteProgram(filename, args)) {
 			WriteOut(MSG_Get("PROGRAM_EXECUTABLE_MISSING"), filename);
 		}

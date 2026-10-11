@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2020-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2020-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "shell/shell.h"
@@ -7,11 +7,11 @@
 
 #include <gtest/gtest.h>
 
-using RedirectionResults = DOS_Shell::RedirectionResults;
+using RedirectionResults = DosShell::RedirectionResults;
 
 static void test_redirection(const char* line, const auto& expected_results)
 {
-	const auto test_results = DOS_Shell::GetRedirection(line);
+	const auto test_results = DosShell::GetRedirection(line);
 	assert(test_results);
 
 	EXPECT_EQ(test_results->processed_line, expected_results.processed_line);
@@ -21,7 +21,7 @@ static void test_redirection(const char* line, const auto& expected_results)
 	EXPECT_EQ(test_results->is_appending, expected_results.is_appending);
 }
 
-TEST(DOS_Shell_GetRedirection, BasicCommand)
+TEST(DosShell_GetRedirection, BasicCommand)
 {
 	constexpr auto line = "echo hello!";
 
@@ -31,7 +31,7 @@ TEST(DOS_Shell_GetRedirection, BasicCommand)
 	test_redirection(line, expected_results);
 }
 
-TEST(DOS_Shell_GetRedirection, BasicCommandFrontPadding)
+TEST(DosShell_GetRedirection, BasicCommandFrontPadding)
 {
 	constexpr auto line = "  echo hello!";
 
@@ -41,7 +41,7 @@ TEST(DOS_Shell_GetRedirection, BasicCommandFrontPadding)
 	test_redirection(line, expected_results);
 }
 
-TEST(DOS_Shell_GetRedirection, BasicCommandBackPadding)
+TEST(DosShell_GetRedirection, BasicCommandBackPadding)
 {
 	constexpr auto line = "echo hello!  ";
 
@@ -51,7 +51,7 @@ TEST(DOS_Shell_GetRedirection, BasicCommandBackPadding)
 	test_redirection(line, expected_results);
 }
 
-TEST(DOS_Shell_GetRedirection, BasicCommandFrontAndBackPadding)
+TEST(DosShell_GetRedirection, BasicCommandFrontAndBackPadding)
 {
 	constexpr auto line = "  echo hello!  ";
 
@@ -61,7 +61,7 @@ TEST(DOS_Shell_GetRedirection, BasicCommandFrontAndBackPadding)
 	test_redirection(line, expected_results);
 }
 
-TEST(DOS_Shell_GetRedirection, OutputNoPadding)
+TEST(DosShell_GetRedirection, OutputNoPadding)
 {
 	constexpr auto line = "echo test>test.txt";
 
@@ -72,7 +72,7 @@ TEST(DOS_Shell_GetRedirection, OutputNoPadding)
 	test_redirection(line, expected_results);
 }
 
-TEST(DOS_Shell_GetRedirection, OutputNoPaddingWithColons)
+TEST(DosShell_GetRedirection, OutputNoPaddingWithColons)
 {
 	constexpr auto line = "echo test>test.txt:>test.txt:";
 
@@ -83,7 +83,7 @@ TEST(DOS_Shell_GetRedirection, OutputNoPaddingWithColons)
 	test_redirection(line, expected_results);
 }
 
-TEST(DOS_Shell_GetRedirection, OutputFrontPadding1)
+TEST(DosShell_GetRedirection, OutputFrontPadding1)
 {
 	constexpr auto line = "echo test >test.txt";
 
@@ -94,7 +94,7 @@ TEST(DOS_Shell_GetRedirection, OutputFrontPadding1)
 	test_redirection(line, expected_results);
 }
 
-TEST(DOS_Shell_GetRedirection, OutputFrontPadding2)
+TEST(DosShell_GetRedirection, OutputFrontPadding2)
 {
 	constexpr auto line = "echo test> test.txt";
 
@@ -105,7 +105,7 @@ TEST(DOS_Shell_GetRedirection, OutputFrontPadding2)
 	test_redirection(line, expected_results);
 }
 
-TEST(DOS_Shell_GetRedirection, OutputFrontPadding3)
+TEST(DosShell_GetRedirection, OutputFrontPadding3)
 {
 	constexpr auto line = "echo test > test.txt";
 
@@ -116,7 +116,7 @@ TEST(DOS_Shell_GetRedirection, OutputFrontPadding3)
 	test_redirection(line, expected_results);
 }
 
-TEST(DOS_Shell_GetRedirection, OutputBackPadding)
+TEST(DosShell_GetRedirection, OutputBackPadding)
 {
 	constexpr auto line = "echo test>test.txt  ";
 
@@ -126,7 +126,7 @@ TEST(DOS_Shell_GetRedirection, OutputBackPadding)
 	// verified in MS-DOS 6.22 (test.txt is 8 bytes)
 	test_redirection(line, expected_results);
 }
-TEST(DOS_Shell_GetRedirection, OutputFrontAndBackPadding)
+TEST(DosShell_GetRedirection, OutputFrontAndBackPadding)
 {
 	constexpr auto line = "echo test > test.txt ";
 
@@ -137,7 +137,7 @@ TEST(DOS_Shell_GetRedirection, OutputFrontAndBackPadding)
 	test_redirection(line, expected_results);
 }
 
-TEST(DOS_Shell_GetRedirection, Input)
+TEST(DosShell_GetRedirection, Input)
 {
 	constexpr auto line = "sort<test.txt";
 
@@ -148,7 +148,7 @@ TEST(DOS_Shell_GetRedirection, Input)
 	test_redirection(line, expected_results);
 }
 
-TEST(DOS_Shell_GetRedirection, InputAndOutput)
+TEST(DosShell_GetRedirection, InputAndOutput)
 {
 	constexpr auto line = "less<in.txt>out.txt";
 
@@ -160,7 +160,7 @@ TEST(DOS_Shell_GetRedirection, InputAndOutput)
 	test_redirection(line, expected_results);
 }
 
-TEST(DOS_Shell_GetRedirection, InputAndNullOutput)
+TEST(DosShell_GetRedirection, InputAndNullOutput)
 {
 	constexpr auto line = "less<in.txt>NUL";
 
@@ -172,7 +172,7 @@ TEST(DOS_Shell_GetRedirection, InputAndNullOutput)
 	test_redirection(line, expected_results);
 }
 
-TEST(DOS_Shell_GetRedirection, InputAndNullOutputWithColon)
+TEST(DosShell_GetRedirection, InputAndNullOutputWithColon)
 {
 	constexpr auto line = "less<in.txt>NUL:";
 
@@ -184,7 +184,7 @@ TEST(DOS_Shell_GetRedirection, InputAndNullOutputWithColon)
 	test_redirection(line, expected_results);
 }
 
-TEST(DOS_Shell_GetRedirection, InputAndNullOutputWithColonAndWhitespace)
+TEST(DosShell_GetRedirection, InputAndNullOutputWithColonAndWhitespace)
 {
 	constexpr auto line = "less < in.txt > NUL:";
 
@@ -196,7 +196,7 @@ TEST(DOS_Shell_GetRedirection, InputAndNullOutputWithColonAndWhitespace)
 	test_redirection(line, expected_results);
 }
 
-TEST(DOS_Shell_GetRedirection, InputAndOutputWithColonAndWhitespace)
+TEST(DosShell_GetRedirection, InputAndOutputWithColonAndWhitespace)
 {
 	constexpr auto line = "less < in.txt > OUT:";
 
@@ -208,7 +208,7 @@ TEST(DOS_Shell_GetRedirection, InputAndOutputWithColonAndWhitespace)
 	test_redirection(line, expected_results);
 }
 
-TEST(DOS_Shell_GetRedirection, InputAndPipe)
+TEST(DosShell_GetRedirection, InputAndPipe)
 {
 	constexpr auto line = "more<file.txt|sort";
 
@@ -220,7 +220,7 @@ TEST(DOS_Shell_GetRedirection, InputAndPipe)
 	test_redirection(line, expected_results);
 }
 
-TEST(DOS_Shell_GetRedirection, InputAndOutputLongLine)
+TEST(DosShell_GetRedirection, InputAndOutputLongLine)
 {
 	constexpr auto line = "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa<in.txt>>out.txt";
 
@@ -234,7 +234,7 @@ TEST(DOS_Shell_GetRedirection, InputAndOutputLongLine)
 	test_redirection(line, expected_results);
 }
 
-TEST(DOS_Shell_GetRedirection, EmptyLine)
+TEST(DosShell_GetRedirection, EmptyLine)
 {
 	constexpr auto line = "";
 
@@ -243,7 +243,7 @@ TEST(DOS_Shell_GetRedirection, EmptyLine)
 	test_redirection(line, expected_results);
 }
 
-TEST(DOS_Shell_GetRedirection, InputAndOutputExtraLineSpacing)
+TEST(DosShell_GetRedirection, InputAndOutputExtraLineSpacing)
 {
 	constexpr auto line = " echo  test < in.txt > out.txt ";
 
@@ -255,117 +255,117 @@ TEST(DOS_Shell_GetRedirection, InputAndOutputExtraLineSpacing)
 	test_redirection(line, expected_results);
 }
 
-TEST(DOS_Shell_GetRedirection, InvalidSyntaxPipeWithExtraPipe)
+TEST(DosShell_GetRedirection, InvalidSyntaxPipeWithExtraPipe)
 {
 	constexpr auto line = "dir || more";
 
-	const auto test_results = DOS_Shell::GetRedirection(line);
+	const auto test_results = DosShell::GetRedirection(line);
 
 	// Syntax error in MS-DOS 6.22
 	EXPECT_FALSE(test_results);
 }
 
-TEST(DOS_Shell_GetRedirection, InvalidSyntaxOutputWithExtraPipe)
+TEST(DosShell_GetRedirection, InvalidSyntaxOutputWithExtraPipe)
 {
 	constexpr auto line = "dir> |out.txt";
 
-	const auto test_results = DOS_Shell::GetRedirection(line);
+	const auto test_results = DosShell::GetRedirection(line);
 
 	// Syntax error in MS-DOS 6.22
 	EXPECT_FALSE(test_results);
 }
 
-TEST(DOS_Shell_GetRedirection, InvalidSyntaxInputWithExtraPipe)
+TEST(DosShell_GetRedirection, InvalidSyntaxInputWithExtraPipe)
 {
 	constexpr auto line = "dir <| in.txt";
 
-	const auto test_results = DOS_Shell::GetRedirection(line);
+	const auto test_results = DosShell::GetRedirection(line);
 
 	// Syntax error in MS-DOS 6.22
 	EXPECT_FALSE(test_results);
 }
 
-TEST(DOS_Shell_GetRedirection, InvalidSyntaxPipeWithExtraInput)
+TEST(DosShell_GetRedirection, InvalidSyntaxPipeWithExtraInput)
 {
 	constexpr auto line = "dir| < more";
 
-	const auto test_results = DOS_Shell::GetRedirection(line);
+	const auto test_results = DosShell::GetRedirection(line);
 
 	// Syntax error in MS-DOS 6.22
 	EXPECT_FALSE(test_results);
 }
 
-TEST(DOS_Shell_GetRedirection, InvalidSyntaxPipeWithExtraOutput)
+TEST(DosShell_GetRedirection, InvalidSyntaxPipeWithExtraOutput)
 {
 	constexpr auto line = "dir|>more";
 
-	const auto test_results = DOS_Shell::GetRedirection(line);
+	const auto test_results = DosShell::GetRedirection(line);
 
 	// Syntax error in MS-DOS 6.22
 	EXPECT_FALSE(test_results);
 }
 
-TEST(DOS_Shell_GetRedirection, InvalidSyntaxOutputWithExtraOutput)
+TEST(DosShell_GetRedirection, InvalidSyntaxOutputWithExtraOutput)
 {
 	constexpr auto line = "dir > >out.txt";
 
-	const auto test_results = DOS_Shell::GetRedirection(line);
+	const auto test_results = DosShell::GetRedirection(line);
 
 	// Syntax error in MS-DOS 6.22
 	EXPECT_FALSE(test_results);
 }
 
-TEST(DOS_Shell_GetRedirection, InvalidSyntaxOutputWithExtraInput)
+TEST(DosShell_GetRedirection, InvalidSyntaxOutputWithExtraInput)
 {
 	constexpr auto line = "more >< in.txt";
 
-	const auto test_results = DOS_Shell::GetRedirection(line);
+	const auto test_results = DosShell::GetRedirection(line);
 
 	// Syntax error in MS-DOS 6.22
 	EXPECT_FALSE(test_results);
 }
 
-TEST(DOS_Shell_GetRedirection, InvalidSyntaxInputWithExtraInput)
+TEST(DosShell_GetRedirection, InvalidSyntaxInputWithExtraInput)
 {
 	constexpr auto line = "more< <in.txt";
 
-	const auto test_results = DOS_Shell::GetRedirection(line);
+	const auto test_results = DosShell::GetRedirection(line);
 
 	// Syntax error in MS-DOS 6.22
 	EXPECT_FALSE(test_results);
 }
 
-TEST(DOS_Shell_GetRedirection, InvalidSyntaxInputWithExtraOutput)
+TEST(DosShell_GetRedirection, InvalidSyntaxInputWithExtraOutput)
 {
 	constexpr auto line = "dir < > in.txt";
 
-	const auto test_results = DOS_Shell::GetRedirection(line);
+	const auto test_results = DosShell::GetRedirection(line);
 
 	// Syntax error in MS-DOS 6.22
 	EXPECT_FALSE(test_results);
 }
 
-TEST(DOS_Shell_GetRedirection, InvalidSyntaxMany)
+TEST(DosShell_GetRedirection, InvalidSyntaxMany)
 {
 	constexpr auto line = "dir < || > in.txt";
 
-	const auto test_results = DOS_Shell::GetRedirection(line);
+	const auto test_results = DosShell::GetRedirection(line);
 
 	// Syntax error in MS-DOS 6.22
 	EXPECT_FALSE(test_results);
 }
 
-TEST(DOS_Shell_GetRedirection, InvalidSyntaxMany2)
+TEST(DosShell_GetRedirection, InvalidSyntaxMany2)
 {
 	constexpr auto line = "dir<<<|||||in.txt";
 
-	const auto test_results = DOS_Shell::GetRedirection(line);
+	const auto test_results = DosShell::GetRedirection(line);
 
 	// Syntax error in MS-DOS 6.22
 	EXPECT_FALSE(test_results);
 }
 
-TEST(DOS_Shell_GetRedirection, DoubleInputOperator)
+TEST(DosShell_GetRedirection, DoubleInputOperator)
 {
 	constexpr auto line = "dir *.bat << in1.txt << in2.txt";
 
@@ -377,7 +377,7 @@ TEST(DOS_Shell_GetRedirection, DoubleInputOperator)
 	test_redirection(line, expected_results);
 }
 
-TEST(DOS_Shell_GetRedirection, TwoInputs)
+TEST(DosShell_GetRedirection, TwoInputs)
 {
 	constexpr auto line = "more < in1.txt < in2.txt";
 
@@ -388,7 +388,7 @@ TEST(DOS_Shell_GetRedirection, TwoInputs)
 	test_redirection(line, expected_results);
 }
 
-TEST(DOS_Shell_GetRedirection, TwoInputsNoWhitespace)
+TEST(DosShell_GetRedirection, TwoInputsNoWhitespace)
 {
 	constexpr auto line = "more<in1.txt<in2.txt";
 
@@ -399,7 +399,7 @@ TEST(DOS_Shell_GetRedirection, TwoInputsNoWhitespace)
 	test_redirection(line, expected_results);
 }
 
-TEST(DOS_Shell_GetRedirection, TwoOutputsNoTrailingWhitespace)
+TEST(DosShell_GetRedirection, TwoOutputsNoTrailingWhitespace)
 {
 	constexpr auto line = "echo test>out1.txt>out2.txt";
 
@@ -410,7 +410,7 @@ TEST(DOS_Shell_GetRedirection, TwoOutputsNoTrailingWhitespace)
 	test_redirection(line, expected_results);
 }
 
-TEST(DOS_Shell_GetRedirection, TwoOutputsNoTrailingWhitespace2)
+TEST(DosShell_GetRedirection, TwoOutputsNoTrailingWhitespace2)
 {
 	constexpr auto line = "echo test>    out1.txt>     out2.txt";
 
@@ -421,7 +421,7 @@ TEST(DOS_Shell_GetRedirection, TwoOutputsNoTrailingWhitespace2)
 	test_redirection(line, expected_results);
 }
 
-TEST(DOS_Shell_GetRedirection, TwoOutputsFirstTrailingSpace)
+TEST(DosShell_GetRedirection, TwoOutputsFirstTrailingSpace)
 {
 	constexpr auto line = "echo test>out1.txt >out2.txt";
 
@@ -432,7 +432,7 @@ TEST(DOS_Shell_GetRedirection, TwoOutputsFirstTrailingSpace)
 	test_redirection(line, expected_results);
 }
 
-TEST(DOS_Shell_GetRedirection, TwoOutputsFirstTrailingTwoSpaces)
+TEST(DosShell_GetRedirection, TwoOutputsFirstTrailingTwoSpaces)
 {
 	constexpr auto line = "echo test>out1.txt  >out2.txt";
 
@@ -443,7 +443,7 @@ TEST(DOS_Shell_GetRedirection, TwoOutputsFirstTrailingTwoSpaces)
 	test_redirection(line, expected_results);
 }
 
-TEST(DOS_Shell_GetRedirection, TwoOutputsFirstBothTrailing)
+TEST(DosShell_GetRedirection, TwoOutputsFirstBothTrailing)
 {
 	constexpr auto line = "echo test>out1.txt >out2.txt ";
 

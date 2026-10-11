@@ -44,7 +44,7 @@ private:
 };
 } // namespace
 
-void DOS_Shell::ShowPrompt()
+void DosShell::ShowPrompt()
 {
 	const uint8_t drive = DOS_GetDefaultDrive() + 'A';
 	char dir[DOS_PATHLENGTH];
@@ -60,7 +60,7 @@ void DOS_Shell::ShowPrompt()
 	CONSOLE_ResetLastWrittenChar('\n');
 }
 
-void DOS_Shell::InputCommand(char* line)
+void DosShell::InputCommand(char* line)
 {
 	std::string command = ReadCommand();
 
@@ -87,7 +87,7 @@ void DOS_Shell::InputCommand(char* line)
 	line[CMD_MAXLINE - 1] = '\0';
 }
 
-std::string DOS_Shell::ReadCommand()
+std::string DosShell::ReadCommand()
 {
 	std::vector<std::string> history_clone = history->GetCommands(
 	        get_utf8_code_page());
@@ -366,7 +366,7 @@ static std::vector<std::string> get_completions(const std::string_view command)
 	return files;
 }
 
-std::string DOS_Shell::SubstituteEnvironmentVariables(std::string_view command)
+std::string DosShell::SubstituteEnvironmentVariables(std::string_view command)
 {
 	std::string expanded = {};
 
@@ -485,7 +485,7 @@ static std::string_view get_extension(const std::string_view path)
 	return filename.substr(dot_pos);
 }
 
-bool DOS_Shell::ExecuteProgram(std::string_view name, std::string_view args)
+bool DosShell::ExecuteProgram(std::string_view name, std::string_view args)
 {
 	if (name.size() > 1 && (std::isalpha(name[0]) != 0) &&
 	    (name.substr(1) == ":" || name.substr(1) == ":\\")) {
@@ -525,7 +525,7 @@ bool DOS_Shell::ExecuteProgram(std::string_view name, std::string_view args)
 	return false;
 }
 
-std::string DOS_Shell::ResolvePath(const std::string_view name) const
+std::string DosShell::ResolvePath(const std::string_view name) const
 {
 	static constexpr auto Extensions = {".COM", ".EXE", ".BAT"};
 
@@ -661,7 +661,7 @@ static void run_binary_executable(const std::string_view fullname,
 	reg_sp += 0x200;
 }
 
-bool DOS_Shell::SetEnv(std::string_view entry, std::string_view new_string)
+bool DosShell::SetEnv(std::string_view entry, std::string_view new_string)
 {
 	return psp->SetEnvironmentValue(entry, new_string);
 }
