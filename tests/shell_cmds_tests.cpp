@@ -288,7 +288,7 @@ TEST_F(DosShell_CMDSTest, CMD_FOR_for_not_allowed)
 TEST_F(DosShell_CMDSTest, ExecuteProgram_Relative_Path_Without_Extension)
 {
 	VFILE_Register("AA.BAT", nullptr, 0, "");
-	auto& z_drive   = Drives.at(drive_index('Z'));
+	auto& z_drive      = Drives.at(drive_index('Z'));
 	MockDosShell shell = {};
 
 	safe_strcpy(z_drive->curdir, "SUB");
