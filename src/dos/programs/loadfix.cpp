@@ -1,3 +1,4 @@
+// SPDX-FileCopyrightText:  2021-2026 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -58,7 +59,7 @@ void LOADFIX::Run(void)
 					safe_strcat(args, " ");
 			}
 			// Use shell to start program
-			DOS_Shell shell;
+			DosShell shell;
 			// If it's a batch file, this call places it into an internal data structure.
 			shell.ExecuteProgram(filename, args);
 			// Actually run the batch file. This is a no-op if it's an executable.
