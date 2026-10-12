@@ -167,6 +167,12 @@ struct SDL_Block {
 
 	struct {
 		FullscreenMode mode = {};
+
+		// In forced-borderless mode, maximised windows are unmaximised
+		// before entering fullscreen mode, then maximised again after
+		// leaving it. This is the window's unmaximised size and
+		// position in native units.
+		std::optional<SDL_Rect> unmaximized_window_rect = {};
 	} fullscreen = {};
 
 	struct {

@@ -786,6 +786,18 @@ static void enter_fullscreen()
 			return;
 		}
 
+		// SDL can't move or resize maximised windows on Windows, so we
+		// need to unmaximise the window first
+		if (SDL_GetWindowFlags(sdl.window) & SDL_WINDOW_MAXIMIZED) {
+			SDL_RestoreWindow(sdl.window);
+
+			SDL_Rect rect = {};
+			SDL_GetWindowPosition(sdl.window, &rect.x, &rect.y);
+			SDL_GetWindowSize(sdl.window, &rect.w, &rect.h);
+
+			sdl.fullscreen.unmaximized_window_rect = rect;
+		}
+
 		SDL_SetWindowBordered(sdl.window, false);
 		SDL_SetWindowResizable(sdl.window, false);
 		if (!SDL_SetWindowPosition(sdl.window,
@@ -833,8 +845,19 @@ static void exit_fullscreen()
 
 		SDL_SetWindowResizable(sdl.window, true);
 
-		apply_windowed_size();
-		apply_windowed_position();
+		if (const auto rect = sdl.fullscreen.unmaximized_window_rect; rect) {
+			// We restore the unmaximised size and position before
+			// maximising the window so the user can still
+			// unmaximise it
+			SDL_SetWindowPosition(sdl.window, rect->x, rect->y);
+			SDL_SetWindowSize(sdl.window, rect->w, rect->h);
+			SDL_MaximizeWindow(sdl.window);
+
+			sdl.fullscreen.unmaximized_window_rect = {};
+		} else {
+			apply_windowed_size();
+			apply_windowed_position();
+		}
 
 		set_window_transparency();
 
