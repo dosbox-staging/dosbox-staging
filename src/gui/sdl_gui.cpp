@@ -2208,9 +2208,10 @@ static void handle_desktop_mode_changed(const SDL_DisplayEvent& event)
 	}
 }
 
-// Restores the windowed size after a display scale change. SDL3 keeps the
-// window's size in pixels on Windows, and the OS keeps its size in logical
-// units on macOS and Wayland, so we only resize the window if needed.
+// Restores the windowed size after the window has been moved to another
+// display or the display scale has changed. On display scale changes, SDL3
+// keeps the window's size in pixels on Windows, and the OS keeps its size in
+// logical units on macOS and Wayland, so we only resize the window if needed.
 //
 // Resizing the window while the user is dragging it to another display
 // interferes with the drag on macOS, so we wait until all mouse buttons are
@@ -2429,6 +2430,14 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 
 		sdl.display_number = new_display_number;
 
+		// Percentage window sizes are relative to the desktop size of
+		// the window's display
+		if (sdl.windowed.size_unit == WindowGeometry::Unit::Percentage) {
+			configure_window_size();
+			sdl.windowed.is_resize_pending = true;
+			maybe_restore_windowed_size();
+		}
+
 		// The new display might have a different resolution and display
 		// scale, so we need to recalculate the viewport
 		update_viewport_and_reset_screen();
@@ -2447,8 +2456,10 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		// on the display scale on Windows and X11.
 		set_minimum_window_size();
 
-		// Window sizes specified in pixels keep their size in pixels
-		if (sdl.windowed.size_unit == WindowGeometry::Unit::Pixels) {
+		// Window sizes specified in pixels keep their size in pixels.
+		// Percentage window sizes are relative to the desktop size in
+		// logical units, which depends on the display scale.
+		if (sdl.windowed.size_unit != WindowGeometry::Unit::LogicalUnits) {
 			configure_window_size();
 		}
 		sdl.windowed.is_resize_pending = true;
