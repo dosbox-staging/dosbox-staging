@@ -307,6 +307,52 @@ factors.
     monitor.
 
 
+### Title bar and window borders
+
+[`window_size`](#window_size) and [`window_position`](#window_position) refer
+to the window's **content area**, the part of the window where DOSBox Staging
+draws the image. The size does *not* include the title bar and window borders,
+so the window takes up slightly more space on the screen than the size you
+specify. Likewise, the position is that of the top-left corner of the content
+area, *not* of the whole window including the title bar.
+
+You'll rarely notice this, except when you place the window near the top of the
+screen or make it nearly as tall as your desktop. What happens then depends on
+your operating system:
+
+- **Windows** --- The title bar is about 30 logical units tall, and windows can
+  extend beyond the edges of the screen. With a vertical position smaller than
+  that (e.g., `window_position = 0,0`), the title bar ends up above the top edge
+  of the screen, where you can't grab it to move the window. Similarly, a window
+  whose content area is as tall as your desktop gets cut off.
+
+- **macOS** --- macOS keeps the title bar below the menu bar and doesn't let
+  windows grow taller than the space below it. A window positioned too close to
+  the top of the screen is moved down, and a window that's too tall is shrunk to
+  fit (this also updates `window_size`).
+
+- **Linux** --- This depends on your desktop environment. On Wayland,
+  [`window_position`](#window_position) has no effect.
+
+Positions and percentages are relative to the whole desktop, including the area
+covered by the taskbar (on Windows) or the Dock (on macOS), so the window can
+end up partly behind them.
+
+!!! tip "Arranging windows"
+
+    To arrange windows side by side, it's easiest to use your operating
+    system's window snapping: press ++win+left++ or ++win+right++ on Windows,
+    ++meta+left++ or ++meta+right++ on most Linux desktops, or hover over the
+    green button in the title bar on macOS. DOSBox Staging updates
+    [`window_size`](#window_size) and [`window_position`](#window_position)`
+    to match.
+
+    If the window must cover an exact area of the screen, set
+    [`window_decorations`](#window_decorations) to `off`. The window then has no
+    title bar or borders, so its size and position describe the whole window.
+    The downside is that there's no title bar to drag the window around with.
+
+
 ## Titlebar customisation
 
 The [`window_titlebar`](#window_titlebar) setting controls what information
@@ -406,6 +452,13 @@ section.
 
     !!! note
 
+        The position is that of the top-left corner of the window's content
+        area, excluding the title bar and window borders. With small Y values,
+        the title bar can end up above the top edge of the screen. On macOS, the
+        window is moved down instead so that its title bar is below the menu
+        bar. See [Title bar and window borders](#title-bar-and-window-borders)
+        for details.
+
         Moving the window updates this setting in the same format.
 
     !!! warning
@@ -440,8 +493,13 @@ section.
 
     !!! note
 
-        Resizing the window updates this setting in the same format, except
-        for the named sizes, which are updated in `WxH%` format.
+        The size doesn't include the title bar and window borders, so the window
+        takes up slightly more space on the screen than the specified size. See
+        [Title bar and window borders](#title-bar-and-window-borders) for
+        details.
+
+        Resizing the window updates this setting in the same format, except for
+        the named sizes, which are updated in `WxH%` format.
 
 
 ##### window_titlebar
