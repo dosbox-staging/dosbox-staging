@@ -2837,8 +2837,12 @@ static void init_sdl_config_settings(SectionProp& section)
 	        "             are relative to the desktop height, so the aspect ratio of the\n"
 	        "             window doesn't depend on the aspect ratio of the desktop.\n"
 	        "\n"
-	        "Note:  Resizing the window updates this setting in the same format, except for\n"
-	        "       the named sizes, which are updated in WxH%% format.");
+	        "Notes:\n"
+	        "  - The size doesn't include the title bar and window borders, so the window\n"
+	        "    takes up slightly more space on the screen than the specified size.\n"
+	        "\n"
+	        "  - Resizing the window updates this setting in the same format, except for the\n"
+	        "    named sizes, which are updated in WxH%% format.");
 
 	pstring = section.AddString("window_position", Always, "auto");
 	pstring->SetHelp(
@@ -2857,11 +2861,37 @@ static void init_sdl_config_settings(SectionProp& section)
 	        "  X,Y%%:      Set window position as a percentage of the desktop width and height\n"
 	        "             (e.g., 10,10%%).\n"
 	        "\n"
-	        "Notes:\n"
-	        "  - Moving the window updates this setting in the same format.\n"
-	        "\n"
-	        "  - This setting has no effect on Wayland because Wayland doesn't let\n"
-	        "    applications position their windows.");
+	        "Notes:");
+
+	pstring->SetOptionHelp(
+	        "content_area",
+	        "  - The position is that of the top-left corner of the window's content area,\n"
+	        "    excluding the title bar and window borders. With small Y values, the title\n"
+	        "    bar can end up above the top edge of the screen.\n");
+
+	pstring->SetOptionHelp(
+	        "content_area_macos",
+	        "  - The position is that of the top-left corner of the window's content area,\n"
+	        "    excluding the title bar and window borders. With small Y values, macOS moves\n"
+	        "    the window down so that its title bar is below the menu bar.\n");
+
+	pstring->SetOptionHelp("wayland",
+	                       "  - This setting has no effect on Wayland because Wayland doesn't let\n"
+	                       "    applications position their windows.\n");
+
+	pstring->SetOptionHelp("moving",
+	                       "  - Moving the window updates this setting in the same format.");
+
+	pstring->SetEnabledOptions({
+#if defined(MACOSX)
+	        "content_area_macos",
+#else
+	        "content_area",
+#endif
+#if defined(LINUX)
+	        "wayland",
+#endif
+	        "moving"});
 
 	pbool = section.AddBool("window_decorations", Always, true);
 	pbool->SetHelp("Enable window decorations in windowed mode ('on' by default).");
