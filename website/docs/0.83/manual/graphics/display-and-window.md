@@ -273,14 +273,15 @@ different ways:
   pixels, and display scaling is not applied. This gives you precise control,
   but the window will look smaller on a 4K monitor than on a 1080p one. A
   window sized in pixels keeps its size in pixels when you move it to another
-  monitor, while windows sized in logical units or percentages keep their
-  size in logical units.
+  monitor, while a window sized in logical units keeps its size in logical
+  units.
 
 - **Percentages** (e.g., `window_size = 120x90%` or `viewport = 89%`) --- The
   values are relative to your desktop size, so they adapt to any monitor. For
   window sizes, both values are relative to the desktop height; for example,
   `120x90%` always gives you a 4:3 window that is 90% as tall as your desktop
-  (this is the same as `window_size = large`).
+  (this is the same as `window_size = large`). The window is resized when you
+  move it to another monitor or change the display scaling.
 
 
 For general use, logical units and percentages are recommended as they ensure
