@@ -174,6 +174,8 @@ int Sound_Quit(void)
     SDL_DestroyMutex(errorlist_mutex);
     errorlist_mutex = NULL;
 
+    SDL_QuitSubSystem(SDL_INIT_AUDIO);
+
     return(1);
 } /* Sound_Quit */
 
