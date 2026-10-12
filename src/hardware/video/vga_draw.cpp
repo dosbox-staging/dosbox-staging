@@ -3157,6 +3157,15 @@ ImageInfo setup_drawing()
 		break;
 	}
 
+	// In very rare edge cases, a resize can run while the CRTC is
+	// half-programmed; we need to know the new dimensions to do the resize.
+	// Further CRTC writes that complete the mode change will start another
+	// resize.
+	if (video_mode.width == 0 || video_mode.height == 0 ||
+	    render_width == 0 || render_height == 0) {
+		return {};
+	}
+
 	VGA_CheckScanLength();
 
 	auto vblank_skip = updated_timings.vblank_skip;
@@ -3295,6 +3304,11 @@ void VGA_SetupDrawing(uint32_t /*val*/)
 	}
 
 	auto image_info = setup_drawing();
+
+	// The mode isn't fully set up yet (see setup_drawing())
+	if (image_info.width == 0 || image_info.height == 0) {
+		return;
+	}
 
 	// need to change the vertical timing?
 	bool fps_changed = false;
