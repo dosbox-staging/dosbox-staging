@@ -8,10 +8,6 @@ contact_links:
     url: https://github.com/dosbox-staging/dosbox-staging/wiki/Game-issues
     about: Your problem may already be known, and there may be a workaround.
 
-  - name: Wiki
-    url: https://github.com/dosbox-staging/dosbox-staging/wiki
-    about: Please check if your question is already answered here.
-
   - name: Discord
     url: https://discord.gg/WwAg3Xf
     about: Alternatively, you can ask questions on our Discord, but for bugs you'll need an issue ticket.
