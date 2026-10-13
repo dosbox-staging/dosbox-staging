@@ -16,27 +16,21 @@ body:
 
         [Please consider a donation to the DOSBox Staging project](https://www.dosbox-staging.org/get-involved/#make-a-donation).
 
-  - type: checkboxes
+  - type: dropdown
     id: version
     attributes:
-      label: Are you using the latest DOSBox Staging version?
+      label: Which DOSBox Staging version are you using?
       description: |
-        Look up the latest version [on our website](https://www.dosbox-staging.org/) or the [download page](https://github.com/dosbox-staging/dosbox-staging/download).
-        To check your version, run `dosbox --version` or execute the `VER` command inside DOSBox Staging. If the version is reported as `git` (meaning you compiled it yourself), put the result of `git describe` in the version field below.
+        Look up the latest version [on our website](https://www.dosbox-staging.org/) or the [download page](https://github.com/dosbox-staging/dosbox-staging/download). To check your version, check out the startup banner, run `dosbox --version`, or execute the `VER` command inside DOSBox Staging.
       options:
-        - label: I have checked and I'm using the latest release.
-          required: true
-
-  - type: input
-    id: verinfo
-    attributes:
-      label: Different version than latest?
-      placeholder: "E.g., 0.84.0-alpha, git version, branch testing"
+        - 0.83.0
+        - 0.82.2
+        - Latest dev build
     validations:
-      required: false
+      required: true
 
   - type: dropdown
-    id: OS
+    id: os
     attributes:
       label: What operating system are you using?
       multiple: false
@@ -48,28 +42,51 @@ body:
         - Windows 7
         - macOS (Intel)
         - macOS (Apple Silicon)
-        - Linux x86
         - Linux x86_64
-        - Linux ARM (Raspberry Pi)
         - Other
     validations:
       required: true
 
   - type: input
-    id: other
+    id: os_details
     attributes:
-      label: If other OS or Linux, please describe
-      placeholder: "Details about your OS; if Linux, state your desktop environment (KDE, Gnome, XFCE, etc.)"
+      label: Relevant OS-related details
+      placeholder: "Other relevant details about your OS (e.g., your desktop environment on Linux)"
     validations:
       required: false
 
   - type: checkboxes
-    id: checked
+    id: native-os
     attributes:
       label: Are you running DOSBox Staging on a native OS?
       description: We only support running DOSBox Staging on a native operating system; running on a guest OS in a VM or hypervisor is not supported.
       options:
         - label: I am running Staging on a native OS
+          required: true
+
+  - type: checkboxes
+    id: official-linux-release
+    attributes:
+      label: Are you able to trigger the issue with our official DOSBox Staging release?
+      description: We only support our official releases downloaded from our [website](https://www.dosbox-staging.org/download/). We do not support repackaged versions of our software; see [this note](https://www.dosbox-staging.org/download/linux/#unofficial-repackaged-releases) for further info.
+      options:
+        - label: I am running an official Staging release, not a release installed by my operating system's package manager, or a version repackaged by an external team.
+          required: true
+
+  - type: input
+    id: hardware
+    attributes:
+      label: Relevant hardware info
+      placeholder: "CPU, GPU, device brand/model (e.g., Raspberry Pi3B+, Nvidia RTX 3060, etc.)"
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checked-dupes
+    attributes:
+      label: Have you checked that no other similar issue already exists?
+      options:
+        - label: I have searched and have not found similar issues.
           required: true
 
   - type: textarea
@@ -101,6 +118,7 @@ body:
     id: additional
     attributes:
       label: Add any other context or screenshots about the feature request here
+      description: Please avoid pasting in large files; _use attachments or links_ in a [Gist](https://gist.github.com/) instead.
       placeholder: "Screenshots, links, mockups, etc."
     validations:
       required: false

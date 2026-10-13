@@ -16,24 +16,18 @@ body:
 
         [Please consider a donation to the DOSBox Staging project](https://www.dosbox-staging.org/get-involved/#make-a-donation).
 
-  - type: checkboxes
+  - type: dropdown
     id: version
     attributes:
-      label: Are you using the latest DOSBox Staging version?
+      label: Which DOSBox Staging version are you using?
       description: |
-        Look up the latest version [on our website](https://www.dosbox-staging.org/) or the [download page](https://github.com/dosbox-staging/dosbox-staging/download).
-        To check your version, run `dosbox --version` or execute the `VER` command inside DOSBox Staging. If the version is reported as `git` (meaning you compiled it yourself), put the result of `git describe` in the version field below.
+        Look up the latest version [on our website](https://www.dosbox-staging.org/) or the [download page](https://github.com/dosbox-staging/dosbox-staging/download). To check your version, check out the startup banner, run `dosbox --version`, or execute the `VER` command inside DOSBox Staging.
       options:
-        - label: I have checked and I'm using the latest release.
-          required: true
-
-  - type: input
-    id: verinfo
-    attributes:
-      label: Different version than latest?
-      placeholder: "E.g., 0.84.0-alpha, git version, branch testing"
+        - 0.83.0
+        - 0.82.2
+        - Latest dev build
     validations:
-      required: false
+      required: true
 
   - type: dropdown
     id: os
@@ -48,18 +42,16 @@ body:
         - Windows 7
         - macOS (Intel)
         - macOS (Apple Silicon)
-        - Linux x86
         - Linux x86_64
-        - Linux ARM (Raspberry Pi)
         - Other
     validations:
       required: true
 
   - type: input
-    id: other_os
+    id: os_details
     attributes:
-      label: If other OS or Linux, please describe
-      placeholder: "Details about your OS; if Linux, state your desktop environment (KDE, Gnome, XFCE, etc.)"
+      label: Relevant OS-related details
+      placeholder: "Other relevant details about your OS (e.g., your desktop environment on Linux)"
     validations:
       required: false
 
@@ -100,7 +92,7 @@ body:
   - type: textarea
     id: description
     attributes:
-      label: A clear and concise description of what the bug is
+      label: A clear and concise description of what the issue is
       description: Describe what happens, what software were you running? Try to specify the exact version of the game you're running. _Include screenshots if possible._
       placeholder: "How and when does this occur?"
     validations:
