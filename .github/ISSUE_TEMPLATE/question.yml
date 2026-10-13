@@ -20,7 +20,7 @@ body:
     attributes:
       label: Which DOSBox Staging version are you using?
       description: |
-        Look up the latest version [on our website](https://www.dosbox-staging.org/) or the [download page](https://github.com/dosbox-staging/dosbox-staging/download). To check your version, check out the startup banner, run `dosbox --version`, or execute the `VER` command inside DOSBox Staging.
+        Look up the latest version [on our website](https://www.dosbox-staging.org/) or the [downloads page](https://www.dosbox-staging.org/download/). To check your version, check out the startup banner, run `dosbox --version`, or execute the `VER` command inside DOSBox Staging.
       options:
         - 0.83.0
         - 0.82.2
@@ -38,7 +38,6 @@ body:
         - Windows 11
         - Windows 10
         - Windows 8
-        - Windows 7
         - macOS (Intel)
         - macOS (Apple Silicon)
         - Linux x86_64
@@ -49,51 +48,34 @@ body:
   - type: input
     id: os_details
     attributes:
-      label: Relevant OS-related details
+      label: Relevant operating system details
       placeholder: "Other relevant details about your OS (e.g., your desktop environment on Linux)"
     validations:
       required: false
-
-  - type: checkboxes
-    id: native-os
-    attributes:
-      label: Are you running DOSBox Staging on a native OS?
-      description: We only support running DOSBox Staging on a native operating system; running on a guest OS in a VM or hypervisor is not supported.
-      options:
-        - label: I am running Staging on a native OS
-          required: true
-
-  - type: checkboxes
-    id: official-linux-release
-    attributes:
-      label: Are you able to trigger the issue with our official DOSBox Staging release?
-      description: We only support our official releases downloaded from our [website](https://www.dosbox-staging.org/download/). We do not support repackaged versions of our software; see [this note](https://www.dosbox-staging.org/download/linux/#unofficial-repackaged-releases) for further info.
-      options:
-        - label: I am running an official Staging release, not a release installed by my operating system's package manager, or a version repackaged by an external team.
-          required: true
 
   - type: input
     id: hardware
     attributes:
       label: Relevant hardware info
-      placeholder: "CPU, GPU, device brand/model (e.g., Raspberry Pi3B+, Nvidia RTX 3060, etc.)"
+      placeholder: "CPU, GPU, device brand/model (e.g., AMD Ryzen 9 7900X, Nvidia RTX 3060, etc.)"
     validations:
       required: false
 
   - type: checkboxes
     id: checked-dupes
     attributes:
-      label: Have you checked that no other similar issue already exists?
+      label: Have you checked that no other similar question or issues already exists?
       options:
-        - label: I have searched and have not found similar issues.
+        - label: I have searched and have not found similar questions or issues.
           required: true
 
+  - type: textarea
   - type: textarea
     id: question
     attributes:
       label: What is your question and how can we help?
       description: Please include all relevant details (e.g., your configuration, log file, details about the game you're trying to run, etc.). _Use attachments or links_ in a [Gist](https://gist.github.com/) if you want to attach large configs or log files.
-      placeholder: "How do I ..."
+      placeholder: "Your question with all relevant details"
     validations:
       required: true
 
