@@ -53,6 +53,24 @@ body:
     validations:
       required: false
 
+  - type: checkboxes
+    id: native-os
+    attributes:
+      label: Are you running DOSBox Staging on a native OS?
+      description: We only support running DOSBox Staging on a native OS; running on a guest OS in a VM or hypervisor is not supported.
+      options:
+        - label: I am running Staging on a native OS
+          required: true
+
+  - type: checkboxes
+    id: official-linux-release
+    attributes:
+      label: Are you able to trigger the issue with our official DOSBox Staging release?
+      description: We only support our official releases downloaded from our [website](https://www.dosbox-staging.org/download/). We do not support repackaged versions of our software; see [this note](https://www.dosbox-staging.org/download/linux/#unofficial-repackaged-releases) for further info.
+      options:
+        - label: I am running an official Staging binary, NOT a release installed by my operating system's package manager, or a version repackaged by an external team.
+          required: true
+
   - type: input
     id: hardware
     attributes:
@@ -64,10 +82,11 @@ body:
   - type: checkboxes
     id: checked-dupes
     attributes:
-      label: Have you checked that no other similar question or issues already exists?
+      label: Have you checked that no other similar issue already exists?
       options:
-        - label: I have searched and have not found similar questions or issues.
+        - label: I have searched and have not found similar issues.
           required: true
+
 
   - type: textarea
   - type: textarea
