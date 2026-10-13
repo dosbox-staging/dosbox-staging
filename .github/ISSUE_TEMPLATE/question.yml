@@ -89,7 +89,6 @@ body:
 
 
   - type: textarea
-  - type: textarea
     id: question
     attributes:
       label: What is your question and how can we help?
