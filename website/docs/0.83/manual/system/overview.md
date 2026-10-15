@@ -127,3 +127,30 @@ You can set these in the `[dosbox]` configuration sections.
     - `slow` -- Typical 1980s hard disk speed (~600 kB/s).
 
     </div>
+
+
+### Logging
+
+These settings are configured in the `[dosbox]` section.
+
+##### log_mode
+
+:   Set the logging mode (`console-and-file` by default). Possible values:
+
+    - `console` -- Print log messages to the console.
+
+    - `file` -- Write log messages to a file. The name of the file is
+      `dosbox.log` located in the directory set by [`log_dir`](#log_dir). Log
+      files from the previous five log runs are kept as `dosbox-001.log`,
+      `dosbox-002.log`, etc.
+
+    - `console-and-file` *default*{ .default } -- Print log messages to the
+      console and also write a log file (default).
+
+    - `off` -- Disable all logging.
+
+##### log_dir
+
+:   Log file directory (unset by default). If unset, the logs are written to
+    the `logs` folder in the [configuration
+    directory](../using-dosbox-staging/configuration.md#primary-configuration).

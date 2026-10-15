@@ -199,6 +199,7 @@ inline bool is_machine_hercules() {
 #include "misc/logging.h"
 #endif // the logging system.
 
+constexpr auto DefaultLogsDir            = "logs";
 constexpr auto DefaultMt32RomsDir        = "mt32-roms";
 constexpr auto DefaultSoundCanvasRomsDir = "soundcanvas-roms";
 constexpr auto DefaultSoundfontsDir      = "soundfonts";

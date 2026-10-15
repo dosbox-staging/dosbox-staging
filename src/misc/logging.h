@@ -6,6 +6,9 @@
 
 #include <cstdio>
 #include <string>
+#include <vector>
+
+#include "misc/std_filesystem.h"
 
 #include "misc/compiler.h"
 
@@ -30,6 +33,26 @@ enum LOG_SEVERITIES {
 	LOG_WARN,
 	LOG_ERROR
 };
+
+enum class LogMode {
+	Console,
+	File,
+	ConsoleAndFile,
+	Off,
+};
+
+// Collects the log lines from the start of the run, so that the lines logged
+// before the configuration is read can still be written to the log file once
+// init_logging() knows where the log goes. 'exit_after_init' is set when DOSBox
+// was only asked for information and exits right away, in which case the
+// console is less chatty.
+void init_loguru(int argc, char* argv[], const bool exit_after_init);
+
+// Applies the 'log_mode' and 'log_dir' settings: the logs of the previous runs
+// are rotated and the log file is started. Must be called after the config
+// files and the command line overrides have been parsed.
+void init_logging();
+
 
 #if C_DEBUGGER
 class LOG 
