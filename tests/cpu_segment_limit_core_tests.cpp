@@ -22,6 +22,9 @@
 
 #include <gtest/gtest.h>
 
+#include <algorithm>
+#include <chrono>
+#include <limits>
 #include <vector>
 
 #include "config/config.h"
@@ -30,6 +33,7 @@
 #include "cpu_config_param.h"
 #include "dosbox_test_fixture.h"
 #include "memory.h"
+#include "misc/logging.h"
 
 namespace {
 
@@ -121,6 +125,32 @@ std::vector<uint8_t> switch_es_code(const uint16_t selector)
 	        0xc0,
 	        0x58,
 	        0xcf};
+}
+
+// mov ebx, reps
+// top: mov esi, SourceBase; mov edi, di; mov ecx, count; <rep_op>
+// dec ebx; jnz top
+std::vector<uint8_t> rep_loop_code(const std::vector<uint8_t>& rep_op,
+                                   const uint32_t di, const uint32_t count,
+                                   const uint32_t reps)
+{
+	std::vector<uint8_t> code = {};
+	const auto mov_imm32 = [&](const uint8_t opcode, const uint32_t value) {
+		code.push_back(opcode);
+		for (auto shift = 0; shift < 32; shift += 8) {
+			code.push_back((value >> shift) & 0xff);
+		}
+	};
+	mov_imm32(0xbb, reps);
+	const auto top = code.size();
+	mov_imm32(0xbe, SourceBase);
+	mov_imm32(0xbf, di);
+	mov_imm32(0xb9, count);
+	code.insert(code.end(), rep_op.begin(), rep_op.end());
+	code.push_back(0x4b); // dec ebx
+	code.push_back(0x75); // jnz top
+	code.push_back(static_cast<uint8_t>(top - (code.size() + 1)));
+	return code;
 }
 
 void prefill(const PhysPt start, const PhysPt end)
@@ -541,6 +571,58 @@ TEST_P(SegmentLimitCoreTest, InterruptHandlerGrowingEsLimitMidRepAvoidsFault)
 	EXPECT_EQ(mem_readd(EsBase + 0x10000), Fill);
 	EXPECT_EQ(mem_readd(EsBase + 0x1021c), Fill);
 	EXPECT_EQ(mem_readd(EsBase + 0x10220), Untouched);
+}
+
+// Manual throughput benchmark for the cost of the limit checks, so not run
+// by default. Run a release build with:
+//   --gtest_also_run_disabled_tests --gtest_filter='*StringWriteThroughput*'
+TEST_P(SegmentLimitCoreTest, DISABLED_StringWriteThroughput)
+{
+	constexpr uint32_t ElementsPerRep = 4096; // 16 KB per REP
+	constexpr uint32_t Reps           = 32768;
+	constexpr auto Elements = static_cast<double>(ElementsPerRep) * Reps;
+	constexpr auto Rounds   = 3;
+
+	struct Scenario {
+		const char* op_name;
+		std::vector<uint8_t> rep_op;
+		const char* es_name;
+		uint16_t es_selector;
+		uint32_t di;
+	};
+	const std::vector<Scenario> scenarios = {
+	        {"rep movsd", {0xf3, 0xa5}, "flat 4 GB ES", FlatDataSelector, EsBase},
+	        {"rep movsd", {0xf3, 0xa5},     "64 KB ES",    Es64KSelector,      0},
+	        {"rep stosd", {0xf3, 0xab}, "flat 4 GB ES", FlatDataSelector, EsBase},
+	        {"rep stosd", {0xf3, 0xab},     "64 KB ES",    Es64KSelector,      0},
+	};
+
+	for (const auto& scenario : scenarios) {
+		CPU_SetSegGeneral(es, scenario.es_selector);
+		const auto code = rep_loop_code(scenario.rep_op,
+		                                scenario.di,
+		                                ElementsPerRep,
+		                                Reps);
+
+		auto best_ns = std::numeric_limits<double>::max();
+		for (auto round = 0; round < Rounds; ++round) {
+			start(code);
+			const auto begin = std::chrono::steady_clock::now();
+			run_until_marker(1 << 30, 1000);
+			const auto end = std::chrono::steady_clock::now();
+			ASSERT_EQ(marker(), FinishedMarker);
+
+			const auto ns = std::chrono::duration<double, std::nano>(
+			        end - begin);
+			best_ns = std::min(best_ns, ns.count());
+		}
+		LOG_MSG("%s, %s, %s: %.2f ns per element, %.0f MB/s",
+		        GetParam().test_name.c_str(),
+		        scenario.op_name,
+		        scenario.es_name,
+		        best_ns / Elements,
+		        4.0 * Elements / best_ns * 1000.0);
+	}
 }
 
 INSTANTIATE_TEST_SUITE_P(CpuVariations, SegmentLimitCoreTest, AllCpuConfigs);
