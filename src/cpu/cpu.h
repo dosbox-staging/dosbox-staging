@@ -357,7 +357,7 @@ public:
 		return static_cast<PhysPt>(base);
 	}
 
-	uint32_t GetLimit()
+	uint32_t GetLimit() const
 	{
 		const auto limit_16_19 = check_cast<uint8_t>(saved.seg.limit_16_19); // 4 bits
 		const auto limit_0_15 = check_cast<uint16_t>(saved.seg.limit_0_15); // 16 bits
@@ -383,7 +383,7 @@ public:
 		return check_cast<uint16_t>(saved.gate.selector); // 16 bit
 	}
 
-	uint8_t Type()
+	uint8_t Type() const
 	{
 		return check_cast<uint8_t>(saved.seg.type); // 5 bits
 	}
@@ -587,7 +587,7 @@ bool CPU_ShouldHltOnIdle();
 
 // A string instruction writing to ES:(E)DI
 struct StringWrite {
-	uint64_t limit    = NoSegmentLimit;
+	uint32_t limit    = NoSegmentLimit;
 	int direction     = 1;
 	int size_bytes    = 1;
 	uint32_t count    = 0;

@@ -95,9 +95,10 @@ enum SegNames {
 };
 
 // Segment limits are not enforced in real and V86 modes, nor for expand-down
-// segments. Limits are stored in 64 bits so this can't clash with a 4 GB limit
-// (0xffffffff), which is enforced.
-constexpr uint64_t NoSegmentLimit = UINT64_MAX;
+// segments. A 4 GB limit (0xffffffff) isn't enforced either, like on real
+// CPUs: the Intel SDM calls faults on such accesses implementation-specific,
+// and CPUs let an access starting at 0xffffffff wrap around to 0.
+constexpr uint32_t NoSegmentLimit = UINT32_MAX;
 
 struct Segments {
 	uint16_t val[8] = {};
@@ -105,7 +106,7 @@ struct Segments {
 
 	// Only maintained for the data segment registers; used to check the ES
 	// limit in string instructions
-	std::array<uint64_t, 8> limit = {NoSegmentLimit,
+	std::array<uint32_t, 8> limit = {NoSegmentLimit,
 	                                 NoSegmentLimit,
 	                                 NoSegmentLimit,
 	                                 NoSegmentLimit,

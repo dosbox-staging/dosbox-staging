@@ -54,8 +54,13 @@ static void DoString(STRING_OP type) {
 
 		if (count_within_limit < count) {
 			is_past_es_limit = true;
-			count_left += static_cast<int32_t>(count - count_within_limit);
+			const auto count_past_limit = count - count_within_limit;
+			count_left += static_cast<int32_t>(count_past_limit);
 			count = count_within_limit;
+			// Don't charge cycles for the iterations not executed
+			if (TEST_PREFIX_REP) {
+				CPU_Cycles += static_cast<int>(count_past_limit);
+			}
 		}
 	}
 

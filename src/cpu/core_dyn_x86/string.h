@@ -40,6 +40,16 @@ static void dyn_string(STRING_OP op) {
 	// which restarts the instruction with the registers updated; the
 	// restarted instruction then faults before its first write.
 	if (IsWritingToEsDi(op)) {
+		// Skip the call inline when there's no limit to check, which is
+		// the case for the flat 4 GB segments nearly all 32-bit
+		// programs use
+		gen_load_host(&Segs.limit[es], DREG(TMPW), 4);
+		gen_dop_word_imm(DOP_CMP, true, DREG(TMPW), NoSegmentLimit);
+		gen_releasereg(DREG(TMPW));
+		DynState no_limit_state;
+		dyn_savestate(&no_limit_state);
+		const uint8_t* no_limit = gen_create_branch_long(BR_Z);
+
 		const auto size_bytes   = static_cast<uint32_t>(1 << (op & 3));
 		const uint32_t add_mask = decode.big_addr ? 0xffffffff : 0xffff;
 		if (decode.rep) {
@@ -60,6 +70,9 @@ static void dyn_string(STRING_OP op) {
 			                  add_mask);
 		}
 		dyn_check_bool_exception_al();
+
+		dyn_synchstate(&no_limit_state);
+		gen_fill_branch_long(no_limit);
 	}
 
 	gen_load_host(&cpu.direction, DREG(TMPW), 4);

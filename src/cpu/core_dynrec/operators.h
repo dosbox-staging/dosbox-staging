@@ -1632,6 +1632,8 @@ static void DRC_CALL_CONV dynrec_std(void) {
 	cpu.direction=-1;
 }
 
+// dynrec_check_es_limit() takes a single immediate parameter: the write size
+// in bytes (1, 2 or 4) in the low 3 bits, OR'ed with these flags
 constexpr Bitu DynrecEsLimitBigAddr = 1 << 3;
 constexpr Bitu DynrecEsLimitRep     = 1 << 4;
 

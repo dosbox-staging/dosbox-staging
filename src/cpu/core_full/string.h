@@ -38,6 +38,34 @@
 			count_left=0;
 		}
 	}
+
+	// Raise a general protection fault instead of writing past the ES
+	// limit, after executing the iterations that fit, like DoString() in
+	// the normal core
+	auto is_past_es_limit = false;
+	if (Segs.limit[es] != NoSegmentLimit && count > 0 &&
+	    IsWritingToEsDi(static_cast<STRING_OP>(inst.code.op)) &&
+	    cpu.pmode && !(reg_flags & FLAG_VM)) {
+		const auto count_within_limit = CPU_GetStringCountWithinLimit(
+		        {.limit      = Segs.limit[es],
+		         .direction  = static_cast<int>(cpu.direction),
+		         .size_bytes = 1 << (inst.code.op & 3),
+		         .count      = static_cast<uint32_t>(count),
+		         .di_index   = di_index,
+		         .add_mask   = add_mask});
+
+		if (count_within_limit < count) {
+			is_past_es_limit = true;
+			const auto count_past_limit = count - count_within_limit;
+			count_left += static_cast<int32_t>(count_past_limit);
+			count = count_within_limit;
+			// Don't charge cycles for the iterations not executed
+			if (inst.prefix & PREFIX_REP) {
+				CPU_Cycles += static_cast<int>(count_past_limit);
+			}
+		}
+	}
+
 	auto add_index = cpu.direction;
 	if (count) switch (inst.code.op) {
 	case R_OUTSB:
@@ -242,5 +270,9 @@
 		count+=count_left;
 		reg_ecx&=(~add_mask);
 		reg_ecx|=(count & add_mask);
+	}
+	// Skips SaveIP(), so the fault handler returns to the instruction start
+	if (is_past_es_limit) {
+		EXCEPTION(EXCEPTION_GP);
 	}
 }

@@ -167,11 +167,6 @@ public:
 	void SetUp() override
 	{
 		const auto& cfg = GetParam();
-		if (cfg.test_name == "Full") {
-			GTEST_SKIP()
-			        << "The full core has its own string "
-			           "implementation without segment limit checks";
-		}
 		DOSBoxTestFixture::SetUp();
 
 		set_section_property_value("cpu", "core", cfg.config_cpu);

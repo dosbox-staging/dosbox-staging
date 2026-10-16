@@ -2565,7 +2565,7 @@ void CPU_VERW(Bitu selector)
 	SETFLAGBIT(ZF, true);
 }
 
-static uint64_t get_segment_limit(Descriptor& desc)
+static uint32_t get_segment_limit(const Descriptor& desc)
 {
 	switch (desc.Type()) {
 	case DESC_DATA_ED_RO_NA:
@@ -4026,7 +4026,7 @@ uint32_t CPU_GetStringCountWithinLimit(const StringWrite& write)
 	if (write.limit == NoSegmentLimit || write.count == 0) {
 		return write.count;
 	}
-	const auto limit    = static_cast<int64_t>(write.limit);
+	const int64_t limit = write.limit;
 	const int64_t size  = write.size_bytes;
 
 	const auto first_write_end = int64_t{write.di_index} + size - 1;
@@ -4092,15 +4092,22 @@ bool CPU_CheckStringEsLimit(const uint32_t di_index, const uint32_t count,
 	if (Segs.limit[es] == NoSegmentLimit || !cpu.pmode || (reg_flags & FLAG_VM)) {
 		return false;
 	}
+	// At most CPU_Cycles iterations run before the next restart and check,
+	// so there's no need to look further; this also bounds the per-write
+	// fallback of CPU_GetStringCountWithinLimit() when (E)DI wraps around.
+	// At least the next write is always checked.
+	const auto max_count = static_cast<uint32_t>(std::max(CPU_Cycles, 1));
+	const auto count_to_check = std::min(count, max_count);
+
 	const auto count_within_limit = CPU_GetStringCountWithinLimit(
 	        {.limit      = Segs.limit[es],
 	         .direction  = static_cast<int>(cpu.direction),
 	         .size_bytes = size_bytes,
-	         .count      = count,
+	         .count      = count_to_check,
 	         .di_index   = di_index,
 	         .add_mask   = add_mask});
 
-	if (count_within_limit == count) {
+	if (count_within_limit == count_to_check) {
 		return false;
 	}
 	if (count_within_limit == 0) {

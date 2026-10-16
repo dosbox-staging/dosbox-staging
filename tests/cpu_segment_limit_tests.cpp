@@ -20,8 +20,7 @@ uint32_t count_within_limit_reference(const StringWrite& write)
 
 	auto index = write.di_index;
 	for (uint32_t i = 0; i < write.count; ++i) {
-		if (int64_t{index} + write.size_bytes - 1 >
-		    static_cast<int64_t>(write.limit)) {
+		if (int64_t{index} + write.size_bytes - 1 > write.limit) {
 			return i;
 		}
 		index = (index + add_index) & write.add_mask;
@@ -76,31 +75,23 @@ TEST(CpuSegmentLimits, PartialWriteFaults)
 	          0u);
 }
 
-TEST(CpuSegmentLimits, FullSizeLimitEnforced)
+TEST(CpuSegmentLimits, FullSizeLimitNotEnforced)
 {
-	// STOSW at the last byte of a 4 GB segment straddles the limit
+	// Like on real CPUs, a word at the last byte of a 4 GB segment wraps
+	// around to 0 instead of faulting
 	EXPECT_EQ(CPU_GetStringCountWithinLimit({.limit      = 0xffffffff,
 	                                         .size_bytes = 2,
 	                                         .count      = 1,
 	                                         .di_index   = 0xffffffff,
 	                                         .add_mask   = 0xffffffff}),
-	          0u);
-
-	// The last dword of a 4 GB segment fits
-	EXPECT_EQ(CPU_GetStringCountWithinLimit({.limit      = 0xffffffff,
-	                                         .size_bytes = 4,
-	                                         .count      = 1,
-	                                         .di_index   = 0xfffffffc,
-	                                         .add_mask   = 0xffffffff}),
 	          1u);
 
-	// REP STOSD stops at the dword straddling the end of a 4 GB segment
 	EXPECT_EQ(CPU_GetStringCountWithinLimit({.limit      = 0xffffffff,
 	                                         .size_bytes = 4,
 	                                         .count      = 10,
 	                                         .di_index   = 0xfffffff2,
 	                                         .add_mask   = 0xffffffff}),
-	          3u);
+	          10u);
 }
 
 void expect_matches_reference(const StringWrite& write)
