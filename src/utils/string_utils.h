@@ -261,13 +261,15 @@ void upcase(std::string& str);
 void lowcase(std::string& str);
 void strip_punctuation(std::string& str);
 
-// Split a string on an arbitrary character delimiter. Absent string content on
+// Split a string on any character found in `delims`. Absent string content on
 // either side of a delimiter is treated as an empty string. For example:
-//   split("abc:", ':') returns {"abc", ""}
-//   split(":def", ':') returns {"", "def"}
-//   split(":", ':') returns {"", ""}
-//   split("::", ':') returns {"", "", ""}
-std::vector<std::string> split_with_empties(std::string_view seq, char delim);
+//   split_with_empties("abc:", ":") returns {"abc", ""}
+//   split_with_empties(":def", ":") returns {"", "def"}
+//   split_with_empties(":", ":") returns {"", ""}
+//   split_with_empties("::", ":") returns {"", "", ""}
+//   split_with_empties("a,b:c", ",:") returns {"a", "b", "c"}
+std::vector<std::string> split_with_empties(std::string_view seq,
+                                            std::string_view delims);
 
 // Split a string on any character found in delim.
 // Delim defaults to all whitespace characters:
@@ -361,7 +363,6 @@ std::optional<std::pair<int, int>> parse_int_dimensions(const std::string_view s
 
 // Returned percentage values are unscaled.
 std::optional<float> parse_percentage_with_percent_sign(const std::string_view s);
-std::optional<float> parse_percentage_with_optional_percent_sign(const std::string_view s);
 
 template <typename... Args>
 std::string format_str(const std::string& format, const Args&... args) noexcept

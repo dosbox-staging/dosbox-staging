@@ -23,7 +23,7 @@
 #include <SDL3/SDL.h>
 #include <SDL3/SDL_opengl.h>
 
-#if defined(MACOSX) 
+#if defined(MACOSX)
 #include "macos_colorspace.h"
 #endif
 
@@ -101,32 +101,30 @@ SDL_Window* OpenGlRenderer::CreateSdlWindow(const int x, const int y,
 	SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_Y_NUMBER, y);
 	SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_WIDTH_NUMBER, width);
 	SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_HEIGHT_NUMBER, height);
-	
-	// For window flags you should use separate window creation properties,
-	// but for easier migration from SDL2 you can use the following:
+
 	SDL_SetNumberProperty(props, SDL_PROP_WINDOW_CREATE_FLAGS_NUMBER, flags);
 	auto window = SDL_CreateWindowWithProperties(props);
 	SDL_DestroyProperties(props);
 
-#if defined(MACOSX) 
+#if defined(MACOSX)
 	// From "Best Practices for Color Management in OS X and iOS", chapter
 	// "Non-Color Managed Frameworks, OpenGL - Explicit Color Management
 	// Example":
-	// 
+	//
 	//   OpenGL is not color managed. As a consequence, it might require
 	//   additional effort to devise solutions to specific color problems
 	//   you may encounter when using it. The fundamental problem is OpenGL
 	//   has one set of assumptions, and the display buffer has another.
-	// 
+	//
 	// Ref:
 	// https://developer.apple.com/library/archive/technotes/tn2313/_index.html#//apple_ref/doc/uid/DTS40014694-CH1-NONCOLORMANAGEDFRAMEWORKS-OPENGL___EXPLICIT_COLOR_MANAGEMENT_EXAMPLE
-	// 
+	//
 	// SDL3 tags the window's colorspace with sRGBColorSpace. This is
 	// hardcoded, but what we want is to use the Display P3 colour space
 	// instead internally, tag the window with displayP3ColorSpace, then let
 	// the system-wide colour management feature of macOS do the rest (i.e.,
-	// converting the Display P3 image data to whatever colour space is set in
-	// the system settings).
+	// converting the Display P3 image data to whatever colour space is set
+	// in the system settings).
 	setDisplayP3ColorSpace(window);
 #endif
 
@@ -171,7 +169,7 @@ bool OpenGlRenderer::InitRenderer()
 	max_texture_size_px = size;
 
 	LOG_INFO("OPENGL: Version: %s, renderer: %s, GLSL version: %s, vendor: %s",
-			 safe_gl_get_string(GL_VERSION, "unknown"),
+	         safe_gl_get_string(GL_VERSION, "unknown"),
 	         safe_gl_get_string(GL_RENDERER, "unknown"),
 	         safe_gl_get_string(GL_SHADING_LANGUAGE_VERSION, "unknown"),
 	         safe_gl_get_string(GL_VENDOR, "unknown"));
@@ -286,6 +284,8 @@ void OpenGlRenderer::NotifyViewportSizeChanged(const DosBox::Rect viewport_size_
 		// SDL3 promises more cross-platform consistency in this regard,
 		// so let's hope that will get us closer to the "test once, run
 		// anywhere" paradigm.
+		//
+		// TODO: investigate whether SDL3 is any different
 		//
 		// It's rather tricky to solve this in a more elegant way, so
 		// this solution will do for now. This method will get called a

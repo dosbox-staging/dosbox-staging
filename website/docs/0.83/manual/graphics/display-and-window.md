@@ -68,7 +68,7 @@ In practice, most users fall into one of three categories:
   defaults work fine --- tearing is rarely noticeable in these genres.
 
 Note that the game itself might tear on real hardware, in which case DOSBox
-Staging will faithfully reproduce that tearing — see [Vsync](#vsync) for
+Staging will faithfully reproduce that tearing --- see [Vsync](#vsync) for
 details.
 
 
@@ -196,9 +196,9 @@ The simplest thing to do on fixed refresh monitors is to leave
 3D games and smooth-scrolling 2D games. In games with mostly static screens
 (RPGs, adventures, and strategy games) the tearing is virtually unnoticeable.
 
-If really want to use vsync, you can create custom screen modes that match the
-DOS refresh rate exactly. Use the Nvidia Control Panel or [Custom Resolution
-Utility
+If you really want to use vsync, you can create custom screen modes that match
+the DOS refresh rate exactly. Use the Nvidia Control Panel or [Custom
+Resolution Utility
 (CRU)](https://www.monitortests.com/forum/Thread-Custom-Resolution-Utility-CRU)
 on Windows. Enable **CVT reduced blanking** (**CVT-RB** or **CVT-RBv2**) to
 reach 70 Hz. For the best results, use the exact fractional **59.713 Hz** and
@@ -238,9 +238,10 @@ texture backends; the default `auto` value selects the best available driver.
 The [`window_size`](#window_size) and [`window_position`](#window_position)
 settings control where and how large the DOSBox Staging window appears on
 startup. You can still resize the window freely after launch --- these only set
-the initial state. The named sizes (`small`, `medium`, `large`) are relative to
-your desktop, while the `WxH` format lets you request an exact size in logical
-units.
+the initial state. The named sizes (`small`, `medium`, `large`) give you 4:3
+windows relative to your desktop height, while the `WxH` format lets you
+specify the size in logical units, pixels, or percentages (see [Logical units,
+pixels, and percentages](#logical-units-pixels-and-percentages) below).
 
 On multi-monitor setups, use [`display`](#display) to select which screen DOSBox
 opens on, and [`window_position`](#window_position) to fine-tune placement.
@@ -250,14 +251,119 @@ system's title bar and window borders are shown.
 [`window_transparency`](#window_transparency) sets the window transparency level
 (0--90%).
 
+
+### Logical units, pixels, and percentages
+
+Most operating systems let you enlarge everything on the screen with a display
+scaling setting, which is especially useful on high-resolution monitors. For
+example, 4K monitors are typically used at 200% scaling. A window that is 1000
+**logical units** wide is 2000 pixels wide on such a monitor, but only 1000
+pixels wide on a 1080p monitor at 100% scaling. This way, the window appears
+roughly the same physical size on both.
+
+You can specify the window size and position, and the [viewport
+size](rendering/aspect-ratios-and-scaling.md#custom-viewport-size), in three
+different ways:
+
+- **Logical units** (e.g., `window_size = 1024x768`) --- The values are
+  multiplied by your operating system's display scaling factor, which is how
+  most programs size their windows.
+
+- **Pixels** (e.g., `window_size = 1440x1080px`) --- The values are in
+  pixels, and display scaling is not applied. This gives you precise control,
+  but the window will look smaller on a 4K monitor than on a 1080p one. A
+  window sized in pixels keeps its size in pixels when you move it to another
+  monitor, while a window sized in logical units keeps its size in logical
+  units.
+
+- **Percentages** (e.g., `window_size = 120x90%` or `viewport = 89%`) --- The
+  values are relative to your desktop size, so they adapt to any monitor. For
+  window sizes, both values are relative to the desktop height; for example,
+  `120x90%` always gives you a 4:3 window that is 90% as tall as your desktop
+  (this is the same as `window_size = large`). The window is resized when you
+  move it to another monitor or change the display scaling.
+
+
+For general use, logical units and percentages are recommended as they ensure
+your settings will be portable between monitors with different scaling
+factors.
+
+
 !!! note
 
-    Both `window_size` and `window_position` use logical units that are
-    multiplied by your OS-level DPI scaling. To use raw pixel coordinates
-    instead, set the `SDL_WINDOWS_DPI_SCALING` environment variable to `0`.
+    You can also use a comma instead of the `x` in sizes (e.g., `window_size =
+    1024,768` or `viewport = 1440,1080px`).
+
+!!! tip "Keep it simple"
+
+    For the least surprising results, use the same kind of unit for
+    [`window_size`](#window_size), [`window_position`](#window_position), and
+    [`viewport`](rendering/aspect-ratios-and-scaling.md#viewport). Mixing them
+    can have unexpected effects; for example, a viewport specified in logical
+    units can end up larger than a window specified in pixels at high scaling
+    factors. That said, mixing units is perfectly valid for more advanced use
+    cases, such as combining a window size relative to your desktop with a
+    viewport size in pixels to get a specific integer scaling factor on your
+    monitor.
 
 
-## Titlebar customisation
+### Title bar and window borders
+
+[`window_size`](#window_size) and [`window_position`](#window_position) refer
+to the window's **content area**, the part of the window where DOSBox Staging
+draws the image. The size does *not* include the title bar and window borders,
+so the window takes up slightly more space on the screen than the size you
+specify. Likewise, the position is that of the top-left corner of the content
+area, *not* of the whole window including the title bar.
+
+You'll rarely notice this, except when you place the window near the top of the
+screen or make it nearly as tall as your desktop. What happens then depends on
+your operating system:
+
+- **Windows** --- The title bar is about 30 logical units tall, and windows can
+  extend beyond the edges of the screen. With a vertical position smaller than
+  that (e.g., `window_position = 0,0`), the title bar ends up above the top edge
+  of the screen, where you can't grab it to move the window. Similarly, a window
+  whose content area is as tall as your desktop gets cut off.
+
+- **macOS** --- macOS keeps the title bar below the menu bar and doesn't let
+  windows grow taller than the space below it. A window positioned too close to
+  the top of the screen is moved down, and a window that's too tall is shrunk to
+  fit (this also updates [`window_size`](#window_size)).
+
+- **Linux** --- The exact behaviour depends on your desktop environment. On Wayland,
+  [`window_position`](#window_position) has no effect. Otherwise, some window
+  managers place the top-left corner of the title bar at the position you set,
+  while others place the top-left corner of the content area there. Some also
+  move the window to keep it fully inside the display bounds. If the window
+  ends up somewhere else, the current values of [`window_size`](#window_size)
+  and [`window_position`](#window_position) show its actual size and position.
+
+Resizing the window updates [`window_size`](#window_size), and moving it
+updates [`window_position`](#window_position). Each setting is updated in the
+same unit you used to specify it (for example, a percentage stays a
+percentage).
+
+Positions and percentages are relative to the whole desktop, including the area
+covered by the taskbar (on Windows) or the Dock (on macOS), so the window can
+end up partly behind them.
+
+!!! tip "Arranging windows"
+
+    To arrange windows side by side, it's easiest to use your operating
+    system's window snapping: press ++win+left++ or ++win+right++ on Windows,
+    ++meta+left++ or ++meta+right++ on most Linux desktops, or hover over the
+    green button in the title bar on macOS. DOSBox Staging updates
+    [`window_size`](#window_size) and [`window_position`](#window_position)
+    to match.
+
+    If the window must cover an exact area of the screen, set
+    [`window_decorations`](#window_decorations) to `off`. The window then has no
+    title bar or borders, so its size and position describe the whole window.
+    The downside is that there's no title bar to drag the window around with.
+
+
+## Title bar customisation
 
 The [`window_titlebar`](#window_titlebar) setting controls what information
 appears in the window's title bar. It accepts a space-separated list of
@@ -343,15 +449,39 @@ section.
 
     - `auto` *default*{ .default } -- Let the window manager decide the
       position.
-    - `X,Y` -- Set window position in X,Y format in logical units (e.g.,
-      `250,100`). `0,0` is the top-left corner of the screen. The values
-      will be multiplied by the OS-level DPI scaling to get the window
+
+    - `X,Y` -- Set window position in `X,Y` format in logical units (e.g.,
+      `250,100`). `0,0` is the top-left corner of the screen. The values are
+      multiplied by the OS-level display scaling factor to get the window
       position in pixels.
 
-    !!! note
+    - `X,Ypx` -- Set window position in pixels (e.g., `375,150px`).
 
-        If you want to use pixel coordinates instead and ignore DPI scaling,
-        set the `SDL_WINDOWS_DPI_SCALING` environment variable to `0`.
+    - `X,Y%` -- Set window position as a percentage of the desktop width and
+      height (e.g., `10,10%`).
+
+    See [Logical units, pixels, and
+    percentages](#logical-units-pixels-and-percentages) for more details.
+
+
+    !!! note "Notes"
+
+        - Moving the window updates this setting in the same format.
+
+        - The position is that of the top-left corner of the window's content area,
+          excluding the title bar and window borders.
+
+        - The window manager might move the window away from the specified position
+          (e.g., to keep it fully inside the display bounds, or to place it below a
+          task bar). E.g., on Windows, with small Y values, the title bar can
+          end up above the top edge of the screen. On macOS, the window is moved
+          down instead so that its title bar is below the menu bar. See [Title
+          bar and window borders](#title-bar-and-window-borders) for details.
+
+    !!! warning "Wayland note"
+
+        This setting has no effect on Wayland because Wayland doesn't let
+        applications position their windows.
 
 
 ##### window_size
@@ -361,25 +491,45 @@ section.
 
     Possible values:
 
-    - `default` *default*{ .default } -- Select the best option based on
-      your environment and other factors (such as whether aspect ratio
-      correction is enabled).
-    - `small`, `medium`, `large` (`s`, `m`, `l`) -- Size the window
-      relative to the desktop.
-    - `WxH` -- Specify window size in WxH format in logical units (e.g.,
-      `1024x768`). The values will be multiplied by the OS-level DPI scaling
-      to get the window size in pixels.
+    - `default` *default*{ .default } -- Same as `medium`.
 
-    !!! note
+    - `small`, `medium`, `large` (`s`, `m`, `l`) -- 4:3 window sizes
+      relative to the desktop height (same as `66.67x50%`, `98.67x74%`, and
+      `120x90%`, respectively).
 
-        If you want to use pixel coordinates instead and ignore DPI scaling,
-        set the `SDL_WINDOWS_DPI_SCALING` environment variable to `0`.
+    - `WxH` -- Specify window size in `WxH` (or `W,H`) format in logical units
+      (e.g., `1024x768`). The values are multiplied by the OS-level display
+      scaling factor to get the window size in pixels.
+
+    - `WxHpx` -- Specify window size in pixels (e.g., `1440x1080px`). The
+      window keeps its size in pixels when moved to another display.
+
+    - `WxH%` -- Specify window size as a percentage of the desktop height
+      (e.g., `120x90%` for a 4:3 window 90% as tall as the desktop). Both
+      values are relative to the desktop height, so the aspect ratio of the
+      window doesn't depend on the aspect ratio of the desktop.
+
+    See [Logical units, pixels, and
+    percentages](#logical-units-pixels-and-percentages) for more details.
+
+    !!! note "Notes"
+
+        - Resizing the window updates this setting in the same format, except for the
+          named sizes, which are updated in `WxH%` format.
+
+        - The size specifies the window's content area excluding the title bar and
+          window borders, so the window takes up slightly more space on the screen
+          than the specified size. 
+
+        - The window manager might resize the window (e.g., to keep it fully inside
+          the display bounds). See [Title bar and window
+          borders](#title-bar-and-window-borders) for details.
 
 
 ##### window_titlebar
 
 :   Space-separated list of information to be displayed in the window's
-    titlebar. If a parameter is not specified, its default value is used
+    title bar. If a parameter is not specified, its default value is used
     (`program=name dosbox=auto cycles=on mouse=full` by default).
 
     Possible parameters:
@@ -524,7 +674,7 @@ rest are in `[sdl]`.
       only. Vsync is only available with `host-rate` presentation (see
       [`presentation_mode`](#presentation_mode)).
 
-    !!! note
+    !!! note "Notes"
 
         - For perfectly smooth scrolling in 2D games (e.g., in
           [Pinball Dreams](https://www.mobygames.com/game/703/pinball-dreams/)

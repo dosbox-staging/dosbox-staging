@@ -35,6 +35,7 @@ add_executable(dosbox_tests
     # stubs.cpp
     support_tests.cpp
     unicode_tests.cpp
+    window_geometry_tests.cpp
     multi_prefix_tests.cpp
 )
 

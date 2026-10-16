@@ -303,17 +303,23 @@ that size, the pixels would look too blocky.
     physical pixels. On a 1080p display with 100% scaling, it corresponds to
     1280&times;960 physical pixels.
 
+    To specify the viewport size in physical pixels instead, add `px` to the
+    end of the value (e.g., `viewport = 1280x960px`). See [Logical units,
+    pixels, and
+    percentages](../display-and-window.md#logical-units-pixels-and-percentages)
+    for more details and advice on choosing the right unit.
+
 
 !!! note "Why 89%?"
 
     `viewport = 89%` is based on the amount of vertical space available on a
     typical 1920&times;1080 desktop. It gives a maximum viewport of about 961
-    logical pixels vertically.
+    logical units vertically.
 
     With integer scaling enabled, this is enough for a 2&times; vertical scale
     of both 320&times;200 content after VGA double-scanning (resulting in a
     640&times;400 image) and 640&times;480 content. The resulting image sizes
-    are approximately 1067&times;800 and 1280&times;960 logical pixels
+    are approximately 1067&times;800 and 1280&times;960 logical units
     respectively in fullscreen mode --- around 15" and 19" physical CRT
     equivalents. This makes `89%` a useful general-purpose starting point.
 
@@ -392,24 +398,27 @@ You can set these in the `[render]` configuration section.
       window/screen. There might be padding (black areas) around the image
       with [`integer_scaling`](#integer_scaling) enabled.
 
-    - `WxH` -- Set a fixed viewport size in WxH format in logical units
-      (e.g., `960x720`). The specified size must not be larger than the
+    - `WxH` -- Set a fixed viewport size in `WxH` (or `W,H`) format in logical
+      units (e.g., `960x720`). The specified size must not be larger than the
       desktop. If it's larger than the window size, it will be scaled to fit
       within the window.
+
+    - `WxHpx` -- Same as `WxH`, but the size is specified in pixels (e.g.,
+      `1440x1080px`).
 
     - `N%` -- Similar to `WxH`, but the size is specified as a percentage of
       the desktop size.
 
     - `relative H% V%` -- The viewport is set to a 4:3 aspect ratio rectangle
-      fit into the available window or screen, then is scaled by the H and V
-      horizontal and vertical scaling factors (valid range is from 20% to
-      300%). The resulting viewport is allowed to extend beyond the bounds of
-      the window or screen. Useful to force arbitrary display aspect ratios
-      with [`aspect`](#aspect) set to `stretch` and to "zoom" into the image.
-      This effectively emulates the horizontal and vertical stretch controls
-      of CRT monitors.
+       fit into the available window or screen, then is scaled by the `H` and
+       `V` horizontal and vertical scaling factors (valid range is from 20%
+       to 300%). The resulting viewport is allowed to extend beyond the
+       bounds of the window or screen. Useful to force arbitrary display
+       aspect ratios with [`aspect`](#aspect) set to `stretch` and to "zoom"
+       into the image. This effectively emulates the horizontal and vertical
+       stretch controls of CRT monitors.
 
-    !!! note
+    !!! note "Notes"
 
         - Using `relative` mode with [`integer_scaling`](#integer_scaling)
           enabled could lead to surprising (but correct) results.

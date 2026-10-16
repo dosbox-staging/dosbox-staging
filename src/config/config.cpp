@@ -37,7 +37,7 @@ static void write_property(const Property& prop, FILE* outfile)
 	// the config.
 	help_text = format_str(help_text);
 
-	auto lines = split_with_empties(help_text, '\n');
+	auto lines = split_with_empties(help_text, "\n");
 
 	// Write help text
 	for (auto& line : lines) {
