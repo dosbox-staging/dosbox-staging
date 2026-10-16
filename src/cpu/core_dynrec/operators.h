@@ -1635,41 +1635,22 @@ static void DRC_CALL_CONV dynrec_std(void) {
 constexpr Bitu DynrecEsLimitBigAddr = 1 << 3;
 constexpr Bitu DynrecEsLimitRep     = 1 << 4;
 
-// Checks the ES segment limit before a string instruction writing to ES:(E)DI.
-// If only some iterations fit, the cycles are cut so the string helper stops
-// after them and the instruction is restarted later; the restarted instruction
-// then faults. Returns true if a general protection fault has been prepared.
+// Checks the ES segment limit once before a string instruction writing to
+// ES:(E)DI; CPU_CheckStringEsLimit() explains why once is enough. If only
+// some iterations fit, the cycles are cut so the string helper stops after
+// them and the instruction is restarted later; the restarted instruction then
+// faults. Returns true if a general protection fault has been prepared.
 static bool DRC_CALL_CONV dynrec_check_es_limit(Bitu params) DRC_FC;
 static bool DRC_CALL_CONV dynrec_check_es_limit(Bitu params)
 {
-	if (Segs.limit[es] == NoSegmentLimit || !cpu.pmode || (reg_flags & FLAG_VM)) {
-		return false;
-	}
 	const uint32_t add_mask = (params & DynrecEsLimitBigAddr) ? 0xffffffff
 	                                                          : 0xffff;
-
 	const auto count = (params & DynrecEsLimitRep) ? (reg_ecx & add_mask) : 1;
 
-	const auto count_within_limit = CPU_GetStringCountWithinLimit(
-	        {.limit      = Segs.limit[es],
-	         .direction  = static_cast<int>(cpu.direction),
-	         .size_bytes = static_cast<int>(params & 7),
-	         .count      = count,
-	         .di_index   = reg_edi & add_mask,
-	         .add_mask   = add_mask});
-
-	if (count_within_limit == count) {
-		return false;
-	}
-	if (count_within_limit == 0) {
-		return CPU_PrepareException(EXCEPTION_GP, 0);
-	}
-	// Same as handing an instruction over to the normal core
-	if (CPU_Cycles > static_cast<int64_t>(count_within_limit)) {
-		CPU_CycleLeft += CPU_Cycles - static_cast<int>(count_within_limit);
-		CPU_Cycles = static_cast<int>(count_within_limit);
-	}
-	return false;
+	return CPU_CheckStringEsLimit(reg_edi & add_mask,
+	                              count,
+	                              static_cast<int>(params & 7),
+	                              add_mask);
 }
 
 static uint16_t DRC_CALL_CONV dynrec_movsb_word(uint16_t count,int16_t add_index,PhysPt si_base,PhysPt di_base) DRC_FC;

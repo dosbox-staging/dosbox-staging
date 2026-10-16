@@ -4061,6 +4061,59 @@ uint32_t CPU_GetStringCountWithinLimit(const StringWrite& write)
 	return write.count;
 }
 
+// Why one check per start or restart of the instruction is enough
+//
+// A REP string instruction is only ever left part-way through by restarting
+// it: the core stops when the cycle budget runs out, when an iteration faults
+// (a page fault, or this limit check) or when a pending interrupt is taken,
+// and in every case (E)IP is left pointing at the instruction with (E)CX,
+// (E)SI and (E)DI holding the completed iterations, so the next run comes
+// back through this check with the current registers.
+//
+// Between two such checks, what the instruction sees in ES can't change:
+//
+// - The limit is cached in Segs.limit when ES is loaded, so writes to the
+//   descriptor table don't affect it, exactly like the descriptor cache of a
+//   real CPU.
+// - Within a block, the dynamic cores only execute the generated or helper
+//   loop of the instruction itself; guest code that could reload ES or switch
+//   mode, and the emulator's own event handling, only run after the
+//   instruction has been restarted.
+// - A fault or interrupt handler that reloads ES returns to the instruction
+//   start, so the next check sees the new limit, which is also what real
+//   hardware does when a REP resumes after an interrupt.
+//
+// So the count computed here stays valid until the next restart, and cutting
+// the cycle budget to that count keeps every write within the limit without
+// checking each iteration. The normal core does the same in DoString().
+bool CPU_CheckStringEsLimit(const uint32_t di_index, const uint32_t count,
+                            const int size_bytes, const uint32_t add_mask)
+{
+	if (Segs.limit[es] == NoSegmentLimit || !cpu.pmode || (reg_flags & FLAG_VM)) {
+		return false;
+	}
+	const auto count_within_limit = CPU_GetStringCountWithinLimit(
+	        {.limit      = Segs.limit[es],
+	         .direction  = static_cast<int>(cpu.direction),
+	         .size_bytes = size_bytes,
+	         .count      = count,
+	         .di_index   = di_index,
+	         .add_mask   = add_mask});
+
+	if (count_within_limit == count) {
+		return false;
+	}
+	if (count_within_limit == 0) {
+		return CPU_PrepareException(EXCEPTION_GP, 0);
+	}
+	// Same as handing an instruction over to the normal core
+	if (CPU_Cycles > static_cast<int64_t>(count_within_limit)) {
+		CPU_CycleLeft += CPU_Cycles - static_cast<int>(count_within_limit);
+		CPU_Cycles = static_cast<int>(count_within_limit);
+	}
+	return false;
+}
+
 void CPU_AddConfigSection(const ConfigPtr& conf)
 {
 	assert(conf);

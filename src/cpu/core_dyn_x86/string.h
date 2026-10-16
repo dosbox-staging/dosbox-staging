@@ -5,19 +5,6 @@
 
 #include <cassert>
 
-// Returns true if a general protection fault has been prepared because the
-// write would go past the ES segment limit
-static bool dyn_is_past_es_limit(const uint32_t di_index, const uint32_t size_bytes)
-{
-	if (Segs.limit[es] == NoSegmentLimit || !cpu.pmode || (reg_flags & FLAG_VM)) {
-		return false;
-	}
-	if (uint64_t{di_index} + size_bytes - 1 > Segs.limit[es]) {
-		return CPU_PrepareException(EXCEPTION_GP, 0);
-	}
-	return false;
-}
-
 static void dyn_string(STRING_OP op) {
 	DynReg * si_base=decode.segprefix ? decode.segprefix : DREG(DS);
 	DynReg * di_base=DREG(ES);
@@ -45,7 +32,37 @@ static void dyn_string(STRING_OP op) {
 	default:
 		IllegalOption("dyn_string op");
 	}
-	gen_load_host(&cpu.direction,DREG(TMPW),4);
+
+	// The ES limit is checked once per start or restart of the instruction
+	// rather than before every write; CPU_CheckStringEsLimit() explains why
+	// that is exact. If only some iterations fit, the check cuts CPU_Cycles
+	// so the loop below leaves through its cycle exit right after them,
+	// which restarts the instruction with the registers updated; the
+	// restarted instruction then faults before its first write.
+	if (IsWritingToEsDi(op)) {
+		const auto size_bytes   = static_cast<uint32_t>(1 << (op & 3));
+		const uint32_t add_mask = decode.big_addr ? 0xffffffff : 0xffff;
+		if (decode.rep) {
+			gen_call_function((void*)&CPU_CheckStringEsLimit,
+			                  decode.big_addr ? "%Dd%Dd%Id%Id"
+			                                  : "%Dw%Dw%Id%Id",
+			                  DREG(EDI),
+			                  DREG(ECX),
+			                  size_bytes,
+			                  add_mask);
+		} else {
+			gen_call_function((void*)&CPU_CheckStringEsLimit,
+			                  decode.big_addr ? "%Dd%Id%Id%Id"
+			                                  : "%Dw%Id%Id%Id",
+			                  DREG(EDI),
+			                  uint32_t{1},
+			                  size_bytes,
+			                  add_mask);
+		}
+		dyn_check_bool_exception_al();
+	}
+
+	gen_load_host(&cpu.direction, DREG(TMPW), 4);
 	switch (op & 3) {
 	case 0:break;
 	case 1:gen_shift_word_imm(SHIFT_SHL,true,DREG(TMPW),1);break;
@@ -102,16 +119,6 @@ static void dyn_string(STRING_OP op) {
 		}
 	}
 	if (usedi) {
-		if (IsWritingToEsDi(op)) {
-			// Raised before the write at the start of the
-			// instruction, with the registers reflecting the
-			// completed iterations
-			gen_call_function((void*)&dyn_is_past_es_limit,
-			                  decode.big_addr ? "%Dd%Id" : "%Dw%Id",
-			                  DREG(EDI),
-			                  1 << (op & 3));
-			dyn_check_bool_exception_al();
-		}
 		if (!decode.big_addr) {
 			gen_extend_word(false,DREG(EA),DREG(EDI));
 			gen_lea(DREG(EA),di_base,DREG(EA),0,0);

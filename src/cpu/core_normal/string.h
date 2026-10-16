@@ -39,6 +39,8 @@ static void DoString(STRING_OP type) {
 	// writing past the segment limit, after executing the iterations that
 	// fit within the limit. Some programs rely on this to switch VESA banks
 	// in their fault handler (e.g., Viper).
+	// Checked once per (re)start of the instruction, like the dynamic
+	// cores do in CPU_CheckStringEsLimit(), which explains why that is exact
 	auto is_past_es_limit = false;
 	if (Segs.limit[es] != NoSegmentLimit && count &&
 	    IsWritingToEsDi(type) && cpu.pmode && !(reg_flags & FLAG_VM)) {

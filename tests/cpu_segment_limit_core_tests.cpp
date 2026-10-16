@@ -18,7 +18,8 @@
 //   remaining iterations.
 //
 // The last point is what allows the cores to check the limit once per start
-// or restart of the instruction instead of once per iteration.
+// or restart of the instruction instead of once per iteration; see
+// CPU_CheckStringEsLimit() in cpu.cpp.
 
 #include <gtest/gtest.h>
 

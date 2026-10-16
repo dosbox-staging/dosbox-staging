@@ -599,4 +599,17 @@ struct StringWrite {
 // before the first write past the segment limit
 uint32_t CPU_GetStringCountWithinLimit(const StringWrite& write);
 
+// Called by the dynamic cores once per start or restart of a string
+// instruction writing to ES:(E)DI, with the registers reflecting the
+// iterations completed so far. Returns true if a general protection fault
+// has been prepared because the next write would go past the ES limit.
+// Otherwise, if only some of the remaining iterations fit, CPU_Cycles is cut
+// so the core executes just those and then restarts the instruction, which
+// faults on its next check.
+//
+// Checking once per (re)start instead of once per iteration is exact; the
+// comment at the definition explains why.
+bool CPU_CheckStringEsLimit(uint32_t di_index, uint32_t count, int size_bytes,
+                            uint32_t add_mask);
+
 #endif
