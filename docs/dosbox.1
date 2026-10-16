@@ -73,69 +73,91 @@ DOSBox Staging quits.
 
 Legacy single dash abbrevations still work for backwards compatibility.
 .LP
---conf <config_file>     Start with the options specified in <config_file>.
-                         Multiple configuration files can be specified.
-                         Example: --conf conf1.conf --conf conf2.conf
-
---printconf              Print the location of the primary configuration file.
-
---editconf               Open the primary configuration file in a text editor.
-
---eraseconf              Delete the primary configuration file.
-
---noprimaryconf          Don't load or create the primary configuration file.
-
---nolocalconf            Don't load the local 'dosbox.conf' configuration file
-                         if present in the current working directory.
-
---set <setting>=<value>  Set a configuration setting. Multiple configuration
-                         settings can be specified. Example:
-                         --set mididevice=fluidsynth --set soundfont=mysoundfont.sf2
-
---working-dir <path>     Set working directory to <path>. DOSBox will act as if
-                         started from this directory.
-
---list-countries         List all supported countries with their numeric codes.
-                         Codes are to be used in the 'country' config setting.
-
---list-layouts           List all supported keyboard layouts with their codes.
-                         Codes are to be used in the 'keyboard_layout' config setting.
-
---list-code-pages        List all bundled code pages (screen fonts).
-
---list-glshaders         List all available OpenGL shaders and their paths.
-                         Shaders are to be used in the 'glshader' config setting.
-
---fullscreen             Start in fullscreen mode.
-
---lang <lang_file>       Start with the language specified in <lang_file>. If set to
-                         'auto', detects the language from the host OS.
-
---machine <type>         Emulate a specific type of machine. The machine type has
-                         influence on both the emulated video and sound cards.
-                         Valid choices are: hercules, cga, cga_mono, tandy,
-                         pcjr, ega, svga_s3 (default), svga_et3000, svga_et4000,
-                         svga_paradise, vesa_nolfb, vesa_oldvbe.
-
--c <command>             Run the specified DOS command before handling the PATH.
-                         Multiple commands can be specified.
-
---noautoexec             Don't run DOS commands from any [autoexec] sections.
-
---exit                   Exit after running '-c <command>'s and [autoexec] sections.
-
---startmapper            Run the mapper GUI.
-
---erasemapper            Delete the default mapper file.
-
---securemode             Enable secure mode by disabling the MOUNT and IMGMOUNT
-                         commands.
-
---socket <num>           Run nullmodem on the specified socket number.
-
---help                   Print help message and exit.
-
---version                Print version information and exit.
+.TP
+.BI "\-\-conf " <config_file>
+Start with the options specified in <config_file>.
+Multiple configuration files can be specified.
+Example: \-\-conf conf1.conf \-\-conf conf2.conf
+.TP
+.B \-\-printconf
+Print the location of the primary configuration file.
+.TP
+.B \-\-editconf
+Open the primary configuration file in a text editor.
+.TP
+.B \-\-eraseconf
+Delete the primary configuration file.
+.TP
+.B \-\-noprimaryconf
+Don't load or create the primary configuration file.
+.TP
+.B \-\-nolocalconf
+Don't load the local 'dosbox.conf' configuration file if present in the current
+working directory.
+.TP
+.BI "\-\-set " <setting>=<value>
+Set a configuration setting. Multiple configuration settings can be specified.
+Example: \-\-set mididevice=fluidsynth \-\-set soundfont=mysoundfont.sf2
+.TP
+.BI "\-\-working\-dir " <path>
+Set working directory to <path>. DOSBox will act as if started from this
+directory.
+.TP
+.B \-\-list\-countries
+List all supported countries with their numeric codes.
+Codes are to be used in the 'country' config setting.
+.TP
+.B \-\-list\-layouts
+List all supported keyboard layouts with their codes.
+Codes are to be used in the 'keyboard_layout' config setting.
+.TP
+.B \-\-list\-code\-pages
+List all bundled code pages (screen fonts).
+.TP
+.B \-\-list\-glshaders
+List all available OpenGL shaders and their paths.
+Shaders are to be used in the 'glshader' config setting.
+.TP
+.B \-\-fullscreen
+Start in fullscreen mode.
+.TP
+.BI "\-\-lang " <lang_file>
+Start with the language specified in <lang_file>. If set to 'auto', detects the
+language from the host OS.
+.TP
+.BI "\-\-machine " <type>
+Emulate a specific type of machine. The machine type has influence on both the
+emulated video and sound cards.
+Valid choices are: hercules, cga, cga_mono, tandy, pcjr, ega, svga_s3 (default),
+svga_et3000, svga_et4000, svga_paradise, vesa_nolfb, vesa_oldvbe.
+.TP
+.BI "\-c " <command>
+Run the specified DOS command before handling the PATH.
+Multiple commands can be specified.
+.TP
+.B \-\-noautoexec
+Don't run DOS commands from any [autoexec] sections.
+.TP
+.B \-\-exit
+Exit after running '\-c <command>'s and [autoexec] sections.
+.TP
+.B \-\-startmapper
+Run the mapper GUI.
+.TP
+.B \-\-erasemapper
+Delete the default mapper file.
+.TP
+.B \-\-securemode
+Enable secure mode by disabling the MOUNT and IMGMOUNT commands.
+.TP
+.BI "\-\-socket " <num>
+Run nullmodem on the specified socket number.
+.TP
+.B \-\-help
+Print help message and exit.
+.TP
+.B \-\-version
+Print version information and exit.
 
 .SH "INTERNAL COMMANDS"
 
@@ -253,11 +275,11 @@ To report a bug, please visit:
 
 .SH RESOURCES
 
-.B Getting\ Started\ Guide
+.B Getting Started Guide
 .br
 .I https://www.dosbox-staging.org/0.83/getting-started/introduction/
 .PP
-.B Official\ User\ Manual
+.B Official User Manual
 .br
 .I https://www.dosbox-staging.org/0.83/manual/introduction/about-this-manual/
 
