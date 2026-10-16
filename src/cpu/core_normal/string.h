@@ -5,13 +5,6 @@
 
 #define LoadD(_BLAH) _BLAH
 
-static bool is_writing_to_es_di(const STRING_OP type)
-{
-	return (type >= R_INSB && type <= R_INSD) ||
-	       (type >= R_MOVSB && type <= R_MOVSD) ||
-	       (type >= R_STOSB && type <= R_STOSD);
-}
-
 static void DoString(STRING_OP type) {
 	const auto si_base = BaseDS;
 	const auto di_base = SegBase(es);
@@ -48,7 +41,7 @@ static void DoString(STRING_OP type) {
 	// in their fault handler (e.g., Viper).
 	auto is_past_es_limit = false;
 	if (Segs.limit[es] != NoSegmentLimit && count &&
-	    is_writing_to_es_di(type) && cpu.pmode && !(reg_flags & FLAG_VM)) {
+	    IsWritingToEsDi(type) && cpu.pmode && !(reg_flags & FLAG_VM)) {
 		const auto count_within_limit = CPU_GetStringCountWithinLimit(
 		        {.limit      = Segs.limit[es],
 		         .direction  = static_cast<int>(cpu.direction),

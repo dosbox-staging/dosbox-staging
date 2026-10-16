@@ -1258,8 +1258,7 @@ static void dyn_iret(void) {
 }
 
 static void dyn_string(STRING_OP op) {
-	// Only MOVS and STOS write to ES:(E)DI here; INS isn't translated
-	if ((op >= R_MOVSB && op <= R_MOVSD) || (op >= R_STOSB && op <= R_STOSD)) {
+	if (IsWritingToEsDi(op)) {
 		const Bitu size_bytes = 1 << (op & 3);
 		gen_call_function_I((void*)&dynrec_check_es_limit,
 		                    size_bytes |

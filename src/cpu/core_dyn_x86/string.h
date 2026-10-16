@@ -102,8 +102,7 @@ static void dyn_string(STRING_OP op) {
 		}
 	}
 	if (usedi) {
-		// Everything except SCAS writes to ES:(E)DI
-		if (op < R_SCASB || op > R_SCASD) {
+		if (IsWritingToEsDi(op)) {
 			// Raised before the write at the start of the
 			// instruction, with the registers reflecting the
 			// completed iterations
