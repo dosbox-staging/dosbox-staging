@@ -4,6 +4,7 @@
 
 #include "cpu/cpu.h"
 
+#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <memory>
@@ -2564,12 +2565,24 @@ void CPU_VERW(Bitu selector)
 	SETFLAGBIT(ZF, true);
 }
 
+static uint64_t get_segment_limit(Descriptor& desc)
+{
+	switch (desc.Type()) {
+	case DESC_DATA_ED_RO_NA:
+	case DESC_DATA_ED_RO_A:
+	case DESC_DATA_ED_RW_NA:
+	case DESC_DATA_ED_RW_A: return NoSegmentLimit;
+	default: return desc.GetLimit();
+	}
+}
+
 bool CPU_SetSegGeneral(SegNames seg, Bitu value)
 {
 	value &= 0xffff;
 	if (!cpu.pmode || (reg_flags & FLAG_VM)) {
-		Segs.val[seg]  = value;
-		Segs.phys[seg] = value << 4;
+		Segs.val[seg]   = value;
+		Segs.phys[seg]  = value << 4;
+		Segs.limit[seg] = NoSegmentLimit;
 		if (seg == ss) {
 			cpu.stack.big     = false;
 			cpu.stack.mask    = 0xffff;
@@ -2616,8 +2629,9 @@ bool CPU_SetSegGeneral(SegNames seg, Bitu value)
 				                            value & 0xfffc);
 			}
 
-			Segs.val[seg]  = value;
-			Segs.phys[seg] = desc.GetBase();
+			Segs.val[seg]   = value;
+			Segs.phys[seg]  = desc.GetBase();
+			Segs.limit[seg] = get_segment_limit(desc);
 			if (desc.Big()) {
 				cpu.stack.big     = true;
 				cpu.stack.mask    = 0xffffffff;
@@ -2629,8 +2643,9 @@ bool CPU_SetSegGeneral(SegNames seg, Bitu value)
 			}
 		} else {
 			if ((value & 0xfffc) == 0) {
-				Segs.val[seg]  = value;
-				Segs.phys[seg] = 0; // ??
+				Segs.val[seg]   = value;
+				Segs.phys[seg]  = 0; // ??
+				Segs.limit[seg] = NoSegmentLimit;
 				return false;
 			}
 			Descriptor desc;
@@ -2669,8 +2684,9 @@ bool CPU_SetSegGeneral(SegNames seg, Bitu value)
 				                            value & 0xfffc);
 			}
 
-			Segs.val[seg]  = value;
-			Segs.phys[seg] = desc.GetBase();
+			Segs.val[seg]   = value;
+			Segs.phys[seg]  = desc.GetBase();
+			Segs.limit[seg] = get_segment_limit(desc);
 		}
 
 		return false;
@@ -4003,6 +4019,46 @@ bool CPU_ShouldHltOnIdle()
 	// We should only execute the power-saving HLT if configured AND if the
 	// interrupts are enabled
 	return should_hlt_on_idle && (reg_flags & FLAG_IF);
+}
+
+uint32_t CPU_GetStringCountWithinLimit(const StringWrite& write)
+{
+	if (write.limit == NoSegmentLimit || write.count == 0) {
+		return write.count;
+	}
+	const auto limit    = static_cast<int64_t>(write.limit);
+	const int64_t size  = write.size_bytes;
+
+	const auto first_write_end = int64_t{write.di_index} + size - 1;
+	if (first_write_end > limit) {
+		return 0;
+	}
+
+	// Distance from the first to the last write, if DI doesn't wrap around
+	const auto span = (int64_t{write.count} - 1) * size;
+
+	if (write.direction < 0) {
+		// Every further write is below the first one
+		if (span <= write.di_index) {
+			return write.count;
+		}
+	} else if (write.di_index + span <= write.add_mask) {
+		const auto count_within_limit = (limit - first_write_end) / size + 1;
+		return static_cast<uint32_t>(
+		        std::min<int64_t>(write.count, count_within_limit));
+	}
+
+	// DI wraps around; rare enough to check each write
+	const auto add_index = static_cast<uint32_t>(write.direction * size);
+
+	auto index = write.di_index;
+	for (uint32_t i = 0; i < write.count; ++i) {
+		if (int64_t{index} + size - 1 > limit) {
+			return i;
+		}
+		index = (index + add_index) & write.add_mask;
+	}
+	return write.count;
 }
 
 void CPU_AddConfigSection(const ConfigPtr& conf)

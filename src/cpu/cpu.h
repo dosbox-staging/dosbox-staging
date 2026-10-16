@@ -585,4 +585,18 @@ void CPU_SetFlagsw(const uint32_t word);
 // program is idle
 bool CPU_ShouldHltOnIdle();
 
+// A string instruction writing to ES:(E)DI
+struct StringWrite {
+	uint64_t limit    = NoSegmentLimit;
+	int direction     = 1;
+	int size_bytes    = 1;
+	uint32_t count    = 0;
+	uint32_t di_index = 0;
+	uint32_t add_mask = 0xffff;
+};
+
+// Returns how many iterations of the string instruction can be executed
+// before the first write past the segment limit
+uint32_t CPU_GetStringCountWithinLimit(const StringWrite& write);
+
 #endif
