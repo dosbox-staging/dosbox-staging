@@ -12,6 +12,13 @@
 //   pushed EIP pointing at the instruction, prefixes included.
 // - With a 16-bit address size, (E)DI wraps within the segment after each
 //   element; a single element never wraps.
+// - A REP left part-way through (the cycle budget ran out, or an interrupt
+//   arrived) resumes from the instruction start with the registers as they
+//   were, and the limit of whatever ES holds at that point applies to the
+//   remaining iterations.
+//
+// The last point is what allows the cores to check the limit once per start
+// or restart of the instruction instead of once per iteration.
 
 #include <gtest/gtest.h>
 
@@ -36,6 +43,9 @@ constexpr PhysPt MarkerAddr   = 0x73000;
 constexpr PhysPt CodeBase     = 0x74000;
 constexpr uint32_t StackTop   = 0x7f000;
 
+constexpr uint32_t CodeSlotSize    = 64;
+constexpr uint32_t HandlerSlotSize = 16;
+
 constexpr uint16_t CodeSelector     = 0x08;
 constexpr uint16_t FlatDataSelector = 0x10;
 constexpr uint16_t Es64KSelector    = 0x18; // base EsBase, limit 0xffff
@@ -46,6 +56,12 @@ constexpr uint16_t Es128KSelector   = 0x20; // base EsBase, limit 0x1ffff
 constexpr uint8_t NoMarker       = 0xff;
 constexpr uint8_t FinishedMarker = 0xfe;
 constexpr uint8_t GpVector       = 13;
+
+// The handlers of these vectors reload ES and return to the interrupted
+// instruction, like an interrupt handler that changes ES in the middle of a
+// REP would
+constexpr uint8_t SwitchEsTo64KVector  = 0x40;
+constexpr uint8_t SwitchEsTo128KVector = 0x41;
 
 constexpr uint32_t Fill      = 0x11223344;
 constexpr uint32_t Untouched = 0xdeadbeef;
@@ -93,6 +109,20 @@ std::vector<uint8_t> set_marker_code(const uint8_t value)
 	        value};
 }
 
+// push eax; mov ax, selector; mov es, ax; pop eax; iret
+std::vector<uint8_t> switch_es_code(const uint16_t selector)
+{
+	return {0x50,
+	        0x66,
+	        0xb8,
+	        static_cast<uint8_t>(selector & 0xff),
+	        static_cast<uint8_t>(selector >> 8),
+	        0x8e,
+	        0xc0,
+	        0x58,
+	        0xcf};
+}
+
 void prefill(const PhysPt start, const PhysPt end)
 {
 	for (auto addr = start; addr < end; addr += 4) {
@@ -118,7 +148,7 @@ public:
 		CPU_Init();
 
 		setup_descriptor_tables();
-		setup_fault_handlers();
+		setup_interrupt_handlers();
 		enter_protected_mode();
 
 		reset_limit_window();
@@ -146,33 +176,55 @@ public:
 		DOSBoxTestFixture::TearDown();
 	}
 
-	// Executes the instruction followed by code that sets FinishedMarker.
-	// Keeps running the core until either that code or a fault handler stub
-	// has set the marker, as the dynamic cores may leave the core to
-	// restart a partially executed string instruction.
-	//
-	// Every run in the process gets its own code slot: the prefetch core
-	// keeps its queue across CPU_Init, so reusing an address would execute
-	// the previous test's bytes.
-	void run(const std::vector<uint8_t>& code)
+	// Writes the code followed by code that sets FinishedMarker to a fresh
+	// slot and points CS:EIP at it. Every run in the process gets its own
+	// slot: the prefetch core keeps its queue across CPU_Init, so reusing
+	// an address would execute the previous test's bytes.
+	void start(const std::vector<uint8_t>& code)
 	{
 		static uint32_t run_count = 0;
-		const auto start          = CodeBase + run_count * 32;
+		last_start                = CodeBase + run_count * CodeSlotSize;
 		++run_count;
 
-		auto next = write_bytes(start, code);
+		auto next = write_bytes(last_start, code);
 		next      = write_bytes(next, set_marker_code(FinishedMarker));
 		mem_writeb(next, Hlt);
 
 		mem_writeb(MarkerAddr, NoMarker);
 		reg_esp = StackTop;
-		CPU_JMP(true, CodeSelector, start, 0);
+		CPU_JMP(true, CodeSelector, last_start, 0);
+	}
 
-		for (auto i = 0; i < 16 && marker() == NoMarker; ++i) {
-			CPU_Cycles = 100000;
+	// Keeps running the core until either the code after the instruction
+	// or a handler stub has set the marker, as the cores leave a string
+	// instruction part-way through when the cycle budget runs out
+	void run_until_marker(const int cycles_per_run, const int max_runs)
+	{
+		for (auto i = 0; i < max_runs && marker() == NoMarker; ++i) {
+			CPU_Cycles = cycles_per_run;
 			GetParam().runner();
 		}
-		last_start = start;
+	}
+
+	void run(const std::vector<uint8_t>& code)
+	{
+		start(code);
+		run_until_marker(100000, 16);
+	}
+
+	// Runs with a tiny cycle budget until the string instruction has been
+	// left part-way through, which is where an interrupt would be taken
+	void run_until_interrupted(const uint32_t initial_ecx)
+	{
+		for (auto i = 0;
+		     i < 100 && marker() == NoMarker && reg_ecx == initial_ecx;
+		     ++i) {
+			CPU_Cycles = 4;
+			GetParam().runner();
+		}
+		ASSERT_EQ(marker(), NoMarker);
+		ASSERT_LT(reg_ecx, initial_ecx);
+		ASSERT_EQ(reg_eip, last_start); // resumes from the instruction
 	}
 
 	uint8_t marker() const
@@ -208,15 +260,20 @@ private:
 	}
 
 	// Every vector gets its own stub that records the vector number and
-	// halts, so an unexpected exception shows up as a wrong marker value
-	void setup_fault_handlers()
+	// halts, so an unexpected exception shows up as a wrong marker value.
+	// Two vectors instead get a handler that reloads ES and returns.
+	void setup_interrupt_handlers()
 	{
 		for (uint32_t vector = 0; vector < 256; ++vector) {
-			const auto stub = HandlersBase + vector * 8;
+			const auto stub = HandlersBase + vector * HandlerSlotSize;
 			const auto next = write_bytes(stub, set_marker_code(vector));
 			mem_writeb(next, Hlt);
 			write_interrupt_gate(IdtBase + vector * 8, CodeSelector, stub);
 		}
+		write_bytes(HandlersBase + SwitchEsTo64KVector * HandlerSlotSize,
+		            switch_es_code(Es64KSelector));
+		write_bytes(HandlersBase + SwitchEsTo128KVector * HandlerSlotSize,
+		            switch_es_code(Es128KSelector));
 	}
 
 	void enter_protected_mode()
@@ -400,6 +457,90 @@ TEST_P(SegmentLimitCoreTest, SixteenBitAddressSizeOperandDoesNotWrap)
 	expect_gp_fault_at_instruction_start();
 	EXPECT_EQ(reg_edi, 0xfffeu);
 	EXPECT_EQ(mem_readd(EsBase + 0xfffe), Untouched);
+}
+
+// REP with a zero count does nothing, so it doesn't fault past the limit
+TEST_P(SegmentLimitCoreTest, RepWithZeroCountPastLimitDoesNotFault)
+{
+	reg_edi = 0x10000;
+	reg_ecx = 0;
+	run({0xf3, 0xab}); // rep stosd
+
+	expect_no_fault();
+	EXPECT_EQ(reg_edi, 0x10000u);
+	EXPECT_EQ(mem_readd(EsBase + 0x10000), Untouched);
+
+	// With a 16-bit address size only CX counts
+	reg_edi = 0xfffe;
+	reg_ecx = 0x12340000;
+	run({0x67, 0xf3, 0xab});
+
+	expect_no_fault();
+	EXPECT_EQ(reg_edi, 0xfffeu);
+	EXPECT_EQ(reg_ecx, 0x12340000u);
+	EXPECT_EQ(mem_readd(EsBase + 0xfffc), Untouched);
+	EXPECT_EQ(mem_readd(EsBase + 0x10000), Untouched);
+}
+
+// Every core leaves the REP part-way through when the cycle budget runs
+// out and resumes it later; the limit still applies to the remainder
+TEST_P(SegmentLimitCoreTest, RepStosdRestartedByCycleBudgetStillFaultsAtLimit)
+{
+	reg_edi = 0xff00;
+	reg_ecx = 200;
+	start({0xf3, 0xab}); // rep stosd
+	run_until_marker(4, 1000);
+
+	expect_gp_fault_at_instruction_start();
+	EXPECT_EQ(reg_ecx, 200u - 64u);
+	EXPECT_EQ(reg_edi, 0x10000u);
+	for (auto offset = 0xff00u; offset < 0x10000u; offset += 4) {
+		EXPECT_EQ(mem_readd(EsBase + offset), Fill) << "offset " << offset;
+	}
+	EXPECT_EQ(mem_readd(EsBase + 0x10000), Untouched);
+}
+
+// An interrupt handler that reloads ES in the middle of a REP changes the
+// limit for the remaining iterations, in both directions
+TEST_P(SegmentLimitCoreTest, InterruptHandlerShrinkingEsLimitMidRepCausesFault)
+{
+	CPU_SetSegGeneral(es, Es128KSelector); // 200 dwords from 0xff00 fit
+	reg_edi = 0xff00;
+	reg_ecx = 200;
+	start({0xf3, 0xab}); // rep stosd
+	ASSERT_NO_FATAL_FAILURE(run_until_interrupted(200));
+	ASSERT_GT(reg_ecx, 200u - 64u); // not at the 64 KB boundary yet
+
+	CPU_HW_Interrupt(SwitchEsTo64KVector);
+	run_until_marker(100000, 16);
+
+	EXPECT_EQ(SegValue(es), Es64KSelector);
+	expect_gp_fault_at_instruction_start();
+	EXPECT_EQ(reg_ecx, 200u - 64u);
+	EXPECT_EQ(reg_edi, 0x10000u);
+	EXPECT_EQ(mem_readd(EsBase + 0xfffc), Fill);
+	EXPECT_EQ(mem_readd(EsBase + 0x10000), Untouched);
+}
+
+TEST_P(SegmentLimitCoreTest, InterruptHandlerGrowingEsLimitMidRepAvoidsFault)
+{
+	prefill(EsBase + 0x10100, EsBase + 0x10300);
+	reg_edi = 0xff00;
+	reg_ecx = 200;
+	start({0xf3, 0xab}); // rep stosd
+	ASSERT_NO_FATAL_FAILURE(run_until_interrupted(200));
+	ASSERT_GT(reg_ecx, 200u - 64u);
+
+	CPU_HW_Interrupt(SwitchEsTo128KVector);
+	run_until_marker(100000, 16);
+
+	EXPECT_EQ(SegValue(es), Es128KSelector);
+	expect_no_fault();
+	EXPECT_EQ(reg_ecx, 0u);
+	EXPECT_EQ(reg_edi, 0xff00u + 200 * 4);
+	EXPECT_EQ(mem_readd(EsBase + 0x10000), Fill);
+	EXPECT_EQ(mem_readd(EsBase + 0x1021c), Fill);
+	EXPECT_EQ(mem_readd(EsBase + 0x10220), Untouched);
 }
 
 INSTANTIATE_TEST_SUITE_P(CpuVariations, SegmentLimitCoreTest, AllCpuConfigs);
