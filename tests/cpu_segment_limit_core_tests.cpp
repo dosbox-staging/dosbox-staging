@@ -225,7 +225,7 @@ public:
 	// Keeps running the core until either the code after the instruction
 	// or a handler stub has set the marker, as the cores leave a string
 	// instruction part-way through when the cycle budget runs out
-	void run_until_marker(const int cycles_per_run, const int max_runs)
+	void run_until_marker(const int cycles_per_run, const int max_runs) const
 	{
 		for (auto i = 0; i < max_runs && marker() == NoMarker; ++i) {
 			CPU_Cycles = cycles_per_run;
@@ -241,7 +241,7 @@ public:
 
 	// Runs with a tiny cycle budget until the string instruction has been
 	// left part-way through, which is where an interrupt would be taken
-	void run_until_interrupted(const uint32_t initial_ecx)
+	void run_until_interrupted(const uint32_t initial_ecx) const
 	{
 		for (auto i = 0;
 		     i < 100 && marker() == NoMarker && reg_ecx == initial_ecx;
@@ -276,7 +276,7 @@ public:
 	}
 
 private:
-	void setup_descriptor_tables()
+	void setup_descriptor_tables() const
 	{
 		write_descriptor(GdtBase + 0x00, 0, 0, 0, 0);
 		write_descriptor(GdtBase + CodeSelector, 0, 0xfffff, 0x9a, 0xc0);
@@ -290,7 +290,7 @@ private:
 	// Every vector gets its own stub that records the vector number and
 	// halts, so an unexpected exception shows up as a wrong marker value.
 	// Two vectors instead get a handler that reloads ES and returns.
-	void setup_interrupt_handlers()
+	void setup_interrupt_handlers() const
 	{
 		for (uint32_t vector = 0; vector < 256; ++vector) {
 			const auto stub = HandlersBase + vector * HandlerSlotSize;
@@ -304,7 +304,7 @@ private:
 		            switch_es_code(Es128KSelector));
 	}
 
-	void enter_protected_mode()
+	void enter_protected_mode() const
 	{
 		CPU_SET_CRX(0, cpu.cr0 | CR0_PROTECTION);
 		CPU_SetFlags(0, FMASK_ALL); // forward direction, interrupts off
