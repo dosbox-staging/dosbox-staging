@@ -2861,11 +2861,15 @@ static void init_sdl_config_settings(SectionProp& section)
 	        "             window doesn't depend on the aspect ratio of the desktop.\n"
 	        "\n"
 	        "Notes:\n"
-	        "  - The size doesn't include the title bar and window borders, so the window\n"
-	        "    takes up slightly more space on the screen than the specified size.\n"
-	        "\n"
 	        "  - Resizing the window updates this setting in the same format, except for the\n"
-	        "    named sizes, which are updated in WxH%% format.");
+	        "    named sizes, which are updated in WxH%% format.\n"
+	        "\n"
+	        "  - The size specifies the window's content area excluding the title bar and\n"
+	        "    window borders, so the window takes up slightly more space on the screen\n"
+	        "    than the specified size.\n"
+	        "\n"
+	        "  - The window manager might resize the window (e.g., to keep it fully inside\n"
+	        "    the display bounds).");
 
 	pstring = section.AddString("window_position", Always, "auto");
 	pstring->SetHelp(
@@ -2884,37 +2888,26 @@ static void init_sdl_config_settings(SectionProp& section)
 	        "  X,Y%%:      Set window position as a percentage of the desktop width and height\n"
 	        "             (e.g., 10,10%%).\n"
 	        "\n"
-	        "Notes:");
-
-	pstring->SetOptionHelp(
-	        "content_area",
+	        "Notes:\n"
+	        "  - Moving the window updates this setting in the same format.\n"
+	        "\n"
 	        "  - The position is that of the top-left corner of the window's content area,\n"
-	        "    excluding the title bar and window borders. With small Y values, the title\n"
-	        "    bar can end up above the top edge of the screen.\n");
+	        "    excluding the title bar and window borders.\n"
+	        "\n"
+	        "  - The window manager might move the window away from the specified position\n"
+	        "    (e.g., to keep it fully inside the display bounds, or to place it below a\n"
+	        "    task bar).");
 
-	pstring->SetOptionHelp(
-	        "content_area_macos",
-	        "  - The position is that of the top-left corner of the window's content area,\n"
-	        "    excluding the title bar and window borders. With small Y values, macOS moves\n"
-	        "    the window down so that its title bar is below the menu bar.\n");
-
-	pstring->SetOptionHelp("wayland",
+	pstring->SetOptionHelp("window_position_linux",
+	                       "\n"
 	                       "  - This setting has no effect on Wayland because Wayland doesn't let\n"
-	                       "    applications position their windows.\n");
-
-	pstring->SetOptionHelp("moving",
-	                       "  - Moving the window updates this setting in the same format.");
+	                       "    applications position their windows.");
 
 	pstring->SetEnabledOptions({
-#if defined(MACOSX)
-	        "content_area_macos",
-#else
-	        "content_area",
-#endif
 #if defined(LINUX)
-	        "wayland",
+	        "window_position_linux"
 #endif
-	        "moving"});
+	});
 
 	pbool = section.AddBool("window_decorations", Always, true);
 	pbool->SetHelp("Enable window decorations in windowed mode ('on' by default).");
