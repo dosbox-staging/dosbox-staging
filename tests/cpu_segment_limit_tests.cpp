@@ -152,4 +152,93 @@ TEST(CpuSegmentLimits, MatchesReference)
 	}
 }
 
+// Intel SDM Vol. 3A, "Limit Checking": a byte at offset > limit, a word at
+// offset > limit - 1 and a dword at offset > limit - 3 raise #GP
+TEST(CpuSegmentLimits, WholeOperandMustFitWithinLimit)
+{
+	constexpr uint32_t limit = 0xffff;
+	auto count = [&](const int size_bytes, const uint32_t di_index) {
+		return CPU_GetStringCountWithinLimit({.limit      = limit,
+		                                      .size_bytes = size_bytes,
+		                                      .count      = 1,
+		                                      .di_index   = di_index,
+		                                      .add_mask = 0xffffffff});
+	};
+	EXPECT_EQ(count(1, limit), 1u);
+	EXPECT_EQ(count(1, limit + 1), 0u);
+	EXPECT_EQ(count(2, limit - 1), 1u);
+	EXPECT_EQ(count(2, limit), 0u);
+	EXPECT_EQ(count(4, limit - 3), 1u);
+	EXPECT_EQ(count(4, limit - 2), 0u);
+}
+
+TEST(CpuSegmentLimits, ForwardCountIsLimitedByRemainingBytes)
+{
+	auto count = [](const int size_bytes) {
+		return CPU_GetStringCountWithinLimit({.limit      = 0xffff,
+		                                      .size_bytes = size_bytes,
+		                                      .count      = 1000,
+		                                      .di_index   = 0xff00,
+		                                      .add_mask = 0xffffffff});
+	};
+	EXPECT_EQ(count(1), 256u);
+	EXPECT_EQ(count(2), 128u);
+	EXPECT_EQ(count(4), 64u);
+}
+
+// With a 16-bit address size the index wraps to 0 after 0xffff and stays
+// within the segment; with a 32-bit address size it runs past the limit
+TEST(CpuSegmentLimits, SixteenBitIndexWrapsWithinSegment)
+{
+	EXPECT_EQ(CPU_GetStringCountWithinLimit({.limit      = 0xffff,
+	                                         .size_bytes = 4,
+	                                         .count      = 3,
+	                                         .di_index   = 0xfffc,
+	                                         .add_mask   = 0xffff}),
+	          3u);
+	EXPECT_EQ(CPU_GetStringCountWithinLimit({.limit      = 0xffff,
+	                                         .size_bytes = 4,
+	                                         .count      = 3,
+	                                         .di_index   = 0xfffc,
+	                                         .add_mask   = 0xffffffff}),
+	          1u);
+}
+
+TEST(CpuSegmentLimits, BackwardStopsWhenIndexWrapsBelowZero)
+{
+	// 32-bit address size: the write after offset 0 lands at 0xfffffffc
+	EXPECT_EQ(CPU_GetStringCountWithinLimit({.limit      = 0xffff,
+	                                         .direction  = -1,
+	                                         .size_bytes = 4,
+	                                         .count      = 4,
+	                                         .di_index   = 8,
+	                                         .add_mask   = 0xffffffff}),
+	          3u);
+	// 16-bit address size: it lands at 0xfffc, which a 64 KB segment covers
+	EXPECT_EQ(CPU_GetStringCountWithinLimit({.limit      = 0xffff,
+	                                         .direction  = -1,
+	                                         .size_bytes = 4,
+	                                         .count      = 4,
+	                                         .di_index   = 8,
+	                                         .add_mask   = 0xffff}),
+	          4u);
+	EXPECT_EQ(CPU_GetStringCountWithinLimit({.limit      = 0x7fff,
+	                                         .direction  = -1,
+	                                         .size_bytes = 4,
+	                                         .count      = 4,
+	                                         .di_index   = 8,
+	                                         .add_mask   = 0xffff}),
+	          3u);
+}
+
+TEST(CpuSegmentLimits, FullCountDoesNotOverflow)
+{
+	EXPECT_EQ(CPU_GetStringCountWithinLimit({.limit      = 0x7fffffff,
+	                                         .size_bytes = 4,
+	                                         .count      = 0xffffffff,
+	                                         .di_index   = 0,
+	                                         .add_mask   = 0xffffffff}),
+	          0x20000000u);
+}
+
 } // namespace
