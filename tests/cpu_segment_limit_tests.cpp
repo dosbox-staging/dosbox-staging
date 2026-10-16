@@ -94,6 +94,68 @@ TEST(CpuSegmentLimits, FullSizeLimitNotEnforced)
 	          10u);
 }
 
+// CPU_CheckStringEsLimit() works on the emulator state; set up a protected
+// mode ES with a 64 KB limit and restore everything afterwards
+class CpuCheckStringEsLimit : public testing::Test {
+protected:
+	void SetUp() override
+	{
+		Segs.limit[es] = 0xffff;
+		cpu.pmode      = true;
+		reg_flags &= ~FLAG_VM;
+		cpu.direction = 1;
+	}
+
+	void TearDown() override
+	{
+		Segs.limit[es] = saved_limit;
+		cpu.pmode      = saved_pmode;
+		reg_flags      = saved_flags;
+		cpu.direction  = saved_direction;
+		CPU_Cycles     = saved_cycles;
+		CPU_CycleLeft  = saved_cycle_left;
+	}
+
+	const uint32_t saved_limit = Segs.limit[es];
+	const bool saved_pmode     = cpu.pmode;
+	const uint32_t saved_flags = reg_flags;
+	const Bits saved_direction = cpu.direction;
+	const int saved_cycles     = CPU_Cycles;
+	const int saved_cycle_left = CPU_CycleLeft;
+};
+
+TEST_F(CpuCheckStringEsLimit, CutsCyclesToIterationsWithinLimit)
+{
+	CPU_Cycles    = 1000;
+	CPU_CycleLeft = 0;
+
+	// 64 dwords fit below the limit
+	EXPECT_FALSE(CPU_CheckStringEsLimit(0xff00, 200, 4, 0xffffffff));
+	EXPECT_EQ(CPU_Cycles, 64);
+	EXPECT_EQ(CPU_Cycles + CPU_CycleLeft, 1000);
+}
+
+TEST_F(CpuCheckStringEsLimit, KeepsOneCycleWhenNoneLeft)
+{
+	// I/O and video memory delays can use up the cycles in the middle of a
+	// dynamic core block
+	CPU_Cycles    = -5;
+	CPU_CycleLeft = 100;
+
+	EXPECT_FALSE(CPU_CheckStringEsLimit(0xff00, 200, 4, 0xffffffff));
+	EXPECT_EQ(CPU_Cycles, 1);
+	EXPECT_EQ(CPU_Cycles + CPU_CycleLeft, 95);
+}
+
+TEST_F(CpuCheckStringEsLimit, FaultsPastLimit)
+{
+	CPU_Cycles = 1000;
+
+	EXPECT_TRUE(CPU_CheckStringEsLimit(0x1007c, 200, 4, 0xffffffff));
+	EXPECT_EQ(cpu.exception.which, static_cast<Bitu>(EXCEPTION_GP));
+	EXPECT_EQ(cpu.exception.error, 0u);
+}
+
 void expect_matches_reference(const StringWrite& write)
 {
 	EXPECT_EQ(CPU_GetStringCountWithinLimit(write),

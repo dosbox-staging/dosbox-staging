@@ -4092,12 +4092,19 @@ bool CPU_CheckStringEsLimit(const uint32_t di_index, const uint32_t count,
 	if (Segs.limit[es] == NoSegmentLimit || !cpu.pmode || (reg_flags & FLAG_VM)) {
 		return false;
 	}
+	// I/O and video memory delays can use up the cycles in the middle of a
+	// block, and the dynrec string helpers execute every iteration when no
+	// cycles are left. Keep at least one so the cycle cut below works,
+	// without changing the total budget.
+	if (CPU_Cycles < 1) {
+		CPU_CycleLeft += CPU_Cycles - 1;
+		CPU_Cycles = 1;
+	}
 	// At most CPU_Cycles iterations run before the next restart and check,
 	// so there's no need to look further; this also bounds the per-write
-	// fallback of CPU_GetStringCountWithinLimit() when (E)DI wraps around.
-	// At least the next write is always checked.
-	const auto max_count = static_cast<uint32_t>(std::max(CPU_Cycles, 1));
-	const auto count_to_check = std::min(count, max_count);
+	// fallback of CPU_GetStringCountWithinLimit() when (E)DI wraps around
+	const auto count_to_check = std::min(count,
+	                                     static_cast<uint32_t>(CPU_Cycles));
 
 	const auto count_within_limit = CPU_GetStringCountWithinLimit(
 	        {.limit      = Segs.limit[es],
@@ -4114,10 +4121,8 @@ bool CPU_CheckStringEsLimit(const uint32_t di_index, const uint32_t count,
 		return CPU_PrepareException(EXCEPTION_GP, 0);
 	}
 	// Same as handing an instruction over to the normal core
-	if (CPU_Cycles > static_cast<int64_t>(count_within_limit)) {
-		CPU_CycleLeft += CPU_Cycles - static_cast<int>(count_within_limit);
-		CPU_Cycles = static_cast<int>(count_within_limit);
-	}
+	CPU_CycleLeft += CPU_Cycles - static_cast<int>(count_within_limit);
+	CPU_Cycles = static_cast<int>(count_within_limit);
 	return false;
 }
 

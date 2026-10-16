@@ -30,6 +30,7 @@
 
 #include "config/config.h"
 #include "cpu/cpu.h"
+#include "cpu/paging.h"
 #include "cpu/registers.h"
 #include "cpu_config_param.h"
 #include "dosbox_test_fixture.h"
@@ -259,12 +260,13 @@ public:
 	}
 
 	// The fault handler stub halts without touching the stack, so the
-	// frame pushed by the fault is still at SS:ESP
-	void expect_gp_fault_at_instruction_start() const
+	// frame pushed by the fault is still at SS:ESP. The instruction under
+	// test starts at the given offset into the code.
+	void expect_gp_fault_at_instruction_start(const uint32_t offset = 0) const
 	{
 		EXPECT_EQ(marker(), GpVector);
 		EXPECT_EQ(mem_readd(reg_esp), 0u); // error code
-		EXPECT_EQ(mem_readd(reg_esp + 4), last_start);
+		EXPECT_EQ(mem_readd(reg_esp + 4), last_start + offset);
 		EXPECT_EQ(mem_readd(reg_esp + 8), CodeSelector);
 	}
 
@@ -567,6 +569,63 @@ TEST_P(SegmentLimitCoreTest, InterruptHandlerGrowingEsLimitMidRepAvoidsFault)
 	EXPECT_EQ(mem_readd(EsBase + 0x10000), Fill);
 	EXPECT_EQ(mem_readd(EsBase + 0x1021c), Fill);
 	EXPECT_EQ(mem_readd(EsBase + 0x10220), Untouched);
+}
+
+// A memory-mapped device whose access delay isn't capped by the cycle budget,
+// like video memory with 'vmem_delay' enabled
+class DelayedDevicePageHandler final : public PageHandler {
+public:
+	static constexpr int DelayCycles = 1000;
+
+	DelayedDevicePageHandler()
+	{
+		flags = PFLAG_NOCODE;
+	}
+
+	void writed(PhysPt, uint32_t) override
+	{
+		CPU_Cycles -= DelayCycles;
+	}
+};
+
+// Device access delays can leave no cycles in the middle of a dynamic core
+// block. A string instruction later in the block that only partly fits must
+// still stop at the limit; the dynrec string helpers execute every
+// iteration when no cycles are left.
+TEST_P(SegmentLimitCoreTest, RepStosdAfterDeviceDelayUsedUpCyclesFaultsAtLimit)
+{
+	constexpr PhysPt DeviceAddr = 0x40000;
+	constexpr auto DevicePage   = DeviceAddr / 4096;
+
+	DelayedDevicePageHandler device = {};
+	MEM_SetPageHandler(DevicePage, 1, &device);
+	PAGING_ClearTLB();
+
+	prefill(EsBase + 0x10100, EsBase + 0x10300);
+	reg_edi = 0xff00;
+	reg_ecx = 200;
+	// mov [DeviceAddr], eax; rep stosd
+	constexpr uint32_t RepStosdOffset = 5;
+	start({0xa3,
+	       DeviceAddr & 0xff,
+	       (DeviceAddr >> 8) & 0xff,
+	       (DeviceAddr >> 16) & 0xff,
+	       (DeviceAddr >> 24) & 0xff,
+	       0xf3,
+	       0xab});
+	run_until_marker(100, 1000);
+
+	MEM_ResetPageHandler(DevicePage, 1);
+	PAGING_ClearTLB();
+
+	expect_gp_fault_at_instruction_start(RepStosdOffset);
+	EXPECT_EQ(reg_ecx, 200u - 64u);
+	EXPECT_EQ(reg_edi, 0x10000u);
+	EXPECT_EQ(mem_readd(EsBase + 0xfffc), Fill);
+	for (auto offset = 0x10000u; offset < 0x10300u; offset += 4) {
+		EXPECT_EQ(mem_readd(EsBase + offset), Untouched)
+		        << "offset " << offset;
+	}
 }
 
 // Manual throughput benchmark for the cost of the limit checks, so not run
