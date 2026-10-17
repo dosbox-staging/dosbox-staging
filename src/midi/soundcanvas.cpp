@@ -7,14 +7,11 @@
 #include <set>
 #include <vector>
 
-#include "clap/all.h"
-
 #include "audio/channel_names.h"
 #include "audio/clap/library.h"
 #include "audio/clap/plugin_manager.h"
 #include "config/setup.h"
 #include "dos/programs.h"
-#include "hardware/pic.h"
 #include "misc/ansi_code_markup.h"
 #include "misc/std_filesystem.h"
 #include "utils/checks.h"
@@ -77,89 +74,18 @@ struct PluginAndModel {
 
 } // namespace SoundCanvas
 
-static const std::optional<Clap::PluginInfo> find_plugin_for_model(
-        const SoundCanvas::Model model,
-        const std::vector<Clap::PluginInfo>& plugin_infos)
-{
-	using namespace SoundCanvas;
-
-	// Search for plugins that are likely Roland SC-55 emulators by
-	// inspecting ther descriptions
-
-	for (const auto& plugin_info : plugin_infos) {
-		auto has = [&](const char* s) {
-			return find_in_case_insensitive(s, plugin_info.name);
-		};
-
-		const auto has_sc55 = has(" sc-55") || has(" sc55");
-
-		switch (model) {
-		case Model::Sc55_100:
-			if (has_sc55 && (has(" 1.00") || has(" v1.00"))) {
-				return plugin_info;
-			}
-			break;
-
-		case Model::Sc55_110:
-			if (has_sc55 && (has(" 1.10") || has(" v1.10"))) {
-				return plugin_info;
-			}
-			break;
-
-		case Model::Sc55_120:
-			if (has_sc55 && (has(" 1.20") || has(" v1.20"))) {
-				return plugin_info;
-			}
-			break;
-
-		case Model::Sc55_121:
-			if (has_sc55 && (has(" 1.21") || has(" v1.21"))) {
-				return plugin_info;
-			}
-			break;
-
-		case Model::Sc55_200:
-			if (has_sc55 && (has(" 2.00") || has(" v2.00"))) {
-				return plugin_info;
-			}
-			break;
-
-		case Model::Sc55mk2_100:
-			if (has_sc55 &&
-			    (has(" mk2") && (has(" 1.00") || has(" v1.00")))) {
-				return plugin_info;
-			}
-			break;
-
-		case Model::Sc55mk2_101:
-			if (has_sc55 && ((has(" mk2") || has("-mk2") || has("55mk2")) &&
-			                 (has(" 1.01") || has(" v1.01")))) {
-				return plugin_info;
-			}
-			break;
-
-		default: assertm(false, "Invalid Model value");
-		};
-	}
-
-	// Requested model not found
-	return {};
-}
-
 SoundCanvas::PluginAndModel try_load_plugin(const SoundCanvas::SynthModel& model)
 {
-	auto& plugin_manager    = Clap::PluginManager::GetInstance();
-	const auto plugin_infos = plugin_manager.GetPluginInfos();
+	auto& plugin_manager       = Clap::PluginManager::GetInstance();
 
-	if (auto p = find_plugin_for_model(model.model, plugin_infos); p) {
+	if (auto p = plugin_manager.FindPlugin("Nuked-SC55.clap", model.display_name_long); p) {
 		const auto plugin_info = *p;
-
+		
 		auto plugin = plugin_manager.LoadPlugin(plugin_info);
 		if (plugin) {
 			return {std::move(plugin), model};
 		}
 	}
-
 	// Requested model not found
 	return {};
 }
@@ -384,8 +310,6 @@ MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 
 	model = plugin_wrapper.model;
 
-	clap.plugin = std::move(plugin_wrapper.plugin);
-
 	const auto it = std::find_if(all_models.begin(),
 	                             all_models.end(),
 	                             [&](const SoundCanvas::SynthModel* m) {
@@ -400,8 +324,7 @@ MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 	// to avoid any extra resampling passes.
 	//
 	const auto sample_rate_hz = native_sample_rate_hz_for_model(model.model);
-
-	ms_per_audio_frame = MillisInSecond / sample_rate_hz;
+	clap.Initialize(std::move(plugin_wrapper.plugin), iroundf(sample_rate_hz));
 
 	MIXER_LockMixerThread();
 
@@ -460,28 +383,7 @@ MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 		set_section_property_value("soundcanvas", "soundcanvas_filter", "off");
 	}
 
-	// Double the baseline PCM prebuffer because MIDI is demanding and
-	// bursty. The mixer's default of ~20 ms becomes 40 ms here, which gives
-	// slower systems a better chance to keep up (and prevent their audio
-	// frame FIFO from running dry).
-	const auto render_ahead_ms = MIXER_GetPreBufferMs() * 2;
-
-	// Size the out-bound audio frame FIFO
-	assertm(sample_rate_hz >= 8000, "Sample rate must be at least 8 kHz");
-
-	const auto audio_frames_per_ms = iround(sample_rate_hz / MillisInSecond);
-	audio_frame_fifo.Resize(
-	        check_cast<size_t>(render_ahead_ms * audio_frames_per_ms));
-
-	// Size the in-bound work FIFO
-	work_fifo.Resize(MaxMidiWorkFifoSize);
-
-	clap.plugin->Activate(iroundf(sample_rate_hz));
-
-	// Start rendering audio
-	const auto render = std::bind_front(&MidiDeviceSoundCanvas::Render, this);
-	renderer          = std::thread(render);
-	set_thread_name(renderer, "dosbox:sndcanv");
+	StartRenderer(iroundf(sample_rate_hz), "dosbox:sndcanv");
 
 	// Start playback
 	MIXER_UnlockMixerThread();
@@ -489,37 +391,12 @@ MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 
 void MidiDeviceSoundCanvas::RenderAudioFramesToFifo(const int num_audio_frames)
 {
-	assert(num_audio_frames > 0);
-
-	static std::vector<float> left  = {};
-	static std::vector<float> right = {};
-
-	// Maybe expand the vectors
-	if (check_cast<int>(left.size()) < num_audio_frames) {
-		left.resize(num_audio_frames);
-		right.resize(num_audio_frames);
-	}
-
-	float* audio_out[] = {left.data(), right.data()};
-
-	clap.plugin->Process(audio_out, num_audio_frames, clap.event_list);
-	clap.event_list.Clear();
-
-	for (auto i = 0; i < num_audio_frames; ++i) {
-		audio_frame_fifo.Enqueue({left[i], right[i]});
-	}
+	clap.RenderAudioFramesToFifo(num_audio_frames, audio_frame_fifo);
 }
 
 void MidiDeviceSoundCanvas::ProcessWorkItem(const MidiWork& work)
 {
-	if (work.message_type == MessageType::Channel) {
-		assert(work.message.size() >= MaxMidiMessageLen);
-		clap.event_list.AddMidiEvent(work.message, 0);
-
-	} else {
-		assert(work.message_type == MessageType::SysEx);
-		clap.event_list.AddMidiSysExEvent(work.message, 0);
-	}
+	clap.ProcessWorkItem(work);
 }
 
 static std::set<const SoundCanvas::SynthModel*> available_models = {};
@@ -530,7 +407,11 @@ void SOUNDCANVAS_ListDevices(MidiDeviceSoundCanvas* device, MoreOutputStrings& o
 {
 	using namespace SoundCanvas;
 
-	set_soundcanvas_rom_dir_env_var();
+	// Preserve the ROM path supplied by the active generic CLAP device.
+	const auto current_device = MIDI_GetCurrentDevice();
+	if (!current_device || current_device->GetName() != MidiDeviceName::Clap) {
+		set_soundcanvas_rom_dir_env_var();
+	}
 
 	// Table layout constants
 	constexpr auto ColumnDelim = " ";
@@ -655,11 +536,11 @@ static void init_soundcanvas_config_settings(SectionProp& sec_prop)
 	                     sc55mk2_101.config_name});
 
 	str_prop->SetHelp(
-	        "Roland Sound Canvas model to use ('auto' by default). One or more CLAP audio\n"
-	        "plugins that implement the supported Sound Canvas models must be present in the\n"
-	        "'plugins' directory in your DOSBox installation or configuration directory.\n"
-	        "DOSBox searches for the requested model by inspecting the plugin descriptions.\n"
-	        "The lookup for the best model is performed in order as listed. Possible values:\n"
+	        "Roland Sound Canvas model to use ('auto' by default). Requires the\n"
+	        "'Nuked-SC55.clap' CLAP plugin library in the 'plugins' directory in your DOSBox\n"
+	        "installation or configuration directory. The requested model is matched by\n"
+	        "plugin name within this library. The lookup for the best model is performed\n"
+	        "in order as listed. Possible values:\n"
 	        "\n"
 	        "  auto:       Pick the best available model (default).\n"
 	        "  sc55:       Pick the best available original SC-55 model.\n"

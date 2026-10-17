@@ -10,19 +10,25 @@
 
 #include "plugin_manager.h"
 
+#include <algorithm>
 #include <cassert>
 #include <optional>
+#include <string>
 
 #include "clap/all.h"
 
-#include "utils/checks.h"
 #include "misc/cross.h"
 #include "misc/logging.h"
 #include "misc/support.h"
+#include "utils/checks.h"
+#include "utils/string_utils.h"
+
+namespace Clap {
 
 CHECK_NARROWING();
 
-namespace Clap {
+// Keep these library selectors in sync with the dedicated MIDI synths.
+static const std::vector<std::string> DedicatedSynthLibraries = {"Nuked-SC55.clap"};
 
 static const clap_host_t dosbox_clap_host = {
         .clap_version = CLAP_VERSION,
@@ -50,8 +56,11 @@ void PluginManager::EnumeratePlugins()
 	constexpr auto OnlyRegularFiles = false;
 
 	for (const auto& dir : get_plugin_paths()) {
-		LOG_DEBUG("CLAP: Enumerating CLAP plugins in '%s'", dir.string().c_str());
-		for (const auto& name : get_directory_entries(dir, ".clap", OnlyRegularFiles)) {
+		LOG_DEBUG("CLAP: Enumerating CLAP plugins in '%s'",
+		          dir.string().c_str());
+
+		for (const auto& name :
+		     get_directory_entries(dir, ".clap", OnlyRegularFiles)) {
 			auto library_path = dir / name;
 
 			LOG_DEBUG("CLAP: Trying to load plugin library '%s'",
@@ -71,14 +80,94 @@ void PluginManager::EnumeratePlugins()
 	}
 }
 
-std::vector<PluginInfo> PluginManager::GetPluginInfos()
+// infos is passed in by value to avoid modifying the original list
+static std::vector<PluginInfo> filter_plugin_infos(std::vector<PluginInfo> infos,
+                                                   const PluginFilter filter)
+{
+	if (filter == PluginFilter::GenericSynthOnly) {
+		const auto has_dedicated_synth = [](const PluginInfo& info) {
+			for (const auto& library_name : DedicatedSynthLibraries) {
+				if (find_in_case_insensitive(
+				            library_name,
+				            info.library_path.filename().string())) {
+					return true;
+				}
+			}
+			return false;
+		};
+
+		std::erase_if(infos, has_dedicated_synth);
+	}
+	return infos;
+}
+
+std::vector<PluginInfo> PluginManager::GetPluginInfos(const PluginFilter filter)
 {
 	if (!plugins_enumerated) {
 		EnumeratePlugins();
 		plugins_enumerated = true;
 	}
 
-	return plugin_info_cache;
+	return filter_plugin_infos(plugin_info_cache, filter);
+}
+
+static std::optional<PluginInfo> find_plugin(const std::vector<PluginInfo>& plugin_infos,
+                                             const std::string& wanted_library_name,
+                                             const std::string& wanted_plugin_name_or_index)
+{
+	if (wanted_library_name.empty() && wanted_plugin_name_or_index.empty()) {
+		return {};
+	}
+
+	std::optional<uint32_t> wanted_plugin_index = {};
+
+	if (!wanted_plugin_name_or_index.empty() &&
+	    is_digits(wanted_plugin_name_or_index)) {
+		if (wanted_library_name.empty()) {
+			return {};
+		}
+
+		const auto index = parse_int(wanted_plugin_name_or_index);
+		if (!index) {
+			LOG_DEBUG("CLAP: Plugin index '%s' is out of range",
+			          wanted_plugin_name_or_index.c_str());
+			return {};
+		}
+
+		wanted_plugin_index = check_cast<uint32_t>(*index);
+	}
+
+	for (const auto& info : plugin_infos) {
+		if (!wanted_library_name.empty() &&
+		    !find_in_case_insensitive(wanted_library_name,
+		                              info.library_path.filename().string())) {
+			continue;
+		}
+
+		if (wanted_plugin_index) {
+			if (info.index != *wanted_plugin_index) {
+				continue;
+			}
+		} else if (!wanted_plugin_name_or_index.empty() &&
+		           !find_in_case_insensitive(wanted_plugin_name_or_index,
+		                                     info.name)) {
+			continue;
+		}
+
+		return info;
+	}
+
+	return {};
+}
+
+std::optional<PluginInfo> PluginManager::FindPlugin(
+        const std::string& wanted_library_name,
+        const std::string& wanted_plugin_name_or_index, 
+		const PluginFilter filter)
+{
+	return find_plugin(GetPluginInfos(filter),
+	                   wanted_library_name,
+	                   wanted_plugin_name_or_index);
 }
 
 static bool validate_note_ports(const clap_plugin_t* plugin)
@@ -91,34 +180,33 @@ static bool validate_note_ports(const clap_plugin_t* plugin)
 		return false;
 	}
 
-	constexpr auto InputPort  = true;
-	constexpr auto OutputPort = false;
+	constexpr auto InputPort = true;
 
 	const auto num_in_ports = note_ports->count(plugin, InputPort);
-	if (num_in_ports != 1) {
-		LOG_DEBUG("CLAP: Only plugins with a single MIDI input ports are supported");
-		return false;
-	}
-
-	const auto num_out_ports = note_ports->count(plugin, OutputPort);
-	if (num_out_ports != 0) {
-		LOG_DEBUG("CLAP: Only plugins with no MIDI output ports are supported");
+	if (num_in_ports == 0) {
+		LOG_DEBUG("CLAP: Plugins must have at least one MIDI input port");
 		return false;
 	}
 
 	clap_note_port_info info = {};
 	const auto PortIndex     = 0;
-	note_ports->get(plugin, PortIndex, InputPort, &info);
+
+	if (!note_ports->get(plugin, PortIndex, InputPort, &info)) {
+		LOG_DEBUG("CLAP: Cannot get the first note input port");
+		return false;
+	}
 
 	if ((info.supported_dialects & CLAP_NOTE_DIALECT_MIDI) == 0) {
-		LOG_DEBUG("CLAP: Only plugins with MIDI dialect support are supported");
+		LOG_DEBUG("CLAP: The first note input port must support the MIDI dialect");
 		return false;
 	}
 
 	return true;
 }
 
-static bool validate_audio_ports(const clap_plugin_t* plugin)
+static bool validate_audio_ports(const clap_plugin_t* plugin,
+                                 std::vector<uint32_t>& input_channel_counts,
+                                 std::vector<uint32_t>& output_channel_counts)
 {
 	const auto audio_ports = static_cast<const clap_plugin_audio_ports_t*>(
 	        plugin->get_extension(plugin, CLAP_EXT_AUDIO_PORTS));
@@ -132,25 +220,49 @@ static bool validate_audio_ports(const clap_plugin_t* plugin)
 	constexpr auto OutputPort = false;
 
 	const auto num_in_ports = audio_ports->count(plugin, InputPort);
-	if (num_in_ports != 0) {
-		LOG_DEBUG("CLAP: Only instrument plugins with no audio input ports are supported");
-		return false;
+
+	input_channel_counts.clear();
+	input_channel_counts.reserve(num_in_ports);
+
+	for (uint32_t in_port_index = 0; in_port_index < num_in_ports;
+	     ++in_port_index) {
+		clap_audio_port_info port = {};
+		if (!audio_ports->get(plugin, in_port_index, InputPort, &port) ||
+		    port.channel_count == 0) {
+			LOG_DEBUG("CLAP: Invalid audio input port %u", in_port_index);
+			return false;
+		}
+
+		input_channel_counts.push_back(port.channel_count);
 	}
 
 	const auto num_out_ports = audio_ports->count(plugin, OutputPort);
-	if (num_out_ports != 1) {
-		LOG_DEBUG("CLAP: Only plugins with a single audio output port are supported");
+	if (num_out_ports == 0) {
+		LOG_DEBUG("CLAP: Plugins must have at least one audio output port");
 		return false;
 	}
 
-	clap_audio_port_info info = {};
-	const auto PortIndex      = 0;
-	audio_ports->get(plugin, PortIndex, OutputPort, &info);
+	output_channel_counts.clear();
+	output_channel_counts.reserve(num_out_ports);
 
-	if (!(info.channel_count == 2 &&
-	      strcmp(info.port_type, CLAP_PORT_STEREO) == 0)) {
-		LOG_DEBUG("CLAP: Only stereo plugins with two audio output channels are supported");
-		return false;
+	for (uint32_t out_port_index = 0; out_port_index < num_out_ports;
+	     ++out_port_index) {
+		clap_audio_port_info port = {};
+		if (!audio_ports->get(plugin, out_port_index, OutputPort, &port) ||
+		    port.channel_count == 0) {
+			LOG_DEBUG("CLAP: Invalid audio output port %u",
+			          out_port_index);
+			return false;
+		}
+
+		if (out_port_index == 0 &&
+		    !(port.channel_count == 2 && port.port_type &&
+		      strcmp(port.port_type, CLAP_PORT_STEREO) == 0)) {
+			LOG_DEBUG("CLAP: The first audio output port must be stereo with two channels");
+			return false;
+		}
+
+		output_channel_counts.push_back(port.channel_count);
 	}
 
 	return true;
@@ -214,6 +326,14 @@ std::unique_ptr<Plugin> PluginManager::LoadPlugin(const PluginInfo& plugin_info)
 		        plugin_info.library_path.string().c_str());
 		return {};
 	}
+
+	const auto destroy_plugin = [](const clap_plugin_t* instance) {
+		instance->destroy(instance);
+	};
+
+	std::unique_ptr<const clap_plugin_t, decltype(destroy_plugin)> plugin_guard(
+	        plugin, destroy_plugin);
+
 	if (!plugin->init(plugin)) {
 		LOG_DEBUG("CLAP: Error initialising plugin with ID '%s' from library '%s'",
 		          plugin_info.id.c_str(),
@@ -224,7 +344,11 @@ std::unique_ptr<Plugin> PluginManager::LoadPlugin(const PluginInfo& plugin_info)
 	if (!validate_note_ports(plugin)) {
 		return {};
 	}
-	if (!validate_audio_ports(plugin)) {
+
+	std::vector<uint32_t> input_channel_counts  = {};
+	std::vector<uint32_t> output_channel_counts = {};
+
+	if (!validate_audio_ports(plugin, input_channel_counts, output_channel_counts)) {
 		return {};
 	}
 
@@ -232,7 +356,15 @@ std::unique_ptr<Plugin> PluginManager::LoadPlugin(const PluginInfo& plugin_info)
 	         plugin_info.name.c_str(),
 	         plugin_info.version.c_str());
 
-	return std::make_unique<Plugin>(library, plugin);
+	auto instance = std::make_unique<Plugin>(library,
+	                                         plugin,
+	                                         input_channel_counts,
+	                                         output_channel_counts);
+
+	// The wrapper now owns the plugin; disarm the temporary guard.
+	(void)plugin_guard.release();
+
+	return instance;
 }
 
 } // namespace Clap

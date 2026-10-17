@@ -6,7 +6,9 @@ add_executable(dosbox_tests
     batch_file_tests.cpp
     bit_view_tests.cpp
     bitops_tests.cpp
+    clap_plugin_tests.cpp
     cmd_move_tests.cpp
+    config_tests.cpp
     dos_files_tests.cpp
     dos_memory_struct_tests.cpp
     dosbox_pause_fsm_tests.cpp
@@ -43,10 +45,12 @@ add_executable(dosbox_tests
 if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU" AND NOT MSVC)
     target_compile_options(dosbox_tests PRIVATE
         "-Wno-effc++"
-        "-Wno-gnu-zero-variadic-macro-arguments"
     )
-    # Clang does not support -Wno-format-overflow
-    if (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+    if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        target_compile_options(dosbox_tests PRIVATE
+            "-Wno-gnu-zero-variadic-macro-arguments"
+        )
+    else()
         target_compile_options(dosbox_tests PRIVATE
             "-Wno-format-overflow"
         )
@@ -54,6 +58,7 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU" AND NOT MSVC)
 endif()
 
 target_link_libraries(dosbox_tests PRIVATE
+    clap
     GTest::gmock_main
     dosboxcommon
     SDL3::Headers

@@ -201,13 +201,16 @@ with a more modern and punchy sonic character. They are alternative
 standard. Many enthusiasts prefer them to the SC-55 in certain games. For a
 detailed comparison of how these modules stack up against the SC-55, see [this
 article](https://blog.johnnovak.net/2023/03/05/grand-ms-dos-gaming-general-midi-showdown/).
-These modules are currently not emulated in DOSBox Staging, but can use them
-as [external MIDI synthesisers](#virtual-midi-devices).
+You can connect hardware modules as [physical MIDI
+devices](#physical-midi-devices), or run software emulations as [external MIDI
+synthesisers](#virtual-midi-devices). If an emulation is available as a CLAP
+plugin, you can load it directly with [CLAP synth](sound-devices/clap.md).
 
 
 ## Built-in MIDI devices
 
-DOSBox Staging offers three main ways for MIDI playback:
+DOSBox Staging offers four main ways for MIDI playback without an external
+MIDI host program:
 
 - [Roland MT-32 emulation](sound-devices/roland-mt-32.md) --- Built-in
   emulation of the MT-32 and CM-32L.
@@ -220,6 +223,10 @@ DOSBox Staging offers three main ways for MIDI playback:
 - [FluidSynth](sound-devices/fluidsynth.md) --- Built-in generic General MIDI
   synthesiser that uses SoundFont files and emulates no particular DOS-era
   hardware.
+
+- [CLAP synth](sound-devices/clap.md) --- Load a CLAP MIDI synthesiser plugin
+  directly in DOSBox Staging. The plugin determines the available sounds and
+  supported MIDI standards.
 
 In other words, the built-in choices can be thought of as different MIDI
 playback devices or systems:
@@ -234,6 +241,10 @@ playback devices or systems:
   cannot provide authentic results for DOS games; it can be thought of as an
   alternative experience (e.g. by trying different SoundFonts for the same
   game).
+
+- **CLAP synth** --- A choice of MIDI synthesisers supplied as plugins. For
+  General MIDI games, choose a General MIDI-compatible plugin; CLAP is a
+  plugin format, not a MIDI sound module or music standard.
 
 This distinction is useful throughout the rest of the chapter: when a game
 supports **General MIDI**, you must choose a GM-compatible MIDI playback
@@ -272,6 +283,10 @@ As a rough rule of thumb:
   authentic results, or [FluidSynth](sound-devices/fluidsynth.md) as a lighter
   alternative.
 
+You can also use [CLAP synth](sound-devices/clap.md) to try other MIDI
+synthesisers. Check that your chosen plugin supports the MIDI standard used
+by the game.
+
 !!! note
 
     Remember that General MIDI describes the supported MIDI format, while
@@ -307,13 +322,14 @@ MIDI related settings are to be configured in the `[midi]` section. Set the
 
 - `mt32` to use the built-in [Roland MT-32](sound-devices/roland-mt-32.md) emulation,
 - `fluidsynth` to use the built-in [FluidSynth](sound-devices/fluidsynth.md) MIDI synthesiser,
+- `clap` to use a [CLAP synth](sound-devices/clap.md) plugin configured in the `[clap]` section,
 - `soundcanvas` to use the built-in [Sound Canvas](sound-devices/roland-sound-canvas.md) emulation,
 - or `port` (the default) to send MIDI data to an [external MIDI
   device](#using-external-midi-devices) configured via
   [`midiconfig`](#midiconfig).
 
-You can use the `MIXER /LISTMIDI` DOS command to see the list of available
-external MIDI devices:
+You can use the `MIXER /LISTMIDI` DOS command to see the available MIDI
+devices, including external MIDI ports, SoundFonts, and CLAP plugins:
 
 ![DOSBox Staging mixer listing the available MIDI devices](https://www.dosbox-staging.org/static/images/manual/mixer-listmidi.png){ loading=lazy }
 
@@ -501,6 +517,9 @@ MIDI related settings are to be configured in the `[midi]` section.
       - `fluidsynth` --- The built-in FluidSynth MIDI synthesiser (SoundFont
         player). See [FluidSynth](sound-devices/fluidsynth.md) for details.
 
+      - `clap` --- A CLAP MIDI synthesizer plugin (see the
+        [`[clap]` section](sound-devices/clap.md#configuration-settings)).
+
       - `mt32` --- The built-in Roland MT-32 synthesiser. See [Roland
         MT-32](sound-devices/roland-mt-32.md#configuration-settings)
         for details.
@@ -530,6 +549,7 @@ MIDI related settings are to be configured in the `[midi]` section.
     | -------------------- | ----------------------
     | `none`               | N/A
     | `fluidsynth`         | N/A
+    | `clap`               | N/A --- configure the plugin in the [`[clap]` section](sound-devices/clap.md#configuration-settings).
     | `mt32`               | N/A
     | `soundcanvas`        | N/A
     | `port`               | `ID [delaysysex]` --- Use the MIDI device with this ID. The ID can be a numeric port index or a part of the device name (case-insensitive substring match). The `delaysysex` option might be needed for some older external MIDI modules.

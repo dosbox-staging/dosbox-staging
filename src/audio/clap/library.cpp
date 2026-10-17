@@ -8,10 +8,10 @@
 
 #include "clap/all.h"
 
-#include "utils/checks.h"
 #include "misc/logging.h"
-#include "utils/string_utils.h"
 #include "misc/support.h"
+#include "utils/checks.h"
+#include "utils/string_utils.h"
 
 CHECK_NARROWING();
 
@@ -45,9 +45,9 @@ Library::Library(const std_fs::path& _library_path)
 	const auto reported_plugin_path = library_path;
 
 #ifdef MACOSX
-	// The dynamic-link library is inside the application bundle on macOS, so
-	// we need to resolve its path, but we must always report the bundle path
-	// to the plugin instance.
+	// The dynamic-link library is inside the application bundle on macOS,
+	// so we need to resolve its path, but we must always report the bundle
+	// path to the plugin instance.
 	const auto dynlib_path = [&] {
 		if (const auto f = find_first_file(_library_path / "Contents" / "MacOS");
 		    f) {
@@ -124,14 +124,15 @@ std::vector<PluginInfo> Library::GetPluginInfos() const
 	const auto num_plugins = factory->get_plugin_count(factory);
 	std::vector<PluginInfo> plugin_infos = {};
 
-	for (size_t plugin_index = 0; plugin_index < num_plugins; ++plugin_index) {
-		const auto desc = factory->get_plugin_descriptor(
-		        factory, check_cast<uint32_t>(plugin_index));
+	for (uint32_t plugin_index = 0; plugin_index < num_plugins; ++plugin_index) {
+		const auto desc = factory->get_plugin_descriptor(factory,
+		                                                 plugin_index);
 
 		if (desc) {
 			LOG_INFO("CLAP: Found plugin '%s'", desc->name);
 
 			const PluginInfo info = {library_path,
+			                         plugin_index,
 			                         desc->id,
 			                         desc->name,
 			                         desc->description,

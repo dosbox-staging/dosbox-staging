@@ -682,8 +682,6 @@ MidiDeviceMt32::MidiDeviceMt32()
 
 	const auto sample_rate_hz = AccurateAnalogModeSampleRateHz;
 
-	ms_per_audio_frame = MillisInSecond / sample_rate_hz;
-
 	mt32_service->setAnalogOutputMode(AnalogMode);
 	mt32_service->selectRendererType(RenderingType);
 	mt32_service->setDACInputMode(DacEmulationMode);
@@ -733,31 +731,12 @@ MidiDeviceMt32::MidiDeviceMt32()
 		set_section_property_value("mt32", "mt32_filter", "off");
 	}
 
-	// Double the baseline PCM prebuffer because MIDI is demanding and
-	// bursty. The mixer's default of ~20 ms becomes 40 ms here, which gives
-	// slower systems a better chance to keep up (and prevent their audio
-	// frame FIFO from running dry).
-	const auto render_ahead_ms = MIXER_GetPreBufferMs() * 2;
-
-	// Size the out-bound audio frame FIFO
-	assertm(sample_rate_hz >= 8000, "Sample rate must be at least 8 kHz");
-
-	const auto audio_frames_per_ms = iround(sample_rate_hz / MillisInSecond);
-	audio_frame_fifo.Resize(
-	        check_cast<size_t>(render_ahead_ms * audio_frames_per_ms));
-
-	// Size the in-bound work FIFO
-	work_fifo.Resize(MaxMidiWorkFifoSize);
-
 	// Move the local objects into the member variables
 	service       = std::move(mt32_service);
 	mixer_channel = std::move(channel);
 	model_and_dir = std::move(*loaded_model_and_dir);
 
-	// Start rendering audio
-	const auto render = std::bind_front(&MidiDeviceMt32::Render, this);
-	renderer          = std::thread(render);
-	set_thread_name(renderer, "dosbox:mt32");
+	StartRenderer(sample_rate_hz, "dosbox:mt32");
 
 	// Start playback
 	MIXER_UnlockMixerThread();

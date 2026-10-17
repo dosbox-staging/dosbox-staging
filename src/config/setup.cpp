@@ -1059,17 +1059,6 @@ bool SectionProp::HandleInputLine(const std::string& line)
 	std::string setting_name      = line.substr(0, loc);
 	std::string setting_value_str = line.substr(loc + 1);
 
-	// Strip quotes around the value string
-	trim(setting_value_str);
-	const auto length = setting_value_str.length();
-
-	if (length > 1 &&
-	    ((setting_value_str[0] == '\"' && setting_value_str[length - 1] == '\"') ||
-	     (setting_value_str[0] == '\'' && setting_value_str[length - 1] == '\''))) {
-
-		setting_value_str = setting_value_str.substr(1, length - 2);
-	}
-
 	// Trim leading and trailing spaces from the setting name and value
 	// strings
 	trim(setting_name);
@@ -1079,6 +1068,22 @@ bool SectionProp::HandleInputLine(const std::string& line)
 	for (auto& prop : properties) {
 		if (strcasecmp(prop->propname.c_str(), setting_name.c_str()) != 0) {
 			continue;
+		}
+
+		// Ordinary settings strip one pair of matching quotes, then
+		// trim the enclosed value. Argument lists can preserve their
+		// quoting and enclosed whitespace for their own parser.
+		if (!prop->PreservesQuotes()) {
+			const auto length = setting_value_str.length();
+			if (length > 1 && ((setting_value_str.front() == '"' &&
+			                    setting_value_str.back() == '"') ||
+			                   (setting_value_str.front() == '\'' &&
+			                    setting_value_str.back() == '\''))) {
+				setting_value_str =
+				        setting_value_str.substr(1, length - 2);
+			}
+
+			trim(setting_value_str);
 		}
 
 		if (prop->IsDeprecated()) {
