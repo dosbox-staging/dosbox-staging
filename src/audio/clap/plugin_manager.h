@@ -15,6 +15,8 @@
 
 namespace Clap {
 
+enum class PluginFilter { All, GenericSynthOnly };
+
 // CLAP plugin manager singleton to discover and load (instantiate) CLAP
 // libraries and plugins. Technically, it implements some parts of a very
 // basic CLAP host.
@@ -28,14 +30,14 @@ public:
 	}
 
 	// Enumerates the list of available plugins only once during the
-	// lifecycle of the program, then it returns the cached results.
-	//
-	std::vector<PluginInfo> GetPluginInfos();
+	// lifecycle of the program, then returns a copy of the cached results.
+	// GenericSynthOnly excludes plugins handled by a dedicated MIDI synth.
+	std::vector<PluginInfo> GetPluginInfos(PluginFilter filter = PluginFilter::All);
 
-	// Returns the first plugin in GetPluginInfos() that matches the supplied
-	// library and plugin selectors. Returns no value if no plugin matches,
-	// both selectors are empty, an index is supplied without a library name,
-	// or the index is out of range.
+	// Returns the first plugin in GetPluginInfos(filter) that matches the
+	// supplied library and plugin selectors. Returns no value if no plugin
+	// matches, both selectors are empty, an index is supplied without a
+	// library name, or the index is out of range.
 	//
 	// wanted_library_name uses case-insensitive partial matching against
 	// the library filename. The .clap extension can be omitted. An empty
@@ -43,13 +45,14 @@ public:
 	//
 	// wanted_plugin_name_or_index uses case-insensitive partial matching
 	// against the plugin name. An all-digit string is always treated as the
-	// zero-based descriptor index within a library; for example, "1" selects
-	// the second plugin descriptor. An index requires a non-empty
-	// wanted_library_name. An empty plugin selector matches the first plugin
-	// in a matching library.
+	// zero-based descriptor index within a library; for example, "1"
+	// selects the second plugin descriptor. An index requires a non-empty
+	// wanted_library_name. An empty plugin selector matches the first
+	// plugin in a matching library.
 	std::optional<PluginInfo> FindPlugin(
 	        const std::string& wanted_library_name         = {},
-	        const std::string& wanted_plugin_name_or_index = {});
+	        const std::string& wanted_plugin_name_or_index = {},
+	        PluginFilter filter = PluginFilter::All);
 
 	// Loads and initialises a CLAP plugin. The first note input port must
 	// support MIDI and the first audio output port must be stereo.

@@ -60,7 +60,9 @@ MidiDeviceClap::MidiDeviceClap()
 	auto& manager           = Clap::PluginManager::GetInstance();
 	const auto library_name = section->GetString("clap_library");
 	const auto plugin_name  = section->GetString("clap_plugin");
-	const auto candidate    = manager.FindPlugin(library_name, plugin_name);
+	const auto candidate    = manager.FindPlugin(library_name, 
+												 plugin_name, 
+												 Clap::PluginFilter::GenericSynthOnly);
 
 	if (!candidate) {
 		const auto message = format_str("CLAPSYNTH: No plugin matches library '%s' and plugin '%s'",
@@ -165,7 +167,9 @@ static std::string format_clap_plugin_list(const std::vector<Clap::PluginInfo>& 
 
 void CLAP_ListDevices(const MidiDeviceClap* device, MoreOutputStrings& output)
 {
-	const auto infos = Clap::PluginManager::GetInstance().GetPluginInfos();
+	using namespace Clap;
+	
+	const auto infos = PluginManager::GetInstance().GetPluginInfos(PluginFilter::GenericSynthOnly);
 	if (infos.empty()) {
 		output.AddString("  %s\n\n", MSG_Get("CLAP_NO_PLUGINS").c_str());
 		return;
@@ -195,14 +199,15 @@ static void init_clap_config_settings(SectionProp& section)
 	        "The first matching plugin is used. Leave unset to use the first plugin in the\n"
 	        "selected library. At least one of 'clap_library' or 'clap_plugin' must be set.\n"
 	        "The plugin must accept MIDI on its first note input and provide a stereo first\n"
-	        "audio output.");
+	        "audio output. Plugins handled by a dedicated MIDI synth (e.g., 'soundcanvas')\n"
+	        "are excluded.");
 
 	property = section.AddString("clap_env", WhenIdle, "");
 	property->SetPreserveQuotes(true);
 	property->SetHelp(
 	        "Environment variables to set before loading the CLAP plugin (unset by default).\n"
 	        "Separate NAME=VALUE assignments with spaces. Quote an entire assignment if its\n"
-	        "value contains spaces, for example: \"SOUNDCANVAS_ROM_PATH=C:\\My ROMs\".\n"
+	        "value contains spaces, for example: \"ROM_PATH=C:\\My ROMs\".\n"
 	        "Existing environment variables are overwritten.");
 
 	property = section.AddString("clap_sample_rate", WhenIdle, "auto");

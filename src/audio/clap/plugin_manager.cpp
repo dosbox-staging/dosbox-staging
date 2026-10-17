@@ -10,8 +10,10 @@
 
 #include "plugin_manager.h"
 
+#include <algorithm>
 #include <cassert>
 #include <optional>
+#include <string>
 
 #include "clap/all.h"
 
@@ -21,9 +23,12 @@
 #include "utils/checks.h"
 #include "utils/string_utils.h"
 
+namespace Clap {
+
 CHECK_NARROWING();
 
-namespace Clap {
+// Keep these library selectors in sync with the dedicated MIDI synths.
+static const std::vector<std::string> DedicatedSynthLibraries = {"Nuked-SC55.clap"};
 
 static const clap_host_t dosbox_clap_host = {
         .clap_version = CLAP_VERSION,
@@ -75,14 +80,35 @@ void PluginManager::EnumeratePlugins()
 	}
 }
 
-std::vector<PluginInfo> PluginManager::GetPluginInfos()
+// infos is passed in by value to avoid modifying the original list
+static std::vector<PluginInfo> filter_plugin_infos(std::vector<PluginInfo> infos,
+                                                   const PluginFilter filter)
+{
+	if (filter == PluginFilter::GenericSynthOnly) {
+		const auto has_dedicated_synth = [](const PluginInfo& info) {
+			for (const auto& library_name : DedicatedSynthLibraries) {
+				if (find_in_case_insensitive(
+				            library_name,
+				            info.library_path.filename().string())) {
+					return true;
+				}
+			}
+			return false;
+		};
+
+		std::erase_if(infos, has_dedicated_synth);
+	}
+	return infos;
+}
+
+std::vector<PluginInfo> PluginManager::GetPluginInfos(const PluginFilter filter)
 {
 	if (!plugins_enumerated) {
 		EnumeratePlugins();
 		plugins_enumerated = true;
 	}
 
-	return plugin_info_cache;
+	return filter_plugin_infos(plugin_info_cache, filter);
 }
 
 static std::optional<PluginInfo> find_plugin(const std::vector<PluginInfo>& plugin_infos,
@@ -136,9 +162,10 @@ static std::optional<PluginInfo> find_plugin(const std::vector<PluginInfo>& plug
 
 std::optional<PluginInfo> PluginManager::FindPlugin(
         const std::string& wanted_library_name,
-        const std::string& wanted_plugin_name_or_index)
+        const std::string& wanted_plugin_name_or_index, 
+		const PluginFilter filter)
 {
-	return find_plugin(GetPluginInfos(),
+	return find_plugin(GetPluginInfos(filter),
 	                   wanted_library_name,
 	                   wanted_plugin_name_or_index);
 }

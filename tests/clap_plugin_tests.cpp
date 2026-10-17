@@ -686,6 +686,27 @@ TEST(ClapListing, GroupsLibrariesAndHighlightsTheActiveInstance)
 	EXPECT_TRUE(format_clap_plugin_list({}, nullptr).empty());
 }
 
+TEST(ClapListing, ExcludesDedicatedSynthLibraries)
+{
+	const std::vector<Clap::PluginInfo> infos = {
+	        {     "plugins/Nuked-SC55.clap", 0,    "sc55",    "Roland SC-55 v1.21"},
+	        {          "plugins/First.clap", 2,   "piano",                 "Piano"},
+	        {"other/Custom-NUKED-SC55.CLAP", 1, "sc55mk2", "Roland SC-55mk2 v1.01"},
+	        {         "plugins/Second.clap", 4, "strings",               "Strings"}
+        };
+
+	const auto generic_infos = Clap::filter_plugin_infos(
+	        infos, Clap::PluginFilter::GenericSynthOnly);
+
+	EXPECT_EQ(format_clap_plugin_list(generic_infos, nullptr),
+	          "  First.clap\n    2 - Piano\n  Second.clap\n    4 - Strings\n");
+
+	const auto dedicated_only = Clap::filter_plugin_infos(
+	        {infos.front(), infos[2]}, Clap::PluginFilter::GenericSynthOnly);
+	EXPECT_TRUE(dedicated_only.empty());
+	EXPECT_TRUE(format_clap_plugin_list(dedicated_only, nullptr).empty());
+}
+
 TEST(ClapSelection, FindsFirstMatchingPlugin)
 {
 	// Factory indices can have gaps when descriptors cannot be retrieved.
@@ -741,6 +762,39 @@ TEST(ClapSelection, FindsFirstMatchingPlugin)
 
 		EXPECT_EQ(found ? found->id : "", search.expected_id);
 	}
+}
+
+TEST(ClapSelection, ExcludesDedicatedSynthsFromGenericSearches)
+{
+	const std::vector<Clap::PluginInfo> infos = {
+	        {"plugins/Nuked-SC55.clap", 0,    "sc55",   "Roland SC-55 v1.21"},
+	        {     "plugins/Other.clap", 3, "generic", "SC-55-inspired Synth"}
+        };
+
+	const auto generic_infos = Clap::filter_plugin_infos(
+	        infos, Clap::PluginFilter::GenericSynthOnly);
+
+	EXPECT_FALSE(Clap::find_plugin(generic_infos, "Nuked-SC55", ""));
+	EXPECT_FALSE(Clap::find_plugin(generic_infos, "Nuked-SC55", "0"));
+	EXPECT_FALSE(Clap::find_plugin(generic_infos, "", "Roland SC-55"));
+
+	const auto name_match = Clap::find_plugin(generic_infos, "", "SC-55");
+	ASSERT_TRUE(name_match);
+	EXPECT_EQ(name_match->id, "generic");
+
+	const auto index_match = Clap::find_plugin(generic_infos, "Other", "3");
+	ASSERT_TRUE(index_match);
+	EXPECT_EQ(index_match->id, "generic");
+
+	// Dedicated synths can still find their plugins in the full cache.
+	const auto all_infos = Clap::filter_plugin_infos(infos,
+	                                                 Clap::PluginFilter::All);
+	ASSERT_EQ(all_infos.size(), infos.size());
+	const auto dedicated_match = Clap::find_plugin(all_infos,
+	                                               "Nuked-SC55.clap",
+	                                               "Roland SC-55 v1.21");
+	ASSERT_TRUE(dedicated_match);
+	EXPECT_EQ(dedicated_match->id, "sc55");
 }
 
 TEST(ClapSelection, HandlesEmptyDiscoveryList)
