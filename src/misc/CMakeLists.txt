@@ -8,6 +8,7 @@ target_sources(dosboxcommon PRIVATE
   host_locale.cpp
   image_decoder.cpp
   iso_locale_codes.cpp
+  logger.cpp
   messages_adjust.cpp
   messages_po_entry.cpp
   rwqueue.cpp
