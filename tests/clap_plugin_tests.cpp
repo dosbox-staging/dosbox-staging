@@ -705,7 +705,7 @@ TEST(ClapSelection, FindsFirstMatchingPlugin)
 	};
 
 	const Search searches[] = {
-	        {           "",	                       "",      "first-0"},
+	        {           "",	                       "",             ""},
 	        {      "first",	                       "",      "first-0"},
 	        {"SECOND.clap",                               "",     "second-0"},
 	        {      "eCoNd",	                       "",     "second-0"},
@@ -718,7 +718,9 @@ TEST(ClapSelection, FindsFirstMatchingPlugin)
 	        {      "first",	                      "2",      "first-2"},
 	        {      "first",	                   "0002",      "first-2"},
 	        {     "second",	                      "1",     "second-1"},
-	        {           "",	                      "1",     "second-1"},
+	        {           "",	                      "0",             ""},
+	        {           "",	                      "1",             ""},
+	        {           "",	                   "0002",             ""},
 	        {     "second",                     "2147483647", "second-large"},
 	        {    "missing",	                       "",             ""},
 	        {    "plugins",	                       "",             ""},

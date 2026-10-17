@@ -185,14 +185,17 @@ static void init_clap_config_settings(SectionProp& section)
 	        "CLAP plugin library to use (unset by default). Libraries are searched in the\n"
 	        "'plugins' directory in your DOSBox installation or configuration directory.\n"
 	        "Use a case-insensitive partial filename, with or without the '.clap' extension.\n"
-	        "Leave unset to search all libraries. Use 'MIXER /LISTMIDI' to list plugins.");
+	        "Leave unset to search all libraries by plugin name.\n"
+	        "Use 'MIXER /LISTMIDI' to list plugins.");
 
 	property = section.AddString("clap_plugin", WhenIdle, "");
 	property->SetHelp(
 	        "CLAP MIDI synth to use (unset by default). Use a case-insensitive partial plugin\n"
-	        "name or its numeric index within the library. The first matching plugin is used.\n"
-	        "Leave unset to use the first plugin in the selected library. The plugin must\n"
-	        "accept MIDI on its first note input and provide a stereo first audio output.");
+	        "name or its numeric index within the library. An index requires 'clap_library'.\n"
+	        "The first matching plugin is used. Leave unset to use the first plugin in the\n"
+	        "selected library. At least one of 'clap_library' or 'clap_plugin' must be set.\n"
+	        "The plugin must accept MIDI on its first note input and provide a stereo first\n"
+	        "audio output.");
 
 	property = section.AddString("clap_env", WhenIdle, "");
 	property->SetPreserveQuotes(true);

@@ -32,17 +32,21 @@ public:
 	//
 	std::vector<PluginInfo> GetPluginInfos();
 
-	// Returns the first plugin in GetPluginInfos() that matches both
-	// arguments, or no value if none match. Empty arguments match any
-	// library or plugin.
+	// Returns the first plugin in GetPluginInfos() that matches the supplied
+	// library and plugin selectors. Returns no value if no plugin matches,
+	// both selectors are empty, an index is supplied without a library name,
+	// or the index is out of range.
 	//
 	// wanted_library_name uses case-insensitive partial matching against
-	// the library filename. The .clap extension can be omitted.
+	// the library filename. The .clap extension can be omitted. An empty
+	// library name searches all libraries by plugin name.
 	//
 	// wanted_plugin_name_or_index uses case-insensitive partial matching
-	// against the plugin name. An all-digit string instead matches the
-	// zero-based descriptor index within the library; for example, "1"
-	// selects the second plugin descriptor.
+	// against the plugin name. An all-digit string is always treated as the
+	// zero-based descriptor index within a library; for example, "1" selects
+	// the second plugin descriptor. An index requires a non-empty
+	// wanted_library_name. An empty plugin selector matches the first plugin
+	// in a matching library.
 	std::optional<PluginInfo> FindPlugin(
 	        const std::string& wanted_library_name         = {},
 	        const std::string& wanted_plugin_name_or_index = {});

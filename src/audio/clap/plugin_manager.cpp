@@ -89,10 +89,18 @@ static std::optional<PluginInfo> find_plugin(const std::vector<PluginInfo>& plug
                                              const std::string& wanted_library_name,
                                              const std::string& wanted_plugin_name_or_index)
 {
+	if (wanted_library_name.empty() && wanted_plugin_name_or_index.empty()) {
+		return {};
+	}
+
 	std::optional<uint32_t> wanted_plugin_index = {};
 
 	if (!wanted_plugin_name_or_index.empty() &&
 	    is_digits(wanted_plugin_name_or_index)) {
+		if (wanted_library_name.empty()) {
+			return {};
+		}
+
 		const auto index = parse_int(wanted_plugin_name_or_index);
 		if (!index) {
 			LOG_DEBUG("CLAP: Plugin index '%s' is out of range",
