@@ -596,6 +596,7 @@ void Config::ParseArguments()
 
 	arguments.socket   = cmdline->FindRemoveIntArgument("socket");
 	arguments.wait_pid = cmdline->FindRemoveIntArgument("wait_pid");
+	arguments.log_name = cmdline->FindRemoveStringArgument("log_name");
 
 	arguments.conf = cmdline->FindRemoveVectorArgument("conf");
 	arguments.set  = cmdline->FindRemoveVectorArgument("set");

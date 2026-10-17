@@ -994,7 +994,8 @@ void DOSBOX_SetMachineTypeFromConfig(SectionProp& section)
 	       (machine != MachineType::Vga && svga_type == SvgaType::None));
 }
 
-constexpr auto WaitPidArg = "--wait_pid";
+static constexpr auto WaitPidArg = "--wait_pid";
+static constexpr auto LogNameArg = "--log_name";
 
 static void remove_arg(std::vector<std::string>& parameters, const std::string arg_name)
 {
@@ -1017,6 +1018,8 @@ static void remove_arg(std::vector<std::string>& parameters, const std::string a
 
 void DOSBOX_Restart()
 {
+	LOG_INFO("DOSBOX: Restarting...");
+
 	DOSBOX_Restart(control->startup_params);
 }
 
@@ -1024,13 +1027,20 @@ void DOSBOX_Restart(std::vector<std::string>& parameters)
 {
 	control->ApplyQueuedValuesToCli(parameters);
 
-	// Remove any existing --wait_pid parameters.
+	// Remove any existing `--wait_pid` and `--log_name` parameters.
 	// This can happen with multiple restarts.
 	remove_arg(parameters, WaitPidArg);
+	remove_arg(parameters, LogNameArg);
+
+	if (const auto maybe_log_name = LOG_GetLogFileName(); maybe_log_name) {
+		parameters.emplace_back(LogNameArg);
+		parameters.emplace_back(*maybe_log_name);
+	}
 
 #ifdef WIN32
 	parameters.emplace_back(WaitPidArg);
 	parameters.emplace_back(std::to_string(GetCurrentProcessId()));
+
 	std::string command_line = {};
 
 	bool first = true;
@@ -1050,7 +1060,7 @@ void DOSBOX_Restart(std::vector<std::string>& parameters)
 		command_line.append("\"" + arg + "\"");
 		first = false;
 	}
-#else
+#else  // macOS & Linux
 	parameters.emplace_back(WaitPidArg);
 	parameters.emplace_back(std::to_string(getpid()));
 
@@ -1116,7 +1126,7 @@ void DOSBOX_Restart(std::vector<std::string>& parameters)
 	                   &process_information)) {
 		LOG_ERR("Restart failed: CreateProcess failed");
 	}
-#else
+#else  // macOS & Linux
 	int ret = fork();
 	switch (ret) {
 	case -1:
@@ -1313,6 +1323,28 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 	        "\n"
 	        "  - English is built-in, the rest is stored in the bundled\n"
 	        "    'resources/translations' directory.");
+
+	pstring = section->AddString("log_mode", Never, "console-and-file");
+	pstring->SetValues({"console", "file", "console-and-file", "off"});
+	pstring->SetHelp(
+	        "Set the logging mode ('console-and-file' by default). Possible values:\n"
+	        "\n"
+	        "  off:               Disable all logging.\n"
+	        "\n"
+	        "  console:           Print log messages to the console.\n"
+	        "\n"
+	        "  file:              Write log messages to a file in the 'log_dir' directory,\n"
+	        "                     named 'dosbox-YYYYMMDD-HHMMSS.log' after the date and time\n"
+	        "                     the file was created. Logs from the most recent ten runs\n"
+	        "                     are kept.\n"
+	        "\n"
+	        "  console-and-file:  Print log messages to the console and also write a log file\n"
+	        "                     (default).");
+
+	pstring = section->AddString("log_dir", Never, "");
+	pstring->SetHelp(
+	        "Log file directory (unset by default). If unset, the logs are written to the\n"
+	        "'logs' folder in the configuration directory.");
 
 	pstring = section->AddString("machine", OnlyAtStart, "svga_s3");
 	pstring->SetValues({"hercules",
