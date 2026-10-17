@@ -1314,6 +1314,28 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 	        "  - English is built-in, the rest is stored in the bundled\n"
 	        "    'resources/translations' directory.");
 
+	pstring = section->AddString("log_mode", OnlyAtStart, "console-and-file");
+	pstring->SetValues({"console", "file", "console-and-file", "off"});
+	pstring->SetHelp(
+	        "Set the logging mode ('console-and-file' by default). Possible values:\n"
+	        "\n"
+	        "  console:           Print log messages to the console.\n"
+	        "\n"
+	        "  file:              Write log messages to a file. The name of the file is\n"
+	        "                     'dosbox.log' located in the directory set by 'log_dir'.\n"
+	        "                     Log files from the previous five log runs are kept as\n"
+	        "                     'dosbox-001.log', 'dosbox-002.log', etc.\n"
+	        "\n"
+	        "  console-and-file:  Print log messages to the console and also write a log file\n"
+	        "                     (default).\n"
+	        "\n"
+	        "  off:               Disable all logging.");
+
+	pstring = section->AddString("log_dir", OnlyAtStart, "");
+	pstring->SetHelp(
+	        "Log file directory (unset by default). If unset, the logs are written to the\n"
+	        "'logs' folder in the configuration directory.");
+
 	pstring = section->AddString("machine", OnlyAtStart, "svga_s3");
 	pstring->SetValues({"hercules",
 	                    "cga_mono",

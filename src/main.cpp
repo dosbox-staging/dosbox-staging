@@ -360,30 +360,6 @@ static int erase_mapper_file()
 	return 0;
 }
 
-static void init_logger(const CommandLineArguments& args, int argc, char* argv[])
-{
-	loguru::g_preamble_date    = true;
-	loguru::g_preamble_time    = true;
-	loguru::g_preamble_uptime  = false;
-	loguru::g_preamble_thread  = false;
-	loguru::g_preamble_file    = false;
-	loguru::g_preamble_verbose = false;
-	loguru::g_preamble_pipe    = true;
-
-	if (args.version || args.help || args.printconf || args.editconf ||
-	    args.eraseconf || args.list_countries || args.list_layouts ||
-	    args.list_code_pages || args.list_shaders || args.erasemapper) {
-
-		loguru::g_stderr_verbosity = loguru::Verbosity_WARNING;
-	}
-
-	// Don't use loguru's crash handler for SIGTERM, just let SDL handle it
-	// to perform a clean shutdown.
-	loguru::Options options = {};
-	options.signal_options.sigterm = false;
-	loguru::init(argc, argv, options);
-}
-
 static void maybe_write_primary_config(const CommandLineArguments& args)
 {
 	// Before loading any configs, write the default primary config if it
@@ -612,7 +588,16 @@ int main(int argc, char* argv[])
 
 	// Set up logging after command line was parsed and trivial arguments
 	// have been handled.
-	init_logger(*arguments, argc, argv);
+	const auto exit_after_init = arguments->version || arguments->help ||
+	                             arguments->printconf ||
+	                             arguments->editconf || arguments->eraseconf ||
+	                             arguments->list_countries ||
+	                             arguments->list_layouts ||
+	                             arguments->list_code_pages ||
+	                             arguments->list_shaders ||
+	                             arguments->erasemapper;
+
+	init_loguru(argc, argv, exit_after_init);
 
 	const auto version_string = DOSBOX_GetDetailedVersion();
 
@@ -697,6 +682,11 @@ int main(int argc, char* argv[])
 		// Handle configuration settings passed with `--set` commands
 		// from the CLI.
 		handle_cli_set_commands(arguments->set);
+
+		// Apply the log destination once both the config files and the
+		// `--set` overrides have been applied, so that a `log_mode` or
+		// `log_dir` given on the command line takes effect for this run.
+		init_logging();
 
 		maybe_create_resource_directories();
 
