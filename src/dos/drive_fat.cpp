@@ -561,14 +561,14 @@ uint8_t fatDrive::readSector(uint32_t sectnum, void * data) {
 	}
 
 	if (absolute) {
-		return loadedDisk->Read_AbsoluteSector(sectnum, data);
+		return loadedDisk->ReadAbsoluteSector(sectnum, data);
 	}
 	uint32_t cylindersize = bootbuffer.headcount * bootbuffer.sectorspertrack;
 	uint32_t cylinder = sectnum / cylindersize;
 	sectnum %= cylindersize;
 	uint32_t head = sectnum / bootbuffer.sectorspertrack;
 	uint32_t sector = sectnum % bootbuffer.sectorspertrack + 1L;
-	return loadedDisk->Read_Sector(head, cylinder, sector, data);
+	return loadedDisk->ReadSector(head, cylinder, sector, data);
 }
 
 uint8_t fatDrive::writeSector(uint32_t sectnum, void * data) {
@@ -578,14 +578,14 @@ uint8_t fatDrive::writeSector(uint32_t sectnum, void * data) {
 	}
 
 	if (absolute) {
-		return loadedDisk->Write_AbsoluteSector(sectnum, data);
+		return loadedDisk->WriteAbsoluteSector(sectnum, data);
 	}
 	uint32_t cylindersize = bootbuffer.headcount * bootbuffer.sectorspertrack;
 	uint32_t cylinder = sectnum / cylindersize;
 	sectnum %= cylindersize;
 	uint32_t head = sectnum / bootbuffer.sectorspertrack;
 	uint32_t sector = sectnum % bootbuffer.sectorspertrack + 1L;
-	return loadedDisk->Write_Sector(head, cylinder, sector, data);
+	return loadedDisk->WriteSector(head, cylinder, sector, data);
 }
 
 uint32_t fatDrive::getSectorCount()
@@ -806,13 +806,19 @@ fatDrive::fatDrive(const char* sysFilename, uint32_t bytesector,
 	is_hdd   = (filesize > 2880);
 
 	/* Load disk image */
-	loadedDisk = std::make_shared<imageDisk>(diskfile, sysFilename, filesize, is_hdd);
+	loadedDisk = CreateImageDisk(diskfile, sysFilename, filesize, is_hdd);
 
-	if(is_hdd) {
+	// Image formats that carry their own geometry decide this for
+	// themselves, and some of them cannot be written back at all.
+	if (loadedDisk->is_readonly) {
+		readonly = true;
+	}
+
+	if (is_hdd) {
 		/* Set user specified harddrive parameters */
-		loadedDisk->Set_Geometry(headscyl, cylinders,cylsector, bytesector);
+		loadedDisk->SetGeometry(headscyl, cylinders, cylsector, bytesector);
 
-		loadedDisk->Read_Sector(0,0,1,&mbrData);
+		loadedDisk->ReadSector(0, 0, 1, &mbrData);
 
 		if(mbrData.magic1!= 0x55 ||	mbrData.magic2!= 0xaa) LOG_MSG("Possibly invalid partition table in disk image.");
 
@@ -834,9 +840,19 @@ fatDrive::fatDrive(const char* sysFilename, uint32_t bytesector,
 		partSectOff = startSector;
 	} else {
 		/* Get floppy disk parameters based on image size */
-		loadedDisk->Get_Geometry(&headscyl, &cylinders, &cylsector, &bytesector);
+		loadedDisk->GetGeometry(&headscyl, &cylinders, &cylsector, &bytesector);
 		/* Floppy disks don't have partitions */
 		partSectOff = 0;
+	}
+
+	// An image that never became active has no usable geometry, for example
+	// a TeleDisk archive whose parse failed. Report that clearly instead of
+	// falling through to the sector-size check below.
+	if (!loadedDisk->active) {
+		created_successfully = false;
+		LOG_WARNING("DOS: MOUNT - Disk image has no usable geometry, not mounting: %s",
+		            sysFilename);
+		return;
 	}
 
 	if (bytesector != BytePerSector) {
@@ -847,7 +863,7 @@ fatDrive::fatDrive(const char* sysFilename, uint32_t bytesector,
 		return;
 	}
 
-	loadedDisk->Read_AbsoluteSector(0+partSectOff,&bootbuffer);
+	loadedDisk->ReadAbsoluteSector(0 + partSectOff, &bootbuffer);
 
 	bootbuffer.bytespersector    = host_to_le(bootbuffer.bytespersector);
 	bootbuffer.reservedsectors   = host_to_le(bootbuffer.reservedsectors);
@@ -874,7 +890,7 @@ fatDrive::fatDrive(const char* sysFilename, uint32_t bytesector,
 		} else {
 			/* Read media descriptor in FAT */
 			uint8_t sectorBuffer[BytePerSector];
-			loadedDisk->Read_AbsoluteSector(1,&sectorBuffer);
+			loadedDisk->ReadAbsoluteSector(1, &sectorBuffer);
 			uint8_t mdesc = sectorBuffer[0];
 
 			if (mdesc >= 0xf8) {
@@ -1032,7 +1048,7 @@ bool fatDrive::AllocationInfo(uint16_t *_bytes_sector, uint8_t *_sectors_cluster
 	uint32_t countFree = 0;
 	uint32_t i;
 
-	loadedDisk->Get_Geometry(&hs, &cy, &sect, &sectsize);
+	loadedDisk->GetGeometry(&hs, &cy, &sect, &sectsize);
 	*_bytes_sector = (uint16_t)sectsize;
 	*_sectors_cluster = bootbuffer.sectorspercluster;
 
