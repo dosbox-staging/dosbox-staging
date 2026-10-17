@@ -55,8 +55,9 @@ cputype = pentium
 sbtype = sb16
 
 [midi]
-# Alternatively, set it to 'mt32' or 'fluidsynth',
-# or don't set it if you don't care about MIDI
+# Alternatively, set it to 'mt32', 'fluidsynth', or 'clap'.
+# Configure a plugin first if using 'clap'.
+# Leave unset if you don't need MIDI.
 mididevice = soundcanvas
 ```
 
@@ -136,9 +137,10 @@ This routes MIDI output through DOSBox's configured
 [`mididevice`](../sound/midi.md#mididevice), so you can use
 [Roland MT-32](../sound/sound-devices/roland-mt-32.md),
 [Sound Canvas SC-55](../sound/sound-devices/roland-sound-canvas.md),
-or [FluidSynth](../sound/sound-devices/fluidsynth.md), 
-emulation for Windows 3.1 games --- just change the `mididevice` setting in
-your DOSBox config.
+[FluidSynth](../sound/sound-devices/fluidsynth.md), or a
+[CLAP MIDI synth](../sound/sound-devices/clap.md) plugin for Windows 3.1 games.
+Set `mididevice` in your DOSBox config and follow the setup instructions for
+the selected MIDI device.
 
 
 ## Mouse setup
