@@ -157,6 +157,7 @@ sections of the manual where they're described in detail.
 | Channel name    | Device                                                                                         | Stereo?
 | --------------- | --------------------------------------------                                                   | --------
 | **CDAUDIO**     | [CD-DA digital audio](sound-devices/cd-da.md)                                                  | Yes
+| **CLAP**        | [CLAP synth](sound-devices/clap.md)                                                          | Yes
 | **CMS**         | [Creative Music System (C/MS) synthesiser](sound-devices/cms.md#)                              | Yes
 | **COVOX**       | [Covox Speech Thing digital audio](sound-devices/covox-variants.md#covox-speech-thing)         | No
 | **DISNEY**      | [Disney Sound Source (DSS) digital audio](sound-devices/covox-variants.md#disney-sound-source) | No
