@@ -360,30 +360,6 @@ static int erase_mapper_file()
 	return 0;
 }
 
-static void init_logger(const CommandLineArguments& args, int argc, char* argv[])
-{
-	loguru::g_preamble_date    = true;
-	loguru::g_preamble_time    = true;
-	loguru::g_preamble_uptime  = false;
-	loguru::g_preamble_thread  = false;
-	loguru::g_preamble_file    = false;
-	loguru::g_preamble_verbose = false;
-	loguru::g_preamble_pipe    = true;
-
-	if (args.version || args.help || args.printconf || args.editconf ||
-	    args.eraseconf || args.list_countries || args.list_layouts ||
-	    args.list_code_pages || args.list_shaders || args.erasemapper) {
-
-		loguru::g_stderr_verbosity = loguru::Verbosity_WARNING;
-	}
-
-	// Don't use loguru's crash handler for SIGTERM, just let SDL handle it
-	// to perform a clean shutdown.
-	loguru::Options options = {};
-	options.signal_options.sigterm = false;
-	loguru::init(argc, argv, options);
-}
-
 static void maybe_write_primary_config(const CommandLineArguments& args)
 {
 	// Before loading any configs, write the default primary config if it
@@ -610,9 +586,7 @@ int main(int argc, char* argv[])
 	set_console_icon();
 #endif
 
-	// Set up logging after command line was parsed and trivial arguments
-	// have been handled.
-	init_logger(*arguments, argc, argv);
+	LOG_SetUpLoguru(argc, argv);
 
 	const auto version_string = DOSBOX_GetDetailedVersion();
 
@@ -697,6 +671,19 @@ int main(int argc, char* argv[])
 		// Handle configuration settings passed with `--set` commands
 		// from the CLI.
 		handle_cli_set_commands(arguments->set);
+
+		// After processing the configs and the `--set` commands from
+		// the CLI, we know whether we need to write a log (`log_mode`
+		// setting) file and where exactly (`log_dir`) setting.
+		//
+		const auto log_name = [&] -> std::optional<std::string> {
+			if (arguments->log_name && !arguments->log_name->empty()) {
+				return arguments->log_name;
+			}
+			return {};
+		}();
+
+		LOG_Init(log_name);
 
 		maybe_create_resource_directories();
 

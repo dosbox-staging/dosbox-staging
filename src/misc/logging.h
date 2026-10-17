@@ -1,3 +1,4 @@
+// SPDX-FileCopyrightText:  2019-2026 The DOSBox Staging Team
 // SPDX-FileCopyrightText:  2002-2021 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
@@ -5,7 +6,11 @@
 #define DOSBOX_LOGGING_H
 
 #include <cstdio>
+#include <optional>
 #include <string>
+#include <vector>
+
+#include "misc/std_filesystem.h"
 
 #include "misc/compiler.h"
 
@@ -30,6 +35,21 @@ enum LOG_SEVERITIES {
 	LOG_WARN,
 	LOG_ERROR
 };
+
+// Should be called as early as possible during startup. We'll start
+// collecting log messages in-memory after this was called.
+void LOG_SetUpLoguru(int argc, char* argv[]);
+
+// Should be called when we're ready to query the `log_mode` and `log_dir`
+// settings (after the configs and the CLI options were processed). Will flush
+// the log messages stored in-memory until this point to the console and/or
+// the log file, then keep logging normally to either or both targets (if
+// logging is enabled).
+void LOG_Init(const std::optional<std::string> log_name);
+
+// Returns the log file name without the full path if we're logging to a file
+// (e.g. `dosbox-20261022-185345.log`)
+std::optional<std::string> LOG_GetLogFileName();
 
 #if C_DEBUGGER
 class LOG 
