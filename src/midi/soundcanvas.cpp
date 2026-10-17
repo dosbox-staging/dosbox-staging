@@ -74,89 +74,18 @@ struct PluginAndModel {
 
 } // namespace SoundCanvas
 
-static const std::optional<Clap::PluginInfo> find_plugin_for_model(
-        const SoundCanvas::Model model,
-        const std::vector<Clap::PluginInfo>& plugin_infos)
-{
-	using namespace SoundCanvas;
-
-	// Search for plugins that are likely Roland SC-55 emulators by
-	// inspecting ther descriptions
-
-	for (const auto& plugin_info : plugin_infos) {
-		auto has = [&](const char* s) {
-			return find_in_case_insensitive(s, plugin_info.name);
-		};
-
-		const auto has_sc55 = has(" sc-55") || has(" sc55");
-
-		switch (model) {
-		case Model::Sc55_100:
-			if (has_sc55 && (has(" 1.00") || has(" v1.00"))) {
-				return plugin_info;
-			}
-			break;
-
-		case Model::Sc55_110:
-			if (has_sc55 && (has(" 1.10") || has(" v1.10"))) {
-				return plugin_info;
-			}
-			break;
-
-		case Model::Sc55_120:
-			if (has_sc55 && (has(" 1.20") || has(" v1.20"))) {
-				return plugin_info;
-			}
-			break;
-
-		case Model::Sc55_121:
-			if (has_sc55 && (has(" 1.21") || has(" v1.21"))) {
-				return plugin_info;
-			}
-			break;
-
-		case Model::Sc55_200:
-			if (has_sc55 && (has(" 2.00") || has(" v2.00"))) {
-				return plugin_info;
-			}
-			break;
-
-		case Model::Sc55mk2_100:
-			if (has_sc55 &&
-			    (has(" mk2") && (has(" 1.00") || has(" v1.00")))) {
-				return plugin_info;
-			}
-			break;
-
-		case Model::Sc55mk2_101:
-			if (has_sc55 && ((has(" mk2") || has("-mk2") || has("55mk2")) &&
-			                 (has(" 1.01") || has(" v1.01")))) {
-				return plugin_info;
-			}
-			break;
-
-		default: assertm(false, "Invalid Model value");
-		};
-	}
-
-	// Requested model not found
-	return {};
-}
-
 SoundCanvas::PluginAndModel try_load_plugin(const SoundCanvas::SynthModel& model)
 {
-	auto& plugin_manager    = Clap::PluginManager::GetInstance();
-	const auto plugin_infos = plugin_manager.GetPluginInfos();
+	auto& plugin_manager       = Clap::PluginManager::GetInstance();
 
-	if (auto p = find_plugin_for_model(model.model, plugin_infos); p) {
+	if (auto p = plugin_manager.FindPlugin("Nuked-SC55.clap", model.display_name_long); p) {
 		const auto plugin_info = *p;
-
+		
 		auto plugin = plugin_manager.LoadPlugin(plugin_info);
 		if (plugin) {
 			return {std::move(plugin), model};
 		}
 	}
-
 	// Requested model not found
 	return {};
 }
@@ -607,11 +536,11 @@ static void init_soundcanvas_config_settings(SectionProp& sec_prop)
 	                     sc55mk2_101.config_name});
 
 	str_prop->SetHelp(
-	        "Roland Sound Canvas model to use ('auto' by default). One or more CLAP audio\n"
-	        "plugins that implement the supported Sound Canvas models must be present in the\n"
-	        "'plugins' directory in your DOSBox installation or configuration directory.\n"
-	        "DOSBox searches for the requested model by inspecting the plugin descriptions.\n"
-	        "The lookup for the best model is performed in order as listed. Possible values:\n"
+	        "Roland Sound Canvas model to use ('auto' by default). Requires the\n"
+	        "'Nuked-SC55.clap' CLAP plugin library in the 'plugins' directory in your DOSBox\n"
+	        "installation or configuration directory. The requested model is matched by\n"
+	        "plugin name within this library. The lookup for the best model is performed\n"
+	        "in order as listed. Possible values:\n"
 	        "\n"
 	        "  auto:       Pick the best available model (default).\n"
 	        "  sc55:       Pick the best available original SC-55 model.\n"
