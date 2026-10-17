@@ -122,6 +122,7 @@ demonstrates configuring various sound devices for a specific game.
 <div class="compact" markdown>
 
 - [Sound Canvas](sound-devices/roland-sound-canvas.md) / [FluidSynth](sound-devices/fluidsynth.md)
+- [CLAP MIDI synth](sound-devices/clap.md) with a General MIDI-compatible plugin
 - [Roland MT-32](sound-devices/roland-mt-32.md)
 - [Gravis UltraSound](sound-devices/gravis-ultrasound.md)
 - [Sound Blaster 16](sound-devices/sound-blaster.md#sound-blaster-16)
