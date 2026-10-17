@@ -1258,6 +1258,16 @@ static void dyn_iret(void) {
 }
 
 static void dyn_string(STRING_OP op) {
+	if (IsWritingToEsDi(op)) {
+		const Bitu size_bytes = 1 << (op & 3);
+		gen_call_function_I((void*)&dynrec_check_es_limit,
+		                    size_bytes |
+		                            (decode.big_addr ? DynrecEsLimitBigAddr
+		                                             : 0) |
+		                            (decode.rep ? DynrecEsLimitRep : 0));
+		dyn_check_exception(FC_RETOP);
+	}
+
 	if (decode.rep) MOV_REG_WORD_TO_HOST_REG(FC_OP1,DRC_REG_ECX,decode.big_addr);
 	else gen_mov_dword_to_reg_imm(FC_OP1,1);
 	gen_mov_word_to_reg(FC_OP2,&cpu.direction,true);

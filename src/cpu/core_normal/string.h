@@ -34,6 +34,36 @@ static void DoString(STRING_OP type) {
 			count_left=0;
 		}
 	}
+
+	// Like real hardware, raise a general protection fault instead of
+	// writing past the segment limit, after executing the iterations that
+	// fit within the limit. Some programs rely on this to switch VESA banks
+	// in their fault handler (e.g., Viper).
+	// Checked once per (re)start of the instruction, like the dynamic
+	// cores do in CPU_CheckStringEsLimit(), which explains why that is exact
+	auto is_past_es_limit = false;
+	if (Segs.limit[es] != NoSegmentLimit && count &&
+	    IsWritingToEsDi(type) && cpu.pmode && !(reg_flags & FLAG_VM)) {
+		const auto count_within_limit = CPU_GetStringCountWithinLimit(
+		        {.limit      = Segs.limit[es],
+		         .direction  = static_cast<int>(cpu.direction),
+		         .size_bytes = 1 << (type & 3),
+		         .count      = static_cast<uint32_t>(count),
+		         .di_index   = static_cast<uint32_t>(di_index),
+		         .add_mask   = static_cast<uint32_t>(add_mask)});
+
+		if (count_within_limit < count) {
+			is_past_es_limit = true;
+			const auto count_past_limit = count - count_within_limit;
+			count_left += static_cast<int32_t>(count_past_limit);
+			count = count_within_limit;
+			// Don't charge cycles for the iterations not executed
+			if (TEST_PREFIX_REP) {
+				CPU_Cycles += static_cast<int>(count_past_limit);
+			}
+		}
+	}
+
 	auto add_index = cpu.direction;
 	if (count) switch (type) {
 	case R_OUTSB:
@@ -236,5 +266,10 @@ static void DoString(STRING_OP type) {
 		count+=count_left;
 		reg_ecx&=(~add_mask);
 		reg_ecx|=(count & add_mask);
+	}
+	if (is_past_es_limit) {
+		// The fault handler returns to the start of the instruction
+		CPU_Exception(EXCEPTION_GP, 0);
+		LOADIP;
 	}
 }

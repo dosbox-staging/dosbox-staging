@@ -89,7 +89,7 @@ static struct {
 
 #define GETIP		(core.cseip-SegBase(cs)-MemBase)
 #define SAVEIP		reg_eip=GETIP;
-#define LOADIP		core.cseip=(MemBase+SegBase(cs)+reg_eip);
+#define LOADIP		core.cseip=(MemBase+SegBase(cs)+reg_eip)
 
 #define SegBase(c)	SegPhys(c)
 #define BaseDS		core.base_ds
