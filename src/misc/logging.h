@@ -6,6 +6,9 @@
 
 #include <cstdio>
 #include <string>
+#include <vector>
+
+#include "misc/std_filesystem.h"
 
 #include "misc/compiler.h"
 
@@ -30,6 +33,16 @@ enum LOG_SEVERITIES {
 	LOG_WARN,
 	LOG_ERROR
 };
+
+enum class LogMode {
+	Console,
+	File,
+	ConsoleAndFile,
+	Off,
+};
+
+void init_loguru(int argc, char* argv[], const bool exit_after_init);
+void init_logging();
 
 #if C_DEBUGGER
 class LOG 
