@@ -1649,8 +1649,8 @@ void DOSBOX_InitModules()
 	DOSBOX_Init();
 
 #if C_DEBUGGER
-	LOG_StartUp();
-	LOG_Init();
+	DEBUG_StartUpLogging();
+	DEBUG_InitLogging();
 #endif
 
 	COMPOSITE_Init();
@@ -1736,7 +1736,7 @@ void DOSBOX_DestroyModules()
 	CPU_Destroy();
 
 #if C_DEBUGGER
-	LOG_Destroy();
+	DEBUG_DestroyLogging();
 #endif
 
 	DOSBOX_Destroy();

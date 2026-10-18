@@ -213,7 +213,7 @@ void LOG::operator()(const char* format, ...)
 	              buf);
 }
 
-void LOG_Init()
+void DEBUG_InitLogging()
 {
 	auto section = get_section("log");
 	assert(section);
@@ -236,7 +236,7 @@ void LOG_Init()
 	}
 }
 
-void LOG_Destroy()
+void DEBUG_DestroyLogging()
 {
 	if (debuglog) {
 		fclose(debuglog);
@@ -244,7 +244,7 @@ void LOG_Destroy()
 	debuglog = nullptr;
 }
 
-void LOG_StartUp()
+void DEBUG_StartUpLogging()
 {
 	// Setup logging groups
 	loggrp[LOG_ALL].front        = "ALL";
