@@ -58,6 +58,9 @@ private:
 	XCopyError CopyFile(uint16_t source_handle, uint16_t dest_handle,
 	                    const char* filename);
 
+	std::optional<char> PromptForLetter(const std::string& allowed,
+	                                    bool cr_confirms);
+
 	void AfterRun(XCopyError error);
 
 	template <typename... Args>
