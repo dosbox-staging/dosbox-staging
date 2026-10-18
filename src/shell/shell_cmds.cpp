@@ -2833,48 +2833,6 @@ static std::vector<std::string> search_files(const std::string_view query)
 	return files;
 }
 
-static DosFilename split_extension(const std::string& fullname)
-{
-	DosFilename split_name = {};
-	size_t pos             = fullname.rfind('.');
-	split_name.name        = fullname.substr(0, pos);
-	++pos;
-	if (pos > 0 && pos < fullname.size()) {
-		split_name.ext = fullname.substr(pos);
-	} else {
-		split_name.ext = {};
-	}
-	return split_name;
-}
-
-static std::string handle_wildcards(const std::string& wildcards,
-                                    const std::string& old_filename)
-{
-	std::string expanded_name = {};
-	for (size_t i = 0; i < wildcards.size(); ++i) {
-		char c    = wildcards[i];
-		bool done = false;
-		switch (c) {
-		case '*':
-			if (i < old_filename.size()) {
-				expanded_name.append(old_filename, i);
-			}
-			done = true;
-			break;
-		case '?':
-			if (i < old_filename.size()) {
-				expanded_name.push_back(old_filename[i]);
-			}
-			break;
-		default: expanded_name.push_back(c);
-		}
-		if (done) {
-			break;
-		}
-	}
-	return expanded_name;
-}
-
 void DosShell::CMD_RENAME(char* args)
 {
 	HELP("RENAME");
@@ -2893,24 +2851,14 @@ void DosShell::CMD_RENAME(char* args)
 	}
 
 	const std::string path      = source.substr(0, source.rfind('\\') + 1);
-	const DosFilename wildcards = split_extension(target);
+	const DosFilename wildcards = parse_dos_filename(target);
 
 	// Search for files matching the first argument (may be multiple files
 	// due to wildcards)
 	for (const std::string& old_filename : search_files(source)) {
-		const DosFilename old_split = split_extension(old_filename);
-
-		DosFilename new_split = {};
-		new_split.name = handle_wildcards(wildcards.name, old_split.name);
-		new_split.ext = handle_wildcards(wildcards.ext, old_split.ext);
-
+		const auto new_filename = apply_pattern(old_filename, wildcards);
 		std::string old_fullpath = path + old_filename;
-
-		std::string new_fullpath = path + new_split.name;
-		if (!new_split.ext.empty()) {
-			new_fullpath.push_back('.');
-			new_fullpath.append(new_split.ext);
-		}
+		std::string new_fullpath = path + new_filename;
 
 		if (!DOS_Rename(old_fullpath.c_str(), new_fullpath.c_str())) {
 			WriteOut("Rename %s -> %s failed\n",
