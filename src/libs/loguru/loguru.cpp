@@ -32,13 +32,14 @@
 
 #include <algorithm>
 #include <atomic>
-#include <cassert>
+#include <cctype>
 #include <chrono>
+#include <cinttypes>
 #include <cstdarg>
+#include <cstdint>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
-#include <climits>
 #include <mutex>
 #include <regex>
 #include <string>
@@ -53,6 +54,7 @@
 
 #ifdef _WIN32
 	#include <direct.h>
+	#include <share.h>
 
 	#define localtime_r(a, b) localtime_s(b, a) // No localtime_r with MSVC, but arguments are swapped for localtime_s
 #else
@@ -72,25 +74,15 @@
 #endif
 
 #ifdef __APPLE__
-	#include "TargetConditionals.h"
+	#include <AvailabilityMacros.h>
+	#include <TargetConditionals.h>
 #endif
 
 // TODO: use defined(_POSIX_VERSION) for some of these things?
 
-#ifndef LOGURU_USE_LOCALE
-	#define LOGURU_USE_LOCALE 0
-#endif
-
 #if defined(_WIN32) || defined(__CYGWIN__)
 	#define LOGURU_PTHREADS    0
 	#define LOGURU_WINTHREADS  1
-	#ifndef LOGURU_STACKTRACES
-		#define LOGURU_STACKTRACES 0
-	#endif
-
-#elif defined(__rtems__) || defined(__ANDROID__) || defined(__FreeBSD__) || !defined(__GLIBC__)
-	#define LOGURU_PTHREADS    1
-	#define LOGURU_WINTHREADS  0
 	#ifndef LOGURU_STACKTRACES
 		#define LOGURU_STACKTRACES 0
 	#endif
@@ -115,9 +107,6 @@
 #endif // LOGURU_STACKTRACES
 
 #if LOGURU_PTHREADS
-	// for std::is_pointer<> to differentiate pthread_self() type variations
-	#include <type_traits>
-
 	#include <pthread.h>
 	#if defined(__FreeBSD__)
 		#include <pthread_np.h>
@@ -222,8 +211,9 @@ namespace loguru
 	static std::atomic<unsigned> s_stderr_indentation { 0 };
 
 	// For periodic flushing:
-	static std::thread* s_flush_thread   = nullptr;
-	static bool         s_needs_flushing = false;
+	static std::thread*      s_flush_thread    = nullptr;
+	static bool              s_needs_flushing  = false;
+	static std::atomic<bool> s_flush_thread_should_exit{false};
 
 	static SignalOptions s_signal_options = SignalOptions::none();
 
@@ -246,7 +236,8 @@ namespace loguru
 				return false;
 			}
 			if (const char* term = getenv("TERM")) {
-				return 0 == strcmp(term, "cygwin")
+				return 0 == strcmp(term, "alacritty")
+					|| 0 == strcmp(term, "cygwin")
 					|| 0 == strcmp(term, "linux")
 					|| 0 == strcmp(term, "rxvt-unicode-256color")
 					|| 0 == strcmp(term, "screen")
@@ -437,27 +428,18 @@ namespace loguru
 	LOGURU_PRINTF_LIKE(1, 0)
 	static Text vtextprintf(const char* format, va_list vlist)
 	{
-		// Determine the required length of the string
-		int bytes_needed = 0;
-
-		// Calling vsnprintf is assumed to 'consume' the vlist, therefore we need a copy
-		// of the args to avoid corrupting the stack in the second call to vsnprintf.
-		va_list argcopy;
-		va_copy(argcopy, vlist);
-		bytes_needed = vsnprintf(NULL, 0, format, argcopy);
-		va_end(argcopy);
+#ifdef _WIN32
+		int bytes_needed = _vscprintf(format, vlist);
 		CHECK_F(bytes_needed >= 0, "Bad string format: '%s'", format);
-
-		// Allocate the string's buffer
-		++bytes_needed; // Add space for null terminator
-		auto buff = static_cast<char*>(malloc(bytes_needed));
-		CHECK_F(buff != nullptr, "Out of memory");
-
-		// Construct the string and check the result
-		const auto written = vsnprintf(buff, bytes_needed, format, vlist);
-		CHECK_F(written <= bytes_needed, "Bad string format: '%s'", format);
-
+		char* buff = (char*)malloc(bytes_needed+1);
+		vsnprintf(buff, bytes_needed+1, format, vlist);
 		return Text(buff);
+#else
+		char* buff = nullptr;
+		int result = vasprintf(&buff, format, vlist);
+		CHECK_F(result >= 0, "Bad string format: '" LOGURU_FMT(s) "'", format);
+		return Text(buff);
+#endif
 	}
 
 	Text textprintf(const char* format, ...)
@@ -505,10 +487,10 @@ namespace loguru
 				last_is_alpha = std::isalpha(cmd[arg_len], std::locale(""));
 			}
 			catch (...) {
-				last_is_alpha = std::isalpha(cmd[arg_len]);
+				last_is_alpha = std::isalpha(static_cast<int>(cmd[arg_len]));
 			}
 			#else
-			last_is_alpha = std::isalpha(cmd[arg_len]);
+			last_is_alpha = std::isalpha(static_cast<int>(cmd[arg_len]));
 			#endif
 
 			if (strncmp(cmd, verbosity_flag, arg_len) == 0 && !last_is_alpha) {
@@ -517,7 +499,7 @@ namespace loguru
 				if (value_str[0] == '\0') {
 					// Value in separate argument
 					arg_it += 1;
-					CHECK_LT_F(arg_it, argc, "Missing verbosity level after " LOGURU_FMT(s) "", verbosity_flag);
+					CHECK_LT_F(arg_it, argc, "Missing verbosiy level after " LOGURU_FMT(s) "", verbosity_flag);
 					value_str = argv[arg_it];
 					out_argc -= 1;
 				}
@@ -594,11 +576,7 @@ namespace loguru
 			else if (c == '\'') { out += "\\\'"; }
 			else if (c == '\"') { out += "\\\""; }
 			else if (c == ' ')  { out += "\\ ";  }
-#if (CHAR_MIN < 0) // char is signed
-			else if (0 <= c && c < 0x20) { // ASCI control character
-#else // char is unsigned
-			else if (c < 0x20) { // ASCI control character
-#endif
+			else if (static_cast<unsigned char>(c) < 0x20) { // ASCII control character:
 			// else if (c < 0x20 || c != (c & 127)) { // ASCII control character or UTF-8:
 				out += "\\x";
 				write_hex_byte(out, static_cast<uint8_t>(c));
@@ -608,20 +586,21 @@ namespace loguru
 
 	Text errno_as_text()
 	{
-		char buff[256];
 	#if defined(__GLIBC__) && defined(_GNU_SOURCE)
 		// GNU Version
+		char buff[256];
 		return Text(STRDUP(strerror_r(errno, buff, sizeof(buff))));
-	#elif defined(__APPLE__) || _POSIX_C_SOURCE >= 200112L
+	#elif defined(__APPLE__) || defined(__FreeBSD__) || defined(__OpenBSD__) || (defined(_POSIX_C_SOURCE) && _POSIX_C_SOURCE >= 200112L)
 		// XSI Version
+		char buff[256];
 		strerror_r(errno, buff, sizeof(buff));
 		return Text(strdup(buff));
 	#elif defined(_WIN32)
+		char buff[256];
 		strerror_s(buff, sizeof(buff), errno);
 		return Text(STRDUP(buff));
 	#else
 		// Not thread-safe.
-		(void)buff; // unused parameter
 		return Text(STRDUP(strerror(errno)));
 	#endif
 	}
@@ -642,7 +621,7 @@ namespace loguru
 			LOG_F(WARNING, "Failed to get current working directory: " LOGURU_FMT(s) "", error_text.c_str());
 		}
 
-		s_arguments.clear();
+		s_arguments = "";
 		for (int i = 0; i < argc; ++i) {
 			escape(s_arguments, argv[i]);
 			if (i + 1 < argc) {
@@ -670,9 +649,6 @@ namespace loguru
 						pthread_set_name_np(this_thread, main_thread_name);
 					#elif defined(__linux__) || defined(__sun)
 						pthread_setname_np(this_thread, main_thread_name);
-					#else
-						// platforms that we don't know how to set the name on
-						(void)this_thread; // unused
 					#endif
 				}
 			#endif // LOGURU_PTHREADS
@@ -691,7 +667,7 @@ namespace loguru
 			fflush(stderr);
 		}
 		VLOG_F(g_internal_verbosity, "arguments: " LOGURU_FMT(s) "", s_arguments.c_str());
-		if (s_current_dir[0] != '\0')
+		if (strlen(s_current_dir) != 0)
 		{
 			VLOG_F(g_internal_verbosity, "Current dir: " LOGURU_FMT(s) "", s_current_dir);
 		}
@@ -703,16 +679,29 @@ namespace loguru
 		atexit(on_atexit);
 	}
 
+	static void stop_flush_thread()
+	{
+		if (s_flush_thread) {
+			s_flush_thread_should_exit = true;
+			s_flush_thread->join();
+			delete s_flush_thread;
+			s_flush_thread = nullptr;
+			s_flush_thread_should_exit = false;
+		}
+	}
+
 	void shutdown()
 	{
 		VLOG_F(g_internal_verbosity, "loguru::shutdown()");
+		stop_flush_thread();
+		flush();
 		remove_all_callbacks();
 		set_fatal_handler(nullptr);
 		set_verbosity_to_name_callback(nullptr);
 		set_name_to_verbosity_callback(nullptr);
 	}
 
-	void write_date_time(char* buff, size_t buff_size)
+	void write_date_time(char* buff, unsigned long long buff_size)
 	{
 		auto now = system_clock::now();
 		long long ms_since_epoch = duration_cast<milliseconds>(now.time_since_epoch()).count();
@@ -758,7 +747,7 @@ namespace loguru
 		#endif // _WIN32
 	}
 
-	void suggest_log_path(const char* prefix, char* buff, unsigned buff_size)
+	void suggest_log_path(const char* prefix, char* buff, unsigned long long buff_size)
 	{
 		if (prefix[0] == '~') {
 			snprintf(buff, buff_size - 1, "%s%s", home_dir(), prefix + 1);
@@ -793,7 +782,7 @@ namespace loguru
 	{
 		CHECK_F(file_path_const && *file_path_const);
 		char* file_path = STRDUP(file_path_const);
-		CHECK_F(file_path != nullptr, "Failed to allocate memory");
+		CHECK_NOTNULL_F(file_path, "Failed to allocate memory");
 		for (char* p = strchr(file_path + 1, '/'); p; p = strchr(p + 1, '/')) {
 			*p = '\0';
 
@@ -836,12 +825,11 @@ namespace loguru
 		const char* mode_str = (mode == FileMode::Truncate ? "w" : "a");
 		FILE* file;
 	#ifdef _WIN32
-		errno_t file_error = fopen_s(&file, path, mode_str);
-		if (file_error) {
+		file = _fsopen(path, mode_str, _SH_DENYNO);
 	#else
 		file = fopen(path, mode_str);
-		if (!file) {
 	#endif
+		if (!file) {
 			LOG_F(ERROR, "Failed to open '" LOGURU_FMT(s) "'", path);
 			return false;
 		}
@@ -863,7 +851,7 @@ namespace loguru
 		if (!s_arguments.empty()) {
 			fprintf(file, "arguments: %s\n", s_arguments.c_str());
 		}
-		if (s_current_dir[0] != '\0') {
+		if (strlen(s_current_dir) != 0) {
 			fprintf(file, "Current dir: %s\n", s_current_dir);
 		}
 		fprintf(file, "File verbosity level: %d\n", verbosity);
@@ -944,7 +932,7 @@ namespace loguru
 			return;
 		}
 
-		s_user_stack_cleanups.emplace_back(StringPair(find_this, replace_with_this));
+		s_user_stack_cleanups.push_back(StringPair(find_this, replace_with_this));
 	}
 
 	static void on_callback_change()
@@ -1070,7 +1058,7 @@ namespace loguru
 	// Where we store the custom thread name set by `set_thread_name`
 	char* thread_name_buffer()
 	{
-		static char thread_name[LOGURU_THREADNAME_WIDTH + 1] = {0};
+		thread_local static char thread_name[LOGURU_THREADNAME_WIDTH + 1] = {0};
 		return &thread_name[0];
 	}
 #endif // LOGURU_WINTHREADS
@@ -1089,9 +1077,6 @@ namespace loguru
 				pthread_set_name_np(pthread_self(), name);
 			#elif defined(__linux__) || defined(__sun)
 				pthread_setname_np(pthread_self(), name);
-			#else
-				// Platforms that may not support setting a thread name
-				(void)name; // unused
 			#endif
 		#elif LOGURU_WINTHREADS
 			// Store thread name in a thread-local storage:
@@ -1115,19 +1100,13 @@ namespace loguru
 			} else {
 				buffer[0] = 0;
 			}
+		#elif defined(__FreeBSD__) || defined(__OpenBSD__)
+			pthread_get_name_np(pthread_self(), buffer, length);
 		#elif LOGURU_PTHREADS
 			// Ask the OS about the thread name.
 			// This is what we *want* to do on all platforms, but
 			// only some platforms support it (currently).
-
-			#if defined(__APPLE__) || defined(__FreeBSD__) || defined(__linux__) || defined(__sun)
-				pthread_getname_np(pthread_self(), buffer, length);
-			#elif defined(__OpenBSD__)
-				pthread_get_name_np(pthread_self(), buffer, length);
-			#else
-				// Other platforms that don't support thread names
-				buffer[0] = 0;
-			#endif
+			pthread_getname_np(pthread_self(), buffer, length);
 		#elif LOGURU_WINTHREADS
 			snprintf(buffer, static_cast<size_t>(length), "%s", thread_name_buffer());
 		#else
@@ -1143,35 +1122,29 @@ namespace loguru
 
 			#ifdef __APPLE__
 				uint64_t thread_id;
-				pthread_threadid_np(pthread_self(), &thread_id);
+				#if MAC_OS_X_VERSION_MAX_ALLOWED < 1060 || defined(__POWERPC__)
+					thread_id = pthread_mach_thread_np(pthread_self());
+				#else
+					pthread_threadid_np(pthread_self(), &thread_id);
+				#endif
 			#elif defined(__FreeBSD__)
 				long thread_id;
 				(void)thr_self(&thread_id);
+			#elif defined(__OpenBSD__)
+				pid_t thread_id = getthrid();
 			#elif LOGURU_PTHREADS
-				const auto native_id = pthread_self();
-				// Warning, even within POSIX, return types and sizes vary:
-				//  - Haku GCC returns a pthread_t*
-				//  - ARM32 GCC returns an unsigned long long int
-				// So we bake the variations down to a common integer:
-				const auto pthread_self_is_pointer = std::is_pointer<decltype(native_id)>::value;
-				const auto thread_id = pthread_self_is_pointer
-				                           ? reinterpret_cast<uintptr_t>((void*)native_id)
-				#if defined(__OpenBSD__)
-				                           : reinterpret_cast<uintptr_t>(native_id);
-				#else
-				                           : static_cast<uintptr_t>(native_id);
-				#endif // __OpenBSD__
-
-			#else // not LOGURU_PTHREADS
+				// Here we rely on the opaque pthread_t being of integer type, which is the case on linux, but not other platforms.
+				uint64_t thread_id = static_cast<uint64_t>(pthread_self());
+			#else
 				// This ID does not correllate to anything we can get from the OS,
 				// so this is the worst way to get the ID.
 				const auto thread_id = std::hash<std::thread::id>{}(std::this_thread::get_id());
 			#endif
 
 			if (right_align_hex_id) {
-				snprintf(buffer, static_cast<size_t>(length), "%*X", static_cast<int>(length - 1), static_cast<unsigned>(thread_id));
+				snprintf(buffer, static_cast<size_t>(length), "%*" PRIX64, static_cast<int>(length - 1), static_cast<uint64_t>(thread_id));
 			} else {
-				snprintf(buffer, static_cast<size_t>(length), "%X", static_cast<unsigned>(thread_id));
+				snprintf(buffer, static_cast<size_t>(length), "%" PRIX64, static_cast<uint64_t>(thread_id));
 			}
 		}
 	}
@@ -1233,7 +1206,7 @@ namespace loguru
 
 		try {
 			std::regex std_allocator_re(R"(,\s*std::allocator<[^<>]+>)");
-			output = std::regex_replace(output, std_allocator_re, std::string());
+			output = std::regex_replace(output, std_allocator_re, std::string(""));
 
 			std::regex template_spaces_re(R"(<\s*([^<> ]+)\s*>)");
 			output = std::regex_replace(output, template_spaces_re, std::string("<$1>"));
@@ -1266,7 +1239,8 @@ namespace loguru
 				}
 				snprintf(buf, sizeof(buf), "%-3d %*p %s + %zd\n",
 						 i - skip, int(2 + sizeof(void*) * 2), callstack[i],
-						 status == 0 ? demangled : info.dli_sname,
+						 status == 0 ? demangled :
+						 info.dli_sname == 0 ? symbols[i] : info.dli_sname,
 						 static_cast<char*>(callstack[i]) - static_cast<char*>(info.dli_saddr));
 				free(demangled);
 			} else {
@@ -1315,9 +1289,7 @@ namespace loguru
 		if (out_buff_size == 0) { return; }
 		out_buff[0] = '\0';
 		size_t pos = 0;
-
-		assert(pos < out_buff_size);
-		if (g_preamble_date) {
+		if (g_preamble_date && pos < out_buff_size) {
 			int bytes = snprintf(out_buff + pos, out_buff_size - pos, "date       ");
 			if (bytes > 0) {
 				pos += bytes;
@@ -1354,14 +1326,10 @@ namespace loguru
 			}
 		}
 		if (g_preamble_pipe && pos < out_buff_size) {
-			(void)snprintf(out_buff + pos, out_buff_size - pos, "| ");
-
-			// Because this is the last if-statement, we avoid incrementing the
-			//  position to clarify it's unused. If more cases are added, then:
-			// int bytes = snprintf(...)
-			// if (bytes > 0) {
-			// 	pos += bytes;
-			// }
+			int bytes = snprintf(out_buff + pos, out_buff_size - pos, "| ");
+			if (bytes > 0) {
+				pos += bytes;
+			}
 		}
 	}
 
@@ -1385,18 +1353,17 @@ namespace loguru
 			file = filename(file);
 		}
 
-		char level_buff[7];
+		char level_buff[6];
 		const char* custom_level_name = get_verbosity_name(verbosity);
 		if (custom_level_name) {
-			snprintf(level_buff, sizeof(level_buff) - 1, "%s", custom_level_name);
+			snprintf(level_buff, sizeof(level_buff), "%s", custom_level_name);
 		} else {
-			snprintf(level_buff, sizeof(level_buff) - 1, "% 4d", static_cast<int8_t>(verbosity));
+			snprintf(level_buff, sizeof(level_buff), "% 4d", static_cast<int8_t>(verbosity));
 		}
 
 		size_t pos = 0;
 
-		assert(pos < out_buff_size);
-		if (g_preamble_date) {
+		if (g_preamble_date && pos < out_buff_size) {
 			int bytes = snprintf(out_buff + pos, out_buff_size - pos, "%04d-%02d-%02d ",
 				                 1900 + time_info.tm_year, 1 + time_info.tm_mon, time_info.tm_mday);
 			if (bytes > 0) {
@@ -1441,13 +1408,10 @@ namespace loguru
 			}
 		}
 		if (g_preamble_pipe && pos < out_buff_size) {
-			(void)snprintf(out_buff + pos, out_buff_size - pos, "| ");
-
-			// Avoid incrementing the position to clarify it's unused
-			// int bytes = snprintf(...)
-			// if (bytes > 0) {
-			// 	pos += bytes;
-			// }
+			int bytes = snprintf(out_buff + pos, out_buff_size - pos, "| ");
+			if (bytes > 0) {
+				pos += bytes;
+			}
 		}
 	}
 
@@ -1523,7 +1487,7 @@ namespace loguru
 
 		if (g_flush_interval_ms > 0 && !s_flush_thread) {
 			s_flush_thread = new std::thread([](){
-				for (;;) {
+				while (!s_flush_thread_should_exit) {
 					if (s_needs_flushing) {
 						flush();
 					}
@@ -1615,6 +1579,7 @@ namespace loguru
 		s_needs_flushing = false;
 	}
 
+#if !LOGURU_USE_FMTLIB
 	LogScopeRAII::LogScopeRAII(Verbosity verbosity, const char* file, unsigned line, const char* format, va_list vlist) :
 		_verbosity(verbosity), _file(file), _line(line)
 	{
@@ -1629,6 +1594,7 @@ namespace loguru
 		this->Init(format, vlist);
 		va_end(vlist);
 	}
+#endif
 
 	LogScopeRAII::~LogScopeRAII()
 	{
@@ -1660,13 +1626,21 @@ namespace loguru
 		}
 	}
 
+#if LOGURU_USE_FMTLIB
+	void LogScopeRAII::Init(const char* format, fmt::format_args args)
+#else
 	void LogScopeRAII::Init(const char* format, va_list vlist)
+#endif
 	{
 		if (_verbosity <= current_verbosity_cutoff()) {
 			std::lock_guard<std::recursive_mutex> lock(s_mutex);
 			_indent_stderr = (_verbosity <= g_stderr_verbosity);
 			_start_time_ns = now_ns();
+#if LOGURU_USE_FMTLIB
+			snprintf(_name, sizeof(_name), "%s", fmt::vformat(format, args).c_str());
+#else
 			vsnprintf(_name, sizeof(_name), format, vlist);
+#endif
 			log_to_everywhere(1, _verbosity, _file, _line, "{ ", _name);
 
 			if (_indent_stderr) {
@@ -1767,7 +1741,7 @@ namespace loguru
 
 	struct StringStream
 	{
-		std::string str{};
+		std::string str;
 	};
 
 	// Use this in your EcPrinter implementations.
@@ -1911,11 +1885,7 @@ namespace loguru
 		else if (c == '\n') { str += "\\n";  }
 		else if (c == '\r') { str += "\\r";  }
 		else if (c == '\t') { str += "\\t";  }
-#if (CHAR_MIN < 0) // char is signed
-		else if (0 <= c && c < 0x20) {
-#else // char is unsigned
-		else if (c < 0x20) {
-#endif
+		else if (static_cast<unsigned char>(c) < 0x20) {
 			str += "\\u";
 			write_hex_16(static_cast<uint16_t>(c));
 		} else { str += c; }
@@ -1949,7 +1919,7 @@ namespace loguru
 		Text parent_ec = get_error_context_for(ec_handle);
 		size_t buffer_size = strlen(parent_ec.c_str()) + 2;
 		char* with_newline = reinterpret_cast<char*>(malloc(buffer_size));
-		CHECK_F(with_newline != nullptr, "Failed to allocate memory for error context.");
+		CHECK_NOTNULL_F(with_newline, "Failed to allocate memory");
 		with_newline[0] = '\n';
 	#ifdef _WIN32
 		strncpy_s(with_newline + 1, buffer_size, parent_ec.c_str(), buffer_size - 2);
@@ -2000,10 +1970,7 @@ namespace loguru
 		memset(&sig_action, 0, sizeof(sig_action));
 		sigemptyset(&sig_action.sa_mask);
 		sig_action.sa_handler = SIG_DFL;
-
-		// Note: Explicitly ignore sigaction's return value.
-		//       It's only used when setting up the signal handlers.
-		(void) sigaction(signal_number, &sig_action, NULL);
+		(void)sigaction(signal_number, &sig_action, NULL); // Restoring the default handler; failure is not actionable here.
 		kill(getpid(), signal_number);
 	}
 

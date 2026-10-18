@@ -56,8 +56,7 @@ Website: www.ilikebigbits.com
 	* Version 1.9.0 - 2018-09-22 - Adjust terminal colors, add LOGURU_VERBOSE_SCOPE_ENDINGS, add LOGURU_SCOPE_TIME_PRECISION, add named log levels
 	* Version 2.0.0 - 2018-09-22 - Split loguru.hpp into loguru.hpp and loguru.cpp
 	* Version 2.1.0 - 2019-09-23 - Update fmtlib + add option to loguru::init to NOT set main thread name.
-	* Version 2.2.0 - 2020-07-31 - Replace LOGURU_CATCH_SIGABRT with struct SignalOptions
-	*                 2023-08-13 - fix PVS Studio warnings (change by DOSBox Staging Team)
+	* Version 2.2.0 - 2026-09-10 - Replace LOGURU_CATCH_SIGABRT with struct SignalOptions, add CMake support, syslog support, va_list API, LOGURU_USE_LOCALE, DLOG_SCOPE_F, and many platform fixes
 
 # Compiling
 	Just include <loguru.hpp> where you want to use Loguru.
@@ -96,7 +95,7 @@ Website: www.ilikebigbits.com
 
 // Semantic versioning. Loguru version can be printed with printf("%d.%d.%d", LOGURU_VERSION_MAJOR, LOGURU_VERSION_MINOR, LOGURU_VERSION_PATCH);
 #define LOGURU_VERSION_MAJOR 2
-#define LOGURU_VERSION_MINOR 1
+#define LOGURU_VERSION_MINOR 2
 #define LOGURU_VERSION_PATCH 0
 
 #if defined(_MSC_VER)
@@ -177,7 +176,7 @@ Website: www.ilikebigbits.com
 #endif
 
 #ifndef LOGURU_USE_LOCALE
-	#define LOGURU_USE_LOCALE 0
+        #define LOGURU_USE_LOCALE 0
 #endif
 
 #ifndef LOGURU_WITH_FILEABS
@@ -534,7 +533,7 @@ namespace loguru
 
 	// Writes date and time with millisecond precision, e.g. "20151017_161503.123"
 	LOGURU_EXPORT
-	void write_date_time(char* buff, unsigned buff_size);
+	void write_date_time(char* buff, unsigned long long buff_size);
 
 	// Helper: thread-safe version strerror
 	LOGURU_EXPORT
@@ -546,7 +545,7 @@ namespace loguru
 	   where "app_name" is a sanitized version of argv[0].
 	*/
 	LOGURU_EXPORT
-	void suggest_log_path(const char* prefix, char* buff, unsigned buff_size);
+	void suggest_log_path(const char* prefix, char* buff, unsigned long long buff_size);
 
 	enum FileMode { Truncate, Append };
 
@@ -665,11 +664,24 @@ namespace loguru
 	{
 	public:
 		LogScopeRAII() : _file(nullptr) {} // No logging
+#if LOGURU_USE_FMTLIB
+		template <typename... Args>
+		LogScopeRAII(Verbosity verbosity, const char* file, unsigned line, LOGURU_FORMAT_STRING_TYPE format, const Args&... args) :
+			_verbosity(verbosity), _file(file), _line(line)
+		{
+			this->Init(format, fmt::make_format_args(args...));
+		}
+#else
 		LogScopeRAII(Verbosity verbosity, const char* file, unsigned line, LOGURU_FORMAT_STRING_TYPE format, va_list vlist) LOGURU_PRINTF_LIKE(5, 0);
 		LogScopeRAII(Verbosity verbosity, const char* file, unsigned line, LOGURU_FORMAT_STRING_TYPE format, ...) LOGURU_PRINTF_LIKE(5, 6);
+#endif
 		~LogScopeRAII();
 
+#if LOGURU_USE_FMTLIB
+		void Init(LOGURU_FORMAT_STRING_TYPE format, fmt::format_args args);
+#else
 		void Init(LOGURU_FORMAT_STRING_TYPE format, va_list vlist) LOGURU_PRINTF_LIKE(2, 0);
+#endif
 
 #if defined(_MSC_VER) && _MSC_VER > 1800
 		// older MSVC default move ctors close the scope on move. See
@@ -728,16 +740,25 @@ namespace loguru
 	LOGURU_EXPORT
 	void flush();
 
-	template<class T> inline Text format_value(const T)                     { return textprintf("N/A");     }
-	template<>        inline Text format_value(const char v)                { return textprintf(LOGURU_FMT(c),   v); }
-	template<>        inline Text format_value(const int v)                 { return textprintf(LOGURU_FMT(d),   v); }
-	template<>        inline Text format_value(const unsigned int v)        { return textprintf(LOGURU_FMT(u),   v); }
-	template<>        inline Text format_value(const long v)                { return textprintf(LOGURU_FMT(lu),  v); }
-	template<>        inline Text format_value(const unsigned long v)       { return textprintf(LOGURU_FMT(ld),  v); }
-	template<>        inline Text format_value(const long long v)           { return textprintf(LOGURU_FMT(llu), v); }
-	template<>        inline Text format_value(const unsigned long long v)  { return textprintf(LOGURU_FMT(lld), v); }
-	template<>        inline Text format_value(const float v)               { return textprintf(LOGURU_FMT(f),   v); }
-	template<>        inline Text format_value(const double v)              { return textprintf(LOGURU_FMT(f),   v); }
+	template<class T> inline Text format_value(const T&)                    { return textprintf("N/A");     }
+	template<>        inline Text format_value(const char& v)               { return textprintf(LOGURU_FMT(c),   v); }
+	template<>        inline Text format_value(const int& v)                { return textprintf(LOGURU_FMT(d),   v); }
+	template<>        inline Text format_value(const float& v)              { return textprintf(LOGURU_FMT(f),   v); }
+	template<>        inline Text format_value(const double& v)             { return textprintf(LOGURU_FMT(f),   v); }
+
+#if LOGURU_USE_FMTLIB
+	template<>        inline Text format_value(const unsigned int& v)       { return textprintf(LOGURU_FMT(d), v); }
+	template<>        inline Text format_value(const long& v)               { return textprintf(LOGURU_FMT(d), v); }
+	template<>        inline Text format_value(const unsigned long& v)      { return textprintf(LOGURU_FMT(d), v); }
+	template<>        inline Text format_value(const long long& v)          { return textprintf(LOGURU_FMT(d), v); }
+	template<>        inline Text format_value(const unsigned long long& v) { return textprintf(LOGURU_FMT(d), v); }
+#else
+	template<>        inline Text format_value(const unsigned int& v)       { return textprintf(LOGURU_FMT(u),   v); }
+	template<>        inline Text format_value(const long& v)               { return textprintf(LOGURU_FMT(lu),  v); }
+	template<>        inline Text format_value(const unsigned long& v)      { return textprintf(LOGURU_FMT(ld),  v); }
+	template<>        inline Text format_value(const long long& v)          { return textprintf(LOGURU_FMT(llu), v); }
+	template<>        inline Text format_value(const unsigned long long& v) { return textprintf(LOGURU_FMT(lld), v); }
+#endif
 
 	/* Thread names can be set for the benefit of readable logs.
 	   If you do not set the thread name, a hex id will be shown instead.
@@ -1131,10 +1152,13 @@ LOGURU_ANONYMOUS_NAMESPACE_END
 	// Debug logging enabled:
 	#define DLOG_F(verbosity_name, ...)     LOG_F(verbosity_name, __VA_ARGS__)
 	#define DVLOG_F(verbosity, ...)         VLOG_F(verbosity, __VA_ARGS__)
-	#define DLOG_IF_F(verbosity_name, ...)  LOG_IF_F(verbosity_name, __VA_ARGS__)
-	#define DVLOG_IF_F(verbosity, ...)      VLOG_IF_F(verbosity, __VA_ARGS__)
+	#define DLOG_IF_F(verbosity_name, cond, ...)  LOG_IF_F(verbosity_name, cond, __VA_ARGS__)
+	#define DVLOG_IF_F(verbosity, cond, ...)      VLOG_IF_F(verbosity, cond, __VA_ARGS__)
 	#define DRAW_LOG_F(verbosity_name, ...) RAW_LOG_F(verbosity_name, __VA_ARGS__)
 	#define DRAW_VLOG_F(verbosity, ...)     RAW_VLOG_F(verbosity, __VA_ARGS__)
+	#define DVLOG_SCOPE_F(verbosity, ...)   VLOG_SCOPE_F(verbosity, __VA_ARGS__)
+	#define DLOG_SCOPE_F(verbosity_name, ...) LOG_SCOPE_F(verbosity_name, __VA_ARGS__)
+	#define DLOG_SCOPE_FUNCTION(verbosity_name) LOG_SCOPE_FUNCTION(verbosity_name)
 #else
 	// Debug logging disabled:
 	#define DLOG_F(verbosity_name, ...)
@@ -1143,6 +1167,9 @@ LOGURU_ANONYMOUS_NAMESPACE_END
 	#define DVLOG_IF_F(verbosity, ...)
 	#define DRAW_LOG_F(verbosity_name, ...)
 	#define DRAW_VLOG_F(verbosity, ...)
+	#define DVLOG_SCOPE_F(verbosity, ...)
+	#define DLOG_SCOPE_F(verbosity_name, ...)
+	#define DLOG_SCOPE_FUNCTION(verbosity_name)
 #endif
 
 #define CHECK_EQ_F(a, b, ...) CHECK_OP_F(a, b, ==, ##__VA_ARGS__)
