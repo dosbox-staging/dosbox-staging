@@ -109,7 +109,6 @@ public:
 	device_EMM(bool is_emm386_avail) : is_emm386(is_emm386_avail)
 	{
 		SetName(EmsDeviceName.c_str());
-		GEMMIS_seg = 0;
 	}
 
 	bool Read(uint8_t* /*data*/, uint16_t* /*size*/) override
@@ -2151,7 +2150,11 @@ public:
 		call_vdma.Set_RealVec(0x4b);
 
 		vcpi.enabled = false;
-		GEMMIS_seg   = 0;
+
+		// GEMMIS_seg is lazily allocated from the DOS private memory
+		// pool on first use (see `ReadFromControlChannel()`) and, like
+		// `ems_baseseg`, must never be reset once allocated since that
+		// memory can't be freed.
 
 		ems_type = GetEMSType(section);
 		if (ems_type <= 0) {
@@ -2166,8 +2169,13 @@ public:
 
 		BIOS_ZeroExtendedSize(true);
 
+		// The DOS private memory pool cannot free allocations, so
+		// allocate the 32 bytes only once and reuse them across
+		// re-initialisations (e.g. runtime [dos] setting changes)
+		static const uint16_t BaseSegAlloc = DOS_GetMemory(2);
+
 		// We have 32 bytes
-		ems_baseseg = DOS_GetMemory(2);
+		ems_baseseg = BaseSegAlloc;
 
 		// Add a little hack so it appears that there is an actual EMS
 		// device installed
@@ -2176,11 +2184,13 @@ public:
 		               EmsDeviceName.length() + 1);
 
 		call_int67 = CALLBACK_Allocate();
+
 		CALLBACK_Setup(call_int67,
 		               &INT67_Handler,
 		               CB_IRET,
 		               PhysicalMake(ems_baseseg, 4),
 		               "Int 67 ems");
+
 		RealSetVec(0x67, RealMake(ems_baseseg, 4), old67_pointer);
 
 		// Register the EMS device
@@ -2208,6 +2218,8 @@ public:
 
 		// Allocate OS-dedicated handle (EMS handle zero, 384kb)
 		EMM_AllocateSystemHandle(24);
+
+		LOG_MSG("EMS: Initialised");
 
 		if (ems_type == 3) {
 			// emm386-bug that disables dma wrapping
@@ -2293,6 +2305,8 @@ public:
 			return;
 		}
 
+		LOG_MSG("EMS: Shutting down");
+
 		// Undo BIOS clearing
 		BIOS_ZeroExtendedSize(false);
 
@@ -2302,12 +2316,11 @@ public:
 			emm_device = nullptr;
 		}
 
-		GEMMIS_seg = 0;
-
 		// Remove the emsname and callback hack
 		char buf[32] = {0};
 		MEM_BlockWrite(PhysicalMake(ems_baseseg, 0), buf, 32);
 		RealSetVec(0x67, old67_pointer);
+		CALLBACK_DeAllocate(call_int67);
 
 		// Release memory allocated to system handle
 		if (emm_handles[EMM_SYSTEM_HANDLE].pages != NULL_HANDLE) {
