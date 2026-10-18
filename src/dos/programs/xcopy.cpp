@@ -5,6 +5,7 @@
 
 #include "misc/support.h"
 #include "more_output.h"
+#include "utils/ascii.h"
 
 #include <array>
 
@@ -231,19 +232,59 @@ bool XCOPY::CopyFile(const uint16_t source_handle, const uint16_t dest_handle,
 	return true;
 }
 
+std::optional<char> XCOPY::PromptForLetter(const std::string& allowed,
+                                           const bool cr_confirms)
+{
+	char selected         = '\0';
+	bool requires_confirm = cr_confirms;
+
+	do {
+		uint8_t answer = 0;
+		uint16_t count = 1;
+
+		if (DOSBOX_IsShutdownRequested()) {
+			LOG_INFO("XCOPY: shutdown requested, aborting user prompt loop");
+			return {};
+		}
+
+		if (!DOS_ReadFile(STDIN, &answer, &count) || count == 0) {
+			LOG_ERR("XCOPY: broken stdin, aborting user prompt loop");
+			return {};
+		}
+
+		// cr_confirms is used to request the user to confirm their
+		// selection with a CR (produced by the Enter key). If false the
+		// loop ends immediately on any valid char.
+		requires_confirm = cr_confirms &&
+		                   answer != Ascii::ControlCode::CarriageReturn;
+
+		const char letter = tolower(answer);
+		if (allowed.contains(letter)) {
+			WriteOut(selected ? "\b%c" : "%c", answer);
+			selected = letter;
+		}
+	} while (!selected || requires_confirm);
+
+	WriteOut("\n");
+
+	return selected;
+}
+
 std::pair<bool, int> XCOPY::CopyToDestination(const std::vector<DOS_DTA::Result>& files)
 {
 	int copied_count = 0;
 
-	// TODO: support alternate destinations
 	if (DOS_Canonicalize(CurrentDirectory) == src_path) {
+		// The original XCOPY implementation doesn't produce an error
+		// in this case.
 		WriteErr(MSG_Get("PROGRAM_XCOPY_COPY_ONTO_ITSELF"));
-		return std::make_pair(false, copied_count);
+		return std::make_pair(true, copied_count);
 	}
 
-	for (const DOS_DTA::Result& file : files) {
-		WriteOut_NoParsing(file.name + '\n');
+	// We always overwrite if we are ran from a batch file
+	bool overwrite_all = !IsInvokedInteractively();
 
+	for (const DOS_DTA::Result& file : files) {
 		const auto from_path = path_join(src_path, file.name);
 		uint16_t from_handle = {};
 		if (!DOS_OpenFile(from_path.c_str(), OPEN_READ, &from_handle)) {
@@ -251,8 +292,28 @@ std::pair<bool, int> XCOPY::CopyToDestination(const std::vector<DOS_DTA::Result>
 			return std::make_pair(false, copied_count);
 		}
 
-		// TODO: ask the user instead of assuming they want to overwrite
 		const auto to_path = file.name;
+		if (!overwrite_all && DOS_FileExists(to_path.c_str())) {
+			// Ask the user what to do if the file already exists
+			WriteErr(MSG_Get("PROGRAM_XCOPY_OVERWRITE_PROMPT"),
+			         to_path.c_str());
+
+			const auto maybe_letter = PromptForLetter("yna", true);
+			if (!maybe_letter) {
+				// Prompt aborted
+				DOS_CloseFile(from_handle);
+				return {};
+			}
+
+			overwrite_all = maybe_letter == 'a';
+			if (maybe_letter == 'n') {
+				DOS_CloseFile(from_handle);
+				continue;
+			}
+		} else {
+			WriteOut("%s\n", file.name.c_str());
+		}
+
 		uint16_t to_handle = {};
 		if (!DOS_CreateFile(to_path.c_str(),
 		                    FatAttributeFlags::Archive,
@@ -320,6 +381,8 @@ void XCOPY::AddMessages()
 	        "File cannot be copied onto itself\n");
 
 	MSG_Add("PROGRAM_XCOPY_READING_SOURCE", "Reading source file(s)...\n");
+
+	MSG_Add("PROGRAM_XCOPY_OVERWRITE_PROMPT", "Overwrite %s (Yes/No/All)?");
 
 	MSG_Add("PROGRAM_XCOPY_FILES_COPIED", "%9d File(s) copied\n");
 
