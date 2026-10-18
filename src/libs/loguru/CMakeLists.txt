@@ -91,6 +91,10 @@ endif()
 add_library(loguru loguru.cpp) # allow BUILD_SHARED_LIBS to decide STATIC/SHARED
 
 if (NOT PROJECT_IS_TOP_LEVEL)
+  disable_warnings(loguru)
+endif()
+
+if (NOT PROJECT_IS_TOP_LEVEL)
   add_library(${_namespace}::loguru ALIAS loguru)
 endif()
 
@@ -114,8 +118,9 @@ endif()
 # --- set loguru target properties
 # ----------------------------------------------------------
 
-target_include_directories(loguru
-  PUBLIC
+target_include_directories(loguru SYSTEM PUBLIC ..)
+
+target_include_directories(loguru SYSTEM PUBLIC
     $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}>
 )
 
