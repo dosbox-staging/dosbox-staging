@@ -212,6 +212,8 @@ public:
 		static uint32_t run_count = 0;
 		last_start                = CodeBase + run_count * CodeSlotSize;
 		++run_count;
+		ASSERT_LT(last_start + CodeSlotSize, SourceBase)
+		        << "out of code slots, the source data would be overwritten";
 
 		auto next = write_bytes(last_start, code);
 		next      = write_bytes(next, set_marker_code(FinishedMarker));
