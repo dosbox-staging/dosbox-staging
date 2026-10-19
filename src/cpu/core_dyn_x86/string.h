@@ -35,7 +35,7 @@ static void dyn_string(STRING_OP op) {
 
 	// The ES limit is checked once per start or restart of the instruction
 	// rather than before every write; CPU_CheckStringEsLimit() explains why
-	// that is exact. If only some iterations fit, the check cuts CPU_Cycles
+	// that is enough. If only some iterations fit, the check cuts CPU_Cycles
 	// so the loop below leaves through its cycle exit right after them,
 	// which restarts the instruction with the registers updated; the
 	// restarted instruction then faults before its first write.
@@ -71,6 +71,7 @@ static void dyn_string(STRING_OP op) {
 		}
 		dyn_check_bool_exception_al();
 
+		// Both paths must reach the join with the same register allocation
 		dyn_synchstate(&no_limit_state);
 		gen_fill_branch_long(no_limit);
 	}

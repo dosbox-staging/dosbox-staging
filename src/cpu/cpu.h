@@ -601,14 +601,16 @@ uint32_t CPU_GetStringCountWithinLimit(const StringWrite& write);
 
 // Called by the dynamic cores once per start or restart of a string
 // instruction writing to ES:(E)DI, with the registers reflecting the
-// iterations completed so far. Returns true if a general protection fault
-// has been prepared because the next write would go past the ES limit.
-// Otherwise, if only some of the remaining iterations fit, CPU_Cycles is cut
-// so the core executes just those and then restarts the instruction, which
-// faults on its next check.
+// iterations completed so far: di_index and count are (E)DI and the REP count
+// (1 without REP) masked to the address size, and add_mask is 0xffff for a
+// 16-bit address size, 0xffffffff otherwise.
 //
-// Checking once per (re)start instead of once per iteration is exact; the
-// comment at the definition explains why.
+// Returns true if a general protection fault has been prepared because the
+// next write would go past the ES limit. Otherwise, if only some of the
+// iterations the cycle budget allows fit, CPU_Cycles is cut so the core
+// executes just those and then restarts the instruction, which faults on its
+// next check. The comment at the definition explains why one check per
+// (re)start is enough.
 bool CPU_CheckStringEsLimit(uint32_t di_index, uint32_t count, int size_bytes,
                             uint32_t add_mask);
 
