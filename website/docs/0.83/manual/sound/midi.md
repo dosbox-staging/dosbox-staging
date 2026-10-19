@@ -204,7 +204,8 @@ article](https://blog.johnnovak.net/2023/03/05/grand-ms-dos-gaming-general-midi-
 You can connect hardware modules as [physical MIDI
 devices](#physical-midi-devices), or run software emulations as [external MIDI
 synthesisers](#virtual-midi-devices). If an emulation is available as a CLAP
-plugin, you can load it directly with [CLAP synth](sound-devices/clap.md).
+plugin, you can load it directly with the [CLAP MIDI
+synth](sound-devices/clap.md).
 
 
 ## Built-in MIDI devices
@@ -213,38 +214,21 @@ DOSBox Staging offers four main ways for MIDI playback without an external
 MIDI host program:
 
 - [Roland MT-32 emulation](sound-devices/roland-mt-32.md) --- Built-in
-  emulation of the MT-32 and CM-32L.
+  authentic emulation of the Roland MT-32 and CM-32L sound modules.
 
 - [Sound Canvas emulation](sound-devices/roland-sound-canvas.md) ---
-  Authentic Roland SC-55 emulation via the Nuked SC55 CLAP plugin. This
-  emulates a specific General MIDI-compatible MIDI sound module, rather than
-  "General MIDI" itself.
-
-- [FluidSynth](sound-devices/fluidsynth.md) --- Built-in generic General MIDI
-  synthesiser that uses SoundFont files and emulates no particular DOS-era
-  hardware.
-
-- [CLAP synth](sound-devices/clap.md) --- Load a CLAP MIDI synthesiser plugin
-  directly in DOSBox Staging. The plugin determines the available sounds and
-  supported MIDI standards.
-
-In other words, the built-in choices can be thought of as different MIDI
-playback devices or systems:
-
-- **MT-32** --- Authentic emulation of the Roland MT-32 sound module
-
-- **Sound Canvas** --- Authentic emulation of the Roland SC-55 sound module,
+  Built-in authentic emulation of the Roland SC-55 sound module,
   supporting General MIDI and Roland GS. Most "General MIDI" DOS soundtracks
   were composed specifically for the SC-55.
 
-- **FluidSynth** --- General MIDI synthesiser that uses SoundFont files. It
-  cannot provide authentic results for DOS games; it can be thought of as an
-  alternative experience (e.g. by trying different SoundFonts for the same
-  game).
+- [FluidSynth](sound-devices/fluidsynth.md) --- Built-in generic General MIDI
+  synthesiser that uses SoundFont files and emulates no particular DOS-era
+  hardware. It cannot provide authentic results for DOS games; it can be
+  thought of as an alternative experience (e.g. by trying different SoundFonts
+  for the same game).
 
-- **CLAP synth** --- A choice of MIDI synthesisers supplied as plugins. For
-  General MIDI games, choose a General MIDI-compatible plugin; CLAP is a
-  plugin format, not a MIDI sound module or music standard.
+- [CLAP MIDI synth](sound-devices/clap.md) --- A MIDI synthesiser supplied as
+  a CLAP plugin. You must use a General MIDI-compatible plugin.
 
 This distinction is useful throughout the rest of the chapter: when a game
 supports **General MIDI**, you must choose a GM-compatible MIDI playback
@@ -283,9 +267,9 @@ As a rough rule of thumb:
   authentic results, or [FluidSynth](sound-devices/fluidsynth.md) as a lighter
   alternative.
 
-You can also use [CLAP synth](sound-devices/clap.md) to try other MIDI
-synthesisers. Check that your chosen plugin supports the MIDI standard used
-by the game.
+You can also use the [CLAP MIDI synth](sound-devices/clap.md) to try other
+MIDI synthesisers. Check that your chosen plugin supports the MIDI standard
+used by the game.
 
 !!! note
 
@@ -320,10 +304,18 @@ See [`mpu401`](#mpu401) for more details.
 MIDI related settings are to be configured in the `[midi]` section. Set the
 [`mididevice`](#mididevice) setting to select which MIDI device to use:
 
-- `mt32` to use the built-in [Roland MT-32](sound-devices/roland-mt-32.md) emulation,
-- `fluidsynth` to use the built-in [FluidSynth](sound-devices/fluidsynth.md) MIDI synthesiser,
-- `clap` to use a [CLAP synth](sound-devices/clap.md) plugin configured in the `[clap]` section,
-- `soundcanvas` to use the built-in [Sound Canvas](sound-devices/roland-sound-canvas.md) emulation,
+- `mt32` to use the built-in [Roland MT-32](sound-devices/roland-mt-32.md)
+  emulation,
+
+- `fluidsynth` to use the built-in [FluidSynth](sound-devices/fluidsynth.md)
+  MIDI synthesiser,
+
+- `clap` to use a [CLAP MIDI synth](sound-devices/clap.md) plugin configured
+  in the `[clap]` section,
+
+- `soundcanvas` to use the built-in [Sound
+  Canvas](sound-devices/roland-sound-canvas.md) emulation,
+
 - or `port` (the default) to send MIDI data to an [external MIDI
   device](#using-external-midi-devices) configured via
   [`midiconfig`](#midiconfig).

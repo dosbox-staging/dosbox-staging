@@ -29,9 +29,9 @@ the release packages), providing sample-accurate playback of the actual SC-55
 sound engine --- as close to the real hardware as you can get without owning
 one.
 
-To use other CLAP MIDI synthesiser plugins, see [CLAP synth](clap.md). The
-bundled Nuked SC55 plugin is selected with `mididevice = soundcanvas` and
-cannot be selected through the generic CLAP synth device.
+To use other CLAP MIDI synthesiser plugins, see [CLAP MIDI synth](clap.md).
+The bundled Nuked SC55 plugin is selected with `mididevice = soundcanvas` and
+cannot be selected through the generic CLAP MIDI synth device.
 
 For background on the General MIDI and GS standards, and help deciding which
 MIDI device to use for a particular game, see the [Which MIDI device should I

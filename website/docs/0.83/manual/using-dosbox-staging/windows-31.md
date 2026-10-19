@@ -138,7 +138,7 @@ This routes MIDI output through DOSBox's configured
 [Roland MT-32](../sound/sound-devices/roland-mt-32.md),
 [Sound Canvas SC-55](../sound/sound-devices/roland-sound-canvas.md),
 [FluidSynth](../sound/sound-devices/fluidsynth.md), or a
-[CLAP synth](../sound/sound-devices/clap.md) plugin for Windows 3.1 games.
+[CLAP MIDI synth](../sound/sound-devices/clap.md) plugin for Windows 3.1 games.
 Set `mididevice` in your DOSBox config and follow the setup instructions for
 the selected MIDI device.
 

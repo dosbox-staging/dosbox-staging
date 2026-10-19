@@ -33,7 +33,7 @@ For more background on MIDI and General MIDI, and for help deciding which MIDI
 device to use for a particular game, see the [MIDI](../midi.md) section.
 
 To use a software MIDI synthesiser supplied as a CLAP plugin instead of a
-SoundFont, see [CLAP synth](clap.md).
+SoundFont, see [CLAP MIDI synth](clap.md).
 
 !!! warning "Roland MT-32 is not General MIDI"
 
