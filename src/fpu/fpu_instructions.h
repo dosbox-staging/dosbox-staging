@@ -906,7 +906,11 @@ static void FPU_FLDLG2(void){
 
 static void FPU_FLDLN2(void){
 	FPU_PREP_PUSH();
-	fpu.regs[TOP].d = M_LN2;
+	// "round" M_LN2 up instead of truncating.
+	// Fixes Zone Raiders and causes no additional
+	// MCPDIAG failures. Follows similar approach as
+	// FLD80 (round to nearest even)
+	fpu.regs[TOP].d = std::nextafter(M_LN2, 1.0);
 }
 
 static void FPU_FLDZ(void){
