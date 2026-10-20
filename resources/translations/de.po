@@ -8646,7 +8646,7 @@ msgstr "und"
 
 #: src/dos/programs.cpp:1095
 #, c-format, no-wrap
-msgctxt "PROGRAM_CONFIG_NOT_CHANGEABLE"
+msgctxt "PROGRAM_CONFIG_ONLY_CHANGEABLE_AT_STARTUP"
 msgid ""
 "[color=yellow]The '%s' setting can't be changed at runtime.[reset]\n"
 "However, it will be applied on restart by running 'CONFIG -r' or via the\n"
