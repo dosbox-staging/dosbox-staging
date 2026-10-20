@@ -890,7 +890,7 @@ void CONFIG::Run(void)
 				if (property->GetChange() ==
 				    Property::Changeable::OnlyAtStart) {
 
-					WriteOut(MSG_Get("PROGRAM_CONFIG_NOT_CHANGEABLE"),
+					WriteOut(MSG_Get("PROGRAM_CONFIG_ONLY_CHANGEABLE_AT_STARTUP"),
 					         parameters[1].c_str());
 
 					property->SetQueuedValue(value);
@@ -1084,7 +1084,7 @@ void PROGRAMS_AddMessages()
 
 	MSG_Add("CONJUNCTION_AND", "and");
 
-	MSG_Add("PROGRAM_CONFIG_NOT_CHANGEABLE",
+	MSG_Add("PROGRAM_CONFIG_ONLY_CHANGEABLE_AT_STARTUP",
 	        "[color=yellow]The '%s' setting can't be changed at runtime.[reset]\n"
 	        "However, it will be applied on restart by running 'CONFIG -r' or via the\n"
 	        "restart hotkey.\n");
