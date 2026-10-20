@@ -148,6 +148,80 @@ bool XCOPY::InitializeSource(const std::string& value)
 	return true;
 }
 
+bool XCOPY::InitializeDestination(const std::string& value)
+{
+	if (has_invalid_drive_spec(value)) {
+		WriteErr(MSG_Get("PROGRAM_XCOPY_INVALID_DRIVE"));
+		return false;
+	}
+
+	const auto canonicalized = DOS_Canonicalize(value.c_str());
+	if (canonicalized.empty()) {
+		WriteErr(MSG_Get("PROGRAM_XCOPY_INVALID_PATH"));
+		return false;
+	}
+
+	// If it has a trailing slash, assume it is a directory. Using
+	// value here because canonicalization may strip slashes.
+	if (value.ends_with(DosSeparator)) {
+		if (canonicalized.find_last_of("?*") != std::string::npos) {
+			// Canonicalization does not reject directories with
+			// wildcards in their name, but they're still invalid.
+			WriteErr(MSG_Get("PROGRAM_XCOPY_INVALID_PATH"));
+			return false;
+		}
+
+		dest_path = canonicalized;
+		dest_spec = AllFiles;
+		return true;
+	}
+
+	// Check if canonicalized exists and is a directory. Note that
+	// we could in theory check if canonicalized exists and is a
+	// file, but the original XCOPY doesn't do that: it always
+	// prompts when this check fails.
+	FatAttributeFlags attr = {};
+	if (DOS_GetFileAttr(canonicalized.c_str(), &attr) && attr.directory) {
+		dest_path = canonicalized;
+		dest_spec = AllFiles;
+		return true;
+	}
+
+	if (canonicalized.find_last_of("?*") == std::string::npos) {
+		// The directory doesn't exists, the user didn't mark the
+		// destination with a trailing slash and there are no wildcards,
+		// we have no idea what the user wants.
+		WriteOut(MSG_Get("PROGRAM_XCOPY_FD_PROMPT"),
+		         get_basename(canonicalized).c_str());
+		const auto maybe_letter = PromptForLetter("fd", false);
+		if (!maybe_letter) {
+			return false;
+		}
+
+		// User wants a directory.
+		if (maybe_letter == 'd') {
+			dest_path = canonicalized;
+			dest_spec = AllFiles;
+			return true;
+		}
+	}
+
+	const auto last_sep_pos = canonicalized.rfind(DosSeparator);
+	assertm(last_sep_pos != std::string::npos,
+	        "Canonicalization ensures a slash is always present");
+
+	dest_path = canonicalized.substr(0, last_sep_pos);
+	dest_spec = parse_dos_filename(canonicalized.substr(last_sep_pos + 1));
+	if (dest_path.find_last_of("?*") != std::string::npos) {
+		// Canonicalization does not reject directories with wildcards
+		// in their name, but they're still invalid.
+		WriteErr(MSG_Get("PROGRAM_XCOPY_INVALID_PATH"));
+		return false;
+	}
+
+	return true;
+}
+
 bool XCOPY::Initialize()
 {
 	std::string found = {};
@@ -165,7 +239,8 @@ bool XCOPY::Initialize()
 		return false;
 	}
 
-	return InitializeSource(args[0]);
+	return InitializeSource(args[0]) &&
+	       InitializeDestination(args.size() == 2 ? args[1] : CurrentDirectory);
 }
 
 std::optional<std::vector<DOS_DTA::Result>> XCOPY::BuildSourceSnapshot()
@@ -189,6 +264,31 @@ std::optional<std::vector<DOS_DTA::Result>> XCOPY::BuildSourceSnapshot()
 	// Inform the user we found something
 	WriteOut(MSG_Get("PROGRAM_XCOPY_READING_SOURCE"));
 	return found;
+}
+
+bool XCOPY::MakeDirectoryTree(const std::string& path)
+{
+	FatAttributeFlags attr = {};
+
+	// skips the drive spec X:\, always present for canonicalized paths
+	size_t find_pos = path.find(DosSeparator, 2);
+
+	do {
+		find_pos                = path.find(DosSeparator, find_pos + 1);
+		const auto partial_path = path.substr(0, find_pos);
+
+		if (DOS_GetFileAttr(partial_path.c_str(), &attr)) {
+			if (!attr.directory) {
+				WriteErr(MSG_Get("PROGRAM_XCOPY_UNABLE_CREATE_DIR"));
+				return false;
+			}
+		} else if (!DOS_MakeDir(partial_path.c_str())) {
+			WriteErr(MSG_Get("PROGRAM_XCOPY_UNABLE_CREATE_DIR"));
+			return false;
+		}
+	} while (find_pos != std::string::npos);
+
+	return true;
 }
 
 bool XCOPY::CopyFile(const uint16_t source_handle, const uint16_t dest_handle,
@@ -274,11 +374,10 @@ std::pair<bool, int> XCOPY::CopyToDestination(const std::vector<DOS_DTA::Result>
 {
 	int copied_count = 0;
 
-	if (DOS_Canonicalize(CurrentDirectory) == src_path) {
-		// The original XCOPY implementation doesn't produce an error
-		// in this case.
-		WriteErr(MSG_Get("PROGRAM_XCOPY_COPY_ONTO_ITSELF"));
-		return std::make_pair(true, copied_count);
+	// Create destination directory if it doesn't exist
+	// TODO: with /e this must be done even if the source matches nothing
+	if (!MakeDirectoryTree(dest_path)) {
+		return std::make_pair(false, copied_count);
 	}
 
 	// We always overwrite if we are ran from a batch file
@@ -286,13 +385,21 @@ std::pair<bool, int> XCOPY::CopyToDestination(const std::vector<DOS_DTA::Result>
 
 	for (const DOS_DTA::Result& file : files) {
 		const auto from_path = path_join(src_path, file.name);
+		const auto to_path = path_join(dest_path,
+		                     apply_pattern(file.name, dest_spec));
+		if (from_path == to_path) {
+			// The original XCOPY implementation doesn't produce an
+			// error in this case, it just stops.
+			WriteErr(MSG_Get("PROGRAM_XCOPY_COPY_ONTO_ITSELF"));
+			return std::make_pair(true, copied_count);
+		}
+
 		uint16_t from_handle = {};
 		if (!DOS_OpenFile(from_path.c_str(), OPEN_READ, &from_handle)) {
 			WriteErr(doserr_msg_get(dos.errorcode), file.name.c_str());
 			return std::make_pair(false, copied_count);
 		}
 
-		const auto to_path = file.name;
 		if (!overwrite_all && DOS_FileExists(to_path.c_str())) {
 			// Ask the user what to do if the file already exists
 			WriteErr(MSG_Get("PROGRAM_XCOPY_OVERWRITE_PROMPT"),
@@ -367,6 +474,8 @@ void XCOPY::AddMessages()
 
 	MSG_Add("PROGRAM_XCOPY_FILE_CREATION_ERROR", "File creation error\n");
 
+	MSG_Add("PROGRAM_XCOPY_UNABLE_CREATE_DIR", "Unable to create directory\n");
+
 	MSG_Add("PROGRAM_XCOPY_TOO_MANY_OPEN_FILES", "Too many open files\n");
 
 	MSG_Add("PROGRAM_XCOPY_LOCK_VIOLATION", "Lock violation - %s\n");
@@ -383,6 +492,11 @@ void XCOPY::AddMessages()
 	MSG_Add("PROGRAM_XCOPY_READING_SOURCE", "Reading source file(s)...\n");
 
 	MSG_Add("PROGRAM_XCOPY_OVERWRITE_PROMPT", "Overwrite %s (Yes/No/All)?");
+
+	MSG_Add("PROGRAM_XCOPY_FD_PROMPT",
+	        "Does %s specify a file name\n"
+	        "or directory name on the target\n"
+	        "(F = file, D = directory)?");
 
 	MSG_Add("PROGRAM_XCOPY_FILES_COPIED", "%9d File(s) copied\n");
 

@@ -38,15 +38,25 @@ private:
 	/// The source file specification.
 	DosFilename src_spec = AllFiles;
 
+	/// The destination path.
+	std::string dest_path = {};
+
+	/// The destination file specification (default *.*).
+	DosFilename dest_spec = {.name = "*", .ext = "*"};
+
 	static void AddMessages();
 
 	[[nodiscard]] bool Initialize();
 
 	[[nodiscard]] bool InitializeSource(const std::string& value);
 
+	[[nodiscard]] bool InitializeDestination(const std::string& value);
+
 	std::optional<std::vector<DOS_DTA::Result>> BuildSourceSnapshot();
 
 	std::pair<bool, int> CopyToDestination(const std::vector<DOS_DTA::Result>& files);
+
+	bool MakeDirectoryTree(const std::string& path);
 
 	bool CopyFile(uint16_t source_handle, uint16_t dest_handle,
 	              const char* filename);
