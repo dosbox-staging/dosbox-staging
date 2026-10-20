@@ -114,10 +114,28 @@ class Property {
 public:
 	struct Changeable {
 		enum Value {
+			// The setting can be at any time, even when a program
+			// is running
 			Always,
+
+			// The setting can be changed at the DOS prompt when a
+			// program is not running
 			WhenIdle,
+
+			// The setting can be changed only at startup; if its
+			// value was changed, it gets applied at the next reboot
+			// (by runnin `CONFIG -r` or pressing the reboot hotkey)
 			OnlyAtStart,
+
+			// The setting can only be set once at startup
+			Never,
+
+			// The setting is deprecated and cannot be set (trying
+			// to set it will result in a deprecating warning)
 			Deprecated,
+
+			// The setting is deprecated but can be set (this will
+			// result in a warning)
 			DeprecatedButAllowed
 		};
 	};
