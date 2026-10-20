@@ -39,6 +39,12 @@ private:
 	/// The source file specification.
 	DosFilename src_spec = AllFiles;
 
+	/// The destination path.
+	std::string dest_path = {};
+
+	/// The destination file specification (default *.*).
+	DosFilename dest_spec = AllFiles;
+
 	/// The snapshot of the source tree, built by BuildSourceSnapshot().
 	std::vector<DOS_DTA::Result> src_snapshot = {};
 
@@ -51,9 +57,13 @@ private:
 
 	XCopyError InitializeSource(const std::string& value);
 
+	XCopyError InitializeDestination(const std::string& value);
+
 	XCopyError BuildSourceSnapshot();
 
 	XCopyError CopyToDestination();
+
+	XCopyError MakeDirectoryTree(const std::string& path);
 
 	XCopyError CopyFile(uint16_t source_handle, uint16_t dest_handle,
 	                    const char* filename);
