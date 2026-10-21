@@ -994,12 +994,16 @@ void DOSBOX_SetMachineTypeFromConfig(SectionProp& section)
 	       (machine != MachineType::Vga && svga_type == SvgaType::None));
 }
 
+constexpr auto WaitPidArg = "--wait_pid";
+
 static void remove_wait_pid(std::vector<std::string>& parameters)
 {
 	auto it = parameters.begin();
+
 	while (it != parameters.end()) {
-		if (*it == "-wait_pid" || *it == "--wait_pid") {
+		if (*it == WaitPidArg) {
 			it = parameters.erase(it);
+
 			if (it != parameters.end()) {
 				auto& pid = *it;
 				if (!pid.empty() && std::isdigit(pid[0])) {
@@ -1029,7 +1033,7 @@ void DOSBOX_Restart(std::vector<std::string>& parameters)
 	remove_wait_pid(parameters);
 
 #ifdef WIN32
-	parameters.emplace_back("--wait_pid");
+	parameters.emplace_back(WaitPidArg);
 	parameters.emplace_back(std::to_string(GetCurrentProcessId()));
 	std::string command_line = {};
 
@@ -1051,7 +1055,7 @@ void DOSBOX_Restart(std::vector<std::string>& parameters)
 		first = false;
 	}
 #else
-	parameters.emplace_back("--wait_pid");
+	parameters.emplace_back(WaitPidArg);
 	parameters.emplace_back(std::to_string(getpid()));
 
 	auto newargs = new char*[parameters.size() + 1];
