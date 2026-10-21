@@ -994,17 +994,17 @@ void DOSBOX_SetMachineTypeFromConfig(SectionProp& section)
 	       (machine != MachineType::Vga && svga_type == SvgaType::None));
 }
 
-static void remove_waitpid(std::vector<std::string>& parameters)
+static void remove_wait_pid(std::vector<std::string>& parameters)
 {
 	auto it = parameters.begin();
 	while (it != parameters.end()) {
-		if (*it == "-waitpid" || *it == "--waitpid") {
+		if (*it == "-wait_pid" || *it == "--wait_pid") {
 			it = parameters.erase(it);
 			if (it != parameters.end()) {
 				auto& pid = *it;
 				if (!pid.empty() && std::isdigit(pid[0])) {
 					// The integer value should be the next
-					// element following "--waitpid". If we
+					// element following "--wait_pid". If we
 					// found an integer, remove it as well.
 					it = parameters.erase(it);
 				}
@@ -1024,12 +1024,12 @@ void DOSBOX_Restart(std::vector<std::string>& parameters)
 {
 	control->ApplyQueuedValuesToCli(parameters);
 
-	// Remove any existing --waitpid parameters.
+	// Remove any existing --wait_pid parameters.
 	// This can happen with multiple restarts.
-	remove_waitpid(parameters);
+	remove_wait_pid(parameters);
 
 #ifdef WIN32
-	parameters.emplace_back("--waitpid");
+	parameters.emplace_back("--wait_pid");
 	parameters.emplace_back(std::to_string(GetCurrentProcessId()));
 	std::string command_line = {};
 
@@ -1051,7 +1051,7 @@ void DOSBOX_Restart(std::vector<std::string>& parameters)
 		first = false;
 	}
 #else
-	parameters.emplace_back("--waitpid");
+	parameters.emplace_back("--wait_pid");
 	parameters.emplace_back(std::to_string(getpid()));
 
 	auto newargs = new char*[parameters.size() + 1];
