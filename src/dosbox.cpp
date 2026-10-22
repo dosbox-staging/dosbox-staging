@@ -230,7 +230,8 @@ std::optional<PauseState> NextPauseState(const PauseState current,
 	switch (event) {
 	case PauseEvent::UserPause:
 		// User pause trumps auto: it engages from Running, upgrades a
-		// pending/engaged auto-pause, and is idempotent once user-paused.
+		// pending/engaged auto-pause, and is idempotent once
+		// user-paused.
 		//
 		switch (current) {
 		case Running: return UserPausePending;
@@ -240,14 +241,13 @@ std::optional<PauseState> NextPauseState(const PauseState current,
 		case UserPausePending:
 		case UserPaused: return {};
 
-		default:
-			assertm(false, "Invalid PauseState value");
-			return {};
+		default: assertm(false, "Invalid PauseState value"); return {};
 		}
 		break;
 
 	case PauseEvent::UserResume:
-		// Only clears a user pause; auto-pauses are left for auto-resume.
+		// Only clears a user pause; auto-pauses are left for
+		// auto-resume.
 		//
 		switch (current) {
 		case UserPausePending: return Running;
@@ -257,9 +257,7 @@ std::optional<PauseState> NextPauseState(const PauseState current,
 		case AutoPausePending:
 		case AutoPaused: return {};
 
-		default:
-			assertm(false, "Invalid PauseState value");
-			return {};
+		default: assertm(false, "Invalid PauseState value"); return {};
 		}
 		break;
 
@@ -274,9 +272,7 @@ std::optional<PauseState> NextPauseState(const PauseState current,
 		case AutoPausePending:
 		case AutoPaused: return {};
 
-		default:
-			assertm(false, "Invalid PauseState value");
-			return {};
+		default: assertm(false, "Invalid PauseState value"); return {};
 		}
 		break;
 
@@ -291,9 +287,7 @@ std::optional<PauseState> NextPauseState(const PauseState current,
 		case UserPausePending:
 		case UserPaused: return {};
 
-		default:
-			assertm(false, "Invalid PauseState value");
-			return {};
+		default: assertm(false, "Invalid PauseState value"); return {};
 		}
 		break;
 
@@ -307,9 +301,7 @@ std::optional<PauseState> NextPauseState(const PauseState current,
 		case UserPaused:
 		case AutoPaused: return {};
 
-		default:
-			assertm(false, "Invalid PauseState value");
-			return {};
+		default: assertm(false, "Invalid PauseState value"); return {};
 		}
 		break;
 	}
@@ -599,8 +591,8 @@ static Bitu normal_loop()
 				// subsystems are already parked, so a MIDI
 				// burst in that window could fill the synth's
 				// `work_fifo` and deadlock the main thread on
-				// its blocking enqueue (the consumer -- the synth
-				// renderer thread -- was just halted).
+				// its blocking enqueue (the consumer -- the
+				// synth renderer thread -- was just halted).
 				if (DOSBOX_IsPaused()) {
 					return 0;
 				}
