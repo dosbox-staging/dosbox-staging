@@ -996,25 +996,21 @@ void DOSBOX_SetMachineTypeFromConfig(SectionProp& section)
 
 constexpr auto WaitPidArg = "--wait_pid";
 
-static void remove_wait_pid(std::vector<std::string>& parameters)
+static void remove_arg(std::vector<std::string>& parameters, const std::string arg_name)
 {
 	auto it = parameters.begin();
 
 	while (it != parameters.end()) {
-		if (*it == WaitPidArg) {
-			it = parameters.erase(it);
-
-			if (it != parameters.end()) {
-				auto& pid = *it;
-				if (!pid.empty() && std::isdigit(pid[0])) {
-					// The integer value should be the next
-					// element following "--wait_pid". If we
-					// found an integer, remove it as well.
-					it = parameters.erase(it);
-				}
-			}
-		} else {
+		if (*it != arg_name) {
 			++it;
+			continue;
+		}
+
+		it = parameters.erase(it);
+
+		// Remove the value unless the next token looks like another option
+		if (it != parameters.end() && (it->empty() || (*it)[0] != '-')) {
+			it = parameters.erase(it);
 		}
 	}
 }
@@ -1030,7 +1026,7 @@ void DOSBOX_Restart(std::vector<std::string>& parameters)
 
 	// Remove any existing --wait_pid parameters.
 	// This can happen with multiple restarts.
-	remove_wait_pid(parameters);
+	remove_arg(parameters, WaitPidArg);
 
 #ifdef WIN32
 	parameters.emplace_back(WaitPidArg);
