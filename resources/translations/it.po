@@ -3826,10 +3826,10 @@ msgstr ""
 #, c-format, no-wrap
 msgctxt "CONFIG_GLSHADER"
 msgid ""
-"The [color=light-green]'glshader'[reset] setting is deprecated but still accepted;\n"
+"The [color=light-green]'shader'[reset] setting is deprecated but still accepted;\n"
 "please use [color=light-green]'shader'[reset] instead."
 msgstr ""
-"L'opzione [color=light-green]'glshader'[reset] è deprecata ma ancora consentita;\n"
+"L'opzione [color=light-green]'shader'[reset] è deprecata ma ancora consentita;\n"
 "si prega invece di utilizzare [color=light-green]'shader'[reset]."
 
 #: src/config/setup.cpp:283
