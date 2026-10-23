@@ -12,7 +12,7 @@ export class DOSBoxApi {
     }
 
     async getCpu() {
-        const res = await this._request('/cpu/state');
+        const res = await this._request('/debug/snapshot/registers');
         return await res.json();
     }
 
@@ -27,7 +27,7 @@ export class DOSBoxApi {
         return new Uint8Array(await res.arrayBuffer());
     }
 
-    async readMemAndCpu(...args) {
+    async readMemJson(...args) {
         if (args.length === 2) {
             args.unshift(0);
         }
