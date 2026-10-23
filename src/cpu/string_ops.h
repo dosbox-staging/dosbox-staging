@@ -29,4 +29,11 @@ enum STRING_OP {
 	R_CMPSD,
 };
 
+// INS, MOVS and STOS write to ES:(E)DI
+constexpr bool IsWritingToEsDi(const STRING_OP op)
+{
+	return (op >= R_INSB && op <= R_INSD) || (op >= R_MOVSB && op <= R_MOVSD) ||
+	       (op >= R_STOSB && op <= R_STOSD);
+}
+
 #endif

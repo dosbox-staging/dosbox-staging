@@ -7,6 +7,8 @@ add_executable(dosbox_tests
     bit_view_tests.cpp
     bitops_tests.cpp
     cmd_move_tests.cpp
+    cpu_segment_limit_core_tests.cpp
+    cpu_segment_limit_tests.cpp
     dos_files_tests.cpp
     dos_memory_struct_tests.cpp
     dosbox_pause_fsm_tests.cpp

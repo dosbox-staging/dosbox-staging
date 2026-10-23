@@ -8,6 +8,7 @@
 #include "hardware/memory.h"
 #endif
 
+#include <array>
 #include <cassert>
 
 // x86 CPU FLAGS register bit positions
@@ -93,9 +94,26 @@ enum SegNames {
 	gs,
 };
 
+// Segment limits are not enforced in real and V86 modes, nor for expand-down
+// segments. A 4 GB limit (0xffffffff) isn't enforced either, like on real
+// CPUs: the Intel SDM calls faults on such accesses implementation-specific,
+// and CPUs let an access starting at 0xffffffff wrap around to 0.
+constexpr uint32_t NoSegmentLimit = UINT32_MAX;
+
 struct Segments {
 	uint16_t val[8] = {};
 	PhysPt phys[8] = {};
+
+	// Only maintained for the data segment registers; used to check the ES
+	// limit in string instructions
+	std::array<uint32_t, 8> limit = {NoSegmentLimit,
+	                                 NoSegmentLimit,
+	                                 NoSegmentLimit,
+	                                 NoSegmentLimit,
+	                                 NoSegmentLimit,
+	                                 NoSegmentLimit,
+	                                 NoSegmentLimit,
+	                                 NoSegmentLimit};
 };
 
 union GenReg32 {
@@ -201,6 +219,7 @@ static inline void SegSet16(Bitu index, uint16_t val)
 {
 	Segs.val[index] = val;
 	Segs.phys[index] = static_cast<uint32_t>(val << 4);
+	Segs.limit[index] = NoSegmentLimit;
 }
 
 enum {

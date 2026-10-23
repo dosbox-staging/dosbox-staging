@@ -32,7 +32,51 @@ static void dyn_string(STRING_OP op) {
 	default:
 		IllegalOption("dyn_string op");
 	}
-	gen_load_host(&cpu.direction,DREG(TMPW),4);
+
+	// The ES limit is checked once per start or restart of the instruction
+	// rather than before every write; CPU_CheckStringEsLimit() explains why
+	// that is enough. If only some iterations fit, the check cuts CPU_Cycles
+	// so the loop below leaves through its cycle exit right after them,
+	// which restarts the instruction with the registers updated; the
+	// restarted instruction then faults before its first write.
+	if (IsWritingToEsDi(op)) {
+		// Skip the call inline when there's no limit to check, which is
+		// the case for the flat 4 GB segments nearly all 32-bit
+		// programs use
+		gen_load_host(&Segs.limit[es], DREG(TMPW), 4);
+		gen_dop_word_imm(DOP_CMP, true, DREG(TMPW), NoSegmentLimit);
+		gen_releasereg(DREG(TMPW));
+		DynState no_limit_state;
+		dyn_savestate(&no_limit_state);
+		const uint8_t* no_limit = gen_create_branch_long(BR_Z);
+
+		const auto size_bytes   = static_cast<uint32_t>(1 << (op & 3));
+		const uint32_t add_mask = decode.big_addr ? 0xffffffff : 0xffff;
+		if (decode.rep) {
+			gen_call_function((void*)&CPU_CheckStringEsLimit,
+			                  decode.big_addr ? "%Dd%Dd%Id%Id"
+			                                  : "%Dw%Dw%Id%Id",
+			                  DREG(EDI),
+			                  DREG(ECX),
+			                  size_bytes,
+			                  add_mask);
+		} else {
+			gen_call_function((void*)&CPU_CheckStringEsLimit,
+			                  decode.big_addr ? "%Dd%Id%Id%Id"
+			                                  : "%Dw%Id%Id%Id",
+			                  DREG(EDI),
+			                  uint32_t{1},
+			                  size_bytes,
+			                  add_mask);
+		}
+		dyn_check_bool_exception_al();
+
+		// Both paths must reach the join with the same register allocation
+		dyn_synchstate(&no_limit_state);
+		gen_fill_branch_long(no_limit);
+	}
+
+	gen_load_host(&cpu.direction, DREG(TMPW), 4);
 	switch (op & 3) {
 	case 0:break;
 	case 1:gen_shift_word_imm(SHIFT_SHL,true,DREG(TMPW),1);break;

@@ -4,6 +4,7 @@
 
 #include "cpu/cpu.h"
 
+#include <algorithm>
 #include <cassert>
 #include <cstddef>
 #include <memory>
@@ -2564,12 +2565,26 @@ void CPU_VERW(Bitu selector)
 	SETFLAGBIT(ZF, true);
 }
 
+// The limit string writes are checked against: expand-down segments aren't
+// checked, and a 4 GB limit decodes to NoSegmentLimit (see registers.h)
+static uint32_t get_segment_limit(const Descriptor& desc)
+{
+	switch (desc.Type()) {
+	case DESC_DATA_ED_RO_NA:
+	case DESC_DATA_ED_RO_A:
+	case DESC_DATA_ED_RW_NA:
+	case DESC_DATA_ED_RW_A: return NoSegmentLimit;
+	default: return desc.GetLimit();
+	}
+}
+
 bool CPU_SetSegGeneral(SegNames seg, Bitu value)
 {
 	value &= 0xffff;
 	if (!cpu.pmode || (reg_flags & FLAG_VM)) {
-		Segs.val[seg]  = value;
-		Segs.phys[seg] = value << 4;
+		Segs.val[seg]   = value;
+		Segs.phys[seg]  = value << 4;
+		Segs.limit[seg] = NoSegmentLimit;
 		if (seg == ss) {
 			cpu.stack.big     = false;
 			cpu.stack.mask    = 0xffff;
@@ -2616,8 +2631,9 @@ bool CPU_SetSegGeneral(SegNames seg, Bitu value)
 				                            value & 0xfffc);
 			}
 
-			Segs.val[seg]  = value;
-			Segs.phys[seg] = desc.GetBase();
+			Segs.val[seg]   = value;
+			Segs.phys[seg]  = desc.GetBase();
+			Segs.limit[seg] = get_segment_limit(desc);
 			if (desc.Big()) {
 				cpu.stack.big     = true;
 				cpu.stack.mask    = 0xffffffff;
@@ -2629,8 +2645,9 @@ bool CPU_SetSegGeneral(SegNames seg, Bitu value)
 			}
 		} else {
 			if ((value & 0xfffc) == 0) {
-				Segs.val[seg]  = value;
-				Segs.phys[seg] = 0; // ??
+				Segs.val[seg]   = value;
+				Segs.phys[seg]  = 0; // ??
+				Segs.limit[seg] = NoSegmentLimit;
 				return false;
 			}
 			Descriptor desc;
@@ -2669,8 +2686,9 @@ bool CPU_SetSegGeneral(SegNames seg, Bitu value)
 				                            value & 0xfffc);
 			}
 
-			Segs.val[seg]  = value;
-			Segs.phys[seg] = desc.GetBase();
+			Segs.val[seg]   = value;
+			Segs.phys[seg]  = desc.GetBase();
+			Segs.limit[seg] = get_segment_limit(desc);
 		}
 
 		return false;
@@ -4003,6 +4021,122 @@ bool CPU_ShouldHltOnIdle()
 	// We should only execute the power-saving HLT if configured AND if the
 	// interrupts are enabled
 	return should_hlt_on_idle && (reg_flags & FLAG_IF);
+}
+
+uint32_t CPU_GetStringCountWithinLimit(const StringWrite& write)
+{
+	if (write.limit == NoSegmentLimit || write.count == 0) {
+		return write.count;
+	}
+	const int64_t limit = write.limit;
+	const int64_t size  = write.size_bytes;
+
+	const auto first_write_end = int64_t{write.di_index} + size - 1;
+	if (first_write_end > limit) {
+		return 0;
+	}
+
+	// Distance from the first to the last write, if DI doesn't wrap around
+	const auto span = (int64_t{write.count} - 1) * size;
+
+	if (write.direction < 0) {
+		// Every further write is below the first one
+		if (span <= write.di_index) {
+			return write.count;
+		}
+	} else if (write.di_index + span <= write.add_mask) {
+		// Forward without wrapping: every write that ends at or before
+		// the limit fits
+		const auto count_within_limit = (limit - first_write_end) / size + 1;
+		return static_cast<uint32_t>(
+		        std::min<int64_t>(write.count, count_within_limit));
+	}
+
+	// DI wraps around; rare enough to check each write
+	const auto add_index = static_cast<uint32_t>(write.direction * size);
+
+	auto index = write.di_index;
+	for (uint32_t i = 0; i < write.count; ++i) {
+		if (int64_t{index} + size - 1 > limit) {
+			return i;
+		}
+		index = (index + add_index) & write.add_mask;
+	}
+	return write.count;
+}
+
+// Why one check per start or restart of the instruction is enough
+//
+// A string instruction only leaves the core part-way through by restarting
+// it: the cycle budget runs out, this check prepares a fault, or (in dyn_x86,
+// whose generated loop writes through the checked memory accessors) an
+// iteration page faults. Every restart leaves (E)IP at the instruction with
+// (E)CX, (E)SI and (E)DI holding the completed iterations, so the next run
+// comes back through this check with the current registers, and interrupts
+// are only delivered between runs.
+//
+// Between two such checks, what the instruction sees in ES can't change:
+//
+// - The limit is cached in Segs.limit when ES is loaded, so writes to the
+//   descriptor table don't affect it, exactly like the descriptor cache of a
+//   real CPU.
+// - Within a block, the dynamic cores only execute the generated or helper
+//   loop of the instruction itself; guest code that could reload ES or switch
+//   mode, and the emulator's own event handling, only run after a restart.
+// - A handler that reloads ES returns to the instruction start, so the next
+//   check sees the new limit, which is also what real hardware does when a
+//   REP resumes after an interrupt.
+//
+// So the count computed here stays valid until the next restart, and cutting
+// the cycle budget to that count keeps every write within the limit without
+// checking each iteration. The normal and full cores check once per
+// instruction too, but trim the count directly and raise the fault right
+// after the fitting iterations.
+//
+// One known deviation: those cores and the dynrec helpers write through the
+// unchecked accessors, so a page fault in an iteration runs the guest's
+// handler nested inside the instruction (PAGING_PageFault) and the remaining
+// iterations continue with the count computed before it. An ES reload by
+// that handler, or by an interrupt handler run during it, is only seen at
+// the next restart. Handlers restore ES, so this has no practical effect.
+bool CPU_CheckStringEsLimit(const uint32_t di_index, const uint32_t count,
+                            const int size_bytes, const uint32_t add_mask)
+{
+	if (Segs.limit[es] == NoSegmentLimit || !cpu.pmode || (reg_flags & FLAG_VM)) {
+		return false;
+	}
+	// I/O and video memory delays can use up the cycles in the middle of a
+	// block, and the dynrec string helpers execute every iteration when no
+	// cycles are left. Keep at least one so the cycle cut below works,
+	// without changing the total budget.
+	if (CPU_Cycles < 1) {
+		CPU_CycleLeft += CPU_Cycles - 1;
+		CPU_Cycles = 1;
+	}
+	// At most CPU_Cycles iterations run before the next restart and check,
+	// so there's no need to look further; this also bounds the per-write
+	// fallback of CPU_GetStringCountWithinLimit() when (E)DI wraps around
+	const auto count_to_check = std::min(count,
+	                                     static_cast<uint32_t>(CPU_Cycles));
+
+	const auto count_within_limit = CPU_GetStringCountWithinLimit(
+	        {.limit      = Segs.limit[es],
+	         .direction  = static_cast<int>(cpu.direction),
+	         .size_bytes = size_bytes,
+	         .count      = count_to_check,
+	         .di_index   = di_index,
+	         .add_mask   = add_mask});
+
+	if (count_within_limit == count_to_check) {
+		return false;
+	}
+	if (count_within_limit == 0) {
+		return CPU_PrepareException(EXCEPTION_GP, 0);
+	}
+	// Same as handing an instruction over to the normal core
+	CPU_CycleLeft += CPU_Cycles - static_cast<int>(count_within_limit);
+	CPU_Cycles = static_cast<int>(count_within_limit);
+	return false;
 }
 
 void CPU_AddConfigSection(const ConfigPtr& conf)
