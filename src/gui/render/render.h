@@ -10,6 +10,7 @@
 #include <deque>
 #include <optional>
 #include <string>
+#include <vector>
 
 #include "private/deinterlacer.h"
 
@@ -93,16 +94,18 @@ struct Render {
 		int cache_pitch     = 0;
 		uint8_t* cache_read = nullptr;
 
-		alignas(uint64_t)
-		        std::array<uint32_t, ScalerMaxWidth * ScalerMaxHeight> cache = {};
+		// std::vector guarantees 8-byte alignment in 64-bit builds
+		std::vector<uint32_t> cache = std::vector<uint32_t>(
+		        ScalerMaxWidth * ScalerMaxHeight);
 
 		int out_width      = 0;
 		int out_height     = 0;
 		int out_pitch      = 0;
 		uint8_t* out_write = nullptr;
 
-		alignas(uint64_t)
-		        std::array<uint32_t, ScalerMaxWidth * ScalerMaxHeight> out_buf = {};
+		// std::vector guarantees 8-byte alignment in 64-bit builds
+		std::vector<uint32_t> out_buf = std::vector<uint32_t>(
+		        ScalerMaxWidth * ScalerMaxHeight);
 
 		int y_scale = 0;
 	} scale = {};
