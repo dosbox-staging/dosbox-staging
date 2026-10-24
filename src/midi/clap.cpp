@@ -14,6 +14,7 @@
 #include "config/config.h"
 #include "config/setup.h"
 #include "misc/ansi_code_markup.h"
+#include "misc/unicode.h"
 #include "utils/env_utils.h"
 #include "utils/string_utils.h"
 
@@ -158,7 +159,7 @@ static std::string format_clap_plugin_list(const std::vector<Clap::PluginInfo>& 
 			result += convert_ansi_markup("[color=light-green]");
 		}
 
-		result += format_str("  %c %u - %s\n",
+		result += format_str(" %c %u - %s\n",
 		                     is_active ? '*' : ' ',
 		                     info.index,
 		                     info.name.c_str());
@@ -184,7 +185,11 @@ void CLAP_ListDevices(const MidiDeviceClap* device, MoreOutputStrings& output)
 	const auto listing = format_clap_plugin_list(
 	        infos, device ? &device->GetPluginInfo() : nullptr);
 
-	output.AddString("%s\n", listing.c_str());
+	const auto listing_dos_cp = utf8_to_dos(listing, 
+											  DosStringConvertMode::WithControlCodes, 
+											  UnicodeFallback::Simple);
+
+	output.AddString("%s\n", listing_dos_cp.c_str());
 }
 
 static void init_clap_config_settings(SectionProp& section)

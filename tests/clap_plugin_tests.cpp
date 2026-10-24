@@ -330,7 +330,7 @@ TEST_F(ClapLibrary, FiltersEffectsFromListingAndSelection)
 	const auto library_name = library_path.filename().string();
 	const auto listing      = format_clap_plugin_list(infos, nullptr);
 
-	EXPECT_EQ(listing, "  " + library_name + "\n    1 - Second test synth\n");
+	EXPECT_EQ(listing, "  " + library_name + "\n   1 - Second test synth\n");
 	EXPECT_FALSE(Clap::find_plugin(infos, library_name, "0"));
 	EXPECT_FALSE(Clap::find_plugin(infos, "", "effect"));
 
@@ -1107,16 +1107,15 @@ TEST(ClapListing, GroupsLibrariesAndHighlightsTheActiveInstance)
 	        {"plugins/First.clap", 2, "strings",       "Strings"},
 	        {  "other/First.clap", 0,   "piano", "Another Piano"}
         };
-	const std::string first_library = "  First.clap\n    0 - Piano\n    2 - Strings\n";
+	const std::string first_library = "  First.clap\n   0 - Piano\n   2 - Strings\n";
 
 	EXPECT_EQ(format_clap_plugin_list(infos, nullptr),
-	          first_library + "  First.clap\n    0 - Another Piano\n");
+	          first_library + "  First.clap\n   0 - Another Piano\n");
 
 	EXPECT_EQ(format_clap_plugin_list(infos, &infos.back()),
 	          first_library + "  First.clap\n" +
 	                  convert_ansi_markup("[color=light-green]") +
-	                  "  * 0 - Another Piano\n" +
-	                  convert_ansi_markup("[reset]"));
+	                  " * 0 - Another Piano\n" + convert_ansi_markup("[reset]"));
 
 	EXPECT_TRUE(format_clap_plugin_list({}, nullptr).empty());
 }
@@ -1135,9 +1134,9 @@ TEST(ClapListing, ExcludesDedicatedSynthLibraries)
 	        infos, Clap::PluginFilter::GenericSynthOnly);
 
 	EXPECT_EQ(format_clap_plugin_list(generic_infos, nullptr),
-	          "  First.clap\n    2 - Piano\n"
-	          "  Custom-Nuked-SC55.clap\n    1 - Roland SC-55mk2 v1.01\n"
-	          "  Second.clap\n    4 - Strings\n");
+	          "  First.clap\n   2 - Piano\n"
+	          "  Custom-Nuked-SC55.clap\n   1 - Roland SC-55mk2 v1.01\n"
+	          "  Second.clap\n   4 - Strings\n");
 
 	const auto dedicated_only = Clap::filter_plugin_infos(
 	        {infos.front(), infos.back()}, Clap::PluginFilter::GenericSynthOnly);
