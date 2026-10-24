@@ -1,9 +1,9 @@
 // SPDX-FileCopyrightText:  2022-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "dosbox.h"
+#include "unicode_encodings.h"
 
-#include "misc/private/unicode_encodings.h"
+#include "misc/logging.h"
 #include "utils/byteorder.h"
 #include "utils/checks.h"
 
