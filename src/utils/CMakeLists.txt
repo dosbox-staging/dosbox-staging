@@ -3,4 +3,5 @@ target_sources(dosboxcommon PRIVATE
   rgb888.cpp
   rwqueue.cpp
   string_utils.cpp
+  unicode_encodings.cpp
 )

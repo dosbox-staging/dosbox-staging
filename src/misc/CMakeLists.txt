@@ -12,7 +12,6 @@ target_sources(dosboxcommon PRIVATE
   messages_po_entry.cpp
   support.cpp
   unicode.cpp
-  unicode_encodings.cpp
   video.cpp
 )
 

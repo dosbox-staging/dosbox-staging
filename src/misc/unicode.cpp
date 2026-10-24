@@ -13,9 +13,9 @@
 #include <vector>
 
 #include "dos/dos.h"
-#include "misc/private/unicode_encodings.h"
 #include "misc/unicode.h"
 #include "utils/checks.h"
+#include "utils/unicode_encodings.h"
 
 CHECK_NARROWING();
 
