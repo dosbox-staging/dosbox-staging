@@ -18,16 +18,38 @@ namespace WindowGeometry {
 
 int LogicalToNative(const int logical, const float content_scale)
 {
-	// Special window position values must be passed to SDL unchanged
-	if (SDL_WINDOWPOS_ISUNDEFINED(logical) || SDL_WINDOWPOS_ISCENTERED(logical)) {
-		return logical;
-	}
 	return iroundf(static_cast<float>(logical) * content_scale);
 }
 
 int NativeToLogical(const int native, const float content_scale)
 {
 	return iroundf(static_cast<float>(native) / content_scale);
+}
+
+static int display_coordinate_to_native(const int logical, const int display_origin,
+                                        const float content_scale)
+{
+	// Special window position values must be passed to SDL unchanged
+	if (SDL_WINDOWPOS_ISUNDEFINED(logical) || SDL_WINDOWPOS_ISCENTERED(logical)) {
+		return logical;
+	}
+	return display_origin + LogicalToNative(logical, content_scale);
+}
+
+SDL_Point DisplayPositionToNative(const SDL_Point position,
+                                  const SDL_Rect& display_bounds,
+                                  const float content_scale)
+{
+	return {display_coordinate_to_native(position.x, display_bounds.x, content_scale),
+	        display_coordinate_to_native(position.y, display_bounds.y, content_scale)};
+}
+
+SDL_Point NativeToDisplayPosition(const SDL_Point native_position,
+                                  const SDL_Rect& display_bounds,
+                                  const float content_scale)
+{
+	return {NativeToLogical(native_position.x - display_bounds.x, content_scale),
+	        NativeToLogical(native_position.y - display_bounds.y, content_scale)};
 }
 
 int LogicalSizeToNative(const float logical, const float content_scale)
