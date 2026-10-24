@@ -26,33 +26,34 @@ enum class StartupVerbosity {
 // clang-format on
 
 struct CommandLineArguments {
-	bool printconf;
-	bool noprimaryconf;
-	bool nolocalconf;
-	bool fullscreen;
-	bool list_countries;
-	bool list_layouts;
-	bool list_code_pages;
-	bool list_shaders;
-	bool version;
-	bool help;
-	bool eraseconf;
-	bool erasemapper;
-	bool noconsole;
-	bool startmapper;
-	bool exit;
-	bool securemode;
-	bool noautoexec;
+	bool printconf       = false;
+	bool noprimaryconf   = false;
+	bool nolocalconf     = false;
+	bool fullscreen      = false;
+	bool list_countries  = false;
+	bool list_layouts    = false;
+	bool list_code_pages = false;
+	bool list_shaders    = false;
+	bool version         = false;
+	bool help            = false;
+	bool eraseconf       = false;
+	bool erasemapper     = false;
+	bool noconsole       = false;
+	bool startmapper     = false;
+	bool exit            = false;
+	bool securemode      = false;
+	bool noautoexec      = false;
 
-	std::string working_dir;
-	std::string lang;
-	std::string machine;
-	std::vector<std::string> conf;
-	std::vector<std::string> set;
-	std::optional<std::vector<std::string>> editconf;
+	std::string working_dir                          = {};
+	std::string lang                                 = {};
+	std::string machine                              = {};
+	std::vector<std::string> conf                    = {};
+	std::vector<std::string> set                     = {};
+	std::optional<std::vector<std::string>> editconf = {};
 
-	std::optional<int> socket;
-	std::optional<int> wait_pid;
+	std::optional<int> socket           = {};
+	std::optional<int> wait_pid         = {};
+	std::optional<std::string> log_name = {};
 };
 
 class Config {

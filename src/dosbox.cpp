@@ -230,7 +230,8 @@ std::optional<PauseState> NextPauseState(const PauseState current,
 	switch (event) {
 	case PauseEvent::UserPause:
 		// User pause trumps auto: it engages from Running, upgrades a
-		// pending/engaged auto-pause, and is idempotent once user-paused.
+		// pending/engaged auto-pause, and is idempotent once
+		// user-paused.
 		//
 		switch (current) {
 		case Running: return UserPausePending;
@@ -240,14 +241,13 @@ std::optional<PauseState> NextPauseState(const PauseState current,
 		case UserPausePending:
 		case UserPaused: return {};
 
-		default:
-			assertm(false, "Invalid PauseState value");
-			return {};
+		default: assertm(false, "Invalid PauseState value"); return {};
 		}
 		break;
 
 	case PauseEvent::UserResume:
-		// Only clears a user pause; auto-pauses are left for auto-resume.
+		// Only clears a user pause; auto-pauses are left for
+		// auto-resume.
 		//
 		switch (current) {
 		case UserPausePending: return Running;
@@ -257,9 +257,7 @@ std::optional<PauseState> NextPauseState(const PauseState current,
 		case AutoPausePending:
 		case AutoPaused: return {};
 
-		default:
-			assertm(false, "Invalid PauseState value");
-			return {};
+		default: assertm(false, "Invalid PauseState value"); return {};
 		}
 		break;
 
@@ -274,9 +272,7 @@ std::optional<PauseState> NextPauseState(const PauseState current,
 		case AutoPausePending:
 		case AutoPaused: return {};
 
-		default:
-			assertm(false, "Invalid PauseState value");
-			return {};
+		default: assertm(false, "Invalid PauseState value"); return {};
 		}
 		break;
 
@@ -291,9 +287,7 @@ std::optional<PauseState> NextPauseState(const PauseState current,
 		case UserPausePending:
 		case UserPaused: return {};
 
-		default:
-			assertm(false, "Invalid PauseState value");
-			return {};
+		default: assertm(false, "Invalid PauseState value"); return {};
 		}
 		break;
 
@@ -307,9 +301,7 @@ std::optional<PauseState> NextPauseState(const PauseState current,
 		case UserPaused:
 		case AutoPaused: return {};
 
-		default:
-			assertm(false, "Invalid PauseState value");
-			return {};
+		default: assertm(false, "Invalid PauseState value"); return {};
 		}
 		break;
 	}
@@ -599,8 +591,8 @@ static Bitu normal_loop()
 				// subsystems are already parked, so a MIDI
 				// burst in that window could fill the synth's
 				// `work_fifo` and deadlock the main thread on
-				// its blocking enqueue (the consumer -- the synth
-				// renderer thread -- was just halted).
+				// its blocking enqueue (the consumer -- the
+				// synth renderer thread -- was just halted).
 				if (DOSBOX_IsPaused()) {
 					return 0;
 				}
@@ -994,29 +986,32 @@ void DOSBOX_SetMachineTypeFromConfig(SectionProp& section)
 	       (machine != MachineType::Vga && svga_type == SvgaType::None));
 }
 
-static void remove_waitpid(std::vector<std::string>& parameters)
+static constexpr auto WaitPidArg = "--wait_pid";
+static constexpr auto LogNameArg = "--log_name";
+
+static void remove_arg(std::vector<std::string>& parameters, const std::string arg_name)
 {
 	auto it = parameters.begin();
+
 	while (it != parameters.end()) {
-		if (*it == "-waitpid" || *it == "--waitpid") {
-			it = parameters.erase(it);
-			if (it != parameters.end()) {
-				auto& pid = *it;
-				if (!pid.empty() && std::isdigit(pid[0])) {
-					// The integer value should be the next
-					// element following "--waitpid". If we
-					// found an integer, remove it as well.
-					it = parameters.erase(it);
-				}
-			}
-		} else {
+		if (*it != arg_name) {
 			++it;
+			continue;
+		}
+
+		it = parameters.erase(it);
+
+		// Remove the value unless the next token looks like another option
+		if (it != parameters.end() && (it->empty() || (*it)[0] != '-')) {
+			it = parameters.erase(it);
 		}
 	}
 }
 
 void DOSBOX_Restart()
 {
+	LOG_INFO("DOSBOX: Restarting...");
+
 	DOSBOX_Restart(control->startup_params);
 }
 
@@ -1024,13 +1019,20 @@ void DOSBOX_Restart(std::vector<std::string>& parameters)
 {
 	control->ApplyQueuedValuesToCli(parameters);
 
-	// Remove any existing --waitpid parameters.
+	// Remove any existing `--wait_pid` and `--log_name` parameters.
 	// This can happen with multiple restarts.
-	remove_waitpid(parameters);
+	remove_arg(parameters, WaitPidArg);
+	remove_arg(parameters, LogNameArg);
+
+	if (const auto maybe_log_name = LOG_GetLogFileName(); maybe_log_name) {
+		parameters.emplace_back(LogNameArg);
+		parameters.emplace_back(*maybe_log_name);
+	}
 
 #ifdef WIN32
-	parameters.emplace_back("--waitpid");
+	parameters.emplace_back(WaitPidArg);
 	parameters.emplace_back(std::to_string(GetCurrentProcessId()));
+
 	std::string command_line = {};
 
 	bool first = true;
@@ -1050,8 +1052,8 @@ void DOSBOX_Restart(std::vector<std::string>& parameters)
 		command_line.append("\"" + arg + "\"");
 		first = false;
 	}
-#else
-	parameters.emplace_back("--waitpid");
+#else  // macOS & Linux
+	parameters.emplace_back(WaitPidArg);
 	parameters.emplace_back(std::to_string(getpid()));
 
 	auto newargs = new char*[parameters.size() + 1];
@@ -1116,7 +1118,7 @@ void DOSBOX_Restart(std::vector<std::string>& parameters)
 	                   &process_information)) {
 		LOG_ERR("Restart failed: CreateProcess failed");
 	}
-#else
+#else  // macOS & Linux
 	int ret = fork();
 	switch (ret) {
 	case -1:
@@ -1313,6 +1315,28 @@ static void add_dosbox_config_section(const ConfigPtr& conf)
 	        "\n"
 	        "  - English is built-in, the rest is stored in the bundled\n"
 	        "    'resources/translations' directory.");
+
+	pstring = section->AddString("log_mode", Never, "console-and-file");
+	pstring->SetValues({"console", "file", "console-and-file", "off"});
+	pstring->SetHelp(
+	        "Set the logging mode ('console-and-file' by default). Possible values:\n"
+	        "\n"
+	        "  off:               Disable all logging.\n"
+	        "\n"
+	        "  console:           Print log messages to the console.\n"
+	        "\n"
+	        "  file:              Write log messages to a file in the 'log_dir' directory,\n"
+	        "                     named 'dosbox-YYYYMMDD-HHMMSS.log' after the date and time\n"
+	        "                     the file was created. Logs from the most recent ten runs\n"
+	        "                     are kept.\n"
+	        "\n"
+	        "  console-and-file:  Print log messages to the console and also write a log file\n"
+	        "                     (default).");
+
+	pstring = section->AddString("log_dir", Never, "");
+	pstring->SetHelp(
+	        "Log file directory (unset by default). If unset, the logs are written to the\n"
+	        "'logs' folder in the configuration directory.");
 
 	pstring = section->AddString("machine", OnlyAtStart, "svga_s3");
 	pstring->SetValues({"hercules",
@@ -1649,8 +1673,8 @@ void DOSBOX_InitModules()
 	DOSBOX_Init();
 
 #if C_DEBUGGER
-	LOG_StartUp();
-	LOG_Init();
+	DEBUG_StartUpLogging();
+	DEBUG_InitLogging();
 #endif
 
 	COMPOSITE_Init();
@@ -1736,7 +1760,7 @@ void DOSBOX_DestroyModules()
 	CPU_Destroy();
 
 #if C_DEBUGGER
-	LOG_Destroy();
+	DEBUG_DestroyLogging();
 #endif
 
 	DOSBOX_Destroy();

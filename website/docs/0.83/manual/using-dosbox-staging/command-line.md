@@ -213,6 +213,11 @@ dosbox [OPTIONS...] [PATH]
     [`machine`](../graphics/adapters.md#machine) for further details.
 
 
+##### `--noconsole`
+
+:   Do not open the console window showing the logs (Windows only).
+
+
 ### Discovery
 
 ##### `--list-countries`

@@ -887,13 +887,18 @@ void CONFIG::Run(void)
 
 				// If the value can't be set at runtime then
 				// queue it and let the user know
-				if (property->GetChange() ==
-				    Property::Changeable::OnlyAtStart) {
+				const auto change = property->GetChange();
 
-					WriteOut(MSG_Get("PROGRAM_CONFIG_NOT_CHANGEABLE"),
+				if (change == Property::Changeable::OnlyAtStart) {
+					WriteOut(MSG_Get("PROGRAM_CONFIG_ONLY_CHANGEABLE_AT_STARTUP"),
 					         parameters[1].c_str());
 
 					property->SetQueuedValue(value);
+					return;
+
+				} else if (change == Property::Changeable::Never) {
+					WriteOut(MSG_Get("PROGRAM_CONFIG_NOT_CHANGEABLE"),
+					         parameters[1].c_str());
 					return;
 				}
 
@@ -1084,10 +1089,13 @@ void PROGRAMS_AddMessages()
 
 	MSG_Add("CONJUNCTION_AND", "and");
 
-	MSG_Add("PROGRAM_CONFIG_NOT_CHANGEABLE",
+	MSG_Add("PROGRAM_CONFIG_ONLY_CHANGEABLE_AT_STARTUP",
 	        "[color=yellow]The '%s' setting can't be changed at runtime.[reset]\n"
 	        "However, it will be applied on restart by running 'CONFIG -r' or via the\n"
 	        "restart hotkey.\n");
+
+	MSG_Add("PROGRAM_CONFIG_NOT_CHANGEABLE",
+	        "[color=yellow]The '%s' setting can't be changed at runtime.[reset]\n");
 
 	MSG_Add("PROGRAM_CONFIG_DEPRECATED_BUT_ALLOWED_WARNING",
 	        "[color=light-red]This is a deprecated setting only kept for "

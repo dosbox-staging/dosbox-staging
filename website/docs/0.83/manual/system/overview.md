@@ -12,6 +12,7 @@ belong anywhere else: window focus, the screensaver, and disk speed. Most
 of this is just about how DOSBox Staging behaves as an application on your
 desktop, but disk speed emulation is the exception.
 
+
 ## General behaviour
 
 When you switch away from DOSBox Staging (e.g., by pressing ++alt+tab++), the
@@ -26,6 +27,7 @@ The [`screensaver`](#screensaver) setting controls whether the OS screensaver
 is allowed to activate while DOSBox Staging is running. By default, it's
 blocked to prevent the screensaver from kicking in during a long cutscene or a
 game that doesn't require constant input.
+
 
 ## Disk speed
 
@@ -127,3 +129,29 @@ You can set these in the `[dosbox]` configuration sections.
     - `slow` -- Typical 1980s hard disk speed (~600 kB/s).
 
     </div>
+
+
+### Logging
+
+These settings are configured in the `[dosbox]` section.
+
+##### log_mode
+
+:   Set the logging mode (`console-and-file` by default). Possible values:
+
+      - `off` -- Disable all logging.
+
+      - `console` -- Print log messages to the console.
+
+      - `file` -- Write log messages to a file in the [log_dir](#log_dir)
+        directory, named `dosbox-YYYYMMDD-HHMMSS.log` after the date and time
+        the file was created. Logs from the most recent ten runs are kept.
+
+      - `console-and-file` *default*{ .default } --  Print log messages to the
+        console and also write a log file.
+
+##### log_dir
+
+:   Log file directory (unset by default). If unset, the logs are written to
+    the `logs` folder in the [configuration
+    directory](../using-dosbox-staging/configuration.md#primary-configuration).
