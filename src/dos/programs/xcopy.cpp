@@ -114,6 +114,11 @@ XCopyError XCOPY::InitializeSource(const std::string& value)
 		return XCopyError::Failure;
 	}
 
+	if (DOS_FindDevice(value.c_str()) != DOS_DEVICES) {
+		WriteErr(MSG_Get("PROGRAM_XCOPY_RESERVED_DEVICE_SOURCE"));
+		return XCopyError::Failure;
+	}
+
 	// The original XCOPY implementation rejects trailing slashes when the
 	// source is not a bare drive (eg: C:\). Canonicalization makes
 	// this implementation more tolerant.
@@ -394,9 +399,16 @@ XCopyError XCOPY::CopyToDestination()
 	bool overwrite_all = !IsInvokedInteractively();
 
 	for (const DOS_DTA::Result& file : src_snapshot) {
+		const auto to_file = apply_pattern(file.name, dest_spec);
+		if (DOS_FindDevice(to_file.c_str()) != DOS_DEVICES) {
+			// The original XCOPY implementation doesn't produce an
+			// error in this case, it just stops.
+			WriteErr(MSG_Get("PROGRAM_XCOPY_RESERVED_DEVICE_DEST"));
+			return XCopyError::NoError;
+		}
+
 		const auto from_path = path_join(src_path, file.name);
-		const auto to_path   = path_join(dest_path,
-                                               apply_pattern(file.name, dest_spec));
+		const auto to_path   = path_join(dest_path, to_file);
 		if (from_path == to_path) {
 			// The original XCOPY implementation doesn't produce an
 			// error in this case, it just stops.
@@ -494,6 +506,12 @@ void XCOPY::AddMessages()
 	MSG_Add("PROGRAM_XCOPY_GENERAL_FAILURE", "General failure - %s\n");
 
 	MSG_Add("PROGRAM_XCOPY_INSUFFICIENT_DISK_SPACE", "Insufficient disk space\n");
+
+	MSG_Add("PROGRAM_XCOPY_RESERVED_DEVICE_SOURCE",
+	        "Cannot copy from a reserved device\n");
+
+	MSG_Add("PROGRAM_XCOPY_RESERVED_DEVICE_DEST",
+	        "Cannot copy to a reserved device\n");
 
 	MSG_Add("PROGRAM_XCOPY_COPY_ONTO_ITSELF",
 	        "File cannot be copied onto itself\n");
