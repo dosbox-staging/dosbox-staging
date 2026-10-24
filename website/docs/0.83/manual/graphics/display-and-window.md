@@ -261,8 +261,9 @@ example, 4K monitors are typically used at 200% scaling. A window that is 1000
 pixels wide on a 1080p monitor at 100% scaling. This way, the window appears
 roughly the same physical size on both.
 
-You can specify the window size and position, and the [viewport
-size](rendering/aspect-ratios-and-scaling.md#custom-viewport-size), in three
+You can specify the window size and position, and the viewport
+[size](rendering/aspect-ratios-and-scaling.md#custom-viewport-size) and
+[position](rendering/aspect-ratios-and-scaling.md#viewport-position), in three
 different ways:
 
 - **Logical units** (e.g., `window_size = 1024x768`) --- The values are
@@ -277,12 +278,11 @@ different ways:
   units.
 
 - **Percentages** (e.g., `window_size = 120x90%` or `viewport = 89%`) --- The
-  values are relative to your desktop size, so they adapt to any monitor. For
-  window sizes, both values are relative to the desktop height; for example,
-  `120x90%` always gives you a 4:3 window that is 90% as tall as your desktop
-  (this is the same as `window_size = large`). The window is resized when you
-  move it to another monitor or change the display scaling.
-
+  values are relative to the size of your desktop or window, so they adapt to
+  any monitor. For window sizes, both values are relative to the desktop
+  height; for example, `120x90%` always gives you a 4:3 window that is 90% as
+  tall as your desktop (this is the same as `window_size = large`). The window
+  is resized when you move it to another monitor or change the display scaling.
 
 For general use, logical units and percentages are recommended as they ensure
 your settings will be portable between monitors with different scaling
