@@ -246,8 +246,10 @@ void BOOT::Run(void)
 			FILE *usefile = getFSFile(temp_line.c_str(),
 			                          &floppysize, &rombytesize);
 			if (usefile != nullptr) {
-				diskSwap[i] = std::make_shared<imageDisk>(
-				        usefile, temp_line.c_str(), floppysize, false);
+				diskSwap[i] = CreateImageDisk(usefile,
+				                              temp_line.c_str(),
+				                              floppysize,
+				                              false);
 				if (usefile_1 == nullptr) {
 					usefile_1 = usefile;
 					rombytesize_1 = rombytesize;
@@ -271,9 +273,18 @@ void BOOT::Run(void)
 		return;
 	}
 
+	// bootSector is a 512-byte buffer. Refuse a disk whose sectors
+	// would overflow it.
+	if (imageDiskList.at(drive_index(drive))->getSectSize() != 512) {
+		LOG_WARNING("BOOT: Non-standard sector size: %u bytes per sector",
+		            imageDiskList.at(drive_index(drive))->getSectSize());
+		WriteOut(MSG_Get("PROGRAM_BOOT_UNABLE"), drive);
+		return;
+	}
+
 	bootSector bootarea;
 	imageDiskList.at(drive_index(drive))
-	        ->Read_Sector(0, 0, 1, reinterpret_cast<uint8_t*>(&bootarea));
+	        ->ReadSector(0, 0, 1, reinterpret_cast<uint8_t*>(&bootarea));
 	if ((bootarea.rawdata[0] == 0x50) && (bootarea.rawdata[1] == 0x43) &&
 	    (bootarea.rawdata[2] == 0x6a) && (bootarea.rawdata[3] == 0x72)) {
 		if (!is_machine_pcjr()) {

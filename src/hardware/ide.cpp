@@ -163,7 +163,7 @@ public:
 	std::string id_model = "DOSBox IDE disk";
 	uint8_t bios_disk_index;
 
-	std::shared_ptr<imageDisk> getBIOSdisk();
+	std::shared_ptr<ImageDisk> getBIOSdisk();
 
 	void update_from_biosdisk();
 	/* read from 1F0h data port from IDE device */
@@ -2033,7 +2033,7 @@ void IDEATAPICDROMDevice::generate_identify_device()
 
 void IDEATADevice::generate_identify_device()
 {
-	//  imageDisk *disk = getBIOSdisk();
+	//  ImageDisk *disk = getBIOSdisk();
 	uint8_t csum;
 	uint32_t i;
 
@@ -2135,7 +2135,7 @@ IDEATADevice::IDEATADevice(IDEController *c, uint8_t disk_index)
           bios_disk_index(disk_index)
 {}
 
-std::shared_ptr<imageDisk> IDEATADevice::getBIOSdisk()
+std::shared_ptr<ImageDisk> IDEATADevice::getBIOSdisk()
 {
 	if (bios_disk_index >= (2 + MAX_HDD_IMAGES))
 		return nullptr;
@@ -2381,7 +2381,8 @@ void IDE_CDROM_DetachAll()
 	}
 }
 
-/* bios_disk_index = index into BIOS INT 13h disk array: imageDisk *imageDiskList[MAX_DISK_IMAGES]; */
+/* bios_disk_index = index into BIOS INT 13h disk array: ImageDisk
+ * *imageDiskList[MAX_DISK_IMAGES]; */
 void IDE_Hard_Disk_Attach(int8_t index,
                           bool slave,
                           uint8_t bios_disk_index /*not INT13h, the index into DOSBox's BIOS drive emulation*/)
@@ -2410,7 +2411,8 @@ void IDE_Hard_Disk_Attach(int8_t index,
 	c->device[slave ? 1 : 0] = (IDEDevice *)dev;
 }
 
-/* bios_disk_index = index into BIOS INT 13h disk array: imageDisk *imageDiskList[MAX_DISK_IMAGES]; */
+/* bios_disk_index = index into BIOS INT 13h disk array: ImageDisk
+ * *imageDiskList[MAX_DISK_IMAGES]; */
 void IDE_Hard_Disk_Detach(uint8_t bios_disk_index)
 {
 	for (uint8_t index = 0; index < MAX_IDE_CONTROLLERS; index++) {
@@ -2534,7 +2536,8 @@ void IDE_EmuINT13DiskReadByBIOS_LBA(uint8_t disk, uint64_t lba)
 				bool vm86 = IDE_CPU_Is_Vm86();
 
 				if ((ata->bios_disk_index - 2) == (disk - 0x80)) {
-					//                  imageDisk *dsk = ata->getBIOSdisk();
+					//                  ImageDisk *dsk =
+					//                  ata->getBIOSdisk();
 
 					if (ide->int13fakev86io && vm86) {
 						dev->faked_command = true;
@@ -2942,7 +2945,7 @@ static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/)
 		auto ata = (IDEATADevice *)dev;
 		uint32_t sectorn = 0; /* TBD: expand to uint64_t when adding LBA48 emulation */
 		uint32_t sectcount;
-		std::shared_ptr<imageDisk> disk = nullptr;
+		std::shared_ptr<ImageDisk> disk = nullptr;
 		//      int i;
 
 		switch (dev->command) {
@@ -2987,7 +2990,7 @@ static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/)
 				          ((uint32_t)ata->lba[0] - 1u);
 			}
 
-			if (disk->Write_AbsoluteSector(sectorn, ata->sector) != 0) {
+			if (disk->WriteAbsoluteSector(sectorn, ata->sector) != 0) {
 				LOG_WARNING("IDE: Failed to write sector");
 				ata->abort_error();
 				dev->controller->raise_irq();
@@ -3064,7 +3067,7 @@ static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/)
 				          ((uint32_t)ata->lba[0] - 1u);
 			}
 
-			if (disk->Read_AbsoluteSector(sectorn, ata->sector) != 0) {
+			if (disk->ReadAbsoluteSector(sectorn, ata->sector) != 0) {
 				LOG_WARNING("IDE: ATA read failed");
 				ata->abort_error();
 				dev->controller->raise_irq();
@@ -3122,7 +3125,7 @@ static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/)
 				          ((uint32_t)ata->lba[0] - 1u);
 			}
 
-			if (disk->Read_AbsoluteSector(sectorn, ata->sector) != 0) {
+			if (disk->ReadAbsoluteSector(sectorn, ata->sector) != 0) {
 				LOG_WARNING("IDE: ATA read failed");
 				ata->abort_error();
 				dev->controller->raise_irq();
@@ -3201,7 +3204,9 @@ static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/)
 			for (uint32_t cc = 0; cc < std::min(ata->multiple_sector_count, sectcount); cc++) {
 				/* it would be great if the disk object had a "read
 				 * multiple sectors" member function */
-				if (disk->Read_AbsoluteSector(sectorn + cc, ata->sector + (cc * 512)) != 0) {
+				if (disk->ReadAbsoluteSector(sectorn + cc,
+				                             ata->sector + (cc * 512)) !=
+				    0) {
 					LOG_WARNING("IDE: ATA read failed");
 					ata->abort_error();
 					dev->controller->raise_irq();
@@ -3264,7 +3269,9 @@ static void IDE_DelayedCommand(uint32_t idx /*which IDE controller*/)
 			for (uint32_t cc = 0; cc < std::min(ata->multiple_sector_count, sectcount); cc++) {
 				/* it would be great if the disk object had a "write
 				 * multiple sectors" member function */
-				if (disk->Write_AbsoluteSector(sectorn + cc, ata->sector + (cc * 512)) != 0) {
+				if (disk->WriteAbsoluteSector(sectorn + cc,
+				                              ata->sector + (cc * 512)) !=
+				    0) {
 					LOG_WARNING("IDE: Failed to write sector");
 					ata->abort_error();
 					dev->controller->raise_irq();
