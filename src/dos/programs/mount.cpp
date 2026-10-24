@@ -882,12 +882,21 @@ bool MOUNT::ParseGeometry(MountParameters& params, const GeometryOptions& option
 
 		int index = 0;
 		int count = 0;
+		std::optional<int> tmpval;
 
 		// Parse the str_size string
 		while (*scan && index < 20 && count < 4) {
 			if (*scan == ',') {
 				number[index]         = 0;
-				params.sizes[count++] = atoi(number);
+				tmpval = parse_int(number);
+				if (!tmpval.has_value() || tmpval.value() < 0 || tmpval.value() > 65535)
+				{
+					NOTIFY_DisplayWarning(Notification::Source::Console,
+							      "MOUNT",
+							      "PROGRAM_IMGMOUNT_CANT_CREATE");
+					return false;
+				}
+				params.sizes[count++] = tmpval.value();
 				index                 = 0;
 			} else {
 				number[index++] = *scan;
@@ -898,8 +907,14 @@ bool MOUNT::ParseGeometry(MountParameters& params, const GeometryOptions& option
 		if (count < 4) {
 			// always goes correct as index is max 20 at this point.
 			number[index] = 0;
-
-			params.sizes[count] = atoi(number);
+			tmpval = parse_int(number);
+			if (!tmpval.has_value() || tmpval.value() < 0 || tmpval.value() > 65535)
+			{
+				NOTIFY_DisplayWarning(Notification::Source::Console,
+						      "MOUNT",
+						      "PROGRAM_IMGMOUNT_CANT_CREATE");
+				return false;
+			}
 		}
 	}
 
@@ -928,6 +943,15 @@ bool MOUNT::ParseGeometry(MountParameters& params, const GeometryOptions& option
 		params.sizes[1] = *sectors;
 		params.sizes[2] = *heads;
 		params.sizes[3] = *cylinders;
+	}
+
+	if ((params.type != MountType::CdRomImage ||
+	     params.fstype != MountFileSystemType::Iso) &&
+	    params.sizes[0] > 512) {
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "MOUNT",
+		                      "PROGRAM_IMGMOUNT_CANT_CREATE");
+		return false;
 	}
 
 	return true;

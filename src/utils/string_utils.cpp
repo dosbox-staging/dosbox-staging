@@ -400,7 +400,9 @@ std::optional<float> parse_float(const std::string& s)
 std::optional<int> parse_int(const std::string& s, const int base)
 {
 	try {
-		if (!s.empty()) {
+		if (s.empty()) {
+			return {};
+		} else {
 			size_t num_chars_processed = 0;
 			const auto number = std::stoi(s, &num_chars_processed, base);
 			if (s.size() == num_chars_processed) {
