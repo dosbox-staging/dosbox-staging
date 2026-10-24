@@ -10,7 +10,6 @@ target_sources(dosboxcommon PRIVATE
   iso_locale_codes.cpp
   messages_adjust.cpp
   messages_po_entry.cpp
-  rwqueue.cpp
   support.cpp
   unicode.cpp
   unicode_encodings.cpp
