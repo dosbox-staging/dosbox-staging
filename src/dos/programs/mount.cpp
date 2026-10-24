@@ -772,31 +772,6 @@ MOUNT::GeometryOptions MOUNT::ParseGeometryOptions()
 	        .chs      = find_remove_option_value(*cmd, "-chs")};
 }
 
-static bool safe_atoi(char *buf, uint16_t *dst)
-{
-	int val = 0;
-	char *c = buf;
-
-	if (!*buf)
-		return false;
-
-	if (strlen(buf) > 6)
-		return false;
-
-	while (*c) {
-		if (!isdigit(static_cast<unsigned char>(*c++)))
-			return false;
-	}
-
-	val = atoi(buf);
-
-	if (val < 0 || val > 65535)
-		return false;
-
-	*dst = static_cast<uint16_t>(val);
-	return true;
-}
-
 // Sets:
 //   params.mediaid
 //   params.sizes
@@ -892,18 +867,21 @@ bool MOUNT::ParseGeometry(MountParameters& params, const GeometryOptions& option
 
 		int index = 0;
 		int count = 0;
+		std::optional<int> tmpval;
 
 		// Parse the str_size string
 		while (*scan && index < 20 && count < 4) {
 			if (*scan == ',') {
 				number[index]         = 0;
-				if (!safe_atoi(number, &params.sizes[count++]))
+				tmpval = parse_int(number);
+				if (!tmpval.has_value() || tmpval.value() < 0 || tmpval.value() > 65535)
 				{
 					NOTIFY_DisplayWarning(Notification::Source::Console,
 							      "MOUNT",
 							      "PROGRAM_IMGMOUNT_CANT_CREATE");
 					return false;
 				}
+				params.sizes[count++] = tmpval.value();
 				index                 = 0;
 			} else {
 				number[index++] = *scan;
@@ -914,8 +892,8 @@ bool MOUNT::ParseGeometry(MountParameters& params, const GeometryOptions& option
 		if (count < 4) {
 			// always goes correct as index is max 20 at this point.
 			number[index] = 0;
-
-			if (!safe_atoi(number, &params.sizes[count]))
+			tmpval = parse_int(number);
+			if (!tmpval.has_value() || tmpval.value() < 0 || tmpval.value() > 65535)
 			{
 				NOTIFY_DisplayWarning(Notification::Source::Console,
 						      "MOUNT",
