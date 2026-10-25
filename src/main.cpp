@@ -36,10 +36,34 @@ CHECK_NARROWING();
 #ifdef WIN32
 
 #include <winuser.h>
-#define STDOUT_FILE "stdout.txt"
-#define STDERR_FILE "stderr.txt"
 
 static uint16_t original_code_page = 0;
+
+static void setup_windows_console_window(const bool disable_console)
+{
+#if !C_DEBUGGER
+	if (disable_console) {
+		// Replace console streams before detaching so libraries can
+		// still safely write to them. Preserve redirected files and
+		// pipes.
+		auto redirect_console_stream = [](DWORD id,
+		                                  FILE* stream,
+		                                  const char* mode) {
+			DWORD console_mode = 0;
+			if (GetConsoleMode(GetStdHandle(id), &console_mode)) {
+				freopen("NUL", mode, stream);
+			}
+		};
+		redirect_console_stream(STD_INPUT_HANDLE, stdin, "r");
+		redirect_console_stream(STD_OUTPUT_HANDLE, stdout, "w");
+		redirect_console_stream(STD_ERROR_HANDLE, stderr, "w");
+		FreeConsole();
+	}
+#else
+	// The debugger needs its console even when --noconsole is passed.
+	(void)disable_console;
+#endif
+}
 
 static void switch_console_to_utf8()
 {
@@ -75,10 +99,6 @@ static BOOL WINAPI console_event_handler(DWORD event)
 }
 #endif // WIN32
 
-// Static variable to signal whether there is a valid stdout available. Fixes
-// some bugs when --noconsole is used in a read only directory.
-static bool no_stdout = false;
-
 // TODO?
 void GFX_ShowMsg(const char* format, ...)
 {
@@ -90,9 +110,7 @@ void GFX_ShowMsg(const char* format, ...)
 	va_end(msg);
 
 	buf[sizeof(buf) - 1] = '\0';
-	if (!no_stdout) {
-		puts(buf); // Else buf is parsed again. (puts adds end of line)
-	}
+	puts(buf); // Else buf is parsed again. (puts adds end of line)
 }
 
 static void register_command_line_help_message()
@@ -550,6 +568,10 @@ int main(int argc, char* argv[])
 	control = std::make_unique<Config>(&command_line);
 
 	const auto arguments = &control->arguments;
+
+#ifdef WIN32
+	setup_windows_console_window(arguments->noconsole);
+#endif
 
 	if (arguments->wait_pid) {
 		wait_for_pid(*arguments->wait_pid);
