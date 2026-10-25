@@ -39,7 +39,7 @@ CHECK_NARROWING();
 
 static uint16_t original_code_page = 0;
 
-static void setup_windows_console_window(const bool disable_console)
+static bool setup_windows_console_window(const bool disable_console)
 {
 #if !C_DEBUGGER
 	if (disable_console) {
@@ -51,18 +51,22 @@ static void setup_windows_console_window(const bool disable_console)
 		                                  const char* mode) {
 			DWORD console_mode = 0;
 			if (GetConsoleMode(GetStdHandle(id), &console_mode)) {
-				freopen("NUL", mode, stream);
+				return freopen("NUL", mode, stream) != nullptr;
 			}
+			return true;
 		};
-		redirect_console_stream(STD_INPUT_HANDLE, stdin, "r");
-		redirect_console_stream(STD_OUTPUT_HANDLE, stdout, "w");
-		redirect_console_stream(STD_ERROR_HANDLE, stderr, "w");
+		if (!redirect_console_stream(STD_INPUT_HANDLE, stdin, "r") ||
+		    !redirect_console_stream(STD_OUTPUT_HANDLE, stdout, "w") ||
+		    !redirect_console_stream(STD_ERROR_HANDLE, stderr, "w")) {
+			return false;
+		}
 		FreeConsole();
 	}
 #else
 	// The debugger needs its console even when --noconsole is passed.
 	(void)disable_console;
 #endif
+	return true;
 }
 
 static void switch_console_to_utf8()
@@ -570,7 +574,9 @@ int main(int argc, char* argv[])
 	const auto arguments = &control->arguments;
 
 #ifdef WIN32
-	setup_windows_console_window(arguments->noconsole);
+	if (!setup_windows_console_window(arguments->noconsole)) {
+		return EXIT_FAILURE;
+	}
 #endif
 
 	if (arguments->wait_pid) {
