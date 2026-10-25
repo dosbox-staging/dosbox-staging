@@ -267,6 +267,10 @@ size_t RWQueue<T>::BulkDequeue(std::vector<T>& into_target, const size_t num_req
 template <typename T>
 size_t RWQueue<T>::BulkDequeue(T* const into_target, const size_t num_requested)
 {
+	if (num_requested == 0) {
+		return 0;
+	}
+
 	assert(into_target);
 	auto target_start  = into_target;
 	auto num_remaining = num_requested;
