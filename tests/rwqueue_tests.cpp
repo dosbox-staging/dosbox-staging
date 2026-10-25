@@ -6,7 +6,8 @@
 #include <gtest/gtest.h>
 #include <gmock/gmock.h>
 
-
+#include <atomic>
+#include <chrono>
 #include <thread>
 #include <tuple>
 #include <vector>
@@ -539,6 +540,223 @@ TEST(RWQueue, StopBulkMidway)
 	value = q.Dequeue();
 	EXPECT_FALSE(value.has_value());
 	EXPECT_TRUE(items.empty());
+}
+
+TEST(RWQueue, BulkDequeueZeroRequestFreshVector)
+{
+	RWQueue<int> q(8);
+
+	// Never allocated, so data() is typically nullptr
+	std::vector<int> target = {};
+
+	EXPECT_EQ(q.BulkDequeue(target, 0), 0u);
+	EXPECT_TRUE(target.empty());
+}
+
+TEST(RWQueue, BulkDequeueZeroRequestNullPointer)
+{
+	RWQueue<int> q(8);
+	EXPECT_EQ(q.BulkDequeue(static_cast<int*>(nullptr), 0), 0u);
+}
+
+TEST(RWQueue, BulkDequeueZeroRequestLeavesQueueIntact)
+{
+	RWQueue<int> q(8);
+
+	std::vector<int> items = {1, 2, 3};
+	q.BulkEnqueue(items);
+
+	int untouched = 0;
+	EXPECT_EQ(q.BulkDequeue(&untouched, 0), 0u);
+	EXPECT_EQ(untouched, 0);
+	EXPECT_EQ(q.Size(), 3u);
+
+	std::vector<int> out = {};
+	EXPECT_EQ(q.BulkDequeue(out, 3), 3u);
+	EXPECT_EQ(out, (std::vector<int>{1, 2, 3}));
+}
+
+TEST(RWQueue, NonblockingEnqueueFull)
+{
+	RWQueue<int> q(2);
+
+	EXPECT_TRUE(q.NonblockingEnqueue(1));
+	EXPECT_TRUE(q.NonblockingEnqueue(2));
+	EXPECT_TRUE(q.IsFull());
+
+	// Full: returns false instead of blocking
+	EXPECT_FALSE(q.NonblockingEnqueue(3));
+	EXPECT_EQ(q.Size(), 2u);
+}
+
+TEST(RWQueue, NonblockingEnqueueStopped)
+{
+	RWQueue<int> q(2);
+	q.Stop();
+	EXPECT_FALSE(q.NonblockingEnqueue(1));
+	EXPECT_TRUE(q.IsEmpty());
+}
+
+TEST(RWQueue, NonblockingBulkEnqueuePartial)
+{
+	RWQueue<int> q(3);
+
+	std::vector<int> items = {1, 2, 3, 4, 5};
+	EXPECT_EQ(q.NonblockingBulkEnqueue(items), 3u);
+	EXPECT_TRUE(q.IsFull());
+
+	// Only the accepted items are removed from the source
+	EXPECT_EQ(items, (std::vector<int>{4, 5}));
+
+	// Queue is full: nothing taken, source untouched
+	EXPECT_EQ(q.NonblockingBulkEnqueue(items), 0u);
+	EXPECT_EQ(items, (std::vector<int>{4, 5}));
+
+	std::vector<int> out = {};
+	EXPECT_EQ(q.BulkDequeue(out, 3), 3u);
+	EXPECT_EQ(out, (std::vector<int>{1, 2, 3}));
+}
+
+TEST(RWQueue, NonblockingBulkEnqueueStopped)
+{
+	RWQueue<int> q(3);
+	q.Stop();
+
+	std::vector<int> items = {1, 2};
+	EXPECT_EQ(q.NonblockingBulkEnqueue(items), 0u);
+	EXPECT_EQ(items.size(), 2u);
+	EXPECT_TRUE(q.IsEmpty());
+}
+
+// There is no way to observe from the outside that a thread is parked inside
+// a condition variable wait. Once the worker signals that it's about to make
+// the blocking call, give it a moment to reach the wait.
+void wait_for_worker_to_block(const std::atomic<bool>& worker_has_started)
+{
+	while (!worker_has_started) {
+		std::this_thread::yield();
+	}
+	std::this_thread::sleep_for(std::chrono::milliseconds(50));
+}
+
+TEST(RWQueue, StopWakesBlockedDequeue)
+{
+	RWQueue<int> q(2);
+	std::optional<int> result = 42;
+
+	std::atomic<bool> has_started  = false;
+	std::atomic<bool> has_returned = false;
+
+	std::thread reader([&] {
+		has_started  = true;
+		result       = q.Dequeue();
+		has_returned = true;
+	});
+
+	wait_for_worker_to_block(has_started);
+
+	// Still blocked: nothing has been enqueued and the queue is running
+	EXPECT_FALSE(has_returned);
+
+	q.Stop();
+	reader.join();
+
+	EXPECT_FALSE(result.has_value());
+}
+
+TEST(RWQueue, StopWakesBlockedEnqueue)
+{
+	RWQueue<int> q(1);
+	q.Enqueue(1);
+
+	auto result = true;
+
+	std::atomic<bool> has_started  = false;
+	std::atomic<bool> has_returned = false;
+
+	std::thread writer([&] {
+		has_started  = true;
+		result       = q.Enqueue(2);
+		has_returned = true;
+	});
+
+	wait_for_worker_to_block(has_started);
+
+	// Still blocked: nothing has been dequeued and the queue is running
+	EXPECT_FALSE(has_returned);
+
+	q.Stop();
+	writer.join();
+
+	EXPECT_FALSE(result);
+	EXPECT_EQ(q.Size(), 1u);
+}
+
+TEST(RWQueue, StopIsIdempotentAndRestartable)
+{
+	RWQueue<int> q(2);
+
+	q.Stop();
+	q.Stop();
+	EXPECT_FALSE(q.IsRunning());
+
+	q.Start();
+	EXPECT_TRUE(q.IsRunning());
+	EXPECT_TRUE(q.Enqueue(1));
+	EXPECT_EQ(*q.Dequeue(), 1);
+}
+
+TEST(RWQueue, ClearEmptiesQueue)
+{
+	RWQueue<int> q(4);
+	q.Enqueue(1);
+	q.Enqueue(2);
+	EXPECT_EQ(q.Size(), 2u);
+
+	q.Clear();
+	EXPECT_TRUE(q.IsEmpty());
+	EXPECT_EQ(q.MaxCapacity(), 4u);
+
+	// Still usable afterwards
+	EXPECT_TRUE(q.Enqueue(3));
+	EXPECT_EQ(*q.Dequeue(), 3);
+}
+
+TEST(RWQueue, IsFullTracksCapacity)
+{
+	RWQueue<int> q(2);
+	EXPECT_FALSE(q.IsFull());
+	q.Enqueue(1);
+	EXPECT_FALSE(q.IsFull());
+	q.Enqueue(2);
+	EXPECT_TRUE(q.IsFull());
+	q.Dequeue();
+	EXPECT_FALSE(q.IsFull());
+}
+
+TEST(RWQueue, GetPercentFull)
+{
+	RWQueue<int> q(4);
+	EXPECT_FLOAT_EQ(q.GetPercentFull(), 0.0f);
+	q.Enqueue(1);
+	EXPECT_FLOAT_EQ(q.GetPercentFull(), 25.0f);
+	q.Enqueue(2);
+	q.Enqueue(3);
+	q.Enqueue(4);
+	EXPECT_FLOAT_EQ(q.GetPercentFull(), 100.0f);
+}
+
+TEST(RWQueue, ResizeChangesCapacity)
+{
+	RWQueue<int> q(4);
+	q.Resize(10);
+	EXPECT_EQ(q.MaxCapacity(), 10u);
+}
+
+TEST(RWQueue, ResizeZeroCapacity)
+{
+	RWQueue<int> q(4);
+	EXPECT_DEBUG_DEATH({ q.Resize(0); }, "");
 }
 
 } // namespace
