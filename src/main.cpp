@@ -161,7 +161,8 @@ void GFX_ShowMsg(const char* format, ...)
 	va_end(msg);
 
 	buf[sizeof(buf) - 1] = '\0';
-	puts(buf); // Else buf is parsed again. (puts adds end of line)
+	// Else buf is parsed again. (puts adds end of line)
+	puts(buf);
 }
 
 static void register_command_line_help_message()
@@ -238,6 +239,10 @@ static void register_command_line_help_message()
 	        "\n"
 	        "  --socket <num>           Run nullmodem on the specified socket number.\n"
 	        "\n"
+#ifdef WIN32
+	        "  --noconsole              Hide the console window with the logs.\n"
+	        "\n"
+#endif
 	        "  -h, -?, --help           Print help message and exit.\n"
 	        "\n"
 	        "  -V, --version            Print version information and exit.\n");
