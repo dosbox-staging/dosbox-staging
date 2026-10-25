@@ -470,7 +470,7 @@ static void handle_cli_set_commands(const std::vector<std::string>& set_args)
 }
 
 #if defined(WIN32) && !(C_DEBUGGER)
-static void apply_windows_debugger_workaround(const bool is_console_disabled)
+static void setup_windows_console_window(const bool is_console_disabled)
 {
 	// Can't disable the console with debugger enabled
 	if (is_console_disabled) {
@@ -665,7 +665,7 @@ int main(int argc, char* argv[])
 		}
 
 #if defined(WIN32) && !(C_DEBUGGER)
-		apply_windows_debugger_workaround(arguments->noconsole);
+		setup_windows_console_window(arguments->noconsole);
 #endif
 
 #if defined(WIN32)
