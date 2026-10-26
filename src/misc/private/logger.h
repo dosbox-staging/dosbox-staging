@@ -95,6 +95,7 @@ private:
 
 	void DeleteLog(const std_fs::path& path) const;
 	void PruneOldLogs() const;
+	void QueueSettingsForRestart() const;
 
 	std::string StripTerminalColours(const std::string& text) const;
 	void PrintToConsole(const Line& line) const;

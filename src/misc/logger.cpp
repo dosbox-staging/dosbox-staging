@@ -403,6 +403,24 @@ void Logger::Init(const std::optional<std::string>& log_file_name)
 		PruneOldLogs();
 		LOG_MSG("LOG: Writing logs to '%s'", log_path.string().c_str());
 	}
+
+	QueueSettingsForRestart();
+}
+
+// A restart re-reads the config files, so a `log_mode` or `log_dir` edited
+// in the meantime would take effect and split the run's log across
+// directories. Queueing the values in use makes the restart pass them with
+// `--set`, which overrides the config files.
+void Logger::QueueSettingsForRestart() const
+{
+	const auto section = get_section("dosbox");
+
+	section->GetProperty("log_mode")->SetQueuedValue(section->GetString("log_mode"));
+
+	if (LogsToFile()) {
+		section->GetProperty("log_dir")->SetQueuedValue(
+		        log_path.parent_path().string());
+	}
 }
 
 std::optional<std::string> Logger::GetLogFileName() const
