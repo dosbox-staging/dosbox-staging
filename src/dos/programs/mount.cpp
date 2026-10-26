@@ -613,6 +613,20 @@ static std::optional<uint16_t> parse_geometry_value(const std::string& s)
 	return static_cast<uint16_t>(*value);
 }
 
+// The FAT and raw image mounts read sectors into fixed 512-byte buffers, so
+// larger sector sizes would overflow them. The limit does not apply to ISO
+// images (which ignore the geometry; their default has 2048-byte sectors) or
+// to directory mounts (which only use the geometry to report free space).
+static bool is_sector_size_supported(const MountParameters& params)
+{
+	constexpr auto MaxBytesPerSector = 512;
+
+	const auto uses_sector_size = params.is_image_mode &&
+	                              params.fstype != MountFileSystemType::Iso;
+
+	return !uses_sector_size || params.sizes[0] <= MaxBytesPerSector;
+}
+
 // CD-ROM options of the original DOSBox. They have no effect in DOSBox Staging,
 // but they're still common in old configs, so they're ignored with a warning
 // instead of being rejected as unknown options.
@@ -1558,6 +1572,14 @@ std::optional<MountParameters> MOUNT::ProcessArguments(CommandLine* cmd)
 		return {};
 	}
 
+	// Must come after ParseDrive() as that can change the filesystem type
+	if (!is_sector_size_supported(params)) {
+		NOTIFY_DisplayWarning(Notification::Source::Console,
+		                      "MOUNT",
+		                      "PROGRAM_MOUNT_UNSUPPORTED_SECTOR_SIZE");
+		return {};
+	}
+
 	if (!MountPaths(params)) {
 		return {};
 	}
@@ -1699,6 +1721,9 @@ void MOUNT::AddMessages()
 
 	MSG_Add("PROGRAM_MOUNT_INVALID_CHS",
 	        "Invalid CHS format. Use -chs cylinders,heads,sectors\n");
+
+	MSG_Add("PROGRAM_MOUNT_UNSUPPORTED_SECTOR_SIZE",
+	        "Sector sizes larger than 512 bytes are not supported.\n");
 
 	MSG_Add("PROGRAM_MOUNT_OVERLAY_REL_ABS",
 	        "The overlay needs to be specified using the same addressing as the underlying\n"
