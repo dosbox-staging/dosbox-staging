@@ -807,12 +807,10 @@ MOUNT::GeometryOptions MOUNT::ParseGeometryOptions()
 //
 bool MOUNT::ParseGeometry(MountParameters& params, const GeometryOptions& options)
 {
-	std::string str_size = "";
-
 	// Default sizing logic based on type
 	switch (params.type) {
 	case MountType::FloppyImage:
-		str_size = "512,1,2880,2880";
+		params.sizes = {512, 1, 2880, 2880};
 
 		params.mediaid = MediaId::Floppy1_44MB;
 		break;
@@ -821,7 +819,7 @@ bool MOUNT::ParseGeometry(MountParameters& params, const GeometryOptions& option
 	case MountType::Overlay: {
 		// 512*32*32765==~500MB total size
 		// 512*32*16000==~250MB total free size
-		str_size = "512,32,32765,16000";
+		params.sizes = {512, 32, 32765, 16000};
 
 		// If drive mounted to A or B, set mediaid to floppy
 		// This is preferable to using type because floppies can
@@ -839,7 +837,7 @@ bool MOUNT::ParseGeometry(MountParameters& params, const GeometryOptions& option
 	} break;
 
 	case MountType::CdRomImage:
-		str_size = "2048,1,65535,0";
+		params.sizes = {2048, 1, 65535, 0};
 
 		// mediaid is used in staging to differentiate between floppy
 		// and non-floppy for cache rescan, disk noise and I/O timing.
@@ -854,16 +852,14 @@ bool MOUNT::ParseGeometry(MountParameters& params, const GeometryOptions& option
 
 	// Parse the free space in mb (kb for floppies)
 	if (options.freesize) {
-
-		char teststr[1024];
-		uint16_t freesize = static_cast<uint16_t>(
+		const auto freesize = static_cast<uint16_t>(
 		        atoi(options.freesize->c_str()));
 
 		if (params.type == MountType::FloppyImage) {
 			// freesize in kb
-			safe_sprintf(teststr,
-			             "512,1,2880,%d",
-			             freesize * 1024 / (512 * 1));
+			const auto free_sectors = freesize * 1024 / 512;
+
+			params.sizes = {512, 1, 2880, static_cast<uint16_t>(free_sectors)};
 		} else {
 			uint32_t total_size_cyl = 32765;
 
@@ -879,25 +875,22 @@ bool MOUNT::ParseGeometry(MountParameters& params, const GeometryOptions& option
 			if (total_size_cyl > 65534) {
 				total_size_cyl = 65534;
 			}
-			safe_sprintf(teststr, "512,32,%d,%d", total_size_cyl, free_size_cyl);
+			params.sizes = {512,
+			                32,
+			                static_cast<uint16_t>(total_size_cyl),
+			                static_cast<uint16_t>(free_size_cyl)};
 		}
-		str_size = teststr;
 	}
 
 	// Parse -size
 	if (options.size) {
-		str_size = *options.size;
-	}
-
-	// Apply str_size string to sizes array
-	if (!str_size.empty()) {
 		char number[21]  = {0};
-		const char* scan = str_size.c_str();
+		const char* scan = options.size->c_str();
 
 		int index = 0;
 		int count = 0;
 
-		// Parse the str_size string
+		// Parse the -size string
 		while (*scan && index < 20 && count < 4) {
 			if (*scan == ',') {
 				number[index]         = 0;
