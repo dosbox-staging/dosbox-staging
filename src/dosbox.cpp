@@ -1008,6 +1008,72 @@ static void remove_arg(std::vector<std::string>& parameters, const std::string a
 	}
 }
 
+// Quotes a single argument so that the Microsoft C runtime parses it back into
+// exactly the same string.
+//
+// Windows passes the whole command line to CreateProcess() as one string, and
+// it's up to the started program to split it into arguments. The rules for that
+// are documented here:
+//
+// https://learn.microsoft.com/en-us/cpp/c-language/parsing-c-command-line-arguments
+//
+// The rules that matter here:
+//
+// - Arguments are separated by spaces or tabs, unless they're inside double
+//   quotes.
+//
+// - Backslashes are literal, except when they immediately precede a double
+//   quote. 2*N backslashes followed by a double quote produce N backslashes,
+//   and the double quote acts as a delimiter. 2*N+1 backslashes followed by a
+//   double quote produce N backslashes and a literal double quote.
+//
+// We always wrap the argument in double quotes, then:
+//
+// - Escape every double quote in the argument with a backslash, and double the
+//   backslashes that precede it.
+//
+// - Double the backslashes at the end of the argument, so they don't escape
+//   the closing quote.
+//
+// - Copy all other backslashes as they are.
+//
+// Examples (argument -> quoted argument):
+//
+//   a b       ->  "a b"
+//   say "hi"  ->  "say \"hi\""
+//   a\"b      ->  "a\\\"b"
+//   C:\dir\   ->  "C:\dir\\"
+//
+std::string quote_windows_argument(const std::string_view arg)
+{
+	std::string quoted = "\"";
+
+	auto num_backslashes = 0;
+
+	for (const auto c : arg) {
+		if (c == '\\') {
+			++num_backslashes;
+			continue;
+		}
+
+		// Backslashes are only special in front of a double quote
+		if (c == '"') {
+			quoted.append(num_backslashes * 2 + 1, '\\');
+		} else {
+			quoted.append(num_backslashes, '\\');
+		}
+		quoted.push_back(c);
+
+		num_backslashes = 0;
+	}
+
+	// The closing quote must not be escaped by trailing backslashes
+	quoted.append(num_backslashes * 2, '\\');
+	quoted.push_back('"');
+
+	return quoted;
+}
+
 void DOSBOX_Restart()
 {
 	LOG_INFO("DOSBOX: Restarting...");
@@ -1049,7 +1115,7 @@ void DOSBOX_Restart(std::vector<std::string>& parameters)
 		// arguments in double quotes, otherwise things will break if
 		// one or more arguments contain spaces.
 		//
-		command_line.append("\"" + arg + "\"");
+		command_line.append(quote_windows_argument(arg));
 		first = false;
 	}
 #else  // macOS & Linux

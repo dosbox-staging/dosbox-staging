@@ -272,12 +272,14 @@ unsigned int CommandLine::GetCount(void)
 	return (unsigned int)cmds.size();
 }
 
+std::vector<std::string> CommandLine::GetRawArguments() const
+{
+	return {cmds.begin(), cmds.end()};
+}
+
 std::vector<std::string> CommandLine::GetArguments()
 {
-	std::vector<std::string> args;
-	for (const auto& cmd : cmds) {
-		args.emplace_back(cmd);
-	}
+	auto args = GetRawArguments();
 #ifdef WIN32
 	// Add back the \" if the parameter contained a space
 	for (auto& arg : args) {
