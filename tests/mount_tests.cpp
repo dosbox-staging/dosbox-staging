@@ -196,6 +196,48 @@ TEST_F(MountTest, AcceptsChsCylinderCountsAboveTheLegacyBiosLimit)
 	EXPECT_EQ(result->sizes[3], 4161); // cylinders
 }
 
+TEST_F(MountTest, RejectsSectorSizesLargerThan512ForFatImages)
+{
+	// fatDrive reads the MBR into a fixed 512-byte buffer
+	const auto result = Mount("C " + P("bootable.img") +
+	                          " -t hdd -size 8192,63,16,200");
+	EXPECT_FALSE(result.has_value());
+}
+
+TEST_F(MountTest, RejectsSectorSizesLargerThan512ForRawImages)
+{
+	// The Int 13h handler reads sectors into a fixed 512-byte buffer
+	const auto result = Mount("2 " + P("bootable.img") +
+	                          " -t hdd -size 8192,63,16,200");
+	EXPECT_FALSE(result.has_value());
+}
+
+TEST_F(MountTest, RejectsIsoDefaultGeometryForRawMounts)
+{
+	// Mounting on a drive number switches the filesystem to 'none', so the
+	// ISO default of 2048 bytes per sector would reach the raw image code
+	const auto result = Mount("2 " + P("image.iso"));
+	EXPECT_FALSE(result.has_value());
+}
+
+TEST_F(MountTest, AcceptsSectorSizesUpTo512)
+{
+	EXPECT_TRUE(Mount("2 " + P("bootable.img") + " -t hdd -size 512,63,16,200")
+	                    .has_value());
+
+	EXPECT_FALSE(Mount("2 " + P("bootable.img") + " -t hdd -size 513,63,16,200")
+	                     .has_value());
+}
+
+TEST_F(MountTest, SectorSizeLimitDoesNotApplyToIsoImages)
+{
+	const auto result = Mount("D " + P("image.iso") +
+	                          " -t iso -size 2048,1,65535,1");
+
+	ASSERT_TRUE(result.has_value());
+	EXPECT_EQ(result->sizes[0], 2048);
+}
+
 TEST_F(MountTest, RejectsOptionValueThatIsAnotherOption)
 {
 	const auto result = Mount("1 " + P("bootable.img") + " -size -t hdd");
