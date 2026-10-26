@@ -114,6 +114,12 @@ private:
 
 	// The current log file. `log_path` is only meaningful while
 	// `log_file` is open.
+	//
+	// We use `std::ofstream` here despite the no-iostreams rule: it opens
+	// a `std_fs::path` directly, so non-ASCII log directories (e.g., a
+	// Windows user name with accented characters) work, whereas `fopen()`
+	// would need a wide-char `_wfopen()` special case on Windows.
+	//
 	std::ofstream log_file = {};
 	std_fs::path log_path  = {};
 
