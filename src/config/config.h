@@ -83,7 +83,7 @@ public:
 	          overwritten_autoexec_section("overwritten-autoexec")
 	{
 		assert(cmdline);
-		startup_params = cmdline->GetArguments();
+		startup_params = cmdline->GetRawArguments();
 		startup_params.emplace(startup_params.begin(),
 		                       cmdline->GetFileName());
 

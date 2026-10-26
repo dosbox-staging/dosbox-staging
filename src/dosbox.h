@@ -12,6 +12,9 @@
 
 #include <functional>
 #include <memory>
+#include <string>
+#include <string_view>
+#include <vector>
 
 // Project name, lower-case and without spaces
 #define DOSBOX_PROJECT_NAME "dosbox-staging"
@@ -105,6 +108,12 @@ void DOSBOX_SetTicksScheduled(const int64_t ticks_scheduled);
 
 void DOSBOX_Restart();
 void DOSBOX_Restart(std::vector<std::string>& parameters);
+
+// Wraps the argument in double quotes and escapes it so it's parsed back
+// verbatim by the standard Windows command line parsing rules
+// (CommandLineToArgvW and the MSVC runtime). Only used on Windows, but
+// platform-independent so it can be unit tested everywhere.
+std::string quote_windows_argument(const std::string_view arg);
 
 enum class MachineType {
 	// Value not set yet

@@ -62,6 +62,10 @@ public:
 	int GetParameterFromList(const char* const params[],
 	                         std::vector<std::string>& output);
 
+	// Returns the arguments verbatim (without the quotes `GetArguments()`
+	// adds back on Windows).
+	std::vector<std::string> GetRawArguments() const;
+
 	std::vector<std::string> GetArguments();
 
 	bool HasDirectory() const;
