@@ -694,6 +694,7 @@ int main(int argc, char* argv[])
 		    return_code) {
 
 			// Exit to the command line
+			LOG_FlushEarlyWarningsToConsole();
 			return *return_code;
 		}
 
@@ -753,6 +754,10 @@ int main(int argc, char* argv[])
 	} catch (...) {
 		return_code = 1;
 	}
+
+	// No-op if we got as far as `LOG_Init()`; otherwise it makes startup
+	// errors visible.
+	LOG_FlushEarlyWarningsToConsole();
 
 	// We already do this at exit, but do clean up earlier in case of normal
 	// exit; this works around problems when 'atexit()' order clashes with SDL

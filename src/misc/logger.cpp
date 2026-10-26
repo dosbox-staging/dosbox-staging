@@ -423,6 +423,28 @@ void Logger::QueueSettingsForRestart() const
 	}
 }
 
+// Prints the held warnings and errors without opening a log file. For exits
+// that happen before `Init()`; does nothing after it.
+void Logger::FlushEarlyWarningsToConsole()
+{
+	std::lock_guard lock(mutex);
+
+	if (phase == Phase::PostInit) {
+		return;
+	}
+
+	for (const auto& line : held_lines) {
+		if (line.verbosity <= loguru::Verbosity_WARNING) {
+			PrintToConsole(line);
+		}
+	}
+	fflush(stderr);
+
+	held_lines.clear();
+	loguru::g_stderr_verbosity = loguru::Verbosity_WARNING;
+	phase                      = Phase::PostInit;
+}
+
 std::optional<std::string> Logger::GetLogFileName() const
 {
 	std::lock_guard lock(mutex);
@@ -445,6 +467,11 @@ void LOG_SetUpLoguru(int argc, char* argv[])
 void LOG_Init(const std::optional<std::string> log_file_name)
 {
 	logger.Init(log_file_name);
+}
+
+void LOG_FlushEarlyWarningsToConsole()
+{
+	logger.FlushEarlyWarningsToConsole();
 }
 
 std::optional<std::string> LOG_GetLogFileName()

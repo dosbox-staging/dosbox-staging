@@ -58,6 +58,12 @@ void LOG_SetUpLoguru(int argc, char* argv[]);
 // logging is enabled).
 void LOG_Init(const std::optional<std::string> log_name);
 
+// For command line actions that print their results and exit, and for startup
+// errors, i.e., exits that happen before `LOG_Init()`. Prints the warnings and
+// errors logged so far to the console without creating a log file. Does nothing
+// if `LOG_Init()` has already run.
+void LOG_FlushEarlyWarningsToConsole();
+
 // Returns the log file name without the full path if we're logging to a file
 // (e.g. `dosbox-20261022-185345.log`)
 std::optional<std::string> LOG_GetLogFileName();
