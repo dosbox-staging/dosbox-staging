@@ -196,6 +196,44 @@ TEST_F(MountTest, AcceptsChsCylinderCountsAboveTheLegacyBiosLimit)
 	EXPECT_EQ(result->sizes[3], 4161); // cylinders
 }
 
+TEST_F(MountTest, RejectsInvalidSizeFormat)
+{
+	// Every part must be a whole number, and all four must be present
+	for (const auto* size : {"notnumbers",
+	                         "512,63,16",
+	                         "512,63,16,100,1",
+	                         "512,63,16,100x",
+	                         "512,,16,100",
+	                         "512,63,16,0x64"}) {
+		SCOPED_TRACE(size);
+
+		const auto result = Mount("C " + P("bootable.img") +
+		                          " -t hdd -size " + size);
+		EXPECT_FALSE(result.has_value());
+	}
+}
+
+TEST_F(MountTest, RejectsOutOfRangeSizeValues)
+{
+	// The geometry is stored in uint16_t fields. These values would
+	// otherwise wrap silently, e.g. 65536 bytes per sector would become 0.
+	for (const auto* size : {"65536,63,16,100",
+	                         "512,65536,16,100",
+	                         "512,63,65536,100",
+	                         "512,63,16,65536",
+	                         "0,63,16,100",
+	                         "512,0,16,100",
+	                         "512,63,0,100",
+	                         "512,63,16,0",
+	                         "-1,63,16,100"}) {
+		SCOPED_TRACE(size);
+
+		const auto result = Mount("C " + P("bootable.img") +
+		                          " -t hdd -size " + size);
+		EXPECT_FALSE(result.has_value());
+	}
+}
+
 TEST_F(MountTest, RejectsSectorSizesLargerThan512ForFatImages)
 {
 	// fatDrive reads the MBR into a fixed 512-byte buffer

@@ -599,9 +599,9 @@ static std::optional<MountFileSystemType> parse_file_system_type(const std::stri
 	}
 }
 
-// Parses a single CHS geometry value. The geometry is stored in uint16_t
-// fields, so out-of-range values would silently wrap (e.g., 65536 cylinders
-// would become 0).
+// Parses a single -chs or -size geometry value. The geometry is stored in
+// uint16_t fields, so out-of-range values would silently wrap (e.g., 65536
+// cylinders would become 0).
 static std::optional<uint16_t> parse_geometry_value(const std::string& s)
 {
 	constexpr auto MaxValue = std::numeric_limits<uint16_t>::max();
@@ -611,6 +611,26 @@ static std::optional<uint16_t> parse_geometry_value(const std::string& s)
 		return {};
 	}
 	return static_cast<uint16_t>(*value);
+}
+
+// Parses the -size option value (BytesPerSector,Sectors,Heads,Cylinders)
+static std::optional<std::array<uint16_t, 4>> parse_size_option(const std::string& s)
+{
+	const auto parts = split_with_empties(s, ",");
+
+	std::array<uint16_t, 4> sizes = {};
+	if (parts.size() != sizes.size()) {
+		return {};
+	}
+
+	for (size_t i = 0; i < sizes.size(); ++i) {
+		const auto value = parse_geometry_value(parts[i]);
+		if (!value) {
+			return {};
+		}
+		sizes[i] = *value;
+	}
+	return sizes;
 }
 
 // The FAT and raw image mounts read sectors into fixed 512-byte buffers, so
@@ -882,32 +902,16 @@ bool MOUNT::ParseGeometry(MountParameters& params, const GeometryOptions& option
 		}
 	}
 
-	// Parse -size
+	// Parse -size B,S,H,C
 	if (options.size) {
-		char number[21]  = {0};
-		const char* scan = options.size->c_str();
-
-		int index = 0;
-		int count = 0;
-
-		// Parse the -size string
-		while (*scan && index < 20 && count < 4) {
-			if (*scan == ',') {
-				number[index]         = 0;
-				params.sizes[count++] = atoi(number);
-				index                 = 0;
-			} else {
-				number[index++] = *scan;
-			}
-			scan++;
+		const auto sizes = parse_size_option(*options.size);
+		if (!sizes) {
+			NOTIFY_DisplayWarning(Notification::Source::Console,
+			                      "MOUNT",
+			                      "PROGRAM_MOUNT_INVALID_SIZE");
+			return false;
 		}
-
-		if (count < 4) {
-			// always goes correct as index is max 20 at this point.
-			number[index] = 0;
-
-			params.sizes[count] = atoi(number);
-		}
+		params.sizes = *sizes;
 	}
 
 	// Parse -chs C,H,S
@@ -1714,6 +1718,9 @@ void MOUNT::AddMessages()
 
 	MSG_Add("PROGRAM_MOUNT_INVALID_CHS",
 	        "Invalid CHS format. Use -chs cylinders,heads,sectors\n");
+
+	MSG_Add("PROGRAM_MOUNT_INVALID_SIZE",
+	        "Invalid size format. Use -size BytesPerSector,Sectors,Heads,Cylinders\n");
 
 	MSG_Add("PROGRAM_MOUNT_UNSUPPORTED_SECTOR_SIZE",
 	        "Sector sizes larger than 512 bytes are not supported.\n");
