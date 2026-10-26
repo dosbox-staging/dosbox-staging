@@ -36,6 +36,8 @@ public:
 	// restarts the process).
 	void Init(const std::optional<std::string>& log_file_name);
 
+	void FlushEarlyWarningsToConsole();
+
 	// Returns the log file name without the full path if we're logging to a
 	// file (e.g. `dosbox-20261022-185345.log`)
 	std::optional<std::string> GetLogFileName() const;
