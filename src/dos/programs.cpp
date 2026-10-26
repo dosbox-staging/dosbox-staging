@@ -448,8 +448,10 @@ void CONFIG::HandleHelpCommand(const std::vector<std::string>& _parameters)
 				}
 
 				// Print 'changability'
-				if (p->GetChange() ==
-				    Property::Changeable::OnlyAtStart) {
+				const auto change = p->GetChange();
+
+				if (change == Property::Changeable::OnlyAtStart ||
+				    change == Property::Changeable::Never) {
 					output.AddString("\n");
 					output.AddString(MSG_Get(
 					        "PROGRAM_CONFIG_HLP_NOCHANGE"));
