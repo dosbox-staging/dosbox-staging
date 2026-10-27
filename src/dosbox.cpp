@@ -69,6 +69,7 @@
 #include "ints/int10.h"
 #include "midi/midi.h"
 #include "misc/cross.h"
+#include "misc/memmonserver.h"
 #include "misc/support.h"
 #include "misc/video.h"
 #include "network/ethernet.h"
@@ -1650,6 +1651,8 @@ void DOSBOX_InitModuleConfigsAndMessages()
 	DOS_AddConfigSection(control);
 	IPX_AddConfigSection(control);
 
+	MEMMON_AddConfigSection(control);
+
 	ETHERNET_AddConfigSection(control);
 	WEBSERVER_AddConfigSection(control);
 
@@ -1714,6 +1717,7 @@ void DOSBOX_InitModules()
 	DOS_Init();
 
 	IPX_Init();
+	MEMMON_Init();
 	ETHERNET_Init();
 	VIRTUALBOX_Init();
 	VMWARE_Init();
@@ -1724,6 +1728,7 @@ void DOSBOX_InitModules()
 
 void DOSBOX_DestroyModules()
 {
+	MEMMON_Destroy();
 	WEBSERVER_Destroy();
 	VMWARE_Destroy();
 	VIRTUALBOX_Destroy();

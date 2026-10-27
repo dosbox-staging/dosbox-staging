@@ -16,6 +16,7 @@ target_sources(dosboxcommon PRIVATE
   unicode.cpp
   unicode_encodings.cpp
   video.cpp
+  memmonserver.cpp
 )
 
 if (DOSBOX_PLATFORM_WINDOWS)
