@@ -103,7 +103,18 @@ static inline double FROUND(double in)
 	case ROUND_Nearest: return std::nearbyint(in);
 	case ROUND_Down: return std::floor(in);
 	case ROUND_Up: return std::ceil(in);
-	case ROUND_Chop: return std::trunc(in);
+	case ROUND_Chop: {
+		if ((fpu.cw & PrecisionModeMask) == ExtendedPrecisionMode) {		
+			// With FPU values stored as doubles, extended-precision results
+			// intended to be integers can land one representable value below
+			// them (e.g. 6.99999999999999911). Snap only an adjacent value.
+			const auto nearest = std::round(in);
+			if (nearest != in && std::nextafter(in, nearest) == nearest) {
+				return nearest;
+			}
+		}
+		return std::trunc(in);
+	}
 	default: return in;
 	}
 }
