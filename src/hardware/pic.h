@@ -70,6 +70,9 @@ void PIC_Destroy();
 void PIC_ActivateIRQ(uint8_t irq);
 void PIC_DeActivateIRQ(uint8_t irq);
 
+// Non-maskable interrupt (INT 2), delivered even with interrupts disabled
+void PIC_RaiseNmi();
+
 void PIC_runIRQs();
 bool PIC_RunQueue();
 
