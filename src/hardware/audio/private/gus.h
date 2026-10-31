@@ -63,8 +63,26 @@ constexpr uint16_t VOLUME_LEVELS    = 4096;
 constexpr int16_t WAVE_WIDTH = 1 << 9; // Wave interpolation width (9 bits)
 
 // IO address quantities
-constexpr uint8_t READ_HANDLERS  = 8;
-constexpr uint8_t WRITE_HANDLERS = 9;
+constexpr uint8_t READ_HANDLERS  = 13;
+constexpr uint8_t WRITE_HANDLERS = 16;
+
+// Sound Blaster and AdLib emulation by TSRs (SBOS, MegaEm): the GUS latches
+// what games write to those ports and interrupts the TSR to answer them.
+// Modelled after 86Box; the SDK doesn't document it.
+namespace Emulation {
+// Written-port bits, read back from 2X8
+constexpr uint8_t AdLibDataWritten = 0x01;
+constexpr uint8_t SbResetWritten   = 0x08;
+constexpr uint8_t SbCommandWritten = 0x10;
+
+// Timer Control Register (45h) bits
+constexpr uint8_t ReadBack2xaAt2x8 = 0x01;
+constexpr uint8_t AdLibIrqEnabled  = 0x02;
+constexpr uint8_t SbIrqEnabled     = 0x20;
+} // namespace Emulation
+
+// One byte (10 bits) at the MIDI rate of 31250 baud
+constexpr double MidiByteTimeMs = 0.32;
 
 // A group of parameters defining the Gus's voice IRQ control that's also shared
 // (as a reference) into each instantiated voice.
@@ -229,7 +247,28 @@ union AddressSelectRegister {
 	// Note: If the channels are sharing, then channel 2's IRQ selector must
 	// be set to 0 and bit 6 must be enabled.
 	bit_view<6, 1> channel2_combined_with_channel1;
-	// bit 7 reserved
+
+	// IRQ latch only: route the emulation interrupt to the NMI
+	bit_view<7, 1> emulation_uses_nmi;
+};
+
+// The MIDI port (3X0 and 3X1) is a Motorola 6850-compatible UART
+constexpr uint8_t MidiMasterReset = 0b11;
+
+// MIDI Control Register (3X0 write)
+union MidiControlRegister {
+	uint8_t data = 0;
+	bit_view<0, 2> counter_divide;
+	bit_view<5, 2> transmit_control;
+	bit_view<7, 1> receive_irq_enabled;
+};
+
+// MIDI Status Register (3X0 read)
+union MidiStatusRegister {
+	uint8_t data = 0b0000'0010;
+	bit_view<0, 1> receive_full;
+	bit_view<1, 1> transmit_empty;
+	bit_view<7, 1> irq_pending;
 };
 
 // The Gravis UltraSound GF1 DSP (classic)
@@ -255,6 +294,7 @@ public:
 
 	bool CheckTimer(size_t t);
 	void MirrorAdLibCommandRegister(const uint8_t reg_value);
+	void FinishMidiTransmit();
 	void PrintStats();
 	void PicCallback(const int requested_frames);
 
@@ -281,7 +321,11 @@ private:
 	Gus& operator=(const Gus&) = delete; // prevent assignment
 
 	void ActivateVoices(uint8_t requested_voices);
+	void CaptureEmulatedWrite(const uint8_t written_port_bit,
+	                          const uint8_t irq_enable_bit);
+	bool IsEmulationIrqPending() const;
 	void CheckIrq();
+	void CheckMidiIrq();
 	void CheckVoiceIrq();
 	uint32_t GetDmaOffset() noexcept;
 	void UpdateDmaAddr(uint32_t offset) noexcept;
@@ -373,8 +417,21 @@ private:
 	ResetRegister reset_register = {};
 	MixControlRegister mix_control_register = {};
 
-	bool irq_previously_interrupted = false;
-	bool should_change_irq_dma      = false;
+	MidiControlRegister midi_control = {};
+	MidiStatusRegister midi_status   = {};
+	uint8_t midi_received_byte       = 0;
+	uint8_t midi_transmitted_byte    = 0;
+
+	uint8_t emulation_written_ports = 0;
+	uint8_t emulation_adlib_data    = 0;
+	uint8_t emulation_latch_2xa     = 0;
+	uint8_t emulation_latch_2xc     = 0;
+	uint8_t emulation_latch_2xe     = 0;
+	bool emulation_uses_nmi         = false;
+
+	bool irq_previously_interrupted      = false;
+	bool midi_irq_previously_interrupted = false;
+	bool should_change_irq_dma           = false;
 };
 
 // The Gravis UltraSound mirrors the AdLib's command register (written to the

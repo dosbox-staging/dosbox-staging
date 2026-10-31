@@ -383,7 +383,26 @@ static void inline primary_startIRQ(uint8_t i)
 	CPU_HW_Interrupt(primary_controller.vector_base + i);
 }
 
+static bool nmi_pending = false;
+
+// ignores the NMI masks (port 70h bit 7, port 61h bit 3) and lets
+// NMIs nest before IRET; only the GUS raises them, and only when SBOS-style
+// software has asked for it
+void PIC_RaiseNmi()
+{
+	nmi_pending = true;
+
+	// Stop the CPU after the current instruction, like PIC_ActivateIRQ
+	CPU_CycleLeft += CPU_Cycles;
+	CPU_Cycles = 0;
+}
+
 void PIC_runIRQs(void) {
+	if (nmi_pending && cpudecoder != CPU_Core_Normal_Trap_Run) {
+		nmi_pending = false;
+		CPU_HW_Interrupt(2);
+		return;
+	}
 	if (!GETFLAG(IF)) return;
 	if (!PIC_IRQCheck) {
 		return;
@@ -634,6 +653,7 @@ public:
 	{
 		/* Setup pic0 and pic1 with initial values like DOS has normally */
 		PIC_IRQCheck = 0;
+		nmi_pending  = false;
 		PIC_Ticks = 0;
 		Bitu i;
 		for (i=0;i<2;i++) {

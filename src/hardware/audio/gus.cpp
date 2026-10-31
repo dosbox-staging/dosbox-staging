@@ -17,6 +17,7 @@
 #include "dosbox.h"
 #include "hardware/pic.h"
 #include "hardware/timer.h"
+#include "midi/midi.h"
 #include "misc/notifications.h"
 #include "shell/autoexec.h"
 #include "shell/shell.h"
@@ -549,29 +550,102 @@ void Gus::PicCallback(const int num_requested_frames)
 	last_rendered_ms = PIC_FullIndex();
 }
 
+static void set_irq_line(const uint8_t irq, const bool should_interrupt,
+                         bool& previously_interrupted)
+{
+	if (should_interrupt) {
+		PIC_ActivateIRQ(irq);
+	} else if (previously_interrupted) {
+		PIC_DeActivateIRQ(irq);
+	}
+	previously_interrupted = should_interrupt;
+}
+
+void Gus::CaptureEmulatedWrite(const uint8_t written_port_bit,
+                               const uint8_t irq_enable_bit)
+{
+	emulation_written_ports |= written_port_bit;
+
+	if (!(timer_ctrl & irq_enable_bit)) {
+		return;
+	}
+	if (emulation_uses_nmi) {
+		PIC_RaiseNmi();
+	} else {
+		PIC_ActivateIRQ(irq1);
+	}
+}
+
+bool Gus::IsEmulationIrqPending() const
+{
+	using namespace Emulation;
+
+	const bool sb_pending = (emulation_written_ports &
+	                         (SbResetWritten | SbCommandWritten)) &&
+	                        (timer_ctrl & SbIrqEnabled);
+
+	const bool adlib_pending = (emulation_written_ports & AdLibDataWritten) &&
+	                           (timer_ctrl & AdLibIrqEnabled);
+
+	return sb_pending || adlib_pending;
+}
+
 void Gus::CheckIrq()
 {
-	const bool should_interrupt = irq_status &
-	                              (reset_register.are_irqs_enabled ? 0xff : 0x9f);
+	// Bits 0 and 1 are the MIDI port's, which signals on channel 2's IRQ
+	constexpr uint8_t MidiIrqs = 0b0000'0011;
 
-	if (should_interrupt && mix_control_register.latches_enabled) {
-		PIC_ActivateIRQ(irq1);
-	} else if (irq_previously_interrupted) {
-		PIC_DeActivateIRQ(irq1);
+	const auto gf1_irqs  = irq_status & ~MidiIrqs &
+	                       (reset_register.are_irqs_enabled ? 0xff : 0x9f);
+	const auto midi_irqs = irq_status & MidiIrqs;
+
+	const bool latches = mix_control_register.latches_enabled;
+
+	const bool should_interrupt_gf1  = latches && gf1_irqs;
+	const bool should_interrupt_midi = latches && midi_irqs;
+
+	if (irq2 == irq1) {
+		set_irq_line(irq1,
+		             should_interrupt_gf1 || should_interrupt_midi,
+		             irq_previously_interrupted);
+	} else {
+		set_irq_line(irq1, should_interrupt_gf1, irq_previously_interrupted);
+		set_irq_line(irq2, should_interrupt_midi, midi_irq_previously_interrupted);
 	}
 
 #if LOG_GUS
-	const auto state_str = (should_interrupt && mix_control_register.latches_enabled)
-	                             ? "activated"
-	                     : irq_previously_interrupted ? "deactivated"
-	                                                  : "unchanged";
-	LOG_MSG("GUS: CheckIrq: IRQ %s (should_interrupt: %d, latches: %d)",
-	        state_str,
-	        should_interrupt,
-	        mix_control_register.latches_enabled);
+	LOG_MSG("GUS: CheckIrq: GF1 IRQ %d, MIDI IRQ %d (latches: %d)",
+	        should_interrupt_gf1,
+	        should_interrupt_midi,
+	        latches);
 #endif
+}
 
-	irq_previously_interrupted = should_interrupt;
+void Gus::CheckMidiIrq()
+{
+	const bool should_interrupt_transmit = midi_control.transmit_control == 1 &&
+	                                       midi_status.transmit_empty;
+	const bool should_interrupt_receive = midi_control.receive_irq_enabled &&
+	                                      midi_status.receive_full;
+
+	midi_status.irq_pending = should_interrupt_transmit ||
+	                          should_interrupt_receive;
+
+	irq_status = static_cast<uint8_t>((irq_status & ~0b0000'0011) |
+	                                  (should_interrupt_transmit ? 0x01 : 0) |
+	                                  (should_interrupt_receive ? 0x02 : 0));
+	CheckIrq();
+}
+
+void Gus::FinishMidiTransmit()
+{
+	midi_status.transmit_empty = true;
+
+	if (mix_control_register.midi_loopback_enabled) {
+		midi_received_byte       = midi_transmitted_byte;
+		midi_status.receive_full = true;
+	}
+	CheckMidiIrq();
 }
 
 bool Gus::CheckTimer(const size_t t)
@@ -642,8 +716,10 @@ void Gus::UpdateDmaAddr(uint32_t offset) noexcept
 	// pack it into the 16-bit register
 	dma_addr = static_cast<uint16_t>(adjusted >> 4);
 
-	// hang onto the last nibble
-	dma_addr_nibble = check_cast<uint8_t>(adjusted & 0xf);
+	// Hang onto the low bits the register drops, so a transfer that's split
+	// across DMA pages resumes at the right address
+	dma_addr_nibble = check_cast<uint8_t>(
+	        offset & (IsDmaXfer16Bit() ? 0b1'1111 : 0b1111));
 }
 
 template <SampleSize sample_size>
@@ -915,10 +991,15 @@ uint16_t Gus::ReadFromPort(const io_port_t port, io_width_t width)
 {
 	//	LOG_MSG("GUS: Read from port %x", port);
 	switch (port - port_base) {
-	case 0x206: return irq_status;
+	case 0x206:
+		// Undocumented bit 4 tells SBOS that a write was captured
+		return irq_status | (IsEmulationIrqPending() ? 0x10 : 0);
 	case 0x208:
+		if (timer_ctrl & Emulation::ReadBack2xaAt2x8) {
+			return emulation_latch_2xa;
+		}
 		uint8_t time;
-		time = 0;
+		time = emulation_written_ports;
 		if (timer_one.has_expired) {
 			time |= (1 << 6);
 		}
@@ -935,7 +1016,17 @@ uint16_t Gus::ReadFromPort(const io_port_t port, io_width_t width)
 			time |= 1 << 1;
 		}
 		return time;
+	case 0x209:
+		emulation_written_ports &= ~Emulation::AdLibDataWritten;
+		return emulation_adlib_data;
 	case 0x20a: return adlib_command_reg;
+	case 0x20c: return emulation_latch_2xc;
+	case 0x20e: return emulation_latch_2xe;
+	case 0x300: return midi_status.data;
+	case 0x301:
+		midi_status.receive_full = false;
+		CheckMidiIrq();
+		return midi_received_byte;
 	case 0x302: return static_cast<uint8_t>(voice_index);
 	case 0x303: return selected_register;
 	case 0x304:
@@ -1037,7 +1128,7 @@ uint16_t Gus::ReadFromRegister()
 void Gus::RegisterIoHandlers()
 {
 	// Register the IO read addresses
-	assert(read_handlers.size() > 7);
+	assert(read_handlers.size() > 12);
 	const auto read_from = std::bind_front(&Gus::ReadFromPort, this);
 
 	read_handlers.at(0).Install(0x302 + port_base, read_from, io_width_t::byte);
@@ -1051,11 +1142,26 @@ void Gus::RegisterIoHandlers()
 	// Board Only
 	read_handlers.at(7).Install(0x20a + port_base, read_from, io_width_t::byte);
 
+	// MIDI port, left out at base 230h so the MPU-401 keeps 330h
+	const bool has_midi_port = (0x300 + port_base) != 0x330;
+	if (has_midi_port) {
+		read_handlers.at(8).Install(0x300 + port_base,
+		                            read_from,
+		                            io_width_t::byte);
+		read_handlers.at(9).Install(0x301 + port_base,
+		                            read_from,
+		                            io_width_t::byte);
+	}
+
+	// Sound Blaster and AdLib emulation latches
+	read_handlers.at(10).Install(0x209 + port_base, read_from, io_width_t::byte);
+	read_handlers.at(11).Install(0x20c + port_base, read_from, io_width_t::byte);
+	read_handlers.at(12).Install(0x20e + port_base, read_from, io_width_t::byte);
+
 	// Register the IO write addresses
-	// We'll leave the MIDI interface to the MPU-401
-	// Ditto for the Joystick
+	// We'll leave the Joystick to the joystick emulation
 	// GF1 Synthesizer
-	assert(write_handlers.size() > 8);
+	assert(write_handlers.size() > 15);
 	const auto write_to = std::bind_front(&Gus::WriteToPort, this);
 
 	write_handlers.at(0).Install(0x302 + port_base, write_to, io_width_t::byte);
@@ -1068,6 +1174,27 @@ void Gus::RegisterIoHandlers()
 	// Board Only
 	write_handlers.at(7).Install(0x200 + port_base, write_to, io_width_t::byte);
 	write_handlers.at(8).Install(0x20b + port_base, write_to, io_width_t::byte);
+
+	if (has_midi_port) {
+		write_handlers.at(9).Install(0x300 + port_base,
+		                             write_to,
+		                             io_width_t::byte);
+		write_handlers.at(10).Install(0x301 + port_base,
+		                              write_to,
+		                              io_width_t::byte);
+	}
+
+	// Sound Blaster and AdLib emulation latches
+	write_handlers.at(11).Install(0x206 + port_base, write_to, io_width_t::byte);
+	write_handlers.at(12).Install(0x20a + port_base, write_to, io_width_t::byte);
+	write_handlers.at(13).Install(0x20c + port_base, write_to, io_width_t::byte);
+	write_handlers.at(14).Install(0x20d + port_base, write_to, io_width_t::byte);
+	write_handlers.at(15).Install(0x20e + port_base, write_to, io_width_t::byte);
+}
+
+static void gus_midi_transmit_event(uint32_t)
+{
+	gus->FinishMidiTransmit();
 }
 
 static void gus_timer_event(uint32_t t)
@@ -1083,7 +1210,8 @@ void Gus::Reset() noexcept
 	// Halt playback before altering the DSP state
 	channel->Enable(false);
 
-	irq_status                 = 0;
+	// The MIDI port's IRQs (bits 0 and 1) belong to a separate chip
+	irq_status &= 0b0000'0011;
 	irq_previously_interrupted = false;
 
 	// Reset the OPL emulator state
@@ -1171,10 +1299,21 @@ void Gus::WriteToPort(io_port_t port, io_val_t value, io_width_t width)
 		mix_control_register.data = static_cast<uint8_t>(val);
 		should_change_irq_dma     = true;
 		return;
+	case 0x206:
+		CaptureEmulatedWrite(Emulation::SbResetWritten,
+		                     Emulation::SbIrqEnabled);
+		break;
 	case 0x208: adlib_command_reg = static_cast<uint8_t>(val); break;
 	case 0x209:
-		// TODO adlib_command_reg should be 4 for this to work
-		// else it should just latch the value
+		// Only AdLib register 4 (timer control) reaches the GUS timers;
+		// anything else is latched for the AdLib emulation
+		if ((timer_ctrl & Emulation::ReadBack2xaAt2x8) ||
+		    adlib_command_reg != 4) {
+			emulation_adlib_data = static_cast<uint8_t>(val);
+			CaptureEmulatedWrite(Emulation::AdLibDataWritten,
+			                     Emulation::AdLibIrqEnabled);
+			break;
+		}
 		if (val & 0x80) {
 			timer_one.has_expired = false;
 			timer_two.has_expired = false;
@@ -1199,8 +1338,7 @@ void Gus::WriteToPort(io_port_t port, io_val_t value, io_width_t width)
 			timer_two.is_counting_down = false;
 		}
 		break;
-		// TODO Check if 0x20a register is also available on the gus
-		// like on the interwave
+	case 0x20a: emulation_latch_2xa = static_cast<uint8_t>(val); break;
 	case 0x20b:
 		if (should_change_irq_dma) {
 
@@ -1222,6 +1360,8 @@ void Gus::WriteToPort(io_port_t port, io_val_t value, io_width_t width)
 			if (mix_control_register.irq_control_selected) {
 
 				// Application is selecting IRQ addresses
+				emulation_uses_nmi = address_select.emulation_uses_nmi;
+
 				if (ch1_selector &&
 				    ch1_selector < IrqAddresses.size()) {
 					irq1 = to_internal_irq(
@@ -1266,6 +1406,41 @@ void Gus::WriteToPort(io_port_t port, io_val_t value, io_width_t width)
 				}
 			}
 		}
+		break;
+	case 0x20c:
+		emulation_latch_2xc = static_cast<uint8_t>(val);
+		CaptureEmulatedWrite(Emulation::SbCommandWritten,
+		                     Emulation::SbIrqEnabled);
+		break;
+	case 0x20d: emulation_latch_2xc = static_cast<uint8_t>(val); break;
+	case 0x20e: emulation_latch_2xe = static_cast<uint8_t>(val); break;
+	case 0x300: {
+		const bool was_reset = midi_control.counter_divide == MidiMasterReset;
+
+		midi_control.data = static_cast<uint8_t>(val);
+
+		if (midi_control.counter_divide == MidiMasterReset) {
+			PIC_RemoveEvents(gus_midi_transmit_event);
+			midi_status.data = 0;
+		} else if (was_reset) {
+			midi_status.transmit_empty = true;
+		}
+		CheckMidiIrq();
+		break;
+	}
+	case 0x301:
+		if (midi_control.counter_divide == MidiMasterReset) {
+			break;
+		}
+		midi_transmitted_byte = static_cast<uint8_t>(val);
+		if (!mix_control_register.midi_loopback_enabled) {
+			MIDI_RawOutByte(midi_transmitted_byte);
+		}
+		midi_status.transmit_empty = false;
+		CheckMidiIrq();
+
+		PIC_RemoveEvents(gus_midi_transmit_event);
+		PIC_AddEvent(gus_midi_transmit_event, MidiByteTimeMs);
 		break;
 	case 0x302:
 		voice_index  = val & 31;
@@ -1371,6 +1546,13 @@ void Gus::WriteToRegister()
 		timer_two.should_raise_irq = (timer_ctrl & 0x08) > 0;
 		if (!timer_two.should_raise_irq) {
 			irq_status &= ~0x08;
+		}
+		if (!(timer_ctrl & Emulation::SbIrqEnabled)) {
+			emulation_written_ports &= ~(Emulation::SbResetWritten |
+			                             Emulation::SbCommandWritten);
+		}
+		if (!(timer_ctrl & Emulation::AdLibIrqEnabled)) {
+			emulation_written_ports &= ~Emulation::AdLibDataWritten;
 		}
 		if (!timer_one.should_raise_irq && !timer_two.should_raise_irq) {
 			CheckIrq();
@@ -1482,6 +1664,7 @@ Gus::~Gus()
 	MIXER_LockMixerThread();
 
 	Reset();
+	PIC_RemoveEvents(gus_midi_transmit_event);
 
 	// Prevent discovery of the GUS via the environment
 	ClearEnvironment();
