@@ -148,7 +148,8 @@ boundary inputs, two signs, and four rounding modes match a reproduction of the
 native wrapper under Rosetta, including result bits and exception/C1 flags.
 Physical Intel hardware has not been tested for this follow-up.
 
-The full regression suite reports 958 passed and one skipped. The independent
+At this sine/cosine follow-up validation point, the full regression suite reported
+958 passed and one skipped. The independent
 Decimal check covers 1,316 correctly rounded mathematical samples and 84 tiny
 cosine compatibility samples. For the latter it checks both the selected +1
 result and its error bound against the high-precision mathematical cosine.
