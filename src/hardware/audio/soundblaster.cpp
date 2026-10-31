@@ -3359,6 +3359,9 @@ static OplMode determine_oplmode(const std::string& pref, const SbType sb_type,
 		} else if (pref == "esfm") {
 			return OplMode::Esfm;
 
+		} else if (pref == "cqm") {
+    		return OplMode::Cqm;
+
 		} else if (pref == "auto") {
 			// Invalid settings result in defaulting to 'auto'
 			switch (sb_type) {
@@ -3559,7 +3562,8 @@ SoundBlaster::SoundBlaster(Section* conf)
 	case OplMode::DualOpl2:
 	case OplMode::Opl3:
 	case OplMode::Opl3Gold:
-	case OplMode::Esfm: {
+	case OplMode::Esfm:
+	case OplMode::Cqm: {
 		OPL_Init(oplmode);
 		auto opl_channel = MIXER_FindChannel(ChannelName::Opl);
 		assert(opl_channel);

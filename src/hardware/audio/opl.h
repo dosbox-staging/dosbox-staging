@@ -13,6 +13,7 @@
 
 #include "ESFMu/esfm.h"
 #include "nuked/opl3.h"
+#include "cqm/cqm.h"
 
 #include "private/adlib_gold.h"
 
@@ -21,7 +22,7 @@
 #include "hardware/pic.h"
 #include "hardware/port.h"
 
-enum class OplMode { None, Opl2, DualOpl2, Opl3, Opl3Gold, Esfm };
+enum class OplMode { None, Opl2, DualOpl2, Opl3, Opl3Gold, Esfm, Cqm };
 
 class Timer {
 public:
@@ -118,6 +119,10 @@ private:
 		esfm_chip chip = {};
 		EsfmMode mode  = EsfmMode::Legacy;
 	} esfm = {};
+
+	struct {
+		cqm_t chip = {};
+	} cqm = {};
 
 	// Playback related
 	double last_rendered_ms = 0.0;
