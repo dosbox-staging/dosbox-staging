@@ -288,25 +288,27 @@ physics calculations, too.
 Windows 3.1 applications also tend to make greater use of the FPU than typical
 DOS software.
 
-!!! danger "IEEE 754 80-bit extended precision floating point emulation"
+!!! danger "80-bit extended precision FPU emulation"
 
-    One particularly risky area is engineering software that requires accurate
-    80-bit extended precision x87 FPU emulation to function correctly. Support
-    for 80-bit floats is not available on all platforms that DOSBox Staging
-    runs on. The logs will warn you about this at startup:
+    On non-x86 computers, DOSBox Staging can use an optional software FPU with
+    80-bit extended precision. Set [`fpu`](#fpu) to `accurate` to enable it.
+    This mode uses more host CPU time, and its results do not exactly match
+    every real x87 processor. Some FPU behavior is still incomplete, so test
+    software that depends on precise FPU behavior carefully.
 
-        FPU: Using reduced-precision floating-point
-
-    Do note, however, that the lack of such log messages **does not** imply or
-    guarantee bug-free operation!
+    The default `fast` mode uses reduced-precision FPU emulation on non-x86
+    computers. On x86-64 computers, DOSBox Staging always uses the host's native
+    x87 instructions, and the `fpu` setting has no effect. Changes to this
+    setting take effect after restarting DOSBox Staging.
 
 !!! warning "No warranties!"
 
     Although we do our best to emulate the DOS environment and legacy IBM PC
     hardware as accurately as we can, **we cannot guarantee** DOSBox Staging
     has zero bugs or can run every single DOS software ever written 100%
-    correctly. This is especially true for engineering software that relies on
-    accurate x87 FPU emulation which we **do not provide** in our emulator!
+    correctly. This is especially true for software that relies on precise x87
+    FPU behavior: emulation can differ from real hardware, even when using the
+    `accurate` mode.
 
     **Under no circumstances** should DOSBox Staging be used for professional
     applications, especially where DOS software malfunctioning due to
@@ -364,6 +366,23 @@ section.
       for demanding DOS programs (e.g., 3D SVGA games). Programs that
       self-modify their code might misbehave or crash on the `dynamic` core;
       use the `normal` core for such programs.
+
+
+##### fpu
+
+:   FPU emulation mode on non-x86 computers. The default is `fast`.
+
+    Possible values:
+
+    - `fast` *default*{ .default } -- Use reduced-precision emulation for
+      better performance.
+    - `accurate` -- Use software 80-bit extended precision for improved
+      computational accuracy, at a higher host CPU cost. This does not
+      guarantee results identical to a particular x87 processor.
+
+    On x86-64 computers, DOSBox Staging always uses native x87 instructions,
+    regardless of this setting. Changes take effect after restarting DOSBox
+    Staging. This setting is independent of [`core`](#core).
 
 
 ##### cputype
