@@ -307,7 +307,7 @@ void Opl::WriteReg(const io_port_t selected_reg, const uint8_t val)
 	} else { // OPL
 		OPL3_WriteRegBuffered(&opl.chip, selected_reg, val);
 		if (selected_reg == 0x105) {
-			opl.newm = selected_reg & 0x01;
+			opl.newm = val & 0x01;
 		}
 	}
 }
