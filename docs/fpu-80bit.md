@@ -14,7 +14,8 @@ Constants use their extended encodings and guest rounding control. This backend
 does not need the fast backend's CHOP snapping or integer-copy side channel.
 
 Transcendentals use software binary128 intermediate arithmetic. Trigonometric
-argument reduction uses a 256-bit fixed-point 2/pi constant before binary128
+argument reduction uses a 256-bit fixed-point reciprocal of Intel’s documented
+66-significant-bit Pi value before binary128
 polynomial evaluation. Small-argument log1p and expm1 avoid cancellation. FPREM
 and FPREM1 perform integer significand division, produce quotient bits, and use
 a 32-bit reduction step when C2 indicates an incomplete reduction.
@@ -47,7 +48,9 @@ integration. In particular:
 - The existing environment format still does not track instruction/data pointers
   or the last opcode. Register payloads, tags, control, status, and TOP are saved.
 - Transcendental results approximate the mathematical functions; they do not
-  reproduce a particular Intel processor's microcode or its 66-bit pi reduction.
+  reproduce a particular Intel processor's microcode. Argument reduction uses the
+  finite Pi documented in Intel SDM Vol. 1 section 8.3.8; unreduced small arguments
+  retain the existing mathematical series evaluation.
   No exhaustive correct-rounding or Intel error-bound proof has been performed.
   C1 rounding indications are implemented for tiny FSIN/FCOS inputs; other
   transcendental C1 indications and extreme subnormal exceptions still need work.
@@ -222,3 +225,19 @@ not counted separately by the profiler.
 Timings include clock overhead, and profiling affects benchmark performance.
 Compare both backends under the same instrumentation and check whole-game
 performance with profiling disabled.
+
+## Documented finite-Pi reduction
+
+The reciprocal limbs in `float80.cpp` are derived by integer division:
+`floor(2^323 / 0xC90FDAA22168C234C)`. Intel SDM Vol. 1 section 8.3.8 defines
+Pi as `0.C90FDAA22168C234C * 2^2`. Using its reciprocal in the existing
+fixed-point reducer changes the period to 2*Pi without changing the series.
+The independent Decimal oracle applies the documented x*pi/Pi model for inputs
+entering reduction (|x| >= 0.5); smaller inputs retain their previous behavior.
+
+`tests/compare_fpu_pi.py` documents a standalone Rosetta comparison. Across 144
+sine/cosine samples (both signs, powers of two, and neighbors of rounded multiples
+of pi and pi/2), exact matches improve from 40 to 138. The remaining six results
+differ by one result ULP. This is sampled Rosetta evidence, not a physical Intel
+or microcode-equivalence claim. The comparison does not cover tangent or all
+rounding modes. MCPDIAG has not been rerun after this change.
