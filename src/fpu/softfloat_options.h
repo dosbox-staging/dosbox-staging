@@ -6,7 +6,7 @@
 // opts-GCC.h requires INLINE and the platform byte order before it is read.
 // Force-include this only in SoftFloat C translation units, never in clients
 // that wrap the public SoftFloat declarations in a C++ namespace.
-#include "opts-GCC.h"
 #include "platform.h"
+#include "opts-GCC.h"
 
 #endif
