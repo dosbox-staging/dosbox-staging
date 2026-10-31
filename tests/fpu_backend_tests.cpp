@@ -1,5 +1,8 @@
 // SPDX-FileCopyrightText: 2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
+#include "dosbox.h"
+
+#if !C_FPU_X86
 #include "dosbox_test_fixture.h"
 #include "cpu/cpu.h"
 #include "cpu_config_param.h"
@@ -7,7 +10,6 @@
 #include "hardware/memory.h"
 #include <tuple>
 
-#if !C_FPU_X86
 namespace {
 class FpuBackendConfig : public DOSBoxTestFixture {
 protected:
