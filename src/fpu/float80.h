@@ -3,7 +3,6 @@
 #ifndef DOSBOX_FLOAT80_H
 #define DOSBOX_FLOAT80_H
 
-#include <bit>
 #include <cstdint>
 namespace softfloat {
 extern "C" {
