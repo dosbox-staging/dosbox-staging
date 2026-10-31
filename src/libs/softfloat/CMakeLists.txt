@@ -1,4 +1,4 @@
-add_library(softfloat STATIC
+set(softfloat_sources
   s_countLeadingZeros8.c
   s_approxRecip_1Ks.c
   s_approxRecipSqrt_1Ks.c
@@ -45,8 +45,6 @@ add_library(softfloat STATIC
   s_commonNaNToF128UI.c
   s_commonNaNToF32UI.c
   s_commonNaNToF64UI.c
-  s_countLeadingZeros32.c
-  s_countLeadingZeros64.c
   s_eq128.c
   s_extF80UIToCommonNaN.c
   s_f128UIToCommonNaN.c
@@ -54,10 +52,6 @@ add_library(softfloat STATIC
   s_f64UIToCommonNaN.c
   s_le128.c
   s_lt128.c
-  s_mul128By32.c
-  s_mul128To256M.c
-  s_mul64ByShifted32To128.c
-  s_mul64To128.c
   s_normRoundPackToExtF80.c
   s_normRoundPackToF128.c
   s_normSubnormalExtF80Sig.c
@@ -90,6 +84,25 @@ add_library(softfloat STATIC
   softfloat_state.c
   ui64_to_extF80.c
 )
+
+# These files provide fallback implementations. opts-GCC.h supplies inline
+# versions when the corresponding compiler intrinsics are enabled.
+if (NOT SOFTFLOAT_USE_BUILTIN_CLZ)
+  list(APPEND softfloat_sources
+    s_countLeadingZeros32.c
+    s_countLeadingZeros64.c
+  )
+endif()
+if (NOT SOFTFLOAT_USE_INTRINSIC_INT128)
+  list(APPEND softfloat_sources
+    s_mul128By32.c
+    s_mul128To256M.c
+    s_mul64ByShifted32To128.c
+    s_mul64To128.c
+  )
+endif()
+
+add_library(softfloat STATIC ${softfloat_sources})
 target_include_directories(softfloat SYSTEM PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_compile_definitions(softfloat PUBLIC SOFTFLOAT_FAST_INT64)
 set_target_properties(softfloat PROPERTIES C_STANDARD 99)
