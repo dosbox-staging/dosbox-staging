@@ -40,3 +40,7 @@ add_subdirectory(simpleini)
 add_subdirectory(tal-chorus)
 add_subdirectory(whereami)
 add_subdirectory(YM7128B_emu)
+
+if (NOT C_FPU_X86)
+  add_subdirectory(softfloat)
+endif()
