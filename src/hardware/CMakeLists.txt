@@ -81,6 +81,7 @@ target_sources(dosboxcommon PRIVATE
 target_sources(dosbox PRIVATE port_containers.cpp)
 
 target_link_libraries(dosboxcommon PRIVATE
+  cqm
   enet
   esfmu
   residfp
