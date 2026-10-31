@@ -20,6 +20,99 @@ protected:
 		fpu_operations.FPU_FINIT();
 	}
 };
+class FpuFastCompare : public DOSBoxTestFixture {
+protected:
+	void SetUp() override
+	{
+		DOSBoxTestFixture::SetUp();
+		FPU_SelectBackend(false);
+		fpu_operations.FPU_FINIT();
+	}
+	void TearDown() override
+	{
+		FPU_SelectBackend(false);
+		fpu_operations.FPU_FINIT();
+		DOSBoxTestFixture::TearDown();
+	}
+	void set(const Bitu reg, const uint64_t bits, const FPU_Tag tag)
+	{
+		fpu.regs[reg].set_bits(bits);
+		fpu.tags[reg] = tag;
+	}
+};
+TEST_F(FpuFastCompare, FcomSignalsQuietNanButFucomDoesNot)
+{
+	set(0, UINT64_C(0x7ff8000000000001), TAG_Weird);
+	set(1, UINT64_C(0x3ff0000000000000), TAG_Valid);
+	fpu_operations.FPU_FCOM(0, 1);
+	EXPECT_EQ(fpu.sw & 0x4501, 0x4501);
+
+	fpu_operations.FPU_FINIT();
+	set(0, UINT64_C(0x7ff8000000000001), TAG_Weird);
+	set(1, UINT64_C(0x3ff0000000000000), TAG_Valid);
+	fpu_operations.FPU_FUCOM(0, 1);
+	EXPECT_EQ(fpu.sw & 0x4501, 0x4500);
+}
+TEST_F(FpuFastCompare, FucomSignalsSignalingNanAndUnmaskedInvalidLeavesFlags)
+{
+	set(0, UINT64_C(0x7ff0000000000001), TAG_Weird);
+	set(1, UINT64_C(0x3ff0000000000000), TAG_Valid);
+	fpu_operations.FPU_FUCOM(0, 1);
+	EXPECT_EQ(fpu.sw & 0x4501, 0x4501);
+
+	fpu_operations.FPU_FINIT();
+	FPU_SetCW(0x37e);
+	set(0, UINT64_C(0x7ff0000000000001), TAG_Weird);
+	set(1, UINT64_C(0x3ff0000000000000), TAG_Valid);
+	fpu_operations.FPU_FUCOM(0, 1);
+	EXPECT_EQ(fpu.sw & 0x4501, 1);
+}
+TEST_F(FpuFastCompare, WeirdTaggedInfinityStillComparesNumerically)
+{
+	set(0, UINT64_C(0x7ff0000000000000), TAG_Weird);
+	set(1, UINT64_C(0x3ff0000000000000), TAG_Valid);
+	fpu_operations.FPU_FCOM(0, 1);
+	EXPECT_EQ(fpu.sw & 0x4501, 0);
+}
+TEST_F(FpuFastCompare, DenormalCompareHonorsTheControlWord)
+{
+	set(0, UINT64_C(1), TAG_Weird);
+	set(1, UINT64_C(0x3ff0000000000000), TAG_Valid);
+	fpu_operations.FPU_FCOM(0, 1);
+	EXPECT_EQ(fpu.sw & 0x4702, 0x0102); // DE, and ST(0) < SRC
+
+	fpu_operations.FPU_FINIT();
+	FPU_SetCW(0x37d); // Unmask denormal-operand exception
+	set(0, UINT64_C(1), TAG_Weird);
+	set(1, UINT64_C(0x3ff0000000000000), TAG_Valid);
+	fpu_operations.FPU_FCOM(0, 1);
+	EXPECT_EQ(fpu.sw & 0x4702, 0x0002); // DE; condition codes unchanged
+}
+TEST_F(FpuFastCompare, EmptyOperandRaisesMaskedStackFault)
+{
+	set(0, UINT64_C(0x3ff0000000000000), TAG_Empty);
+	set(1, UINT64_C(0x3ff0000000000000), TAG_Valid);
+	fpu_operations.FPU_FCOM(0, 1);
+	EXPECT_EQ(fpu.sw & 0x4541, 0x4541);
+}
+TEST_F(FpuFastCompare, Load80PreservesSignalingNanForFucom)
+{
+	mem_writeq(0x9000, UINT64_C(0x8000000000000001));
+	mem_writew(0x9008, 0x7fff);
+	fpu_operations.FPU_FLD_F80(0x9000);
+	set(1, UINT64_C(0x3ff0000000000000), TAG_Valid);
+	fpu_operations.FPU_FUCOM(TOP, 1);
+	EXPECT_EQ(fpu.sw & 0x4501, 0x4501);
+}
+TEST_F(FpuFastCompare, Load80UnsupportedEncodingSignalsFucom)
+{
+	mem_writeq(0x9000, UINT64_C(0x4000000000000000)); // Missing integer bit
+	mem_writew(0x9008, 0x4000);
+	fpu_operations.FPU_FLD_F80(0x9000);
+	set(1, UINT64_C(0x3ff0000000000000), TAG_Valid);
+	fpu_operations.FPU_FUCOM(TOP, 1);
+	EXPECT_EQ(fpu.sw & 0x4501, 0x4501);
+}
 TEST_F(FpuBackendConfig, FastIsTheStartupDefault)
 {
 	auto section  = get_section("cpu");

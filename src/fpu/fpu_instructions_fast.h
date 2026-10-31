@@ -15,6 +15,7 @@ static constexpr uint16_t DoublePrecisionMode   = 0x0200;
 static constexpr uint16_t ExtendedPrecisionMode = 0x0300;
 
 static constexpr uint16_t InvalidArithmeticFlag = 0x0001;
+static constexpr uint16_t DenormalOperandFlag   = 0x0002;
 static constexpr uint16_t ZeroDivideFlag        = 0x0004;
 static constexpr uint16_t PrecisionFlag         = 0x0020;
 
@@ -163,6 +164,11 @@ static Real64 FPU_FLD80(PhysPt addr)
 
 	// Special cases
 	if (exp80 == 0x7fff) {
+		// The explicit integer bit must be set for infinity and NaN.
+		if ((sig64 >> 63) == 0) {
+			out = (uint64_t(sign) << 63) | (0x7ffULL << 52) | 1;
+			return std::bit_cast<double>(out);
+		}
 		// Inf or NaN
 		// J==1, frac==0
 		const bool is_inf = (sig64 & 0x7fffffffffffffffULL) == 0;
@@ -170,8 +176,11 @@ static Real64 FPU_FLD80(PhysPt addr)
 			out = (uint64_t(sign) << 63) | (0x7ffULL << 52);
 			return std::bit_cast<double>(out);
 		}
-		// Quiet NaN
-		out = (uint64_t(sign) << 63) | (0x7ffULL << 52) | (1ULL << 51);
+		// Preserve the signaling/quiet bit for FUCOM. Keep a non-zero
+		// payload even when the source payload is only in discarded bits.
+		const auto payload = ((sig64 & ((1ULL << 62) - 1)) >> 11) | 1;
+		out = (uint64_t(sign) << 63) | (0x7ffULL << 52) | payload |
+		      ((sig64 & (1ULL << 62)) ? (1ULL << 51) : 0);
 		return std::bit_cast<double>(out);
 	}
 
@@ -230,10 +239,15 @@ static Real64 FPU_FLD80(PhysPt addr)
 		return std::bit_cast<double>(out);
 	}
 
-	// Normal finite: ensure J bit set (defensive against pseudo-denorms)
+	// An unnormal 80-bit encoding is unsupported. Represent it as a
+	// signaling NaN so comparisons raise invalid in both FCOM and FUCOM.
 	if ((sig64 >> 63) == 0) {
-		sig64 |= (1ULL << 63);
+		out = (uint64_t(sign) << 63) | (0x7ffULL << 52) | 1;
+		return std::bit_cast<double>(out);
 	}
+
+	// Normal finite. Pseudo-denormals (exp=0, J=1) are handled above as
+	// subnormals by this reduced-precision backend.
 
 	auto exp64 = static_cast<int64_t>(exp80) - BIAS80 + BIAS64;
 
@@ -665,10 +679,29 @@ static void FPU_FST(Bitu st, Bitu other)
 	fpu.regs_memcpy[other] = fpu.regs_memcpy[st];
 }
 
-static void FPU_FCOM(Bitu st, Bitu other)
+static void FPU_COMPARE(Bitu st, Bitu other, const bool quiet)
 {
 	const auto a = fpu.regs[st].d;
 	const auto b = fpu.regs[other].d;
+	const auto a_bits = fpu.regs[st].bits();
+	const auto b_bits = fpu.regs[other].bits();
+	constexpr uint64_t exponent_mask = UINT64_C(0x7ff0000000000000);
+	constexpr uint64_t fraction_mask = UINT64_C(0x000fffffffffffff);
+	constexpr uint64_t quiet_bit     = UINT64_C(0x0008000000000000);
+	const auto is_nan = [&](const uint64_t bits) {
+		return (bits & exponent_mask) == exponent_mask &&
+		       (bits & fraction_mask) != 0;
+	};
+	const bool a_nan = is_nan(a_bits);
+	const bool b_nan = is_nan(b_bits);
+	const bool signaling_nan =
+	        (a_nan && !(a_bits & quiet_bit)) ||
+	        (b_nan && !(b_bits & quiet_bit));
+	const auto is_denormal = [&](const uint64_t bits, const Bitu reg) {
+		return (bits & exponent_mask) == 0 &&
+		       ((bits & fraction_mask) != 0 ||
+		        (fpu.tags[reg] == TAG_Weird && bits == 0));
+	};
 
 	/*
 	Table 3-21. FCOM/FCOMP/FCOMPP Results
@@ -692,22 +725,37 @@ static void FPU_FCOM(Bitu st, Bitu other)
 
 	FPU_SET_C1(0);
 
-	if (((fpu.tags[st] != TAG_Valid) && (fpu.tags[st] != TAG_Zero)) ||
-	    ((fpu.tags[other] != TAG_Valid) && (fpu.tags[other] != TAG_Zero))) {
+	const bool stack_underflow = fpu.tags[st] == TAG_Empty ||
+	                             fpu.tags[other] == TAG_Empty;
+	if (stack_underflow) {
+		fpu.sw |= InvalidArithmeticFlag | 0x0040; // IE | SF
+		if (!(fpu.cw & InvalidArithmeticFlag)) {
+			return;
+		}
 		FPU_SET_C3(1);
 		FPU_SET_C2(1);
 		FPU_SET_C0(1);
 		return;
 	}
 
-	if (std::isunordered(a, b)) {
-		fpu.sw |= InvalidArithmeticFlag;
-		if (fpu.cw & InvalidArithmeticFlag) {
-			FPU_SET_C3(1);
-			FPU_SET_C2(1);
-			FPU_SET_C0(1);
+	const bool unordered = a_nan || b_nan;
+	if (unordered) {
+		if (!quiet || signaling_nan) {
+			fpu.sw |= InvalidArithmeticFlag;
+			if (!(fpu.cw & InvalidArithmeticFlag)) {
+				return;
+			}
 		}
+		FPU_SET_C3(1);
+		FPU_SET_C2(1);
+		FPU_SET_C0(1);
 		return;
+	}
+	if (is_denormal(a_bits, st) || is_denormal(b_bits, other)) {
+		fpu.sw |= DenormalOperandFlag;
+		if (!(fpu.cw & DenormalOperandFlag)) {
+			return;
+		}
 	}
 
 	FPU_SET_C3(a == b);
@@ -715,10 +763,14 @@ static void FPU_FCOM(Bitu st, Bitu other)
 	FPU_SET_C0(a < b);
 }
 
+static void FPU_FCOM(Bitu st, Bitu other)
+{
+	FPU_COMPARE(st, other, false);
+}
+
 static void FPU_FUCOM(Bitu st, Bitu other)
 {
-	// does atm the same as fcom
-	FPU_FCOM(st, other);
+	FPU_COMPARE(st, other, true);
 }
 
 static void FPU_FRNDINT(void)
