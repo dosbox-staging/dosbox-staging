@@ -82,6 +82,11 @@ def raw(value, rounding):
 def evaluate(operation, value):
     """Compute the mathematical reference for one probe operation."""
     if operation < 3:
+        if abs(value) >= Decimal('.5'):
+            # Intel SDM Vol. 1, 8.3.8: reduction uses finite Pi, so
+            # the instruction approximates sin/cos/tan(value * pi/Pi).
+            finite_pi = Decimal(0xc90fdaa22168c234c) / Decimal(2) ** 66
+            value = value * PI / finite_pi
         sine, cosine = sincos(value)
         return [sine, cosine, sine / cosine][operation]
     ln2 = Decimal(2).ln()

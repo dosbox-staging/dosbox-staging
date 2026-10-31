@@ -254,17 +254,20 @@ static void sincosq(Float a, Float128& sine, Float128& cosine)
 	int quadrant     = 0;
 	const int e      = exponent(a) - 16383;
 	if (e >= -1) {
-		// Payne-Hanek reduction with 256 fixed-point bits of 2/pi.
-		// Reducing a 63-bit argument directly in binary128 would lose
-		// up to 63 guard bits through cancellation. Keep the fractional
-		// product separately before converting it to binary128.
-		constexpr std::array<uint32_t, 8> inv_pi = {0xdebbc561,
-		                                            0xfe5163ab,
-		                                            0x3c439041,
-		                                            0xdb629599,
-		                                            0xf534ddc0,
-		                                            0xfc2757d1,
-		                                            0x4e441529,
+		// Intel SDM Vol. 1, 8.3.8 defines Pi =
+		// 0.C90FDAA22168C234C * 2^2 (66 significant bits).
+		// Keep the existing fixed-point reduction, but reduce against Pi
+		// rather than mathematical pi. These little-endian limbs are
+		// floor(2^256 * 2/Pi) = floor(2^323 / 0xC90FDAA22168C234C).
+		// Multiplying the fractional quotient by mathematical pi/2 below
+		// approximates sin/cos(x*pi/Pi), as described in that section.
+		constexpr std::array<uint32_t, 8> inv_pi = {0x80d6c260,
+		                                            0x767cec1f,
+		                                            0x055cd5ba,
+		                                            0xd4c1fdf9,
+		                                            0x0da276be,
+		                                            0x00062bc4,
+		                                            0x4e44152a,
 		                                            0xa2f9836e};
 		std::array<uint32_t, 10> product         = {};
 		for (int i = 0; i < 2; ++i) {
