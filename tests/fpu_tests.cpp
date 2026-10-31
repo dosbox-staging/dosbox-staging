@@ -416,14 +416,26 @@ TEST_F(Fpu80, PseudoDenormalAndExceptionPriority)
 	expect(0, 0xffff, UINT64_C(0xc000000000000000));
 	EXPECT_EQ(fpu.sw & 0x3f, 1);
 }
-TEST_F(Fpu80, LargeTrigUsesFixedPointArgumentReduction)
+TEST_F(Fpu80, LargeTrigUsesDocumentedFinitePi)
 {
 	put(0, x87::raw(0x403d, UINT64_C(0xabcdef1234567890)));
 	FPU_FSIN();
-	expect(0, 0x3ffc, UINT64_C(0xc64371b7ed4cf3db));
+	expect(0, 0x3ffc, UINT64_C(0xce434ceb4e0a2388));
 	put(0, x87::raw(0x403d, UINT64_C(0xabcdef1234567890)));
 	FPU_FCOS();
-	expect(0, 0x3ffe, UINT64_C(0xfb27e11cf89838b0));
+	expect(0, 0x3ffe, UINT64_C(0xfac0b8bdc12e8d71));
+}
+TEST_F(Fpu80, RoundedPiRetainsDocumentedReductionResidual)
+{
+	// FLDPI's nearest ext80 value exceeds Intel's internal Pi by 2^-64.
+	// Thus FSIN is approximately -2^-64, rather than mathematical sin(pi80).
+	for (const bool negative : {false, true}) {
+		put(0, x87::raw(negative ? 0xc000 : 0x4000,
+		                UINT64_C(0xc90fdaa22168c235)));
+		FPU_FSIN();
+		expect(0, negative ? 0x3fbf : 0xbfbf,
+		       UINT64_C(0x8000000000000000));
+	}
 }
 TEST_F(Fpu80, TinyLog1pDoesNotLoseArgument)
 {
