@@ -293,8 +293,8 @@ DOS software.
     On non-x86 computers, DOSBox Staging can use an optional software FPU with
     80-bit extended precision. Set [`fpu`](#fpu) to `accurate` to enable it.
     This mode uses more host CPU time, and its results do not exactly match
-    every real x87 processor. Some FPU behavior is still incomplete, so test
-    software that depends on precise FPU behavior carefully.
+    every real x87 processor. Some FPU behaviour is still incomplete, so test
+    software that depends on precise FPU behaviour carefully.
 
     The default `fast` mode uses reduced-precision FPU emulation on non-x86
     computers. On x86-64 computers, DOSBox Staging always uses the host's native
@@ -307,7 +307,7 @@ DOS software.
     hardware as accurately as we can, **we cannot guarantee** DOSBox Staging
     has zero bugs or can run every single DOS software ever written 100%
     correctly. This is especially true for software that relies on precise x87
-    FPU behavior: emulation can differ from real hardware, even when using the
+    FPU behaviour: emulation can differ from real hardware, even when using the
     `accurate` mode.
 
     **Under no circumstances** should DOSBox Staging be used for professional
@@ -370,19 +370,18 @@ section.
 
 ##### fpu
 
-:   FPU emulation mode on non-x86 computers. The default is `fast`.
+:   FPU emulation on non-x86 hosts (`fast` by default). Possible values:
 
-    Possible values:
-
-    - `fast` *default*{ .default } -- Use reduced-precision emulation for
-      better performance.
+    - `fast` -- Use the existing reduced-precision implementation for better
+      performance (default).
     - `accurate` -- Use software 80-bit extended precision for improved
-      computational accuracy, at a higher host CPU cost. This does not
-      guarantee results identical to a particular x87 processor.
+      floating-point accuracy, at a higher host CPU cost.
 
-    On x86-64 computers, DOSBox Staging always uses native x87 instructions,
-    regardless of this setting. Changes take effect after restarting DOSBox
-    Staging. This setting is independent of [`core`](#core).
+    Restart DOSBox to apply changes. Independent of the [`core`](#core) setting.
+    On x86-64 hosts, native x87 emulation is always used.
+
+    The `accurate` mode improves computational accuracy, but does not guarantee
+    results identical to a particular x87 processor.
 
 
 ##### cputype
