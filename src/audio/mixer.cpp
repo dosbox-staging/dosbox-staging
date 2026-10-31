@@ -62,7 +62,7 @@ constexpr auto EnvelopeMaxExpansionOverMs = 15;
 constexpr auto EnvelopeExpiresAfterSeconds = 10;
 
 constexpr auto DefaultPrebufferMs = 20;
-constexpr auto MaxPrebufferMs = 100;
+constexpr auto MaxPrebufferMs     = 100;
 
 constexpr auto DefaultBlocksize = 1024;
 constexpr auto MinBlocksize     = 16;
@@ -200,19 +200,19 @@ struct MixerSettings {
 	bool no_sound = false;
 
 	// Mute FSM (see `MixerMuteState` in mixer.h). When non-Audible,
-	// `mix_samples()` still runs (so the capture queue IS fed at full level)
-	// and the fade below ramps the SDL-bound `output_buffer` toward zero
-	// before it reaches `final_output`.
+	// `mix_samples()` still runs (so the capture queue IS fed at full
+	// level) and the fade below ramps the SDL-bound `output_buffer` toward
+	// zero before it reaches `final_output`.
 	std::atomic<MixerMuteState> mute_state = MixerMuteState::Audible;
 
 	// Fade-out/-in gain, ramped by `mixer_thread_loop()` and polled by the
-	// PausePending FSM in dosbox.cpp (via `MIXER_GetPlaybackGain()`) to know
-	// when the fade-out has reached zero.
+	// PausePending FSM in dosbox.cpp (via `MIXER_GetPlaybackGain()`) to
+	// know when the fade-out has reached zero.
 	//
 	// Written ONLY by the mixer thread. Read by the mixer thread and by
-	// `pending_pause_tick_handler()`. Because there's a single writer there's
-	// no coordination hazard; the atomic exists purely to make the FSM's read
-	// well-defined.
+	// `pending_pause_tick_handler()`. Because there's a single writer
+	// there's no coordination hazard; the atomic exists purely to make the
+	// FSM's read well-defined.
 	std::atomic<float> playback_gain = 1.0f;
 
 	HighpassFilter highpass_filter = {};
@@ -1295,9 +1295,9 @@ void MixerChannel::AddSilence()
 	last_samples_were_silence = true;
 }
 
-static void log_filter_settings(const std::string& channel_name,
-                                const std::string& filter_name, const int order,
-                                const int cutoff_freq_hz)
+static void log_enabled_filter_state(const std::string& channel_name,
+                                     const std::string& filter_name,
+                                     const int order, const int cutoff_freq_hz)
 {
 	assert(order > 0);
 	assert(cutoff_freq_hz > 0);
@@ -1311,38 +1311,46 @@ static void log_filter_settings(const std::string& channel_name,
 	        cutoff_freq_hz);
 }
 
-void MixerChannel::SetHighPassFilter(const FilterState state)
+void MixerChannel::SetHighPassFilter(const FilterState new_state)
 {
 	std::lock_guard lock(mutex);
 
-	filters.highpass.state = state;
-
-	if (filters.highpass.state == FilterState::On) {
+	if (new_state == FilterState::On) {
 		assert(filters.highpass.order > 0);
 		assert(filters.highpass.cutoff_freq_hz > 0);
 
-		log_filter_settings(name,
-		                    "High-pass",
-		                    filters.highpass.order,
-		                    filters.highpass.cutoff_freq_hz);
+		log_enabled_filter_state(name,
+		                         "High-pass",
+		                         filters.highpass.order,
+		                         filters.highpass.cutoff_freq_hz);
+	} else {
+		if (filters.highpass.state == FilterState::On) {
+			LOG_MSG("%s: High-pass filter disabled", name.c_str());
+		}
 	}
+
+	filters.highpass.state = new_state;
 }
 
-void MixerChannel::SetLowPassFilter(const FilterState state)
+void MixerChannel::SetLowPassFilter(const FilterState new_state)
 {
 	std::lock_guard lock(mutex);
 
-	filters.lowpass.state = state;
-
-	if (filters.lowpass.state == FilterState::On) {
+	if (new_state == FilterState::On) {
 		assert(filters.lowpass.order > 0);
 		assert(filters.lowpass.cutoff_freq_hz > 0);
 
-		log_filter_settings(name,
-		                    "Low-pass",
-		                    filters.lowpass.order,
-		                    filters.lowpass.cutoff_freq_hz);
+		log_enabled_filter_state(name,
+		                         "Low-pass",
+		                         filters.lowpass.order,
+		                         filters.lowpass.cutoff_freq_hz);
+	} else {
+		if (filters.lowpass.state == FilterState::On) {
+			LOG_MSG("%s: Low-pass filter disabled", name.c_str());
+		}
 	}
+
+	filters.lowpass.state = new_state;
 }
 
 void MixerChannel::ConfigureNoiseGate(const float threshold_db,
@@ -2007,15 +2015,19 @@ bool MixerChannel::Sleeper::ConfigureFadeOut(const std::string& prefs)
 		        fade_ms);
 	};
 
-	// Disable fade-out (default)
+	// Disable fade-out
 	if (has_false(prefs)) {
-		wants_fadeout = false;
+		if (fadeout_enabled) {
+			LOG_MSG("%s: Fade-out disabled", channel.GetName().c_str());
+			fadeout_enabled = false;
+		}
 		return true;
 	}
+
 	// Enable fade-out with defaults
 	if (has_true(prefs)) {
 		set_wait_and_fade(DefaultWaitMs, DefaultWaitMs);
-		wants_fadeout = true;
+		fadeout_enabled = true;
 		return true;
 	}
 
@@ -2027,6 +2039,7 @@ bool MixerChannel::Sleeper::ConfigureFadeOut(const std::string& prefs)
 	if (auto prefs_vec = split(prefs); prefs_vec.size() == 2) {
 		const auto wait_ms = parse_int(prefs_vec[0]);
 		const auto fade_ms = parse_int(prefs_vec[1]);
+
 		if (wait_ms && fade_ms) {
 			const auto wait_is_valid = (*wait_ms >= MinWaitMs &&
 			                            *wait_ms <= MaxWaitMs);
@@ -2036,11 +2049,12 @@ bool MixerChannel::Sleeper::ConfigureFadeOut(const std::string& prefs)
 
 			if (wait_is_valid && fade_is_valid) {
 				set_wait_and_fade(*wait_ms, *fade_ms);
-				wants_fadeout = true;
+				fadeout_enabled = true;
 				return true;
 			}
 		}
 	}
+
 	// Otherwise inform the user and disable the fade
 	NOTIFY_DisplayWarning(Notification::Source::Console,
 	                      channel.GetName(),
@@ -2051,7 +2065,7 @@ bool MixerChannel::Sleeper::ConfigureFadeOut(const std::string& prefs)
 	                      MinFadeMs,
 	                      MaxFadeMs);
 
-	wants_fadeout = false;
+	fadeout_enabled = false;
 	return false;
 }
 
@@ -2083,7 +2097,7 @@ MixerChannel::Sleeper::Sleeper(MixerChannel& c, const int sleep_after_ms)
 // Either fades the frame or checks if the channel had any signal output.
 AudioFrame MixerChannel::Sleeper::MaybeFadeOrListen(const AudioFrame& frame)
 {
-	if (wants_fadeout) {
+	if (fadeout_enabled) {
 		// When fading, we actively drive down the channel level
 		return frame * fadeout_level;
 	}
@@ -2110,7 +2124,8 @@ void MixerChannel::Sleeper::MaybeSleep()
 	if (awake_for_ms < fadeout_or_sleep_after_ms) {
 		return;
 	}
-	if (wants_fadeout) {
+
+	if (fadeout_enabled) {
 		// The channel is still fading out.. try to sleep later
 		if (fadeout_level > 0.0f) {
 			DecrementFadeLevel(awake_for_ms);
@@ -2121,6 +2136,7 @@ void MixerChannel::Sleeper::MaybeSleep()
 		WakeUp();
 		return;
 	}
+
 	if (channel.is_enabled) {
 		channel.Enable(false);
 		// LOG_INFO("MIXER: %s fell asleep", channel.name.c_str());
@@ -2621,9 +2637,12 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 	const auto frames_to_dequeue = std::min(mixer.final_output.Size(),
 	                                        frames_requested);
 
-	const auto frames_received = mixer.final_output.BulkDequeue(output, frames_to_dequeue);
+	const auto frames_received = mixer.final_output.BulkDequeue(output,
+	                                                            frames_to_dequeue);
 
-	SDL_PutAudioStreamData(stream, output.data(), check_cast<int>(frames_received) * BytesPerAudioFrame);
+	SDL_PutAudioStreamData(stream,
+	                       output.data(),
+	                       check_cast<int>(frames_received) * BytesPerAudioFrame);
 }
 
 float MIXER_GetPlaybackGain()
@@ -2708,8 +2727,8 @@ static void mixer_thread_loop()
 			if (mixer.no_sound) {
 				// No SDL device, no consumer for
 				// `final_output`. Just sleep to simulate the
-				// per-block duration; skipping the enqueue avoids
-				// filling and blocking the queue.
+				// per-block duration; skipping the enqueue
+				// avoids filling and blocking the queue.
 				constexpr double NanosecondsPerMillisecond = 1000000.0;
 
 				const auto expected_time =
@@ -3068,16 +3087,17 @@ static bool init_sdl_sound(const int requested_sample_rate_hz,
 		return false;
 	}
 
-	mixer.sdl_device = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &desired);
+	mixer.sdl_device = SDL_OpenAudioDevice(SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK,
+	                                       &desired);
 	if (mixer.sdl_device == 0) {
 		LOG_ERR("MIXER: Can't open audio device: '%s'; sound output is disabled",
 		        SDL_GetError());
 		return false;
 	}
 
-	// We open the audio device with our desired audio specs but these are only a hint.
-	// The hardware and/or platform may not support what we requested.
-	// Check here to see what the device actually got opened with.
+	// We open the audio device with our desired audio specs but these are
+	// only a hint. The hardware and/or platform may not support what we
+	// requested. Check here to see what the device actually got opened with.
 	int obtained_blocksize = 0;
 	SDL_GetAudioDeviceFormat(mixer.sdl_device, &obtained, &obtained_blocksize);
 
@@ -3087,7 +3107,7 @@ static bool init_sdl_sound(const int requested_sample_rate_hz,
 	// to match the device's rate to avoid SDL having to resample our
 	// already resampled audio.
 	const auto obtained_sample_rate_hz = obtained.freq;
-	desired.freq = obtained_sample_rate_hz;
+	desired.freq                       = obtained_sample_rate_hz;
 
 	// This is a playback stream so the source must match our mixer's output.
 	// The destination spec will be set by SDL in SDL_BindAudioStream()
@@ -3120,9 +3140,11 @@ static bool init_sdl_sound(const int requested_sample_rate_hz,
 	mixer.sample_rate_hz = obtained_sample_rate_hz;
 	mixer.blocksize      = obtained_blocksize;
 
-	const auto driver_name = SDL_GetCurrentAudioDriver();
+	const auto driver_name   = SDL_GetCurrentAudioDriver();
 	const auto playback_name = SDL_GetAudioDeviceName(mixer.sdl_device);
-	LOG_MSG("MIXER: Initialised '%s' audio driver using '%s' output device", driver_name, playback_name);
+	LOG_MSG("MIXER: Initialised '%s' audio driver using '%s' output device",
+	        driver_name,
+	        playback_name);
 
 	// Did SDL negotiate a different playback rate?
 	if (obtained_sample_rate_hz != requested_sample_rate_hz) {
@@ -3137,7 +3159,8 @@ static bool init_sdl_sound(const int requested_sample_rate_hz,
 	}
 
 	// Did SDL adjust the hint request?
-	if (requested_blocksize_in_frames && obtained_blocksize != *requested_blocksize_in_frames) {
+	if (requested_blocksize_in_frames &&
+	    obtained_blocksize != *requested_blocksize_in_frames) {
 		LOG_MSG("MIXER: SDL changed the requested blocksize of "
 		        "%d to %d frames",
 		        *requested_blocksize_in_frames,
@@ -3198,7 +3221,7 @@ static void init_denoiser(bool enabled)
 	}
 }
 
-static std::optional<int> parse_blocksize(SectionProp *section)
+static std::optional<int> parse_blocksize(SectionProp* section)
 {
 	const auto str = section->GetString("blocksize");
 	if (str == "auto") {
@@ -3254,10 +3277,14 @@ void MIXER_Init()
 
 			mixer.final_output.Start();
 
-			// The stream becomes live (unpaused) during the SDL_BindAudioStream() call.
-			// It will play silence until we start the callback here and start feeding it audio.
-			// We never use SDL's pause feature. Instead we write silence when we mute the audio.
-			SDL_SetAudioStreamGetCallback(mixer.sdl_stream, mixer_callback, nullptr);
+			// The stream becomes live (unpaused) during the
+			// SDL_BindAudioStream() call. It will play silence
+			// until we start the callback here and start feeding it
+			// audio. We never use SDL's pause feature. Instead we
+			// write silence when we mute the audio.
+			SDL_SetAudioStreamGetCallback(mixer.sdl_stream,
+			                              mixer_callback,
+			                              nullptr);
 
 			// `mute_state` defaults to Audible and `paused`
 			// defaults to false; nothing more to set here.
@@ -3407,15 +3434,18 @@ static void init_mixer_config_settings(SectionProp& sec_prop)
 	        "rates to 48000 Hz anyway.");
 
 	constexpr auto DefaultBlocksizeString = "auto";
-	auto string_prop = sec_prop.AddString("blocksize", OnlyAtStart, DefaultBlocksizeString);
-	string_prop->SetHelp(format_str(
-	        "Block size of the host audio device in sample frames ('%s' by default). Valid\n"
-	        "range is %d to %d. Should be set to power-of-two values (e.g., 256, 512, 1024,\n"
-	        "etc.) Larger values might help with sound stuttering but will introduce more\n"
-	        "latency.",
-	        DefaultBlocksizeString,
-	        MinBlocksize,
-	        MaxBlocksize));
+
+	auto string_prop = sec_prop.AddString("blocksize",
+	                                      OnlyAtStart,
+	                                      DefaultBlocksizeString);
+	string_prop->SetHelp(
+	        format_str("Block size of the host audio device in sample frames ('%s' by default). Valid\n"
+	                   "range is %d to %d. Should be set to power-of-two values (e.g., 256, 512, 1024,\n"
+	                   "etc.) Larger values might help with sound stuttering but will introduce more\n"
+	                   "latency.",
+	                   DefaultBlocksizeString,
+	                   MinBlocksize,
+	                   MaxBlocksize));
 
 	int_prop = sec_prop.AddInt("prebuffer", OnlyAtStart, DefaultPrebufferMs);
 	int_prop->SetMinMax(0, MaxPrebufferMs);
