@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2002-2024 The DOSBox Team
+// SPDX-FileCopyrightText:  2002-2026 The DOSBox Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DOSBOX_OPL_H
@@ -102,9 +102,9 @@ private:
 	IO_WriteHandleObject WriteHandler[3];
 
 	std::queue<AudioFrame> fifo = {};
-	std::mutex mutex = {};
+	std::mutex mutex            = {};
 
-	OplChip chip[2]  = {};
+	OplChip chip[2] = {};
 
 	struct {
 		OplMode mode   = OplMode::None;

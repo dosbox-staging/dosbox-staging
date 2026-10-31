@@ -1,4 +1,4 @@
-// SPDX-FileCopyrightText:  2022-2025 The DOSBox Staging Team
+// SPDX-FileCopyrightText:  2022-2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #ifndef DOSBOX_PRIVATE_CMS_H
@@ -24,8 +24,8 @@
 
 class Cms {
 public:
-	Cms(const int port_choice, const std::string& card_choice,
-	            const std::string& filter_choice);
+	Cms(const int port, const std::string& card_prefs,
+	    const std::string& filter_prefs);
 
 	~Cms();
 
