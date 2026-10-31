@@ -1,6 +1,6 @@
 // SPDX-FileCopyrightText: 2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
-#include "float80.h"
+#include "fpu/float80.h"
 #include <array>
 #include <bit>
 
@@ -9,40 +9,42 @@ using namespace softfloat;
 namespace {
 // Transcendental evaluation uses software binary128 guard precision. No host
 // floating-point operations or host rounding mode enter these calculations.
-struct Q {
-	float128_t v = {};
-	Q()          = default;
-	Q(int64_t n) : v(i64_to_f128(n)) {}
-	explicit Q(Float f) : v(extF80_to_f128(f)) {}
-	explicit Q(float128_t f) : v(f) {}
-};
-Q operator+(Q a, Q b)
+using Float128 = float128_t;
+Float128 to_float128(const int64_t value)
 {
-	return Q(f128_add(a.v, b.v));
+	return i64_to_f128(value);
 }
-Q operator-(Q a, Q b)
+Float128 to_float128(const Float value)
 {
-	return Q(f128_sub(a.v, b.v));
+	return extF80_to_f128(value);
 }
-Q operator*(Q a, Q b)
+Float128 operator+(Float128 a, Float128 b)
 {
-	return Q(f128_mul(a.v, b.v));
+	return f128_add(a, b);
 }
-Q operator/(Q a, Q b)
+Float128 operator-(Float128 a, Float128 b)
 {
-	return Q(f128_div(a.v, b.v));
+	return f128_sub(a, b);
 }
-bool operator==(Q a, Q b)
+Float128 operator*(Float128 a, Float128 b)
 {
-	return f128_eq(a.v, b.v);
+	return f128_mul(a, b);
 }
-bool operator<(Q a, Q b)
+Float128 operator/(Float128 a, Float128 b)
 {
-	return f128_lt(a.v, b.v);
+	return f128_div(a, b);
 }
-Q bits(uint64_t hi, uint64_t lo)
+bool operator==(Float128 a, Float128 b)
 {
-	float128_t f = {};
+	return f128_eq(a, b);
+}
+bool operator<(Float128 a, Float128 b)
+{
+	return f128_lt(a, b);
+}
+Float128 bits(uint64_t hi, uint64_t lo)
+{
+	Float128 f = {};
 #ifdef LITTLEENDIAN
 	f.v[1] = hi;
 	f.v[0] = lo;
@@ -50,30 +52,30 @@ Q bits(uint64_t hi, uint64_t lo)
 	f.v[0] = hi;
 	f.v[1] = lo;
 #endif
-	return Q(f);
+	return f;
 }
-Q pi()
+Float128 pi()
 {
 	return bits(0x4000921fb54442d1, 0x8469898cc51701b8);
 }
-Q ln2()
+Float128 ln2()
 {
 	return bits(0x3ffe62e42fefa39e, 0xf35793c7673007e6);
 }
-struct Guard {
+struct SoftFloatStateGuard {
 	uint_fast8_t rounding = softfloat_roundingMode;
 	uint_fast8_t flags    = softfloat_exceptionFlags;
-	Guard()
+	SoftFloatStateGuard()
 	{
 		softfloat_roundingMode   = softfloat_round_near_even;
 		softfloat_exceptionFlags = 0;
 	}
-	~Guard()
+	~SoftFloatStateGuard()
 	{
 		softfloat_roundingMode   = rounding;
 		softfloat_exceptionFlags = flags;
 	}
-	Float result(Q a)
+	Float result(Float128 a)
 	{
 		softfloat_roundingMode   = rounding;
 		extF80_roundingPrecision = 80;
@@ -81,51 +83,51 @@ struct Guard {
 		// instruction result; the final conversion detects result
 		// tininess.
 		softfloat_exceptionFlags &= ~softfloat_flag_underflow;
-		const auto out = f128_to_extF80(a.v);
+		const auto out = f128_to_extF80(a);
 		flags |= softfloat_exceptionFlags;
 		return out;
 	}
 };
-Q twice_atanh(Q z)
+Float128 twice_atanh(Float128 z)
 {
 	// After range reduction, |z| <= 1/3.
-	Q zz = z * z, term = z, sum = z;
+	Float128 zz = z * z, term = z, sum = z;
 	for (int n = 3; n < 513; n += 2) {
-		term   = term * zz;
-		Q next = sum + term / Q(n);
+		term          = term * zz;
+		Float128 next = sum + term / to_float128(n);
 		if (next == sum) {
 			break;
 		}
 		sum = next;
 	}
-	return Q(2) * sum;
+	return to_float128(2) * sum;
 }
-Q arctangent(Q a)
+Float128 arctangent(Float128 a)
 {
-	bool reciprocal = Q(1) < a;
+	bool reciprocal = to_float128(1) < a;
 	if (reciprocal) {
-		a = Q(1) / a;
+		a = to_float128(1) / a;
 	}
-	bool shifted = Q(1) / Q(2) < a;
+	bool shifted = to_float128(1) / to_float128(2) < a;
 	if (shifted) {
-		a = (a - Q(1)) / (a + Q(1));
+		a = (a - to_float128(1)) / (a + to_float128(1));
 	}
-	Q aa = Q(0) - a * a, term = a, sum = a;
+	Float128 aa = to_float128(0) - a * a, term = a, sum = a;
 	for (int n = 3; n < 513; n += 2) {
-		term   = term * aa;
-		Q next = sum + term / Q(n);
+		term          = term * aa;
+		Float128 next = sum + term / to_float128(n);
 		if (next == sum) {
-			if (sum == a && !(a == Q(0))) {
+			if (sum == a && !(a == to_float128(0))) {
 				// atan(a) is strictly below a. Preserve that
 				// direction when the correction is smaller than
 				// a binary128 ULP.
 #ifdef LITTLEENDIAN
-				if (sum.v.v[0]-- == 0) {
-					--sum.v.v[1];
+				if (sum.v[0]-- == 0) {
+					--sum.v[1];
 				}
 #else
-				if (sum.v.v[1]-- == 0) {
-					--sum.v.v[0];
+				if (sum.v[1]-- == 0) {
+					--sum.v[0];
 				}
 #endif
 			}
@@ -134,9 +136,9 @@ Q arctangent(Q a)
 		sum = next;
 	}
 	if (shifted) {
-		sum = sum + pi() / Q(4);
+		sum = sum + pi() / to_float128(4);
 	}
-	return reciprocal ? pi() / Q(2) - sum : sum;
+	return reciprocal ? pi() / to_float128(2) - sum : sum;
 }
 } // namespace
 
@@ -154,30 +156,30 @@ Float scale(Float a, int n)
 	return softfloat_roundPackToExtF80(sign(a), e + n, a.signif, 0, 80);
 }
 
-static Q log2q(Float a, bool plus_one)
+static Float128 log2q(Float a, bool plus_one)
 {
-	Q input(a);
+	Float128 input = to_float128(a);
 	if (plus_one) {
-		if (Q(abs(a)) < Q(1) / Q(2)) {
-			return twice_atanh(input / (input + Q(2))) / ln2();
+		if (to_float128(abs(a)) < to_float128(1) / to_float128(2)) {
+			return twice_atanh(input / (input + to_float128(2))) / ln2();
 		}
-		input = input + Q(1);
+		input = input + to_float128(1);
 	}
-	if (input == Q(0)) {
-		return Q(infinity(true));
+	if (input == to_float128(0)) {
+		return to_float128(infinity(true));
 	}
-	if (input < Q(0)) {
-		return Q(indefinite());
+	if (input < to_float128(0)) {
+		return to_float128(indefinite());
 	}
 	// Extract the binary128 exponent and normalize without a host conversion.
 #ifdef LITTLEENDIAN
-	auto& hi = input.v.v[1];
+	auto& hi = input.v[1];
 #else
-	auto& hi = input.v.v[0];
+	auto& hi = input.v[0];
 #endif
 	int e = static_cast<int>((hi >> 48) & 0x7fff) - 16383;
 	if (e == 16384) {
-		return Q(inf(a) && !sign(a) ? a : indefinite());
+		return to_float128(inf(a) && !sign(a) ? a : indefinite());
 	}
 	if (e == -16383) {
 		// Normalize binary128 subnormals through exact multiplication.
@@ -185,19 +187,21 @@ static Q log2q(Float a, bool plus_one)
 		e     = static_cast<int>((hi >> 48) & 0x7fff) - 16383 - 128;
 	}
 	hi = (hi & UINT64_C(0x0000ffffffffffff)) | UINT64_C(0x3fff000000000000);
-	return Q(e) + twice_atanh((input - Q(1)) / (input + Q(1))) / ln2();
+	return to_float128(e) +
+	       twice_atanh((input - to_float128(1)) / (input + to_float128(1))) /
+	               ln2();
 }
 
 Float log2(Float a, bool plus_one)
 {
-	Guard guard;
+	SoftFloatStateGuard guard;
 	return guard.result(log2q(a, plus_one));
 }
 
 Float log2_times(Float a, Float y, bool plus_one)
 {
-	Guard guard;
-	return guard.result(log2q(a, plus_one) * Q(y));
+	SoftFloatStateGuard guard;
+	return guard.result(log2q(a, plus_one) * to_float128(y));
 }
 
 Float exp2m1(Float a)
@@ -205,11 +209,11 @@ Float exp2m1(Float a)
 	if (is_zero(a)) {
 		return a;
 	}
-	Guard guard;
-	Q x = Q(a) * ln2(), term = x, sum = x;
+	SoftFloatStateGuard guard;
+	Float128 x = to_float128(a) * ln2(), term = x, sum = x;
 	for (int n = 2; n < 256; ++n) {
-		term   = term * x / Q(n);
-		Q next = sum + term;
+		term          = term * x / to_float128(n);
+		Float128 next = sum + term;
 		if (next == sum) {
 			break;
 		}
@@ -220,34 +224,35 @@ Float exp2m1(Float a)
 
 Float atan2(Float y, Float x)
 {
-	Guard guard;
-	Q angle;
+	SoftFloatStateGuard guard;
+	Float128 angle;
 	if (inf(x) && inf(y)) {
-		angle = sign(x) ? pi() * Q(3) / Q(4) : pi() / Q(4);
+		angle = sign(x) ? pi() * to_float128(3) / to_float128(4)
+		                : pi() / to_float128(4);
 	} else if (is_zero(y)) {
-		angle = sign(x) ? pi() : Q(0);
+		angle = sign(x) ? pi() : to_float128(0);
 	} else if (is_zero(x) || inf(y)) {
-		angle = pi() / Q(2);
+		angle = pi() / to_float128(2);
 	} else if (inf(x)) {
-		angle = sign(x) ? pi() : Q(0);
+		angle = sign(x) ? pi() : to_float128(0);
 	} else {
-		angle = arctangent(Q(abs(y)) / Q(abs(x)));
+		angle = arctangent(to_float128(abs(y)) / to_float128(abs(x)));
 		if (sign(x)) {
 			angle = pi() - angle;
 		}
 	}
-	if (angle == Q(0)) {
+	if (angle == to_float128(0)) {
 		return raw(sign(y) ? 0x8000 : 0, 0);
 	}
-	return guard.result(sign(y) ? Q(0) - angle : angle);
+	return guard.result(sign(y) ? to_float128(0) - angle : angle);
 }
 
-static void sincosq(Float a, Q& sine, Q& cosine)
+static void sincosq(Float a, Float128& sine, Float128& cosine)
 {
-	Q half_pi = pi() / Q(2);
-	Q r(a);
-	int quadrant = 0;
-	const int e  = exponent(a) - 16383;
+	Float128 half_pi = pi() / to_float128(2);
+	Float128 r       = to_float128(a);
+	int quadrant     = 0;
+	const int e      = exponent(a) - 16383;
 	if (e >= -1) {
 		// Payne-Hanek reduction with 256 fixed-point bits of 2/pi.
 		// Reducing a 63-bit argument directly in binary128 would lose
@@ -298,26 +303,27 @@ static void sincosq(Float a, Q& sine, Q& cosine)
 			product[i]          = static_cast<uint32_t>(v) & mask;
 			carry               = v >> 32;
 		}
-		Q fraction(0);
+		Float128 fraction = to_float128(0);
 		for (int i = 9; i >= 0; --i) {
 			fraction = fraction +
-			           Q(product[i]) *
+			           to_float128(product[i]) *
 			                   bits(uint64_t(16383 + 32 * i - shift) << 48,
 			                        0);
 		}
 		r = fraction * half_pi;
 		if (round_up != sign(a)) {
-			r = Q(0) - r;
+			r = to_float128(0) - r;
 		}
 		if (sign(a)) {
 			quadrant = (-quadrant) & 3;
 		}
 	}
-	Q rr = Q(0) - r * r, s = r, c(1), st = r, ct(1);
+	Float128 rr = to_float128(0) - r * r;
+	Float128 s = r, c = to_float128(1), st = r, ct = to_float128(1);
 	for (int n = 2; n < 160; n += 2) {
-		st   = st * rr / Q(n * (n + 1));
-		ct   = ct * rr / Q((n - 1) * n);
-		Q sn = s + st, cn = c + ct;
+		st          = st * rr / to_float128(n * (n + 1));
+		ct          = ct * rr / to_float128((n - 1) * n);
+		Float128 sn = s + st, cn = c + ct;
 		if (sn == s && cn == c) {
 			break;
 		}
@@ -325,16 +331,16 @@ static void sincosq(Float a, Q& sine, Q& cosine)
 		c = cn;
 	}
 	if (quadrant == 1) {
-		Q t = s;
-		s   = c;
-		c   = Q(0) - t;
+		Float128 t = s;
+		s          = c;
+		c          = to_float128(0) - t;
 	} else if (quadrant == 2) {
-		s = Q(0) - s;
-		c = Q(0) - c;
+		s = to_float128(0) - s;
+		c = to_float128(0) - c;
 	} else if (quadrant == 3) {
-		Q t = s;
-		s   = Q(0) - c;
-		c   = t;
+		Float128 t = s;
+		s          = to_float128(0) - c;
+		c          = t;
 	}
 	sine   = s;
 	cosine = c;
@@ -374,8 +380,9 @@ void sincos(Float a, Float& sine, Float& cosine)
 		return;
 	}
 	if (exponent(a) < 16383 - 33) {
-		// For tiny sine arguments the correction is below half an extended
-		// ULP, but directed rounding must still retain its direction.
+		// For tiny sine arguments the correction is below half an
+		// extended ULP, but directed rounding must still retain its
+		// direction.
 		const auto rc          = softfloat_roundingMode;
 		const bool toward_zero = rc == softfloat_round_minMag ||
 		                         rc == (sign(a) ? softfloat_round_max
@@ -390,8 +397,8 @@ void sincos(Float a, Float& sine, Float& cosine)
 		cosine = one();
 		return;
 	}
-	Guard guard;
-	Q s, c;
+	SoftFloatStateGuard guard;
+	Float128 s, c;
 	sincosq(a, s, c);
 	sine   = guard.result(s);
 	cosine = guard.result(c);
@@ -408,8 +415,8 @@ Float tangent(Float a)
 		                           : softfloat_round_max);
 		return away ? adjacent_magnitude(a, true) : a;
 	}
-	Guard guard;
-	Q s, c;
+	SoftFloatStateGuard guard;
+	Float128 s, c;
 	sincosq(a, s, c);
 	return guard.result(s / c);
 }

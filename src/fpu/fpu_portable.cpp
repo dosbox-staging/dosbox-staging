@@ -2,7 +2,7 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 #include "cpu/cpu.h"
 #include "dosbox.h"
-#include "fpu.h"
+#include "fpu/fpu.h"
 #include "misc/cross.h"
 #include "misc/logging.h"
 #include "utils/math_utils.h"
