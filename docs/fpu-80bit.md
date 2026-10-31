@@ -201,3 +201,23 @@ existing intrinsic implementations after its platform definitions; defining the
 intrinsic macros alone would not activate them with the bundled platform header.
 All configuration lives outside the SoftFloat source directory. Other compilers
 retain the portable implementations.
+
+### Opt-in instruction profiling
+
+On the portable FPU backend, launch with `DOSBOX_FPU_PROFILE=1` to profile
+`fpu=fast` or `fpu=accurate`. Unset the variable (or use any value other than `1`)
+to retain normal dispatch without per-call counters or clock reads. Native x87
+backends are not instrumented.
+
+The profiler counts every backend operation and times approximately one call in
+1,024, spreading samples across recurring guest loops. `LOG_INFO()` emits
+cumulative calls, timed samples, and total sampled nanoseconds for each operation
+every five seconds during FPU activity and once at normal process exit. Divide
+sampled nanoseconds by sample count for the mean sampled duration. Counters also
+include startup/loading and stack helpers; they are not retired x87 instruction
+counts. Internal helper calls are included in the enclosing operation's timing,
+not counted separately by the profiler.
+
+Timings include clock overhead, and profiling affects benchmark performance.
+Compare both backends under the same instrumentation and check whole-game
+performance with profiling disabled.
