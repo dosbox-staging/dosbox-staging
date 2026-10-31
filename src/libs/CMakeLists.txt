@@ -43,4 +43,22 @@ add_subdirectory(YM7128B_emu)
 
 if (NOT C_FPU_X86)
   add_subdirectory(softfloat)
+
+  # Keep vendor sources untouched; enable SoftFloat's inline primitives and
+  # compiler-specific implementations through a private forced-include header.
+  target_compile_definitions(softfloat PRIVATE INLINE_LEVEL=5)
+  if (CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm64|aarch64|ARM64|x86_64|AMD64|amd64)$")
+    target_compile_definitions(softfloat PRIVATE SOFTFLOAT_FAST_DIV64TO32)
+  endif()
+  if (CMAKE_C_COMPILER_ID MATCHES "Clang|GNU" AND NOT MSVC)
+    target_compile_definitions(softfloat PRIVATE SOFTFLOAT_BUILTIN_CLZ)
+    include(CheckCSourceCompiles)
+    check_c_source_compiles("int main(void) { unsigned __int128 n = 1; return (int)(n * n); }"
+                            SOFTFLOAT_HAS_INT128)
+    if (SOFTFLOAT_HAS_INT128)
+      target_compile_definitions(softfloat PRIVATE SOFTFLOAT_INTRINSIC_INT128)
+    endif()
+    target_compile_options(softfloat PRIVATE
+      -include "${CMAKE_CURRENT_SOURCE_DIR}/../fpu/softfloat_options.h")
+  endif()
 endif()
