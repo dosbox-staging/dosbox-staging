@@ -113,6 +113,7 @@ public:
 	DosShell& operator=(const DosShell&) = delete; // prevent assignment
 	void Run() override;
 	void RunBatchFile();
+	bool IsRunningBatchFile() const;
 
 	/* A load of subfunctions */
 	void ParseLine(char* line);
