@@ -190,3 +190,14 @@ Windows Intel machine was not captured.
 
 Temporary instruction/CPU tracing has been removed. The full regression suite
 after the FLDLG2 correction reports 960 passed and one skipped.
+
+## Performance checks
+
+The build enables `SOFTFLOAT_FAST_INT64` and `INLINE_LEVEL=5`. GCC/Clang builds
+also enable `SOFTFLOAT_BUILTIN_CLZ` and, after a compiler capability check,
+`SOFTFLOAT_INTRINSIC_INT128`. ARM64 and x86-64 targets enable
+`SOFTFLOAT_FAST_DIV64TO32`. A private forced-include header loads the library's
+existing intrinsic implementations after its platform definitions; defining the
+intrinsic macros alone would not activate them with the bundled platform header.
+All configuration lives outside the SoftFloat source directory. Other compilers
+retain the portable implementations.
