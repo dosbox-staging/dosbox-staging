@@ -17,6 +17,7 @@ endfunction()
 
 add_subdirectory(base64)
 add_subdirectory(clap)
+add_subdirectory(cqm)
 add_subdirectory(decoders)
 add_subdirectory(enet)
 add_subdirectory(ESFMu)
