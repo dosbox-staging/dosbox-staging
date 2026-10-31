@@ -286,6 +286,8 @@ Blaster](sound-blaster.md#configuration-settings) page.
 
       - `esfm` -- ESS ESFM (enhanced Yamaha OPL3 compatible FM synth).
 
+      - `cqm` -- Creative CQM (OPL3-compatible clone used on later SB16 and AWE32/64 cards).
+
       - `none`/`off` -- Disable OPL emulation.
 
     !!! note
