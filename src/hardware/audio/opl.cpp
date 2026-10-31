@@ -42,6 +42,7 @@ static const char* to_string(const OplMode opl_mode)
 	case OplMode::Opl3:     return "OPL3";
 	case OplMode::Opl3Gold: return "OPL3Gold";
 	case OplMode::Esfm:     return "ESFM";
+	case OplMode::Cqm:      return "CQM";
 	}
 	return "Unknown";
 	// clang-format on
@@ -263,9 +264,11 @@ void Opl::Init()
 
 	if (opl.mode == OplMode::Esfm) {
 		ESFM_init(&esfm.chip);
+	} else if (opl.mode == OplMode::Cqm) {
+		// samplerate and genrate are the same for our use case
+		CQM_Reset(&cqm.chip, OplSampleRateHz, OplSampleRateHz);
 	} else {
 		OPL3_Reset(&opl.chip, OplSampleRateHz);
-
 		initialize_opl_tone_generators(opl.chip);
 	}
 
@@ -292,6 +295,8 @@ void Opl::Init()
 
 	case OplMode::Esfm: break;
 
+	case OplMode::Cqm: break;
+
 	default:
 		assertm(false,
 		        format_str("Invalid OPL mode: %s", to_string(opl.mode)));
@@ -302,8 +307,14 @@ void Opl::WriteReg(const io_port_t selected_reg, const uint8_t val)
 {
 	if (opl.mode == OplMode::Esfm) {
 		ESFM_write_reg_buffered_fast(&esfm.chip, selected_reg, val);
-
-
+	} else if (opl.mode == OplMode::Cqm) {
+		CQM_WriteRegBuffered(&cqm.chip, selected_reg, val);
+		// Keep host-side OPL3-mode flag in sync so WriteAddr() can
+		// select the second register bank (0x100-0x1FF). Without this,
+		// channels 9-17 and right-only panning never receive writes.
+		if (selected_reg == 0x105) {
+			opl.newm = val & 0x01;
+		}
 	} else { // OPL
 		OPL3_WriteRegBuffered(&opl.chip, selected_reg, val);
 		if (selected_reg == 0x105) {
@@ -386,6 +397,17 @@ AudioFrame Opl::RenderFrame()
 
 	if (opl.mode == OplMode::Esfm) {
 		ESFM_generate_stream(&esfm.chip, buf, 1);
+
+		if (ctrl.wants_dc_bias_removed) {
+			buf[0] = remove_dc_bias<Left>(buf[0]);
+			buf[1] = remove_dc_bias<Right>(buf[1]);
+		}
+
+		AudioFrame frame = {buf[0], buf[1]};
+		return frame;
+
+	} else if (opl.mode == OplMode::Cqm) {
+		CQM_GenerateStream(&cqm.chip, buf, 1);
 
 		if (ctrl.wants_dc_bias_removed) {
 			buf[0] = remove_dc_bias<Left>(buf[0]);
@@ -620,6 +642,7 @@ void Opl::PortWrite(const io_port_t port, const io_val_t value, const io_width_t
 
 		case OplMode::Opl2:
 		case OplMode::Opl3:
+		case OplMode::Cqm:
 			if (!chip[0].Write(reg.normal, val)) {
 				WriteReg(reg.normal, val);
 				CacheWrite(reg.normal, val);
@@ -696,6 +719,7 @@ void Opl::PortWrite(const io_port_t port, const io_val_t value, const io_width_t
 
 		case OplMode::Opl3:
 		case OplMode::Esfm:
+		case OplMode::Cqm:
 			reg.normal = WriteAddr(port, val) & 0x1ff;
 			break;
 
@@ -754,6 +778,7 @@ uint8_t Opl::PortRead(const io_port_t port, const io_width_t)
 		[[fallthrough]];
 
 	case OplMode::Opl3:
+	case OplMode::Cqm:
 		// We allocated 4 ports, so just return -1 for the higher ones
 		if (!(port & 3)) {
 			return chip[0].Read();
@@ -977,26 +1002,31 @@ static void init_opl_config_settings(SectionProp& secprop)
 
 	auto pstring = secprop.AddString("oplmode", when_idle, "auto");
 	pstring->SetValues(
-	        {"auto", "cms", "opl2", "dualopl2", "opl3", "opl3gold", "esfm", "none"});
+	        {"auto", "cms", "opl2", "dualopl2", "opl3", "opl3gold", "esfm", "cqm", "none"});
 	pstring->SetHelp(
-	        "OPL model to emulate ('auto' by default). Possible values:\n"
-	        "\n"
-	        "  auto:      Use the appropriate model determined by 'sbtype'.\n"
-	        "  opl2:      Yamaha OPL2 (YM3812, mono).\n"
-	        "  dualopl2:  Dual OPL2 (two OPL2 chips in stereo configuration).\n"
-	        "  opl3:      Yamaha OPL3 (YMF262, stereo).\n"
-	        "\n"
-	        "  opl3gold:  OPL3 and the optional AdLib Gold Surround module.\n"
-	        "             Use with 'sbtype = sb16' to emulate the AdLib Gold 1000.\n"
-	        "\n"
-	        "  esfm:      ESS ESFM (enhanced Yamaha OPL3 compatible FM synth).\n"
-	        "  none/off:  Disable OPL emulation.\n"
-	        "\n"
-	        "Notes:\n"
-	        "  - 'sbtype = none' and 'oplmode = opl2' emulates the original AdLib card.\n"
-	        "  - Only 'oplmode = esfm' is not enough to get ESS Enhanced FM music in games;\n"
-	        "    you'll also need to set 'sbtype = ess'. 'oplmode = esfm' is useful to\n"
-	        "    get ESFM-flavoured OPL with original Sound Blaster models.");
+			"OPL model to emulate ('auto' by default). Possible values:\n"
+			"\n"
+			"  auto:      Use the appropriate model determined by 'sbtype'.\n"
+			"  opl2:      Yamaha OPL2 (YM3812, mono).\n"
+			"  dualopl2:  Dual OPL2 (two OPL2 chips in stereo configuration).\n"
+			"  opl3:      Yamaha OPL3 (YMF262, stereo).\n"
+			"\n"
+			"  opl3gold:  OPL3 and the optional AdLib Gold Surround module.\n"
+			"             Use with 'sbtype = sb16' to emulate the AdLib Gold 1000.\n"
+			"\n"
+			"  esfm:      ESS ESFM (enhanced Yamaha OPL3 compatible FM synth).\n"
+			"\n"
+			"  cqm:       Creative CQM (OPL3-compatible clone used on later SB16 and AWE32/64\n"
+			"             cards).\n"
+			"\n"
+			"  none/off:  Disable OPL emulation.\n"
+			"\n"
+			"Notes:\n"
+			"  - 'sbtype = none' and 'oplmode = opl2' emulates the original AdLib card.\n"
+			"\n"
+			"  - Only 'oplmode = esfm' is not enough to get ESS Enhanced FM music in games;\n"
+			"    you'll also need to set 'sbtype = ess'. 'oplmode = esfm' is useful to\n"
+			"    get ESFM-flavoured OPL with original Sound Blaster models.");
 
 	pstring = secprop.AddString("opl_fadeout", when_idle, "off");
 	pstring->SetHelp(
