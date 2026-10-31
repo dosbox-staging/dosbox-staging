@@ -3896,6 +3896,19 @@ void init_cpu_config_settings(SectionProp& secprop)
 	pstring->SetDeprecatedWithAlternateValue("486_prefetch", "486");
 	pstring->SetDeprecatedWithAlternateValue("pentium_slow", "pentium");
 
+	pstring = secprop.AddString("fpu", OnlyAtStart, "fast");
+	pstring->SetValues({"fast", "accurate"});
+	pstring->SetHelp(
+	        "FPU emulation on non-x86 hosts ('fast' by default). Possible values:\n"
+	        "\n"
+	        "  fast:      Use the existing reduced-precision implementation for better\n"
+	        "             performance (default).\n"
+	        "  accurate:  Use software 80-bit extended precision for improved floating-\n"
+	        "             point accuracy, at a higher host CPU cost.\n"
+	        "\n"
+	        "Restart DOSBox to apply changes. Independent of the 'core' setting.\n"
+	        "On x86-64 hosts, native x87 emulation is always used.");
+
 	// Legacy `cycles` setting
 	pstring = secprop.AddString("cycles", DeprecatedButAllowed, "");
 	pstring->SetHelp(

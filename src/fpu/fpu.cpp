@@ -3,10 +3,11 @@
 
 #include "dosbox.h"
 
+#include "config/config.h"
 #include "cpu/cpu.h"
-#include "misc/cross.h"
 #include "fpu/fpu.h"
 #include "hardware/memory.h"
+#include "misc/cross.h"
 #include <cmath>
 
 FPU_rec fpu = {};
@@ -52,7 +53,7 @@ void FPU_GetPRegsTo(uint8_t dyn_regs[8][10])
 #if C_FPU_X86
 #include "fpu_instructions_x86.h"
 #else
-#include "fpu_instructions.h"
+#include "fpu_instructions_portable.h"
 #endif
 
 /* WATCHIT : ALWAYS UPDATE REGISTERS BEFORE AND AFTER USING THEM 
@@ -600,8 +601,16 @@ void FPU_ESC7_Normal(Bitu rm) {
 
 void FPU_Init()
 {
-#if !C_FPU_X86
-	LOG_WARNING("FPU: Using reduced-precision floating-point emulation");
+#if C_FPU_X86
+	LOG_INFO("FPU: Using native x87 emulation");
+#else
+	const bool accurate = get_section("cpu")->GetString("fpu") == "accurate";
+	FPU_SelectBackend(accurate);
+	if (accurate) {
+		LOG_INFO("FPU: Using 'accurate' (80-bit SoftFloat) emulation");
+	} else {
+		LOG_WARNING("FPU: Using 'fast' (reduced-precision) emulation");
+	}
 #endif
 	FPU_FINIT();
 }
