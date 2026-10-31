@@ -3,12 +3,12 @@
 
 #include "dosbox.h"
 
+#include "config/config.h"
 #include "cpu/cpu.h"
-#include "misc/cross.h"
 #include "fpu/fpu.h"
 #include "hardware/memory.h"
+#include "misc/cross.h"
 #include <cmath>
-#include "config/config.h"
 
 FPU_rec fpu = {};
 

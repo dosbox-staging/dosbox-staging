@@ -3,9 +3,9 @@
 #include "dosbox.h"
 
 #if !C_FPU_X86
-#include "dosbox_test_fixture.h"
 #include "cpu/cpu.h"
 #include "cpu_config_param.h"
+#include "dosbox_test_fixture.h"
 #include "fpu/fpu.h"
 #include "hardware/memory.h"
 #include <tuple>
