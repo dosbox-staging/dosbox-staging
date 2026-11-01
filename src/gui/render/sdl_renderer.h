@@ -91,6 +91,7 @@ private:
 
 	SDL_Window* window     = {};
 	SDL_Renderer* renderer = {};
+	bool vsync_enabled     = false;
 
 	// The current framebuffer we render the emulated video output into
 	// (contains the "work-in-progress" next frame).

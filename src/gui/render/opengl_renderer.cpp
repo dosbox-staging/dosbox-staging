@@ -11,6 +11,7 @@
 
 #include "capture/capture.h"
 #include "dosbox_config.h"
+#include "hardware/timer.h"
 #include "misc/support.h"
 #include "misc/video.h"
 #include "utils/checks.h"
@@ -488,7 +489,11 @@ void OpenGlRenderer::PresentFrame()
 	}
 
 	// Present frame
+	const auto start_us = vsync_enabled ? GetTicksUs() : 0;
 	SDL_GL_SwapWindow(window);
+	if (vsync_enabled) {
+		DOSBOX_AccountPresentationWait(GetTicksUsSince(start_us));
+	}
 }
 
 OpenGlRenderer::SetShaderResult OpenGlRenderer::SetShader(const std::string& symbolic_shader_descriptor)
@@ -627,6 +632,8 @@ void OpenGlRenderer::SetVsync(const bool is_enabled)
 		LOG_ERR("OPENGL: Error %s vsync: %s",
 		        (is_enabled ? "enabling" : "disabling"),
 		        SDL_GetError());
+	} else {
+		vsync_enabled = is_enabled;
 	}
 }
 

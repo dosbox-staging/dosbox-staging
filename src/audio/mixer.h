@@ -512,6 +512,9 @@ void MIXER_Destroy();
 
 int MIXER_GetSampleRate();
 int MIXER_GetPreBufferMs();
+// Cumulative short delivery to SDL, excluding intentional pause. Diagnostic
+// telemetry, not a measure of the emulation thread's available CPU capacity.
+uint64_t MIXER_GetAudioShortfallFrames();
 
 void MIXER_EnableFastForwardMode();
 void MIXER_DisableFastForwardMode();

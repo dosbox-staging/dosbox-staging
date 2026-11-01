@@ -163,6 +163,9 @@ struct MixerSettings {
 	RWQueue<int16_t> capture_queue{1};
 
 	std::thread thread = {};
+	// Diagnostic only: short delivery at the SDL callback boundary. This
+	// does not identify whether the mixer, a device, or the host fell behind.
+	std::atomic<uint64_t> audio_shortfall_frames = 0;
 
 	// The default master gain is -6dB (50% volume) to minimize the change
 	// for clipping.
@@ -2622,6 +2625,10 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 	                                        frames_requested);
 
 	const auto frames_received = mixer.final_output.BulkDequeue(output, frames_to_dequeue);
+	if (frames_received < frames_requested && !DOSBOX_IsPauseRequested()) {
+		mixer.audio_shortfall_frames.fetch_add(frames_requested - frames_received,
+		                                       std::memory_order_relaxed);
+	}
 
 	SDL_PutAudioStreamData(stream, output.data(), check_cast<int>(frames_received) * BytesPerAudioFrame);
 }
@@ -2629,6 +2636,11 @@ static void SDLCALL mixer_callback([[maybe_unused]] void* userdata,
 float MIXER_GetPlaybackGain()
 {
 	return mixer.playback_gain.load(std::memory_order_relaxed);
+}
+
+uint64_t MIXER_GetAudioShortfallFrames()
+{
+	return mixer.audio_shortfall_frames.load(std::memory_order_relaxed);
 }
 
 // Fades out the SDL `output_buffer` between full and muted over a few ms to

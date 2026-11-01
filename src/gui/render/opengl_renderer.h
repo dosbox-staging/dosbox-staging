@@ -101,6 +101,7 @@ private:
 
 	SDL_Window* window    = {};
 	SDL_GLContext context = {};
+	bool vsync_enabled    = false;
 
 	GLint max_texture_size_px = 0;
 

@@ -2530,25 +2530,6 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 	return false;
 }
 
-static void adjust_ticks_after_present_frame(int64_t elapsed_us)
-{
-	static int64_t cumulative_time_rendered_us = 0;
-	cumulative_time_rendered_us += elapsed_us;
-
-	constexpr auto MicrosInMillisecond = 1000;
-
-	if (cumulative_time_rendered_us >= MicrosInMillisecond) {
-		// 1 tick == 1 millisecond
-		const auto cumulative_ticks_rendered = cumulative_time_rendered_us /
-		                                       MicrosInMillisecond;
-
-		DOSBOX_SetTicksDone(DOSBOX_GetTicksDone() - cumulative_ticks_rendered);
-
-		// Keep the fractional microseconds part
-		cumulative_time_rendered_us %= MicrosInMillisecond;
-	}
-}
-
 void GFX_CaptureRenderedImage()
 {
 	assert(sdl.renderer);
@@ -2617,10 +2598,6 @@ void GFX_MaybePresentFrame()
 		}
 #endif
 		sdl.presentation.last_present_time_us = end_us;
-
-		// Adjust "ticks done" counter by the time it took to present
-		// the frame
-		adjust_ticks_after_present_frame(GetTicksDiff(end_us, start_us));
 	}
 }
 

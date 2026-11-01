@@ -11,6 +11,7 @@
 
 #include "capture/capture.h"
 #include "config/setup.h"
+#include "hardware/timer.h"
 #include "misc/video.h"
 #include "utils/checks.h"
 #include "utils/math_utils.h"
@@ -361,7 +362,11 @@ void SdlRenderer::PresentFrame()
 		GFX_CaptureRenderedImage();
 	}
 
+	const auto start_us = vsync_enabled ? GetTicksUs() : 0;
 	SDL_RenderPresent(renderer);
+	if (vsync_enabled) {
+		DOSBOX_AccountPresentationWait(GetTicksUsSince(start_us));
+	}
 }
 
 void SdlRenderer::SetVsync(const bool is_enabled)
@@ -370,6 +375,8 @@ void SdlRenderer::SetVsync(const bool is_enabled)
 		LOG_WARNING("SDL: Error %s vsync: %s",
 		            (is_enabled ? "enabling" : "disabling"),
 		            SDL_GetError());
+	} else {
+		vsync_enabled = is_enabled;
 	}
 }
 

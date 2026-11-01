@@ -242,6 +242,7 @@ static void set_modern_cycles_config(const CpuMode mode)
 
 	CPU_Cycles    = 0;
 	CPU_CycleLeft = 0;
+	CPU_ResetAutoAdjust();
 
 	const auto real_mode_with_max_cycles = (mode == CpuMode::Real &&
 	                                        !fixed_cycles);
@@ -3094,10 +3095,7 @@ static void cpu_decrease_cycles(bool pressed)
 
 void CPU_ResetAutoAdjust()
 {
-	CPU_IODelayRemoved = 0;
-
-	DOSBOX_SetTicksDone(0);
-	DOSBOX_SetTicksScheduled(0);
+	DOSBOX_ResetCycleController();
 }
 
 std::string CPU_GetCyclesConfigAsString()
@@ -3718,6 +3716,7 @@ public:
 		cpu_cycle_down = secprop->GetInt("cycledown");
 
 		should_hlt_on_idle = secprop->GetBool("cpu_idle");
+		CPU_ResetAutoAdjust();
 
 		TITLEBAR_NotifyCyclesChanged();
 

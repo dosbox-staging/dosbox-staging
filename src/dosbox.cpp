@@ -29,6 +29,7 @@
 #include "config/setup.h"
 #include "cpu/callback.h"
 #include "cpu/cpu.h"
+#include "cpu/cycle_controller.h"
 #include "cpu/paging.h"
 #include "debugger/debugger.h"
 #include "dos/dos.h"
@@ -85,13 +86,61 @@ SvgaType svga_type  = SvgaType::None;
 static LoopHandler* loop;
 
 static struct {
-	int64_t remain    = {};
-	int64_t last      = {};
-	int64_t added     = {};
-	int64_t done      = {};
-	int64_t scheduled = {};
-	bool locked       = {};
+	int64_t remain = {};
+	int64_t last   = {};
+	bool locked    = {};
 } ticks = {};
+
+static CycleController cycle_controller = {};
+
+// Main-thread-only accounting. In particular, this is not process CPU time:
+// the mixer and synth workers can run concurrently with emulation.
+static struct {
+	int64_t last_us       = 0;
+	int64_t pacing_us     = 0;
+	int64_t guest_us      = 0;
+	int64_t budget_cycles = 0;
+	int64_t dropped_us    = 0;
+	int tick_cycles       = 0;
+	bool tick_in_progress = false;
+
+	int cycles                      = 0;
+	int percent                     = 0;
+	int limit                       = 0;
+	bool automatic                  = false;
+	uint64_t audio_shortfall_frames = 0;
+} cycle_timing = {};
+
+void DOSBOX_ResetCycleController()
+{
+	cycle_controller.Reset();
+	cycle_timing                        = {};
+	cycle_timing.last_us                = GetTicksUs();
+	cycle_timing.cycles                 = CPU_CycleMax;
+	cycle_timing.percent                = CPU_CyclePercUsed;
+	cycle_timing.limit                  = CPU_CycleLimit;
+	cycle_timing.automatic              = CPU_CycleAutoAdjust;
+	cycle_timing.audio_shortfall_frames = MIXER_GetAudioShortfallFrames();
+	CPU_IODelayRemoved                  = 0;
+}
+
+// Called only for an explicit wait at a vsync-enabled swap boundary. Texture
+// uploads, shader submission, capture, and other rendering work stay charged
+// to the main thread. The guest-progress guard also checks time spent here.
+void DOSBOX_AccountPresentationWait(const int64_t elapsed_us)
+{
+	cycle_timing.pacing_us += elapsed_us;
+}
+
+static void sync_cycle_controller_settings()
+{
+	if (cycle_timing.cycles != CPU_CycleMax ||
+	    cycle_timing.percent != CPU_CyclePercUsed ||
+	    cycle_timing.limit != CPU_CycleLimit ||
+	    cycle_timing.automatic != CPU_CycleAutoAdjust) {
+		DOSBOX_ResetCycleController();
+	}
+}
 
 // Reset wall-clock accounting on resume so `increase_ticks()` doesn't see
 // a multi-second gap from before pause and try to "catch up" by running
@@ -100,26 +149,9 @@ static struct {
 //
 static void rebase_wall_clock_on_resume()
 {
-	ticks.last      = GetTicks();
-	ticks.remain    = 0;
-	ticks.added     = 0;
-	ticks.done      = 0;
-	ticks.scheduled = 0;
-}
-
-int64_t DOSBOX_GetTicksDone()
-{
-	return ticks.done;
-}
-
-void DOSBOX_SetTicksDone(const int64_t ticks_done)
-{
-	ticks.done = ticks_done;
-}
-
-void DOSBOX_SetTicksScheduled(const int64_t ticks_scheduled)
-{
-	ticks.scheduled = ticks_scheduled;
+	ticks.last   = GetTicks();
+	ticks.remain = 0;
+	DOSBOX_ResetCycleController();
 }
 
 void Null_Init([[maybe_unused]] Section* sec)
@@ -556,6 +588,13 @@ static Bitu normal_loop()
 			}
 #endif
 		} else {
+			sync_cycle_controller_settings();
+			if (cycle_timing.tick_in_progress) {
+				cycle_timing.guest_us += MicrosInMillisecond;
+				cycle_timing.budget_cycles += cycle_timing.tick_cycles;
+				cycle_timing.tick_in_progress = false;
+			}
+
 			// In 'host-rate' presentation mode, this effectively
 			// accomplishes polling at the sub-millisecond level for
 			// presenting the frame.
@@ -581,6 +620,12 @@ static Bitu normal_loop()
 				return 0;
 			}
 			if (ticks.remain > 0) {
+				// Mark before invoking tick handlers: they can
+				// enter a nested DOSBOX_RunMachine() and
+				// complete this tick.
+				cycle_timing.tick_cycles = CPU_CycleMax;
+				cycle_timing.tick_in_progress = CPU_CycleAutoAdjust &&
+				                                !ticks.locked;
 				TIMER_AddTick();
 				--ticks.remain;
 
@@ -604,233 +649,109 @@ static Bitu normal_loop()
 	}
 }
 
-constexpr auto auto_cpu_cycles_min = 200;
+static void update_cycle_controller(const int64_t now_us)
+{
+	sync_cycle_controller_settings();
+	if (!CPU_CycleAutoAdjust || ticks.locked) {
+		DOSBOX_ResetCycleController();
+		return;
+	}
+
+	const auto elapsed_us = std::max(int64_t{0}, now_us - cycle_timing.last_us);
+	const CycleObservation sample = {
+	        .elapsed_us = elapsed_us,
+	        .work_us = std::max(int64_t{0}, elapsed_us - cycle_timing.pacing_us),
+	        .guest_us       = cycle_timing.guest_us,
+	        .budget_cycles  = cycle_timing.budget_cycles,
+	        .removed_cycles = CPU_IODelayRemoved,
+	        .dropped_us     = cycle_timing.dropped_us,
+	};
+
+	cycle_timing.last_us       = now_us;
+	cycle_timing.pacing_us     = 0;
+	cycle_timing.guest_us      = 0;
+	cycle_timing.budget_cycles = 0;
+	cycle_timing.dropped_us    = 0;
+	CPU_IODelayRemoved         = 0;
+
+	const auto adjustment = cycle_controller.Observe(sample,
+	                                                 CPU_CycleMax,
+	                                                 CPU_CyclePercUsed,
+	                                                 CPU_CycleLimit,
+	                                                 CpuCyclesMax);
+	if (!adjustment) {
+		return;
+	}
+
+	static const bool trace_enabled = [] {
+		const auto value = std::getenv("DOSBOX_CYCLE_TRACE");
+		return value && std::strcmp(value, "1") == 0;
+	}();
+
+	if (trace_enabled) {
+		const auto& observation     = adjustment->observation;
+		const auto shortfall_frames = MIXER_GetAudioShortfallFrames();
+		LOG_INFO("CPU: auto cycles %d -> %d | host %.3f ms | guest %.3f ms | work %.3f ms | load %.3f | rate %.3f | active %.3f | dropped %.3f ms | audio shortfall %llu frames",
+		         CPU_CycleMax,
+		         adjustment->cycles,
+		         observation.elapsed_us / 1000.0,
+		         observation.guest_us / 1000.0,
+		         observation.work_us / 1000.0,
+		         adjustment->load,
+		         adjustment->guest_rate,
+		         adjustment->active_fraction,
+		         observation.dropped_us / 1000.0,
+		         static_cast<unsigned long long>(
+		                 shortfall_frames -
+		                 cycle_timing.audio_shortfall_frames));
+		cycle_timing.audio_shortfall_frames = shortfall_frames;
+	}
+
+	CPU_CycleMax = adjustment->cycles;
+	// This change belongs to the controller, not a user/config change.
+	// Preserve overload history while starting the next observation window.
+	cycle_timing.cycles = CPU_CycleMax;
+}
 
 static void increase_ticks()
 {
-	// Make it return ticks.remain and set it in the function above to
-	// remove the global variable.
-
-	// For fast-forward mode
 	if (ticks.locked) {
+		// Fast-forward has no real-time capacity target.
 		ticks.remain = 5;
-
-		// Reset any auto cycle guessing for this frame
-		ticks.last      = GetTicks();
-		ticks.added     = 0;
-		ticks.done      = 0;
-		ticks.scheduled = 0;
+		ticks.last   = GetTicks();
+		DOSBOX_ResetCycleController();
 		return;
 	}
 
-	const auto ticks_new_us = GetTicksUs();
-	const auto ticks_new    = ticks_new_us / MicrosInMillisecond;
+	const auto now_us = GetTicksUs();
+	const auto now_ms = now_us / MicrosInMillisecond;
 
-	ticks.scheduled += ticks.added;
+	if (now_ms <= ticks.last) {
+		update_cycle_controller(now_us);
 
-	// Lower should not be possible, only equal
-	if (ticks_new <= ticks.last) {
-		ticks.added = 0;
-
-		static int64_t cumulative_time_slept_us = 0;
-
-		// Sleep until the next millisecond tick boundary rather than a
-		// flat 1ms, to wake up as close to the next tick as possible.
-		const auto next_tick_us = (ticks.last + 1) * MicrosInMillisecond;
-		const auto sleep_us = next_tick_us - ticks_new_us;
+		// The pacer retains the 1 ms guest tick and sleeps to an
+		// absolute tick boundary. Measure the entire explicit wait,
+		// including oversleep and any SDL busy-waiting, separately.
+		const auto deadline_us = (ticks.last + 1) * MicrosInMillisecond;
+		const auto start_us    = GetTicksUs();
+		const auto sleep_us    = deadline_us - start_us;
 		if (sleep_us > 0) {
 			SDL_DelayPrecise(static_cast<uint64_t>(sleep_us) * 1000);
+			cycle_timing.pacing_us += GetTicksUsSince(start_us);
 		}
-
-		const auto time_slept_us = GetTicksUsSince(ticks_new_us);
-		cumulative_time_slept_us += time_slept_us;
-
-		// Update ticks.done with the total time spent sleeping
-		if (cumulative_time_slept_us >= MicrosInMillisecond) {
-			// 1 tick == 1 millisecond
-			const auto cumulative_ticks_slept = cumulative_time_slept_us /
-			                                    MicrosInMillisecond;
-			ticks.done -= cumulative_ticks_slept;
-
-			// Keep the fractional microseconds part
-			cumulative_time_slept_us %= MicrosInMillisecond;
-		}
-
-		if (ticks.done < 0) {
-			ticks.done = 0;
-		}
-
-		// If we do work this tick and sleep till the next tick, then
-		// ticks.done is decreased, despite the fact that work was done
-		// as well in this tick. Maybe make it depend on an extra
-		// parameter. What do we know: ticks.remain = 0 (condition to
-		// enter this function) ticks_new = time before sleeping
-
-		// Maybe keep track of slept time in this frame, and use slept
-		// and done as indicators, and take care of the fact there are
-		// frames that have both.
-
 		return;
 	}
 
-	// ticks_new > ticks.last
-	ticks.remain = GetTicksDiff(ticks_new, ticks.last);
-	ticks.last   = ticks_new;
-	ticks.done += ticks.remain;
+	const auto elapsed_ms = now_ms - ticks.last;
+	ticks.last            = now_ms;
 
-	if (ticks.remain > 20) {
-#if 0
-		LOG(LOG_MISC,LOG_ERROR)("large remain %d", ticks.remain);
-#endif
-		ticks.remain = 20;
-	}
+	// Drop excess wall-clock debt explicitly. A host interruption must
+	// not cause an unbounded catch-up burst of guest execution.
+	constexpr int64_t MaxCatchupMs = 20;
+	ticks.remain                   = std::min(elapsed_ms, MaxCatchupMs);
+	cycle_timing.dropped_us += (elapsed_ms - ticks.remain) * MicrosInMillisecond;
 
-	ticks.added = ticks.remain;
-
-	// Is the system in auto cycle guessing mode? If not, do nothing.
-	if (!CPU_CycleAutoAdjust) {
-		return;
-	}
-
-	if (ticks.scheduled >= 100 || ticks.done >= 100 ||
-	    (ticks.added > 15 && ticks.scheduled >= 5)) {
-
-		if (ticks.done < 1) {
-			// Protect against division by zero.
-			ticks.done = 1;
-		}
-
-		// Ratio we are aiming for is 100% usage
-		auto ratio = (ticks.scheduled * (CPU_CyclePercUsed * 1024 / 100)) /
-		             ticks.done;
-
-		auto new_cycle_max = CPU_CycleMax;
-
-		auto cproc = static_cast<int64_t>(CPU_CycleMax) *
-		             static_cast<int64_t>(ticks.scheduled);
-
-		// Increase scope for logging
-		auto ratio_removed = 0.0;
-
-		// TODO This is full of magic constants with zero explanation.
-		// Where are they coming from, what do the signify, why these
-		// numbers and not some other numbers, etc.--there's lots of
-		// explaining to do here.
-
-		if (cproc > 0) {
-			// Ignore the cycles added due to the IO delay code in
-			// order to have smoother auto cycle adjustments.
-			ratio_removed = static_cast<double>(CPU_IODelayRemoved) /
-			                static_cast<double>(cproc);
-
-			if (ratio_removed < 1.0) {
-				double ratio_not_removed = 1 - ratio_removed;
-				ratio = ifloor(static_cast<double>(ratio) *
-				               ratio_not_removed);
-
-				// Don't allow very high ratios; they can cause
-				// locking as we don't scale down for very low
-				// ratios. High ratios might be the result of
-				// timing resolution.
-				if (ticks.scheduled >= 100 && ticks.done < 10 &&
-				    ratio > 16384) {
-					ratio = 16384;
-				}
-
-				// Limit the ratio even more when the cycles are
-				// already way above the realmode default.
-				if (ticks.scheduled >= 100 && ticks.done < 10 &&
-				    ratio > 5120 && CPU_CycleMax > 50000) {
-					ratio = 5120;
-				}
-
-				// When downscaling multiple times in a row,
-				// ensure a minimum amount of downscaling
-				if (ticks.added > 15 && ticks.scheduled >= 5 &&
-				    ticks.scheduled <= 20 && ratio > 800) {
-					ratio = 800;
-				}
-
-				if (ratio <= 1024) {
-					// Uncommenting the below line restores
-					// the old formula: ratio_not_removed
-					// = 1.0;
-
-					auto r = (1.0 + ratio_not_removed) /
-					         (ratio_not_removed +
-					          1024.0 / (static_cast<double>(ratio)));
-
-					new_cycle_max = static_cast<int>(
-					        CPU_CycleMax * r + 1);
-				} else {
-					auto ratio_with_removed = static_cast<int64_t>(
-					        ((static_cast<double>(ratio) - 1024.0) *
-					         ratio_not_removed) +
-					        1024.0);
-
-					auto cmax_scaled = check_cast<int64_t>(
-					        CPU_CycleMax * ratio_with_removed);
-
-					new_cycle_max = static_cast<int>(
-					        1 + (CPU_CycleMax / 2) +
-					        cmax_scaled / 2048LL);
-				}
-			}
-		}
-
-		if (new_cycle_max < auto_cpu_cycles_min) {
-			new_cycle_max = auto_cpu_cycles_min;
-		}
-
-#if 0
-		LOG_INFO("CPU: cycles: curr %7d | new %7d | ratio %5d | done %3d | sched %3d | add %3d | rem %4.2f",
-		         CPU_CycleMax,
-		         new_cycle_max,
-		         ratio,
-		         ticks.done,
-		         ticks.scheduled,
-		         ticks.added,
-		         ratio_removed);
-#endif
-
-		// Ratios below 1% are considered to be dropouts due to
-		// temporary load imbalance, the cycles adjusting is skipped.
-		if (ratio > 10) {
-
-			// Ratios below 12% along with a large time since the
-			// last update has taken place are most likely caused by
-			// heavy load through a different application, the
-			// cycles adjusting is skipped as well.
-			if ((ratio > 120) || (ticks.done < 700)) {
-				CPU_CycleMax = new_cycle_max;
-
-				if (CPU_CycleLimit > 0) {
-					if (CPU_CycleMax > CPU_CycleLimit) {
-						CPU_CycleMax = CPU_CycleLimit;
-					}
-				} else if (CPU_CycleMax > CpuCyclesMax) {
-					// Hardcoded limit if the limit wasn't
-					// explicitly specified.
-					CPU_CycleMax = CpuCyclesMax;
-				}
-			}
-		}
-
-		// Reset cycle guessing parameters.
-		CPU_IODelayRemoved = 0;
-		ticks.done         = 0;
-		ticks.scheduled    = 0;
-
-	} else if (ticks.added > 15) {
-		// ticks.added > 15 but ticks.scheduled < 5, lower the cycles
-		// but do not reset the scheduled/done ticks to take them into
-		// account during the next auto cycle adjustment.
-		CPU_CycleMax /= 3;
-
-		if (CPU_CycleMax < auto_cpu_cycles_min) {
-			CPU_CycleMax = auto_cpu_cycles_min;
-		}
-	}
+	update_cycle_controller(now_us);
 }
 
 const char* DOSBOX_GetVersion() noexcept
@@ -919,6 +840,7 @@ static void DOSBOX_UnlockSpeed(bool pressed)
 			CPU_CycleAutoAdjust = true;
 		}
 	}
+	rebase_wall_clock_on_resume();
 }
 
 void DOSBOX_SetMachineTypeFromConfig(SectionProp& section)
@@ -1247,9 +1169,8 @@ static std::optional<VesaCustomResolution> parse_vesa_custom_resolution(
 static void dosbox_realinit(SectionProp& section)
 {
 	// Initialize some dosbox internals
-	ticks.remain = 0;
-	ticks.last   = GetTicks();
 	ticks.locked = false;
+	rebase_wall_clock_on_resume();
 
 	DOSBOX_SetNormalLoop();
 
