@@ -147,7 +147,7 @@ jobs:
             set -e
             pip3 install markdown2 requests
             ./scripts/tools/release-notes-drafter.py summary.query pull-requests.csv
-            ./scripts/tools/release-notes-drafter.py summary.process_markdown pull-requests.csv release-notes.md
+            ./scripts/tools/release-notes-drafter.py summary.process-markdown pull-requests.csv release-notes.md
 
             # GitHub always shows this release's original publish date next to
             # its title, which never changes as this same release gets
