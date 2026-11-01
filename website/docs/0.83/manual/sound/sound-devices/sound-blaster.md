@@ -21,10 +21,12 @@ with a specific model, or require a driver to be loaded. Please refer to the
 [List of games that require a sound driver](#){ external } on the wiki for
 further details.
 
-For standalone Createive Music System (CMS) / Game Blaster see [Creative Music
+For standalone Creative Music System (CMS) / Game Blaster see [Creative Music
 System](cms.md), for AdLib, OPL, AdLib Gold, and ESFM configuration, see
 [AdLib](adlib.md).
 
+For FM synthesis model selection (`oplmode`), including Creative CQM used on
+later Sound Blaster 16 and AWE32/64 cards, see [AdLib](adlib.md).
 
 ## On-board synthesisers
 
