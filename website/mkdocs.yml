@@ -151,6 +151,7 @@ plugins:
 
           'releases/development-builds.md': 'download/development-builds.md'
 
+          'releases/release-notes/0.83.1.md': 'download/release-notes/0.83.1.md'
           'releases/release-notes/0.83.0.md': 'download/release-notes/0.83.0.md'
           'releases/release-notes/0.82.2.md': 'download/release-notes/0.82.2.md'
           'releases/release-notes/0.82.1.md': 'download/release-notes/0.82.1.md'
@@ -184,6 +185,7 @@ nav:
     - Linux: download/linux.md
 
     - Release notes:
+      - 0.83.1: download/release-notes/0.83.1.md
       - 0.83.0: download/release-notes/0.83.0.md
       - 0.82.2: download/release-notes/0.82.2.md
       - 0.82.1: download/release-notes/0.82.1.md
