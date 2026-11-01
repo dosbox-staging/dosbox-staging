@@ -29,7 +29,7 @@ runs:
       run: |
         ./scripts/tools/release-notes-drafter.py \
             summary.query \
-            --start_time $RELEASE_START_TIME pull-requests.csv
+            --start-time $RELEASE_START_TIME pull-requests.csv
 
     - name: Generate HTML release notes
       shell: bash
@@ -39,5 +39,5 @@ runs:
         mkdir -p "$(dirname "${{ inputs.output_path }}")"
 
         ./scripts/tools/release-notes-drafter.py \
-            summary.process_html \
+            summary.process-html \
             pull-requests.csv $DOSBOX_VERSION_AND_HASH "${{ inputs.output_path }}"
