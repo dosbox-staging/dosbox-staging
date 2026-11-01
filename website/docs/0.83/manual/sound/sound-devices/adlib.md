@@ -1,7 +1,7 @@
 # AdLib (OPL)
 
 This page covers the **AdLib Music Synthesizer Card**, the **AdLib Gold
-1000**, and the OPL3-compatible **ESS Enhanced FM (ESFM)** synthesiser, and
+1000**, the OPL3-compatible **ESS Enhanced FM (ESFM)** synthesiser, and
 **Creative CQM** --- all FM synthesisers built around Yamaha's OPL chip
 family or compatible designs. Because the OPL chip also appeared on every
 DOS-era [Sound Blaster](sound-blaster.md), their settings live the shared
