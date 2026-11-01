@@ -22,11 +22,9 @@ with a specific model, or require a driver to be loaded. Please refer to the
 further details.
 
 For standalone Creative Music System (CMS) / Game Blaster see [Creative Music
-System](cms.md), for AdLib, OPL, AdLib Gold, and ESFM configuration, see
-[AdLib](adlib.md).
+System](cms.md). For AdLib, OPL, AdLib Gold, ESFM, and Creative CQM
+configuration (`oplmode`), see [AdLib](adlib.md).
 
-For FM synthesis model selection (`oplmode`), including Creative CQM used on
-later Sound Blaster 16 and AWE32/64 cards, see [AdLib](adlib.md).
 
 ## On-board synthesisers
 
@@ -44,7 +42,7 @@ The other less common synthesiser is the [Creative Music System](cms.md) (also
 referred to as **C/MS**, or **CMS**) which is only present on the earliest
 Sound Blaster models.
 
-The standalone AdLib, CMS/Game Blaster, AdLib Gold, and ESFM modes are
+The standalone AdLib, CMS/Game Blaster, AdLib Gold, ESFM, and CQM modes are
 covered separately in [AdLib](adlib.md).
 
 

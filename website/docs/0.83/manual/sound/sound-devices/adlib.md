@@ -1,13 +1,13 @@
 # AdLib (OPL)
 
 This page covers the **AdLib Music Synthesizer Card**, the **AdLib Gold
-1000**, and the OPL3-compatible **ESS Enhanced FM (ESFM)** synthesiser --- all
-FM synthesisers built around Yamaha's OPL chip family or compatible designs.
-Because the OPL chip also appeared on every DOS-era [Sound
-Blaster](sound-blaster.md), their settings live the shared `[sblaster]`
-configuration section alongside the Sound Blaster's own. DOSBox Staging uses
-the cycle-accurate Nuked OPL3 emulator for effectively bit-identical OPL
-output. 
+1000**, and the OPL3-compatible **ESS Enhanced FM (ESFM)** synthesiser, and
+**Creative CQM** --- all FM synthesisers built around Yamaha's OPL chip
+family or compatible designs. Because the OPL chip also appeared on every
+DOS-era [Sound Blaster](sound-blaster.md), their settings live the shared
+`[sblaster]` configuration section alongside the Sound Blaster's own.
+DOSBox Staging uses the cycle-accurate Nuked OPL3 emulator for effectively
+bit-identical OPL output, and Nuked-CQM when `oplmode = cqm` is selected.
 
 DOS games typically split their audio into two streams handled by different
 hardware: [synthesised music](../overview.md#synthesised-sound) (notes played
@@ -139,6 +139,22 @@ sbtype = ess
     with the ESFM driver from
     [Heaven's Dawn](https://www.mobygames.com/game/45120/heavens-dawn/).
 
+
+## Creative CQM
+
+Later **Sound Blaster 16** and **AWE32/64** boards often used Creative’s
+**CQM** (Creative Quadrature Modulation) instead of a discrete Yamaha YMF262
+(OPL3) chip. CQM is register-compatible with OPL3, so games need no special
+driver, but the timbre differs from a real YMF262 (softer modulators, and a
+different character on high-feedback bass and drums).
+
+DOSBox Staging can emulate CQM with the Nuked-CQM core:
+
+``` ini
+[sblaster]
+sbtype = sb16
+oplmode = cqm
+```
 
 ## Audio artifact mitigation
 
