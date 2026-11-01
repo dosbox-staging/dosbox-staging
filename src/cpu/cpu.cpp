@@ -3904,7 +3904,8 @@ void init_cpu_config_settings(SectionProp& secprop)
 	        "  fast:      Use the existing reduced-precision implementation for better\n"
 	        "             performance (default).\n"
 	        "  accurate:  Use software 80-bit extended precision for improved floating-\n"
-	        "             point accuracy, at a higher host CPU cost.\n"
+	        "             point accuracy. FPU-intensive workloads may run about 50%\n"
+	        "             slower; the impact varies by workload.\n"
 	        "\n"
 	        "Restart DOSBox to apply changes. Independent of the 'core' setting.\n"
 	        "On x86-64 hosts, native x87 emulation is always used.");
