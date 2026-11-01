@@ -11,10 +11,11 @@ You must use a classic personal access token with 'repo' scope.
 
 """
 
-# pylint: disable=invalid-name
-# pylint: disable=import-error
-# pylint: disable=missing-docstring
 # pylint: disable=global-statement
+# pylint: disable=import-error
+# pylint: disable=invalid-name
+# pylint: disable=missing-docstring
+# pylint: disable=too-many-lines
 
 import argparse
 import csv
@@ -154,8 +155,12 @@ class CustomFormatter(argparse.RawDescriptionHelpFormatter):
         if action.option_strings:
             for opt in action.option_strings:
                 result = result.replace(opt, _CYAN(opt), 1)
+
         elif action.dest != argparse.SUPPRESS:
-            result = result.replace(action.dest, _GREEN(action.dest), 1)
+            # Positionals are displayed using their metavar (dashed name),
+            # falling back to dest if no metavar was set
+            name = action.metavar or action.dest
+            result = result.replace(name, _GREEN(name), 1)
         return result
 
     # Colour section headers (e.g. "positional arguments:")
@@ -170,6 +175,9 @@ class CustomFormatter(argparse.RawDescriptionHelpFormatter):
 
 
 def setup_arg_parser(parser):
+    # Positional arguments use an underscored `dest` so they can be read as
+    # `args.some_name`, and a dashed `metavar` so users see `some-name` in
+    # the help and usage output.
     fmt = CustomFormatter
     subparsers = parser.add_subparsers(dest="ACTION", required=True,
                                        metavar="<command>")
@@ -181,42 +189,52 @@ def setup_arg_parser(parser):
         description="Fetch merged PRs and write to CSV.",
         formatter_class=fmt,
     )
-    p.add_argument("out_pull_requests_csv",
+    p.add_argument("out_pull_requests_csv", metavar="out-pull-requests-csv",
                    help="output CSV file for pull requests")
-    p.add_argument("--start_time",
-                   help="include PRs after this datetime "
-                        "(defaults to RELEASE_START_TIME from set-common-vars/action.yml)")
 
-    # summary.process_markdown
+    p.add_argument("--start-time",
+                   help="include PRs after this datetime (defaults to "
+                        "RELEASE_START_TIME from .github/actions/set-common-vars/action.yml)")
+
+    # summary.process-markdown
     # -----------------------------------------------------------------
     p = subparsers.add_parser(
-        "summary.process_markdown",
+        "summary.process-markdown",
         description="Generate release notes Markdown from CSV.",
         formatter_class=fmt,
     )
-    p.add_argument("in_pull_requests_csv", help="input CSV file")
-    p.add_argument("out_markdown",         help="output Markdown file")
+    p.add_argument("in_pull_requests_csv", metavar="in-pull-requests-csv",
+                   help="input CSV file")
+    p.add_argument("out_markdown", metavar="out-markdown",
+                   help="output Markdown file")
 
-    # summary.process_html
+    # summary.process-html
     # -----------------------------------------------------------------
     p = subparsers.add_parser(
-        "summary.process_html",
+        "summary.process-html",
         description="Generate release notes HTML from CSV.",
         formatter_class=fmt,
     )
-    p.add_argument("in_pull_requests_csv", help="input CSV file")
-    p.add_argument("process_version_tag",  help="version tag (e.g. v0.83.0-alpha)")
-    p.add_argument("out_html",             help="output HTML file")
+    p.add_argument("in_pull_requests_csv", metavar="in-pull-requests-csv",
+                   help="input CSV file")
 
-    # summary.process_csv
+    p.add_argument("process_version_tag", metavar="process-version-tag",
+                   help="version tag (e.g. v0.83.0-alpha)")
+
+    p.add_argument("out_html", metavar="out-html",
+                   help="output HTML file")
+
+    # summary.process-csv
     # -----------------------------------------------------------------
     p = subparsers.add_parser(
-        "summary.process_csv",
+        "summary.process-csv",
         description="Generate categorised CSV from input CSV.",
         formatter_class=fmt,
     )
-    p.add_argument("in_pull_requests_csv", help="input CSV file")
-    p.add_argument("out_categorised_csv",  help="output categorised CSV file")
+    p.add_argument("in_pull_requests_csv", metavar="in-pull-requests-csv",
+                   help="input CSV file")
+    p.add_argument("out_categorised_csv", metavar="out-categorised-csv",
+                   help="output categorised CSV file")
 
     # website.query
     # -----------------------------------------------------------------
@@ -225,21 +243,44 @@ def setup_arg_parser(parser):
         description="Fetch merged PRs with descriptions and write to JSON.",
         formatter_class=fmt,
     )
-    p.add_argument("out_pull_requests_json", help="output JSON file")
-    p.add_argument("--start_time",
-                   help="include PRs after this datetime "
-                        "(defaults to RELEASE_START_TIME from set-common-vars/action.yml)")
+    p.add_argument("out_pull_requests_json", metavar="out-pull-requests-json",
+                   help="output JSON file")
+
+    group = p.add_mutually_exclusive_group()
+
+    group.add_argument("--start-time",
+                       help="include PRs after this datetime (defaults to "
+                            "RELEASE_START_TIME from .github/actions/set-common-vars/action.yml)")
+
+    group.add_argument("--milestone",
+                       help="include all PRs in the milestone with this name, e.g. 0.83.1")
+
+    group = p.add_mutually_exclusive_group()
+
+    group.add_argument("--exclude-backports", dest="remove_backports",
+                       action="store_true", default=True,
+                       help="exclude PRs labelled 'backport' from the output "
+                        "(default)")
+
+    group.add_argument("--include-backports", dest="remove_backports",
+                       action="store_false", default=True,
+                       help="include PRs labelled 'backport' in the output")
 
     # website.process_markdown
     # -----------------------------------------------------------------
     p = subparsers.add_parser(
-        "website.process_markdown",
+        "website.process-markdown",
         description="Generate detailed website release notes from JSON.",
         formatter_class=fmt,
     )
-    p.add_argument("in_pull_requests_json", help="input JSON file from website.query")
-    p.add_argument("process_version_tag",   help="version tag (e.g. v0.83.0-alpha)")
-    p.add_argument("out_markdown",          help="output Markdown file")
+    p.add_argument("in_pull_requests_json", metavar="in-pull-requests-json",
+                   help="input JSON file from website.query")
+
+    p.add_argument("process_version_tag", metavar="process-version-tag",
+                   help="version tag (e.g. v0.83.0-alpha)")
+
+    p.add_argument("out_markdown", metavar="out-markdown",
+                   help="output Markdown file")
 
 
 def get_default_start_time():
@@ -293,14 +334,36 @@ def make_repository_query(body):
       }
     """
 
+
+def pull_request_fields(include_body=False):
+    body_field = "body" if include_body else ""
+
+    return """
+        title
+        number
+        author {
+          login
+          url
+        }
+        url
+        createdAt
+        updatedAt
+        mergedAt
+        """ + body_field + """
+        labels(first: 20) {
+          nodes {
+            name
+          }
+        }
+    """
+
+
 def get_pull_requests(start, end, cursor=None, include_body=False):
     after = f'"{cursor}"' if cursor else "null"
 
     search_query = ("repo:dosbox-staging/dosbox-staging is:pr "
                     "is:merged base:main "
                     f"merged:{start}..{end} sort:updated")
-
-    body_field = "body" if include_body else ""
 
     query = """
       {
@@ -312,22 +375,7 @@ def get_pull_requests(start, end, cursor=None, include_body=False):
         ) {
           nodes {
             ... on PullRequest {
-              title
-              number
-              author {
-                login
-                url
-              }
-              url
-              createdAt
-              updatedAt
-              mergedAt
-              """ + body_field + """
-              labels(first: 20) {
-                nodes {
-                  name
-                }
-              }
+              """ + pull_request_fields(include_body) + """
             }
           }
           pageInfo {
@@ -337,7 +385,50 @@ def get_pull_requests(start, end, cursor=None, include_body=False):
         }
       }
     """
-    return execute_query(query)
+    return execute_query(query)["data"]["search"]
+
+
+def get_milestone_number(title):
+    query = make_repository_query(f"""
+      milestones(first: 10, query: {json.dumps(title)}) {{
+        nodes {{
+          title
+          number
+        }}
+      }}
+    """)
+    response = execute_query(query)
+
+    # The `query` filter is a fuzzy match, so check for an exact title
+    for node in response["data"]["repository"]["milestones"]["nodes"]:
+        if node["title"] == title:
+            return node["number"]
+
+    print(f"Error: milestone '{title}' not found")
+    sys.exit(1)
+
+
+def get_milestone_pull_requests(number, cursor=None, include_body=False):
+    after = f'"{cursor}"' if cursor else "null"
+
+    query = make_repository_query(f"""
+      milestone(number: {number}) {{
+        pullRequests(
+          after: {after},
+          first: {FETCH_PAGE_SIZE},
+          states: [OPEN, CLOSED, MERGED]
+        ) {{
+          nodes {{
+            {pull_request_fields(include_body)}
+          }}
+          pageInfo {{
+            endCursor
+            hasNextPage
+          }}
+        }}
+      }}
+    """)
+    return execute_query(query)["data"]["repository"]["milestone"]["pullRequests"]
 
 
 def get_author(item):
@@ -348,8 +439,7 @@ def get_author(item):
     return "-"
 
 
-def pull_requests_response_to_dict(response):
-    nodes = response["data"]["search"]["nodes"]
+def pull_requests_nodes_to_dicts(nodes):
     result = []
 
     for item in nodes:
@@ -371,30 +461,41 @@ def pull_requests_response_to_dict(response):
     return result
 
 
-def fetch_all_pull_requests_since(start_time, include_body=False):
+def fetch_all_pages(fetch_page):
+    """
+    `fetch_page(cursor)` must return a connection object with `nodes` and
+    `pageInfo`.
+    """
     all_items = []
     cursor = None
-    item_offset = 0
-
-    now = datetime.datetime.now(datetime.UTC).isoformat()
 
     while True:
-        print(f"Fetching next page of pull requests, item offset: {item_offset}")
-        response = get_pull_requests(start=start_time, end=now,
-                                     cursor=cursor,
-                                     include_body=include_body)
-        items = pull_requests_response_to_dict(response)
+        print(f"Fetching next page of pull requests, item offset: {len(all_items)}")
+        connection = fetch_page(cursor)
+        all_items.extend(pull_requests_nodes_to_dicts(connection["nodes"]))
 
-        all_items.extend(items)
-        item_offset += len(items)
-
-        page_info = response["data"]["search"]["pageInfo"]
+        page_info = connection["pageInfo"]
         if not page_info["hasNextPage"]:
             return all_items
 
         cursor = page_info["endCursor"]
 
-    return all_items
+
+def fetch_all_pull_requests_since(start_time, include_body=False):
+    now = datetime.datetime.now(datetime.UTC).isoformat()
+
+    return fetch_all_pages(
+        lambda cursor: get_pull_requests(start=start_time, end=now,
+                                         cursor=cursor,
+                                         include_body=include_body))
+
+
+def fetch_all_milestone_pull_requests(milestone, include_body=False):
+    number = get_milestone_number(milestone)
+
+    return fetch_all_pages(
+        lambda cursor: get_milestone_pull_requests(number, cursor=cursor,
+                                                   include_body=include_body))
 
 
 def read_csv(fname):
@@ -633,15 +734,22 @@ def make_upsert_release_payload(tag, name, description):
     })
 
 
-def website_query_pull_requests(json_fname, start_time):
-    items = fetch_all_pull_requests_since(start_time, include_body=True)
+def website_query_pull_requests(json_fname, start_time=None, milestone=None,
+                                remove_backports=True):
+    if milestone:
+        items = fetch_all_milestone_pull_requests(milestone, include_body=True)
+    else:
+        items = fetch_all_pull_requests_since(start_time, include_body=True)
+
+    if remove_backports:
+        items = [i for i in items if "backport" not in i["labels"]]
+
     write_json(items, json_fname)
     print(f"{len(items)} pull requests written to '{json_fname}'")
 
 
 def website_process_pull_requests(json_fname, version, markdown_fname):
     items = read_json(json_fname)
-    items = [i for i in items if "backport" not in i["labels"]]
 
     markdown = website_generate_markdown(items, version)
 
@@ -845,8 +953,8 @@ def main():
     args = parser.parse_args()
 
     actions_requiring_token = [
-        "summary.query", "summary.process_markdown", "summary.process_html",
-        "summary.process_csv", "website.query"
+        "summary.query", "summary.process-markdown", "summary.process-html",
+        "summary.process-csv", "website.query"
     ]
 
     global GITHUB_ACCESS_TOKEN
@@ -860,34 +968,39 @@ def main():
         case "summary.query":
             start_time = args.start_time or get_default_start_time()
             if not start_time:
-                parser.error("--start_time must be specified")
+                parser.error("--start-time must be specified")
             summary_query_pull_requests(args.out_pull_requests_csv,
                                         start_time)
 
-        case "summary.process_markdown":
+        case "summary.process-markdown":
             items = read_csv(args.in_pull_requests_csv)
             summary_process_pull_requests_markdown(items,
                                                    args.out_markdown)
 
-        case "summary.process_html":
+        case "summary.process-html":
             items = read_csv(args.in_pull_requests_csv)
             summary_process_pull_requests_html(items,
                                                args.process_version_tag,
                                                args.out_html)
 
-        case "summary.process_csv":
+        case "summary.process-csv":
             items = read_csv(args.in_pull_requests_csv)
             summary_process_pull_requests_csv(items,
                                               args.out_categorised_csv)
 
         case "website.query":
-            start_time = args.start_time or get_default_start_time()
-            if not start_time:
-                parser.error("--start_time must be specified")
-            website_query_pull_requests(args.out_pull_requests_json,
-                                        start_time)
+            start_time = None
+            if not args.milestone:
+                start_time = args.start_time or get_default_start_time()
+                if not start_time:
+                    parser.error("--start-time or --milestone must be specified")
 
-        case "website.process_markdown":
+            website_query_pull_requests(args.out_pull_requests_json,
+                                        start_time=start_time,
+                                        milestone=args.milestone,
+                                        remove_backports=args.remove_backports)
+
+        case "website.process-markdown":
             website_process_pull_requests(args.in_pull_requests_json,
                                           args.process_version_tag,
                                           args.out_markdown)
