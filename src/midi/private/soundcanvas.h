@@ -22,7 +22,14 @@ enum class Model {
 	// Roland SC-55mk2
 	Sc55mk2_100,
 	Sc55mk2_101,
+
+	// Roland SC-88
+	Sc88,
+	Sc88Pro,
 };
+
+// Holds every SC-55 model; the plugin is picked by `display_name_long`
+constexpr auto NukedSc55Library = "Nuked-SC55.clap";
 
 struct SynthModel {
 	Model model = {};
@@ -30,6 +37,9 @@ struct SynthModel {
 	const char* config_name        = {};
 	const char* display_name_short = {};
 	const char* display_name_long  = {};
+
+	// Any other library is a Nuked-SC55-P256 build with a single model
+	const char* plugin_library = NukedSc55Library;
 
 	bool operator==(const SynthModel* other) const
 	{

@@ -241,6 +241,59 @@ CPU-intensive to emulate, so the SC-55 v1.21 is generally the better choice.
     </div>
 
 
+## Roland SC-88 and SC-88 Pro
+
+The **SC-88** and **SC-88 Pro** are later Sound Canvas modules with more
+sounds, 32 parts, and a switchable SC-55 sound map. DOSBox Staging can use them
+through the [Nuked-SC55-P256](https://github.com/NightFright2k19/Nuked-SC55-P256)
+plugins, which run the original firmware on the 88emu core of
+[Gearmulator](https://github.com/dsp56300/gearmulator). DOS games only use the
+first 16 parts.
+
+These plugins are not bundled with DOSBox Staging, and they come in two kinds:
+
+- **Plugins without ROMs** read your ROM files at startup, just like the SC-55
+  plugin. Copy `Emu-SC88.clap` and `Emu-SC88_Pro.clap` into the `plugins`
+  folder in your DOSBox installation or configuration folder, then put your
+  ROM files into the `SC-88` and `SC-88Pro` subfolders of your
+  `soundcanvas-roms` folder:
+
+    ```
+    soundcanvas-roms
+    ├── SC-88
+    │   ├── sc88_control_1.01.bin
+    │   ├── sc88_wave0.bin
+    │   ...
+    └── SC-88Pro
+        ├── sc88pro_control_1.02.bin
+        ├── sc88pro_wave0.bin
+        ...
+    ```
+
+- **Plugins with your ROMs built in** are made by the P256 patcher, which you
+  can download from the [Nuked-SC55-P256
+  releases](https://github.com/NightFright2k19/Nuked-SC55-P256/releases) page.
+  Put your ROM files into a folder (the file names don't matter), run the
+  patcher and point it to that folder, then copy the `Emu-SC88.clap` and
+  `Emu-SC88_Pro.clap` files from its `Plugins/CLAP/` folder into your `plugins`
+  folder. These plugins contain your ROM data, so don't share them.
+
+Then select the model in your config:
+
+``` ini
+[midi]
+mididevice = soundcanvas
+
+[soundcanvas]
+soundcanvas_model = sc88pro
+```
+
+`soundcanvas_model = auto` only picks an SC-88 model if no SC-55 model is
+available, as most DOS game music was composed on the SC-55. The built-in
+output filter was measured on SC-55 units, so `soundcanvas_filter = on` leaves
+the SC-88 models unfiltered.
+
+
 ## Mixer channel
 
 Sound Canvas outputs to the **SOUNDCANVAS** [mixer
@@ -298,6 +351,9 @@ Sound Canvas settings are to be configured in the `[soundcanvas]` section.
     - `auto` *default*{ .default } -- Pick the best available model.
     - `sc55` -- Pick the best available original SC-55 model.
     - `sc55mk2` -- Pick the best available SC-55mk2 model.
+    - `sc88` -- Use the Roland SC-88 (see [Roland SC-88 and SC-88
+      Pro](#roland-sc-88-and-sc-88-pro)).
+    - `sc88pro` -- Use the Roland SC-88 Pro.
     - `<version>` -- Use the exact specified model version (e.g., `sc55_121`).
 
     </div>
@@ -317,7 +373,7 @@ Sound Canvas settings are to be configured in the `[soundcanvas]` section.
 
     Possible values:
 
-    - `on` *default*{ .default } -- Filter the output. This applies a 1st order low-pass filter at 11 kHz (`lpf 1 11000`).
+    - `on` *default*{ .default } -- Filter the output of the SC-55 models. This applies a 1st order low-pass filter at 11 kHz (`lpf 1 11000`).
     - `off` -- Don't filter the output.
     - `<custom>` -- Custom filter definition; see
       [Custom filter settings](../output-filters.md#custom-filter-settings)
