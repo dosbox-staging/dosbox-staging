@@ -7,7 +7,7 @@ family or compatible designs. Because the OPL chip also appeared on every
 DOS-era [Sound Blaster](sound-blaster.md), their settings live the shared
 `[sblaster]` configuration section alongside the Sound Blaster's own.
 DOSBox Staging uses the cycle-accurate Nuked OPL3 emulator for effectively
-bit-identical OPL output, and Nuked-CQM when `oplmode = cqm` is selected.
+bit-identical OPL output, and Nuked CQM when `oplmode = cqm` is selected.
 
 DOS games typically split their audio into two streams handled by different
 hardware: [synthesised music](../overview.md#synthesised-sound) (notes played
@@ -148,7 +148,7 @@ Later **Sound Blaster 16** and **AWE32/64** boards often used Creative’s
 driver, but the timbre differs from a real YMF262 (softer modulators, and a
 different character on high-feedback bass and drums).
 
-DOSBox Staging can emulate CQM with the Nuked-CQM core:
+DOSBox Staging can emulate CQM with the Nuked CQM core:
 
 ``` ini
 [sblaster]
