@@ -49,6 +49,8 @@ public:
 	TandyDAC(const ConfigProfile config_profile, const std::string& filter_choice);
 	~TandyDAC();
 
+	void SetFilter(const std::string& filter_choice);
+
 	void PicCallback(const int requested);
 
 private:
