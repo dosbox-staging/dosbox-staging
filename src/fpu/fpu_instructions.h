@@ -89,7 +89,7 @@ static FPU_Tag FPU_classify(FPU_Float a)
 	return TAG_Valid;
 }
 
-static void FPU_put(Bitu reg, FPU_Float a)
+static void FPU_put(uint32_t reg, FPU_Float a)
 {
 	if (fpu_discard_push && reg == TOP) {
 		fpu_discard_push  = false;
@@ -103,7 +103,7 @@ static void FPU_put(Bitu reg, FPU_Float a)
 	fpu.tags[reg]       = FPU_classify(a);
 }
 
-static FPU_Float FPU_operand(Bitu reg)
+static FPU_Float FPU_operand(uint32_t reg)
 {
 	if (fpu.tags[reg] == TAG_Empty) {
 		FPU_exceptions(0x41);
@@ -130,7 +130,7 @@ static FPU_Float FPU_operand(Bitu reg)
 	return a;
 }
 
-static void FPU_result(Bitu reg, FPU_Float a)
+static void FPU_result(uint32_t reg, FPU_Float a)
 {
 	FPU_finish();
 	if (!(fpu.sw & ~fpu.cw & 0x07)) {
@@ -204,7 +204,7 @@ static FPU_Float FPU_FLD80(PhysPt addr)
 {
 	return x87::raw(mem_readw(addr + 8), mem_readq(addr));
 }
-static void FPU_ST80(PhysPt addr, Bitu reg)
+static void FPU_ST80(PhysPt addr, uint32_t reg)
 {
 	const auto a = fpu.regs[reg].value;
 	mem_writeq(addr, a.signif);
@@ -405,7 +405,7 @@ static void FPU_FBST(PhysPt addr)
 }
 
 using FPU_BinaryOp = FPU_Float (*)(FPU_Float, FPU_Float);
-static void FPU_binary(Bitu dst, Bitu left, Bitu right, FPU_BinaryOp op)
+static void FPU_binary(uint32_t dst, uint32_t left, uint32_t right, FPU_BinaryOp op)
 {
 	FPU_begin(true);
 	const auto a = FPU_operand(left), b = FPU_operand(right);
@@ -490,7 +490,7 @@ static void FPU_FST(Bitu a, Bitu b)
 	                                            : fpu.regs[a].value;
 	FPU_result(b, value);
 }
-static void FPU_compare(Bitu a, Bitu b, bool quiet)
+static void FPU_compare(uint32_t a, uint32_t b, bool quiet)
 {
 	FPU_begin();
 	const auto av = FPU_operand(a), bv = FPU_operand(b);
@@ -956,13 +956,13 @@ static void FPU_FLDENV(PhysPt addr)
 {
 	uint16_t tag;
 	uint32_t tagbig;
-	Bitu cw;
+	uint16_t cw;
 	if (!cpu.code.big) {
 		cw     = mem_readw(addr + 0);
 		fpu.sw = mem_readw(addr + 2);
 		tag    = mem_readw(addr + 4);
 	} else {
-		cw     = mem_readd(addr + 0);
+		cw     = static_cast<uint16_t>(mem_readd(addr + 0));
 		fpu.sw = static_cast<uint16_t>(mem_readd(addr + 4));
 		tagbig = mem_readd(addr + 8);
 		tag    = static_cast<uint16_t>(tagbig);
