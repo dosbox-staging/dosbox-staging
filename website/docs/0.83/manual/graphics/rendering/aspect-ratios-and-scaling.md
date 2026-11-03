@@ -324,6 +324,26 @@ that size, the pixels would look too blocky.
     equivalents. This makes `89%` a useful general-purpose starting point.
 
 
+## Viewport position
+
+The image is centred in the window or on the screen by default. You can move
+it elsewhere with the [`viewport_position`](#viewport_position) setting. The
+values are offsets from the centre: negative values move the image left and
+up, positive values right and down. For example, this moves the image to the
+left by 20% of the window or screen height:
+
+```ini
+[render]
+viewport_position = -20,0%
+```
+
+Both percentage values are relative to the window or screen height, so the
+offset scales with the window size. The position is applied after the image
+size has been calculated; moving the image never changes its size, and integer
+scaling works as usual. Parts of the image that end up outside the window or
+screen are cut off.
+
+
 ## Configuration settings
 
 You can set these in the `[render]` configuration section.
@@ -426,4 +446,31 @@ You can set these in the `[render]` configuration section.
         - Use the `Stretch Axis`, `Inc Stretch`, and `Dec Stretch` hotkey
           actions to adjust the image size in `relative` mode in real-time,
           then copy the new settings from the logs into your config.
+
+
+##### viewport_position
+
+:   Set the position of the viewport relative to the centre of the window or
+    screen (`0,0` by default). The image is always centred within the
+    viewport, so this moves the image. Negative values move the viewport left
+    and up, positive values right and down.
+
+    Possible values:
+
+    - `X,Y` -- Offset in logical units (e.g., `-100,50`). The values are
+      multiplied by the OS-level display scaling factor to get the offset
+      in pixels.
+    - `X,Ypx` -- Offset in pixels (e.g., `-150,75px`).
+    - `X,Y%` -- Offset as a percentage of the window or screen height (e.g.,
+      `-10,5%`). Both values are relative to the height, so the offset scales
+      with the window size.
+
+    See [Logical units, pixels, and
+    percentages](../display-and-window.md#logical-units-pixels-and-percentages)
+    for more details.
+
+    !!! note
+
+        Changing the position never changes the size of the image; the parts
+        of the image outside the window or screen are cut off.
 

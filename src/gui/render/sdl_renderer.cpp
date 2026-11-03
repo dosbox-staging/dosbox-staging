@@ -433,8 +433,19 @@ RenderedImage SdlRenderer::ReadPixelsPostShader(const DosBox::Rect output_rect_p
 	//
 	const SDL_Rect read_rect_px = to_sdl_rect(output_rect_px);
 
+	// `SDL_RenderReadPixels()` can only read from the current viewport,
+	// which is set to the draw rect, but the output rect can be outside of
+	// it (e.g., when the image has been moved off-screen with
+	// `viewport_position`)
+	SDL_Rect viewport_px = {};
+	SDL_GetRenderViewport(renderer, &viewport_px);
+	SDL_SetRenderViewport(renderer, nullptr);
+
 	const std::unique_ptr<SDL_Surface, decltype(&SDL_DestroySurface)> surface(
 	        SDL_RenderReadPixels(renderer, &read_rect_px), SDL_DestroySurface);
+
+	SDL_SetRenderViewport(renderer, &viewport_px);
+
 	if (!surface) {
 		LOG_ERR("SDL: Error reading pixels from the texture renderer: %s",
 		        SDL_GetError());

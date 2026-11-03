@@ -249,6 +249,12 @@ SDL_Window* OpenGlRenderer::GetWindow()
 	return window;
 }
 
+// OpenGL uses a bottom-left origin, while our rectangles have a top-left origin
+static DosBox::Rect to_gl_rect(const DosBox::Rect& r, const DosBox::Rect& canvas_size)
+{
+	return {r.x, canvas_size.h - r.y - r.h, r.w, r.h};
+}
+
 DosBox::Rect OpenGlRenderer::GetCanvasSizeInPixels()
 {
 	SDL_Rect canvas_size_px = {};
@@ -269,7 +275,7 @@ void OpenGlRenderer::NotifyViewportSizeChanged(const DosBox::Rect viewport_size_
 	// We always expect a valid canvas
 	assert(!canvas_size_px.IsEmpty());
 
-	curr_viewport_size_px = viewport_size_px;
+	curr_viewport_size_px = to_gl_rect(viewport_size_px, canvas_size_px);
 
 	// The video mode hasn't changed, but the ShaderManager call expects it.
 	const auto video_mode = VGA_GetCurrentVideoMode();
@@ -706,8 +712,10 @@ RenderedImage OpenGlRenderer::ReadPixelsPostShader(const DosBox::Rect output_rec
 	// potentially revert to the default 4-byte alignment
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
-	glReadPixels(iroundf(output_rect_px.x),
-	             iroundf(output_rect_px.y),
+	const auto gl_rect_px = to_gl_rect(output_rect_px, GetCanvasSizeInPixels());
+
+	glReadPixels(iroundf(gl_rect_px.x),
+	             iroundf(gl_rect_px.y),
 	             image.params.width,
 	             image.params.height,
 	             GL_BGR,
