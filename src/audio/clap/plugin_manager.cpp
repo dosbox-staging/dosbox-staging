@@ -28,7 +28,9 @@ namespace Clap {
 CHECK_NARROWING();
 
 // Keep these library filenames in sync with the dedicated MIDI synths.
-static const std::vector<std::string> DedicatedSynthLibraries = {"Nuked-SC55.clap"};
+static const std::vector<std::string> DedicatedSynthLibraries = {"Nuked-SC55.clap",
+                                                                 "Emu-SC88.clap",
+                                                                 "Emu-SC88_Pro.clap"};
 
 static const clap_host_t dosbox_clap_host = {
         .clap_version = CLAP_VERSION,
