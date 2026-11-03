@@ -653,7 +653,8 @@ bool make_readonly(const std_fs::path& p)
 
 bool is_date_valid(const uint32_t year, const uint32_t month, const uint32_t day)
 {
-	if (year < 1980 || month > 12 || month == 0 || day == 0) {
+	// MS-DOS rejects dates before 1980 and after 2099
+	if (year < 1980 || year > 2099 || month > 12 || month == 0 || day == 0) {
 		return false;
 	}
 	// February has 29 days on leap-years and 28 days otherwise.

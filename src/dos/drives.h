@@ -31,6 +31,19 @@ bool filename_not_8x3(const char *n);
 bool filename_not_strict_8x3(const char *n);
 char *VFILE_Generate_8x3(const char *name, const unsigned int onpos);
 
+struct DosFilename {
+	std::string name = {};
+	std::string ext  = {};
+};
+
+DosFilename parse_dos_filename(const std::string& s);
+
+std::string to_string(const DosFilename& filename);
+
+DosFilename apply_pattern(const DosFilename& filename, const DosFilename& pattern);
+
+std::string apply_pattern(const std::string& filename, const DosFilename& pattern);
+
 class imageDisk; // forward declare
 
 class DriveManager {

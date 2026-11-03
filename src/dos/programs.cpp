@@ -19,6 +19,7 @@
 #include "config/config.h"
 #include "cpu/callback.h"
 #include "cpu/registers.h"
+#include "dos/dos.h"
 #include "dos/programs/more_output.h"
 #include "gui/mapper.h"
 #include "misc/cross.h"
@@ -209,6 +210,20 @@ void Program::AddToHelpList()
 	if (help_detail.name.size()) {
 		HELP_AddToHelpList(help_detail.name, help_detail);
 	}
+}
+
+bool Program::IsInvokedInteractively() const
+{
+	// This check is ALMOST correct, but if the program is invoked from a
+	// nested interactive COMMAND.COM, it will not be considered
+	// interactive, while it should be. This is a case users will likely
+	// never experience, so for now it's not worth the effort of
+	// implementing additional code to support it.
+	if (psp->GetParent() != DOS_FIRST_SHELL) {
+		return false;
+	}
+	const auto* shell = DOS_GetFirstShell();
+	return shell && !shell->IsRunningBatchFile();
 }
 
 class CONFIG final : public Program {

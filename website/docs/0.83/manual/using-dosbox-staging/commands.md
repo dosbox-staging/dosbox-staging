@@ -65,6 +65,7 @@ These commands are specific to DOSBox Staging and have no MS-DOS equivalent.
 | `REN`      | `RENAME`             | Rename one or more files
 | `SUBST`    |                      | Assign an internal directory to a drive
 | `TREE`     |                      | Display directory tree in a graphical form
+| `XCOPY`    |                      | Extended file copy with subdirectory support
 
 </div>
 
@@ -133,6 +134,5 @@ open-source programs included for convenience.
 | ------------ | -------------                                                  | --------
 | `DEBUG`      | Interactive DOS debugger                                       | [DOS-debug](https://github.com/Baron-von-Riedesel/DOS-debug)
 | `DELTREE`    | Delete a directory tree including all files and subdirectories | [FreeDOS](https://gitlab.com/FreeDOS/base/deltree)
-| `XCOPY`      | Extended file copy with subdirectory support                   | [FreeDOS](https://github.com/joncampbell123/dosbox-x/tree/master/src/builtin/xcopy)
 
 </div>

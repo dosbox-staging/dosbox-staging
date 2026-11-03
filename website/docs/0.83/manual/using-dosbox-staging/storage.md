@@ -98,8 +98,7 @@ addition to whatever you mount:
 
 - **Y:** contains a small set of [bundled third-party
   utilities](commands.md#bundled-third-party-programs) in its `Y:\DOS`
-  directory which is added automatically to the PATH (e.g. `DEBUG`, `DELTREE`
-  and `XCOPY`).
+  directory which is added automatically to the PATH (e.g. `DEBUG` and `DELTREE`).
 
 
 ## Automounting
