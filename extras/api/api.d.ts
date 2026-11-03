@@ -23,7 +23,6 @@ export interface MemoryWithAddr {
 
 export interface MemoryResponse {
     memory: MemoryWithAddr;
-	registers: CpuRegisters;
 }
 
 export interface DosInfo {
@@ -36,6 +35,7 @@ export interface DosBoxInfo {
 	version: string;
 	configHome: string;
 	configWebserver: string;
+	debuggerEnabled: boolean;
 }
 
 export class DOSBoxApi {
@@ -43,8 +43,8 @@ export class DOSBoxApi {
     getCpu(): Promise<CpuResponse>;
     readMem(segment: string | number, offset: string | number, len: string | number): Promise<Uint8Array>;
 	readMem(offset: string | number, len: string | number): Promise<Uint8Array>;
-    readMemAndCpu(segment: string | number, offset: string | number, len: string | number): Promise<MemoryResponse>;
-	readMemAndCpu(offset: string | number, len: string | number): Promise<MemoryResponse>;
+    readMemJson(segment: string | number, offset: string | number, len: string | number): Promise<MemoryResponse>;
+	readMemJson(offset: string | number, len: string | number): Promise<MemoryResponse>;
     writeMem(segment: string | number, offset: string | number, data: Uint8Array): Promise<void>;
 	writeMem(offset: string | number, data: Uint8Array): Promise<void>;
 	compareAndSwap(segment: string | number, offset: string | number, data: Uint8Array, expected: Uint8Array): Promise<Uint8Array | null>;
