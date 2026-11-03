@@ -22,9 +22,9 @@ if [[ $IN_ZIP != $IN_ZIP_PREFIX* ]]; then
 	exit 1
 fi
 
-if [[ $IN_ZIP =~ ^.*/dosbox-staging-windows-([^-]*)-(v?)([0-9.]*)- ]]; then
-    ARCH=${BASH_REMATCH[1]}
-    VERSION=${BASH_REMATCH[3]}
+if [[ $IN_ZIP =~ ^(.*/)?dosbox-staging-windows-([^-]*)-(v?)([0-9.]*)- ]]; then
+    ARCH=${BASH_REMATCH[2]}
+    VERSION=${BASH_REMATCH[4]}
 else
 	echo "Invalid input filename pattern"
 	exit 1
