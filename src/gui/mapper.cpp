@@ -17,6 +17,7 @@
 #include <optional>
 #include <queue>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <utility>
 #include <vector>
@@ -622,30 +623,31 @@ std::optional<int> MAPPER_FindMappedAxis(const char* sdl_mapping,
 	assert(sdl_mapping);
 	assert(element);
 
-	const auto key = std::string(",") + element + ":";
+	const std::string_view mapping = sdl_mapping;
+	const auto key                 = std::string(",") + element + ":";
 
-	const char* substring = strstr(sdl_mapping, key.c_str());
-	if (!substring) {
+	const auto key_pos = mapping.find(key);
+	if (key_pos == std::string_view::npos) {
 		return {};
 	}
-	substring += key.size();
-	if (*substring != 'a') {
+	auto value = mapping.substr(key_pos + key.size());
+	if (!value.starts_with('a')) {
 		// Not a full axis (a button, hat or half axis)
 		return {};
 	}
-	++substring;
-	if (!isdigit(*substring)) {
+	value.remove_prefix(1);
+	if (value.empty() || !isdigit(value.front())) {
 		// Safety check, this means the string is an invalid format
 		return {};
 	}
 	int axis_number = 0;
-	while (isdigit(*substring)) {
+	while (!value.empty() && isdigit(value.front())) {
 		axis_number *= 10;
-		axis_number += *substring - '0';
+		axis_number += value.front() - '0';
 		if (axis_number >= num_axes) {
 			return {};
 		}
-		++substring;
+		value.remove_prefix(1);
 	}
 	return axis_number;
 }
