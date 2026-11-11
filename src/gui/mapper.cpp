@@ -8,7 +8,6 @@
 #include <array>
 #include <cassert>
 #include <cctype>
-#include <cmath>
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
@@ -617,21 +616,38 @@ private:
 
 bool autofire = false;
 
-// Scales a stick position from the circle to the square, so a full diagonal
-// reaches full deflection on both axes (same as 'circularinput' does for the
-// emulated joystick)
-static std::pair<int, int> circle_to_square(const int x, const int y)
+std::optional<int> MAPPER_FindMappedAxis(const char* sdl_mapping,
+                                         const char* element, const int num_axes)
 {
-	const auto max_abs = std::max(std::abs(x), std::abs(y));
-	if (max_abs == 0) {
-		return {x, y};
-	}
-	const auto scale = std::hypot(x, y) / max_abs;
+	assert(sdl_mapping);
+	assert(element);
 
-	const auto scale_axis = [scale](const int pos) {
-		return clamp_to_int16(iround(pos * scale));
-	};
-	return {scale_axis(x), scale_axis(y)};
+	const auto key = std::string(",") + element + ":";
+
+	const char* substring = strstr(sdl_mapping, key.c_str());
+	if (!substring) {
+		return {};
+	}
+	substring += key.size();
+	if (*substring != 'a') {
+		// Not a full axis (a button, hat or half axis)
+		return {};
+	}
+	++substring;
+	if (!isdigit(*substring)) {
+		// Safety check, this means the string is an invalid format
+		return {};
+	}
+	int axis_number = 0;
+	while (isdigit(*substring)) {
+		axis_number *= 10;
+		axis_number += *substring - '0';
+		if (axis_number >= num_axes) {
+			return {};
+		}
+		++substring;
+	}
+	return axis_number;
 }
 
 static int to_magnitude(const int axis_pos)
@@ -976,40 +992,6 @@ private:
 			return "[missing joystick]";
 	}
 
-	// Returns the joystick axis an SDL gamepad mapping binds 'element' to,
-	// if it binds it to a full axis. The part of the mapping we care about
-	// has the format ",element:a<axis number>", e.g. ",lefttrigger:a4".
-	static std::optional<int> FindMappedAxis(const char* sdl_mapping,
-	                                         const char* element)
-	{
-		const auto key = std::string(",") + element + ":";
-
-		const char* substring = strstr(sdl_mapping, key.c_str());
-		if (!substring) {
-			return {};
-		}
-		substring += key.size();
-		if (*substring != 'a') {
-			// Not a full axis (a button, hat or half axis)
-			return {};
-		}
-		++substring;
-		if (!isdigit(*substring)) {
-			// Safety check, this means the string is an invalid format
-			return {};
-		}
-		int axis_number = 0;
-		while (isdigit(*substring)) {
-			axis_number *= 10;
-			axis_number += *substring - '0';
-			if (axis_number >= MAXAXIS) {
-				return {};
-			}
-			++substring;
-		}
-		return axis_number;
-	}
-
 	// Detects the trigger axes and the axes of the sticks from the SDL
 	// gamepad mapping
 	void DetectGamepadAxes()
@@ -1022,16 +1004,23 @@ private:
 		// Trigger buttons that are actually analogue axes need special
 		// handling
 		for (const auto element : {"lefttrigger", "righttrigger"}) {
-			if (const auto axis = FindMappedAxis(sdl_mapping, element)) {
+			if (const auto axis = MAPPER_FindMappedAxis(sdl_mapping,
+			                                            element,
+			                                            MAXAXIS)) {
 				is_trigger[*axis] = true;
 			}
 		}
 
 		const auto add_stick = [&](const char* x_element,
 		                           const char* y_element) {
-			const auto x = FindMappedAxis(sdl_mapping, x_element);
-			const auto y = FindMappedAxis(sdl_mapping, y_element);
-			if (x && y && *x != *y && !is_trigger[*x] && !is_trigger[*y]) {
+			const auto x = MAPPER_FindMappedAxis(sdl_mapping,
+			                                     x_element,
+			                                     MAXAXIS);
+			const auto y = MAPPER_FindMappedAxis(sdl_mapping,
+			                                     y_element,
+			                                     MAXAXIS);
+			if (x && y && *x != *y && !is_trigger[*x] &&
+			    !is_trigger[*y]) {
 				stick_axes.emplace_back(*x, *y);
 			}
 		};

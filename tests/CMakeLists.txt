@@ -20,6 +20,7 @@ add_executable(dosbox_tests
     i8042_wide_read_tests.cpp
     image_decoder_tests.cpp
     int10_modes_tests.cpp
+    mapper_tests.cpp
     math_utils_tests.cpp
     messages_adjust_tests.cpp
     mixer_tests.cpp
