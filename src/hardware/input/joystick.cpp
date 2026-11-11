@@ -169,6 +169,7 @@ static uint32_t last_write = 0;
 static bool write_active = false;
 static bool swap34 = false;
 bool button_wrapping_enabled = true;
+bool circular_input_enabled  = false;
 
 extern bool autofire; //mapper.cpp
 
@@ -558,8 +559,9 @@ public:
 		button_wrapping_enabled = section.GetBool("buttonwrap");
 		stick[0].deadzone = section.GetInt("deadzone");
 		swap34 = section.GetBool("swap34");
-		stick[0].mapstate = section.GetBool("circularinput") ? MovementType::JOYMAP_CIRCLE
-		                                                       : MovementType::JOYMAP_SQUARE;
+		circular_input_enabled = section.GetBool("circularinput");
+		stick[0].mapstate = circular_input_enabled ? MovementType::JOYMAP_CIRCLE
+		                                           : MovementType::JOYMAP_SQUARE;
 		configure_calibration(section);
 
 		// Set initial time and position states
