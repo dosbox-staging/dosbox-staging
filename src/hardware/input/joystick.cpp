@@ -674,7 +674,9 @@ static void init_joystick_config_settings(SectionProp& secprop)
 	pbool = secprop.AddBool("circularinput", WhenIdle, false);
 	pbool->SetHelp(
 	        "Enable translation of circular input to square output ('off' by default).\n"
-	        "Try enabling this if your left analog stick can only move in a circle.");
+	        "Try enabling this if your analog sticks can only move in a circle. Applies to\n"
+	        "the first emulated joystick and to key bindings on both sticks, so a full\n"
+	        "diagonal presses both bound keys.");
 
 	auto pint = secprop.AddInt("deadzone", WhenIdle, 10);
 	pint->SetMinMax(0, 100);
