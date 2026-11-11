@@ -5,6 +5,7 @@
 #include "dosbox.h"
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cctype>
 #include <cstdarg>
@@ -13,7 +14,12 @@
 #include <cstring>
 #include <list>
 #include <memory>
+#include <optional>
 #include <queue>
+#include <string>
+#include <string_view>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 #include <SDL3/SDL.h>
@@ -358,6 +364,10 @@ public:
 	}
 	virtual ~CBindGroup() = default;
 	void ActivateBindList(CBindList * list,Bits value,bool ev_trigger);
+	// Triggered events (e.g. key presses) receive 'trigger_value' instead
+	// of 'value'
+	void ActivateBindList(CBindList* list, Bits value, Bits trigger_value,
+	                      bool ev_trigger);
 	void DeactivateBindList(CBindList * list,bool ev_trigger);
 	virtual CBind * CreateConfigBind(char *&buf)=0;
 	virtual CBind * CreateEventBind(SDL_Event * event)=0;
@@ -607,6 +617,46 @@ private:
 
 bool autofire = false;
 
+std::optional<int> MAPPER_FindMappedAxis(const char* sdl_mapping,
+                                         const char* element, const int num_axes)
+{
+	assert(sdl_mapping);
+	assert(element);
+
+	const std::string_view mapping = sdl_mapping;
+	const auto key                 = std::string(",") + element + ":";
+
+	const auto key_pos = mapping.find(key);
+	if (key_pos == std::string_view::npos) {
+		return {};
+	}
+	auto value = mapping.substr(key_pos + key.size());
+	if (!value.starts_with('a')) {
+		// Not a full axis (a button, hat or half axis)
+		return {};
+	}
+	value.remove_prefix(1);
+	if (value.empty() || !isdigit(value.front())) {
+		// Safety check, this means the string is an invalid format
+		return {};
+	}
+	int axis_number = 0;
+	while (!value.empty() && isdigit(value.front())) {
+		axis_number *= 10;
+		axis_number += value.front() - '0';
+		if (axis_number >= num_axes) {
+			return {};
+		}
+		value.remove_prefix(1);
+	}
+	return axis_number;
+}
+
+static int to_magnitude(const int axis_pos)
+{
+	return std::min(std::abs(axis_pos), static_cast<int>(INT16_MAX));
+}
+
 static void set_joystick_led(SDL_Joystick* joystick, const Rgb888& color)
 {
 	if (!joystick)
@@ -686,9 +736,7 @@ public:
 		LOG_MSG("MAPPER: Initialised %s with %d axes, %d buttons, and %d hat(s)",
 		        SDL_GetJoystickNameForID(stick_id), axes, buttons, hats);
 
-		// Trigger buttons that are actually analogue axis need special handling
-		// This function detects such triggers and sets the is_trigger variable for them
-		DetectTriggerButtons();
+		DetectGamepadAxes();
 	}
 
 	~CStickBindGroup() override
@@ -810,24 +858,48 @@ public:
 				old_button_state[i]=button_pressed[i];
 			}
 		}
+		std::array<int, MAXAXIS> axis_pos = {};
+		for (int i = 0; i < axes; ++i) {
+			axis_pos[i] = SDL_GetJoystickAxis(sdl_joystick, i);
+		}
+
+		// With 'circularinput', key bindings on the axes of the
+		// gamepad's sticks also fire on full diagonals
+		auto key_bind_axis_pos = axis_pos;
+		if (circular_input_enabled) {
+			for (const auto& [x, y] : stick_axes) {
+				if (x < axes && y < axes) {
+					std::tie(key_bind_axis_pos[x],
+					         key_bind_axis_pos[y]) =
+					        circle_to_square(axis_pos[x],
+					                         axis_pos[y]);
+				}
+			}
+		}
+
 		for (int i = 0; i < axes; i++) {
-			Sint16 caxis_pos = SDL_GetJoystickAxis(sdl_joystick, i);
+			const auto pos          = axis_pos[i];
+			const auto key_bind_pos = key_bind_axis_pos[i];
 			/* activate bindings for joystick position */
-			if (caxis_pos>1) {
+			if (pos > 1) {
 				if (old_neg_axis_state[i]) {
 					DeactivateBindList(&neg_axis_lists[i],false);
 					old_neg_axis_state[i] = false;
 				}
-				ActivateBindList(&pos_axis_lists[i],caxis_pos,false);
+				ActivateBindList(&pos_axis_lists[i],
+				                 pos,
+				                 key_bind_pos,
+				                 false);
 				old_pos_axis_state[i] = true;
-			} else if (caxis_pos<-1) {
+			} else if (pos < -1) {
 				if (old_pos_axis_state[i]) {
 					DeactivateBindList(&pos_axis_lists[i],false);
 					old_pos_axis_state[i] = false;
 				}
-				if (caxis_pos!=-32768) caxis_pos=(Sint16)abs(caxis_pos);
-				else caxis_pos=32767;
-				ActivateBindList(&neg_axis_lists[i],caxis_pos,false);
+				ActivateBindList(&neg_axis_lists[i],
+				                 to_magnitude(pos),
+				                 to_magnitude(key_bind_pos),
+				                 false);
 				old_neg_axis_state[i] = true;
 			} else {
 				/* center */
@@ -922,48 +994,48 @@ private:
 			return "[missing joystick]";
 	}
 
-	void SetTriggerButtonFor(const char* button_name, const char* sdl_mapping)
-	{
-		// Part of the string we care about is in the format of:
-		// "button_name" + ':' + single character button type (a for axis, b for button, h for hat) + axis number
-
-		const char* substring = strstr(sdl_mapping, button_name);
-		if (!substring) {
-			return;
-		}
-		substring += strlen(button_name);
-		if (*substring != 'a') {
-			// Not an axis so no need to do anything
-			return;
-		}
-		++substring;
-		if (!isdigit(*substring)) {
-			// Safety check, this means the string is an invalid format
-			return;
-		}
-		int axis_number = 0;
-		while (isdigit(*substring)) {
-			axis_number *= 10;
-			axis_number += *substring - '0';
-			++substring;
-		}
-		if (axis_number >= 0 && axis_number < MAXAXIS) {
-			is_trigger[axis_number] = true;
-		}
-	}
-
-	void DetectTriggerButtons()
+	// Detects the trigger axes and the axes of the sticks from the SDL
+	// gamepad mapping
+	void DetectGamepadAxes()
 	{
 		auto sdl_mapping = SDL_GetGamepadMappingForID(stick_id);
 		if (!sdl_mapping) {
 			return;
 		}
-		SetTriggerButtonFor("lefttrigger:", sdl_mapping);
-		SetTriggerButtonFor("righttrigger:", sdl_mapping);
+
+		// Trigger buttons that are actually analogue axes need special
+		// handling
+		for (const auto element : {"lefttrigger", "righttrigger"}) {
+			if (const auto axis = MAPPER_FindMappedAxis(sdl_mapping,
+			                                            element,
+			                                            MAXAXIS)) {
+				is_trigger[*axis] = true;
+			}
+		}
+
+		const auto add_stick = [&](const char* x_element,
+		                           const char* y_element) {
+			const auto x = MAPPER_FindMappedAxis(sdl_mapping,
+			                                     x_element,
+			                                     MAXAXIS);
+			const auto y = MAPPER_FindMappedAxis(sdl_mapping,
+			                                     y_element,
+			                                     MAXAXIS);
+			if (x && y && *x != *y && !is_trigger[*x] &&
+			    !is_trigger[*y]) {
+				stick_axes.emplace_back(*x, *y);
+			}
+		};
+		add_stick("leftx", "lefty");
+		add_stick("rightx", "righty");
+
 		SDL_free(sdl_mapping);
 	}
 
 	bool is_trigger[MAXAXIS] = {};
+
+	// The (x, y) axis pairs of the gamepad's sticks
+	std::vector<std::pair<int, int>> stick_axes = {};
 
 protected:
 	CBindList *pos_axis_lists = nullptr;
@@ -1270,6 +1342,12 @@ static struct CMapper {
 } mapper;
 
 void CBindGroup::ActivateBindList(CBindList * list,Bits value,bool ev_trigger) {
+	ActivateBindList(list, value, value, ev_trigger);
+}
+
+void CBindGroup::ActivateBindList(CBindList* list, Bits value,
+                                  Bits trigger_value, bool ev_trigger)
+{
 	assert(list);
 	Bitu validmod=0;
 	CBindList_it it;
@@ -1279,7 +1357,12 @@ void CBindGroup::ActivateBindList(CBindList * list,Bits value,bool ev_trigger) {
 		}
 	}
 	for (it = list->begin(); it != list->end(); ++it) {
-		if (validmod==(*it)->mods) (*it)->ActivateBind(value,ev_trigger);
+		if (validmod == (*it)->mods) {
+			const auto bind_value = (*it)->event->IsTrigger()
+			                              ? trigger_value
+			                              : value;
+			(*it)->ActivateBind(bind_value, ev_trigger);
+		}
 	}
 }
 

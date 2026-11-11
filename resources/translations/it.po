@@ -7840,11 +7840,13 @@ msgstr ""
 "del joystick reale o ai tasti della tastiera (predefinito 'off')."
 
 #: src/config/setup.cpp:262
-#, c-format, no-wrap
+#, fuzzy, c-format, no-wrap
 msgctxt "CONFIG_CIRCULARINPUT"
 msgid ""
 "Enable translation of circular input to square output ('off' by default).\n"
-"Try enabling this if your left analog stick can only move in a circle."
+"Try enabling this if your analog sticks can only move in a circle. Applies to\n"
+"the first emulated joystick and to key bindings on both sticks, so a full\n"
+"diagonal presses both bound keys."
 msgstr ""
 "Abilita la traduzione dell'input circolare in output quadrato\n"
 "(predefinito 'off').\n"

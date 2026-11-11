@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <cassert>
 #include <cmath>
+#include <cstdlib>
+#include <utility>
 
 #include "misc/support.h"
 
@@ -233,6 +235,23 @@ constexpr uint32_t clamp_to_uint32(const T val)
 	constexpr auto min_val = static_cast<T>(0);
 	constexpr auto max_val = static_cast<T>(UINT32_MAX);
 	return static_cast<uint32_t>(std::clamp(val, min_val, max_val));
+}
+
+// Scales an analog stick position from the circle to the square, so a full
+// diagonal reaches full deflection on both axes. The direction stays the same;
+// the result is clamped to the int16_t range of SDL's axis values.
+inline std::pair<int, int> circle_to_square(const int x, const int y)
+{
+	const auto max_abs = std::max(std::abs(x), std::abs(y));
+	if (max_abs == 0) {
+		return {x, y};
+	}
+	const auto scale = std::hypot(x, y) / max_abs;
+
+	const auto scale_axis = [scale](const int pos) {
+		return clamp_to_int16(iround(pos * scale));
+	};
+	return {scale_axis(x), scale_axis(y)};
 }
 
 constexpr uint8_t low_nibble(const uint8_t byte)

@@ -352,4 +352,48 @@ TEST(round_to_multiple_of, negative)
 	EXPECT_EQ(round_to_multiple_of(11, -11), -11);
 }
 
+using AxisPair = std::pair<int, int>;
+
+TEST(circle_to_square, center)
+{
+	EXPECT_EQ(circle_to_square(0, 0), AxisPair(0, 0));
+}
+
+TEST(circle_to_square, straight_directions_unchanged)
+{
+	EXPECT_EQ(circle_to_square(32767, 0), AxisPair(32767, 0));
+	EXPECT_EQ(circle_to_square(-32768, 0), AxisPair(-32768, 0));
+	EXPECT_EQ(circle_to_square(0, 32767), AxisPair(0, 32767));
+	EXPECT_EQ(circle_to_square(0, -32768), AxisPair(0, -32768));
+	EXPECT_EQ(circle_to_square(10000, 0), AxisPair(10000, 0));
+}
+
+TEST(circle_to_square, full_diagonal_reaches_corner)
+{
+	// 32767 * cos 45 = 23170
+	EXPECT_EQ(circle_to_square(23170, 23170), AxisPair(32767, 32767));
+	EXPECT_EQ(circle_to_square(-23170, 23170), AxisPair(-32767, 32767));
+	EXPECT_EQ(circle_to_square(23170, -23170), AxisPair(32767, -32767));
+	EXPECT_EQ(circle_to_square(-23170, -23170), AxisPair(-32767, -32767));
+}
+
+TEST(circle_to_square, half_diagonal_stays_half)
+{
+	EXPECT_EQ(circle_to_square(11585, 11585), AxisPair(16384, 16384));
+}
+
+TEST(circle_to_square, keeps_direction)
+{
+	// Scaled by hypot(2, 1) / 2 = 1.118
+	EXPECT_EQ(circle_to_square(20000, 10000), AxisPair(22361, 11180));
+	EXPECT_EQ(circle_to_square(-10000, 20000), AxisPair(-11180, 22361));
+}
+
+TEST(circle_to_square, clamps_beyond_the_circle)
+{
+	EXPECT_EQ(circle_to_square(32767, 32767), AxisPair(32767, 32767));
+	EXPECT_EQ(circle_to_square(-32768, -32768), AxisPair(-32768, -32768));
+	EXPECT_EQ(circle_to_square(32767, 25000), AxisPair(32767, 31446));
+}
+
 } // namespace
