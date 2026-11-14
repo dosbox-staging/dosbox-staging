@@ -7,18 +7,16 @@ hide:
 
 !!! danger "READ THIS FIRST!"
 
-    📖 **Read the [0.83.0 release
-    notes](https://www.dosbox-staging.org/download/release-notes/0.83.0/)**.
-    They explain what's new, what's changed, and what may behave differently
-    from previous versions.
+    📖 **Read the [0.83.1 release notes](release-notes/0.83.1.md)**. They
+    explain what's new, what's changed, and what may behave differently from
+    previous versions.
 
     🚀 **New to DOSBox Staging? Read the [Getting Started
-    guide](https://www.dosbox-staging.org/getting-started/).** This is **not
-    optional** --- it covers the basics that most first-time questions are about.
+    guide](../0.83/getting-started/index.md).** This is **not optional** ---
+    it covers the basics that most first-time questions are about.
 
-    📚 **Check the [user
-    manual](https://www.dosbox-staging.org/0.83/manual/introduction/about-this-manual/)**
-    to learn how the new features work and how to configure them.
+    📚 **Check the [user manual](../0.83/manual/index.md)** to learn how the
+    new features work and how to configure them.
 
     🔍 **Search the [project website](https://www.dosbox-staging.org/)** using
     the search box in the top-right corner. It searches the *entire* site,
@@ -46,10 +44,10 @@ hide:
 
 <section class="release-downloads" markdown>
 
-  [Download DOSBox Staging 0.83.0 Universal Binary (dmg)][0_83_0]
+  [Download DOSBox Staging 0.83.1 Universal Binary (dmg)][0_83_1]
   <br>
   <small>
-  sha256: d8a771adfb8010fa6b5f7fb5351abfba<wbr>659273ad01c89f03675a92bdbdae8167
+  sha256: a016f04c25b0c27cc3dfa4165cd7242f<wbr>eb36d647fc9b3e4990ca83257d1012ad
   </small>
 
 </section>
@@ -57,7 +55,7 @@ hide:
 The latest version is compatible with **macOS 12 (Monterey) or later** and
 supports both 64-bit Intel and Apple silicon Macs.
 
-Read the [0.83.0 release notes](release-notes/0.83.0.md) to learn about the
+Read the [0.83.1 release notes](release-notes/0.83.1.md) to learn about the
 changes and improvements introduced in this version.
 
 
@@ -78,6 +76,12 @@ Our recommendation is to upgrade your operating system and use the latest
 version.
 
 ??? note "List of older macOS versions"
+
+    - [DOSBox Staging 0.83.0 Universal Binary (dmg)][0_83_0] (macOS 11 or newer)
+      <br>
+      <small>
+      sha256: d8a771adfb8010fa6b5f7fb5351abfba<wbr>659273ad01c89f03675a92bdbdae8167
+      </small>
 
     - [DOSBox Staging 0.82.2 Universal Binary (dmg)][0_82_2] (macOS 11 or newer)
       <br>
@@ -206,6 +210,7 @@ version.
       </small>
 
 
+[0_83_1]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.83.1/dosbox-staging-macOS-v0.83.1.dmg
 [0_83_0]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.83.0/dosbox-staging-macOS-v0.83.0.dmg
 [0_82_2]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.2/dosbox-staging-macOS-v0.82.2.dmg
 [0_82_1]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.1/dosbox-staging-macOS-v0.82.1.dmg

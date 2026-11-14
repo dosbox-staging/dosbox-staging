@@ -7,18 +7,16 @@ hide:
 
 !!! danger "READ THIS FIRST!"
 
-    📖 **Read the [0.83.0 release
-    notes](https://www.dosbox-staging.org/download/release-notes/0.83.0/)**.
-    They explain what's new, what's changed, and what may behave differently
-    from previous versions.
+    📖 **Read the [0.83.1 release notes](release-notes/0.83.1.md)**. They
+    explain what's new, what's changed, and what may behave differently from
+    previous versions.
 
     🚀 **New to DOSBox Staging? Read the [Getting Started
-    guide](https://www.dosbox-staging.org/getting-started/).** This is **not
-    optional** --- it covers the basics that most first-time questions are about.
+    guide](../0.83/getting-started/index.md).** This is **not optional** ---
+    it covers the basics that most first-time questions are about.
 
-    📚 **Check the [user
-    manual](https://www.dosbox-staging.org/0.83/manual/introduction/about-this-manual/)**
-    to learn how the new features work and how to configure them.
+    📚 **Check the [user manual](../0.83/manual/index.md)** to learn how the
+    new features work and how to configure them.
 
     🔍 **Search the [project website](https://www.dosbox-staging.org/)** using
     the search box in the top-right corner. It searches the *entire* site,
@@ -46,10 +44,10 @@ hide:
 
 <section class="release-downloads" markdown>
 
-  [Download DOSBox Staging 0.83.0 (x86_64)][0_83_0]
+  [Download DOSBox Staging 0.83.1 (x86_64)][0_83_1]
   <br>
   <small>
-  sha256: d3a94f7f1c3e68a47ec88d61145506c7<wbr>904452adb0c9c5928cb8cfe2331d6c5c
+  sha256: 3c7c925e28a5c88ae9f9f1a315ad07d9<wbr>1176b135fbe5f6f240eeee148ed176b0
   </small>
 
 </section>
@@ -59,7 +57,7 @@ The latest version is compatible with any laptop or desktop released after
 ALSA, and OpenGL system libraries; all other libraries are statically linked.
 A dedicated graphics adapter is recommended for laptops.
 
-Read the [0.83.0 release notes](release-notes/0.83.0.md) to learn about the
+Read the [0.83.1 release notes](release-notes/0.83.1.md) to learn about the
 changes and improvements introduced in this version.
 
 Run the `install-icons.sh` script included with the release to install
@@ -106,6 +104,12 @@ Our recommendation is to upgrade your operating system and use the latest
 version.
 
 ??? note "List of older Linux versions"
+
+    - [DOSBox Staging 0.83.0 (x86_64)][0_83_0]
+      <br>
+      <small>
+      sha256: d3a94f7f1c3e68a47ec88d61145506c7<wbr>904452adb0c9c5928cb8cfe2331d6c5c
+      </small>
 
     - [DOSBox Staging 0.82.2 (x86_64)][0_82_2]
       <br>
@@ -216,6 +220,7 @@ version.
       </small>
 
 
+[0_83_1]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.83.1/dosbox-staging-linux-x86_64-v0.83.1.tar.xz
 [0_83_0]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.83.0/dosbox-staging-linux-x86_64-v0.83.0.tar.xz
 [0_82_2]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.2/dosbox-staging-linux-x86_64-v0.82.2.tar.xz
 [0_82_1]: https://github.com/dosbox-staging/dosbox-staging/releases/download/v0.82.1/dosbox-staging-linux-x86_64-v0.82.1.tar.xz
