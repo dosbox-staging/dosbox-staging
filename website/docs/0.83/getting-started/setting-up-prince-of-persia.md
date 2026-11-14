@@ -20,10 +20,12 @@ e.g., `Program Files` on Windows). Each game will have its own dedicated
 subfolder under `DOS Games`, so let's create our first one called `Prince of
 Persia`.
 
-Now download [pop1.zip][pop1] from the [Prince of Persia demo page][pop-demo]
-and extract its contents into `DOS Games/Prince of Persia`. The archive
-contains only two files: `pop1.txt` (a regular text file) and `pop1demo.exe`
-(an MS-DOS executable). Let's open `pop1.txt` in our text editor!
+Now download [pop1demo.zip][pop1] from the [Prince of Persia demo
+page][pop-demo] and extract its contents into a temporary folder. The archive
+contains a bunch of files -- we'll only need `pop1.zip`, so let's extract it.
+This second archive contains only two files: `pop1.txt` (a regular text file)
+and `pop1demo.exe` (an MS-DOS executable). Let's open `pop1.txt` in our text
+editor!
 
 [pop1]: https://www.dosgamesarchive.com/file/prince-of-persia/pop1demo
 [pop-demo]: https://www.dosgamesarchive.com/download/prince-of-persia
@@ -77,9 +79,9 @@ subfolders like `drives/c` and `drives/d` as DOS drives is called
 In our case, we only need a single C: drive, so we'll create a `c` subfolder
 inside our `drives` folder (technically, it does not make a difference whether
 you use uppercase or lowercase "letter C" on Windows and macOS, but it does in
-Linux, so we recommend always using lowercase). We'll then copy the files from
-the `pop1.zip` archive into `drives/c` to end up with the following folder
-structure:
+Linux, so we recommend always using lowercase). We'll then copy the two files
+from our `pop1.zip` archive into `drives/c` to end up with the following
+folder structure:
 
 ![Prince of Persia folder structure](images/prince-of-persia-dirtree1.png){ .skip-lightbox style="width: 16.5rem; margin: 0.3rem max(calc((50% - 16.5rem/2) * 0.85), 0rem);" }
 
@@ -210,6 +212,14 @@ executes the following command:
 this case).
 
 
+!!! note
+
+    In MS-DOS, folders
+    are called **directories**, so the various DOSBox Staging messages usually use
+    the word "directory". We'll use "folder" and "directory" interchangeably in
+    this guide.
+
+
 ## Installing the game
 
 You'll be greeted by the following window when starting DOSBox Staging:
@@ -218,26 +228,19 @@ You'll be greeted by the following window when starting DOSBox Staging:
 
 <!-- TODO update screenshot, make sure it has the automounting message  -->
 
-Let's ignore the polite welcome message for now and focus on the text below
-the big blue rectangle:
+Let's ignore the polite welcome message for now and focus on this strange
+line:
 
 ``` { . .dos-prompt }
-Local directory drives/c/ mounted as C drive
 Z:\>_
 ```
 
-The first line is pretty straightforward --- it tells us that DOSBox Staging
-mounted `drives/c` we created earlier as the "C: drive". In MS-DOS, folders
-are called **directories**, so the various DOSBox Staging messages usually use
-the word "directory". We'll use "folder" and "directory" interchangeably in
-this guide.
-
-The second line is the **DOS prompt**. DOS has a command line interface that
-predates graphical user interfaces we're accustomed to from modern operating
-systems. We get DOS to do things by typing in commands, and if we manage to do
-this correctly, DOS will follow our instructions to the letter (pun intended).
-DOS is *not* a multitasking operating system; you can only do a single thing
-in it at any given time.
+This is the **DOS prompt**. DOS has a command line interface that predates
+graphical user interfaces we're accustomed to from modern operating systems.
+We get DOS to do things by typing in commands, and if we manage to do this
+correctly, DOS will follow our instructions to the letter (pun intended). DOS
+is *not* a multitasking operating system; you can only do a single thing in it
+at any given time.
 
 Let's analyse the prompt a little bit: it always starts with a letter followed
 by a colon, which denotes the current drive. Right after startup, this is
