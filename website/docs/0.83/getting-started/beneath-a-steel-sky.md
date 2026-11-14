@@ -332,8 +332,7 @@ games.
 But back in the day there were more Sound Blaster variants and clones than you
 could shake a stick at, many with quite different default volume levels. We
 don't know which model this game's developers used, so it's worth trying a
-few. Let's start with a secondirst-revision (most common) **Sound Blaster
-Pro**:
+few. Let's start with a second-revision (most common) **Sound Blaster Pro**:
 
 ```ini
 [sblaster]
@@ -393,14 +392,11 @@ is the best solution.
 
 ## Adjusting the emulated CPU speed
 
-If you *did* watch the intro (which I told you to skip, but no hard
-feelings), you'll have heard severe audio stuttering from the moment the
-narrator starts speaking. If you haven't, watch it now!
-
-What's happening? DOS gaming spans almost two decades, with wildly different
-CPU speeds in use throughout (see [CPU](../manual/system/cpu.md) for the full
-reference). DOSBox doesn't emulate a specific CPU, just a "generic" one --- so
-how does it know what speed to run a given game at?
+How fast should DOSBox run a game? DOS gaming spans almost two decades, with
+wildly different CPU speeds in use throughout (see
+[CPU](../manual/system/cpu.md) for the full reference). DOSBox doesn't emulate
+a specific CPU, just a "generic" one --- so how does it know what speed a
+given game needs?
 
 It doesn't.
 
@@ -412,19 +408,38 @@ impossible, but detecting real vs. protected mode is trivial, so DOSBox does
 automatic speed calibration by default:
 
 - **Real mode** games: **3000** CPU instructions per millisecond (roughly a
-  386SX at 20 MHz)
-- **Protected mode** games: **60&thinsp;000** instructions per millisecond (roughly
-  a Pentium at 100 MHz)
+  386SX at 20 MHz, or a 286 at 25 MHz)
+
+- **Protected mode** games: **60&thinsp;000** instructions per millisecond
+  (roughly a Pentium at 100 MHz)
 
 The reasoning: older games are often sensitive to CPU speed and might
 misbehave if it's too fast, hence the conservative default; newer games
-benefit from extra speed and generally tolerate faster processors fine.
+benefit from extra speed and often tolerate faster processors fine (as long as
+the emulated speed remains in the still realistic "fast Pentium" territory).
 
-This gets all games *running*, but manual tweaking is often needed to make a
-particular game run *smoothly*. Protected-mode games at "too high" cycle
-counts are especially problematic since there's not enough headroom left for
-glitch-free audio --- there's no point emulating a faster CPU than the game
-needs, since that extra power could go toward smoother audio instead.
+This gets all games *running*, and on a reasonably modern computer, most of
+them will run just fine out of the box. But the defaults are a ballpark guess,
+not a tuned setting; there are good reasons to find the optimal CPU cycles
+setting for each game:
+
+- **Audio might stutter on slower computers.** Emulating a fast CPU (higher
+  emulated CPU cycles value) takes a lot of host CPU power. If your machine
+  doesn't have much to spare, there might not be enough headroom left for
+  glitch-free audio emulation, which might result in stuttering, clicks, pops,
+  or distorted audio.
+
+- **A "too fast" emulated CPU can cause subtle problems.**
+  Games were written for the hardware of their time, and some of them behave
+  slightly differently (or just wrong) when they run much faster than they
+  were designed for. These bugs can be easy to miss.
+
+- **It wastes host CPU power.** Extra emulated speed beyond what the game
+  needs doesn't make it look or sound any better.
+
+So even if you aren't hearing or seeing any problems, it's good practice to
+find a sensible cycles value for each game and set it explicitly. Always aim
+for the *minimum* value that gives adequate performance.
 
 Beneath a Steel Sky is a protected-mode game --- how do we know? Comment out
 the `sky` command in `[autoexec]`, launch DOSBox Staging windowed, and check
@@ -444,47 +459,47 @@ SKY.EXE - 60000 cycles/ms - to capture the mouse press...
 `SKY.EXE` is now running, and it's at 60&thinsp;000 cycles/ms --- our protected-mode
 default, confirming this is a protected-mode game.
 
-That's the crux of the stuttering: not enough horsepower left for
-time-critical audio. The fix is to cap the cycle count instead of letting
-DOSBox run wild. `cpu_cycles` sets real-mode cycles, `cpu_cycles_protected`
-sets protected-mode cycles:
+That's a lot more speed than a 1994 adventure game with mostly static 2D
+graphics needs. To cap it, set the cycles value in your config instead of
+letting DOSBox use the default. `cpu_cycles` sets real-mode cycles,
+`cpu_cycles_protected` sets protected-mode cycles:
 
 ```ini
 [cpu]
 cpu_cycles_protected = 25000
 ```
 
-Restart DOSBox Staging and watch the intro again --- the audio glitches
-should be gone. Well done, time for a beer (or your beverage of choice)!
-:sunglasses: :beer:
+Restart DOSBox Staging and check that the game still runs well. Nothing
+should look or sound different, and the game will be using a lot less host
+CPU power than before. (If you're on a slower machine, this is where you might
+notice an improvement in audio smoothness, too.)
 
 !!! info "Real and protected mode"
 
-    In simple terms, **real mode** is the legacy 16-bit mode of a 386 or
-    later CPU, while **protected mode** takes full advantage of its
-    capabilities in 32-bit mode. Protected mode couldn't be widely used until
-    386+ CPUs became common, around 1993; games from then on use it almost
-    exclusively.
+    In simple terms, **real mode** is the legacy 16-bit mode of a 386 or later
+    CPU, while **protected mode** takes full advantage of its capabilities in
+    32-bit mode. Protected mode couldn't be widely used until 386+ CPUs became
+    common, around 1993; games from then on use it almost exclusively.
 
     You can spot protected-mode games by the presence of [DOS
-    extenders](https://en.wikipedia.org/wiki/DOS_extender) like
-    `DOS4GW.EXE`, `PMODEW.EXE`, or `CWSDPMI.EXE` in their game directories,
-    and by characteristic startup messages. But you don't need to worry about
-    any of that --- DOSBox tells you with 100% accuracy via the title bar, so
-    just leave `cpu_cycles`/`cpu_cycles_protected` at their defaults (or set
-    custom values) and watch the title as the game runs.
+    extenders](https://en.wikipedia.org/wiki/DOS_extender) like `DOS4GW.EXE`,
+    `PMODEW.EXE`, or `CWSDPMI.EXE` in their game directories, and by
+    characteristic startup messages. But you don't need to check for any of
+    that. DOSBox Staging shows the current cycles value in the title bar, so
+    just watch it as the game starts: with the default settings, 3000 means
+    the game runs in real mode and 60&thinsp;000 means protected mode.
 
 
 ### Finding the correct speed for a game
 
-Okay, so why set `cpu_cycles_protected` to 25&thinsp;000 and not any other number? The game's manual states
-that a 386 or better processor is required. Indeed, the game works fine at
-6000 cycles, which approximates a 386DX CPU running at 33 MHz, but the loading
-times are a bit on the slow side. Setting the CPU cycles to
-25&thinsp;000 --- which roughly corresponds to a 486DX2/66 --- speeds up the
-loading considerably without causing any negative side effects. This is not
-surprising as the DX2/66 was one of the
-most popular CPUs in the 1990s for gaming. This is [what Wikipedia says about
+Okay, so why set `cpu_cycles_protected` to 25&thinsp;000 and not any other
+number? The game's manual states that a 386 or better processor is required.
+Indeed, the game works fine at 6000 cycles, which approximates a 386DX CPU
+running at 33 MHz, but the loading times are a bit on the slow side. Setting
+the CPU cycles to 25&thinsp;000 --- which roughly corresponds to a 486DX2/66
+--- speeds up the loading considerably without causing any negative side
+effects. This is not surprising as the DX2/66 was one of the most popular CPUs
+in the 1990s for gaming. This is [what Wikipedia says about
 it](https://en.wikipedia.org/wiki/Intel_DX2#:~:text=The%20i486DX2%2D66,performance%20and%20longevity.):
 
 > The i486DX2-66 was a very popular processor for video game enthusiasts in
@@ -760,9 +775,8 @@ of the manual.
     width="90%"
 ) }}
 
-That's easy to fix; we'll also set the viewport resolution for roughly 4x
-integer scaling, since the game would look too blocky stretched to
-fullscreen:
+That's easy to fix; we'll also set the viewport resolution for 4x integer
+scaling, since the game would look too blocky stretched to fullscreen:
 
 ```ini
 [render]
@@ -902,7 +916,7 @@ viewport = 1280x800
 #shader = crt-auto-arcade
 
 [sblaster]
-sbmixer = off
+sbtype = sbpro2
 
 [midi]
 mididevice = mt32
