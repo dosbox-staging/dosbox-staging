@@ -98,9 +98,10 @@
     const currentSegment = parseSegment(params.get('segment')); 
     const currentAddr = parseIntOrHex(params.get('addr') || '0') || 0;
 	const currentLen = parseIntOrHex(params.get('len') || '0') || 0xFFFF;
-	var currentData;
+	let currentData;
+	let currentRegisters = null;
 
-    async function init(api) {
+	async function init(api) {
         const hexOut = document.getElementById('hex-view');
         const regBar = document.getElementById('registers-bar');
         const segLinks = document.getElementById('segment-links');
@@ -112,10 +113,9 @@
                 `<a class="reg-link" href="?segment=${s.toUpperCase()}&addr=0">${s.toUpperCase()}</a>`
             ).join(' ');
 
-            currentData = await api.readMemAndCpu(currentSegment, currentAddr, currentLen);
+            currentData = await api.readMemJson(currentSegment, currentAddr, currentLen);
             const memory = currentData.memory.data;
             const startAddr = currentData.memory.addr; 
-            const regs = currentData.registers;
 
 			if (currentSegment) {
 				if (typeof(currentSegment) == "string") {
@@ -128,15 +128,22 @@
 			}
 			inputLen.value = `0x${memory.length.toString(16).padStart(0, '0')}`
 
-            regBar.innerHTML = `
-				<dl>
-				${regNames.map(r => `<dt class="register">${r.toUpperCase()}:</dt><dd class="register">0x${regs[r].toString(16).padStart(4, '0')}</dd>`).join(' ')}
-				</dl>
-                <span class="dim">|</span>
-				<dl>
-                ${segNames.map(s => `<dt class="register">${s.toUpperCase()}:</dt><dd class="register">0x${regs[s].toString(16).padStart(4, '0')}</dd>`).join(' ')}
-				</dl>
-            `;
+            try {
+                const cpu = await api.getCpu();
+                currentRegisters = cpu.registers;
+                regBar.innerHTML = `
+					<dl>
+					${regNames.map(r => `<dt class="register">${r.toUpperCase()}:</dt><dd class="register">0x${currentRegisters[r].toString(16).padStart(4, '0')}</dd>`).join(' ')}
+					</dl>
+                    <span class="dim">|</span>
+					<dl>
+                    ${segNames.map(s => `<dt class="register">${s.toUpperCase()}:</dt><dd class="register">0x${currentRegisters[s].toString(16).padStart(4, '0')}</dd>`).join(' ')}
+					</dl>
+                `;
+            } catch {
+                currentRegisters = null;
+                regBar.textContent = 'Register snapshot unavailable.';
+            }
             renderHex(memory, startAddr, currentAddr, hexOut);
 			renderDisasm();
         } catch (err) {
@@ -272,7 +279,10 @@
 	function renderDisasmManual() {
 		let start = document.getElementById('disasm-start').value.trim();
 		if (start.toLowerCase() == "eip" || start.toLowerCase() == "ip") {
-			start = currentData.registers.eip;
+			if (!currentRegisters) {
+				throw new Error("Register snapshot unavailable; enter a numeric address.");
+			}
+			start = currentRegisters.eip;
 		} else {
 			start = parseIntOrHex(start);
 		}

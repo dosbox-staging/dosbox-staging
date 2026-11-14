@@ -2,53 +2,44 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 
 #include "webserver.h"
-#include "bridge.h"
 #include "private/cpu.h"
-
-#include "base64/base64.h"
-#include "http/http.h"
-#include "json/json.h"
-
-#include "cpu/registers.h"
 
 using json = nlohmann::json;
 
 namespace Webserver {
 
-void Registers::load()
+json cpu_registers_to_json(const CpuRegisters& registers)
 {
-	this->eax   = reg_eax;
-	this->ebx   = reg_ebx;
-	this->ecx   = reg_ecx;
-	this->edx   = reg_edx;
-	this->esi   = reg_esi;
-	this->edi   = reg_edi;
-	this->esp   = reg_esp;
-	this->ebp   = reg_ebp;
-	this->eip   = reg_eip;
-	this->flags = reg_flags;
-	this->cs    = SegValue(SegNames::cs);
-	this->ds    = SegValue(SegNames::ds);
-	this->es    = SegValue(SegNames::es);
-	this->ss    = SegValue(SegNames::ss);
-	this->fs    = SegValue(SegNames::fs);
-	this->gs    = SegValue(SegNames::gs);
+	return {
+	        {"eax", registers.eax},
+	        {"ebx", registers.ebx},
+	        {"ecx", registers.ecx},
+	        {"edx", registers.edx},
+	        {"esi", registers.esi},
+	        {"edi", registers.edi},
+	        {"ebp", registers.ebp},
+	        {"esp", registers.esp},
+	        {"eip", registers.eip},
+	        {"flags", registers.flags},
+	        {"cs", registers.cs},
+	        {"ds", registers.ds},
+	        {"es", registers.es},
+	        {"ss", registers.ss},
+	        {"fs", registers.fs},
+	        {"gs", registers.gs},
+	};
 }
 
-void CpuStateCommand::Execute()
+void CpuRegistersCommand::Execute()
 {
-	regs.load();
-	LOG_DEBUG("API: CpuStateCommand()");
+	registers = CPU_CaptureRegisters();
 }
 
-void CpuStateCommand::Get(const httplib::Request&, httplib::Response& res)
+void CpuRegistersCommand::Get(const httplib::Request&, httplib::Response& res)
 {
-	CpuStateCommand cmd;
-	cmd.WaitForCompletion();
-
-	json j;
-	j["registers"] = cmd.regs;
-	send_json(res, j);
+	CpuRegistersCommand command = {};
+	command.WaitForCompletion();
+	send_json(res, json{{"registers", cpu_registers_to_json(command.registers)}});
 }
 
 } // namespace Webserver
