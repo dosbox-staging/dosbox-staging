@@ -764,6 +764,22 @@ static void apply_windowed_position()
 	}
 }
 
+// Restores the window's state after it has left "real" fullscreen mode
+static void restore_windowed_state()
+{
+	// On macOS, SDL_SetWindowSize() and SDL_SetWindowPosition() calls in
+	// fullscreen mode are no-ops, so we need to set the potentially changed
+	// window size and position when exiting fullscreen mode.
+	apply_windowed_size();
+	apply_windowed_position();
+
+	// Transparency is disabled in fullscreen mode (see
+	// `enter_fullscreen()`), so we need to restore it
+	set_window_transparency();
+
+	set_window_decorations();
+}
+
 static void enter_fullscreen()
 {
 	assert(sdl.window);
@@ -868,19 +884,7 @@ static void exit_fullscreen()
 			LOG_WARNING("SDL: Failed to exit fullscreen: %s",
 			            SDL_GetError());
 		}
-
-		// On macOS, SDL_SetWindowSize() and SDL_SetWindowPosition()
-		// calls in fullscreen mode are no-ops, so we need to set the
-		// potentially changed window size and position when exiting
-		// fullscreen mode.
-		apply_windowed_size();
-		apply_windowed_position();
-
-		// Transparency is disabled in fullscreen mode (see
-		// `enter_fullscreen()`), so we need to restore it
-		set_window_transparency();
-
-		set_window_decorations();
+		restore_windowed_state();
 	}
 }
 
@@ -1165,6 +1169,18 @@ static void focus_input()
 	}
 }
 
+// Updates the 'fullscreen' setting and everything else that depends on
+// whether we're in fullscreen mode
+static void update_fullscreen_dependent_state()
+{
+	set_section_property_value("sdl", "fullscreen", sdl.is_fullscreen ? "on" : "off");
+
+	focus_input();
+	setup_presentation_mode();
+
+	maybe_log_display_properties();
+}
+
 static void toggle_fullscreen()
 {
 	assert(sdl.renderer);
@@ -1174,13 +1190,7 @@ static void toggle_fullscreen()
 	} else {
 		enter_fullscreen();
 	}
-
-	set_section_property_value("sdl", "fullscreen", sdl.is_fullscreen ? "on" : "off");
-
-	focus_input();
-	setup_presentation_mode();
-
-	maybe_log_display_properties();
+	update_fullscreen_dependent_state();
 }
 
 static void toggle_fullscreen_handler(bool pressed)
@@ -1188,6 +1198,27 @@ static void toggle_fullscreen_handler(bool pressed)
 	if (pressed) {
 		toggle_fullscreen();
 	}
+}
+
+// Called when the window has entered or left fullscreen mode. This usually
+// happens because we've requested it, but the user can also toggle fullscreen
+// mode via the OS (e.g., with the green button on macOS). The window is
+// already in the new mode then, so we only need to update our state.
+static void handle_fullscreen_changed(const bool is_fullscreen)
+{
+	if (is_fullscreen == sdl.is_fullscreen) {
+		return;
+	}
+	sdl.is_fullscreen = is_fullscreen;
+
+	if (is_fullscreen) {
+		// Transparency is disabled in fullscreen mode (see
+		// `enter_fullscreen()`)
+		SDL_SetWindowOpacity(sdl.window, 1.0f);
+	} else {
+		restore_windowed_state();
+	}
+	update_fullscreen_dependent_state();
 }
 
 // The function should return a writeable buffer for the VGA emulation to
@@ -2445,6 +2476,18 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		handle_window_moved(x, y);
 		return true;
 	}
+
+	case SDL_EVENT_WINDOW_ENTER_FULLSCREEN:
+		log_window_event("SDL: Window has entered fullscreen mode");
+
+		handle_fullscreen_changed(true);
+		return true;
+
+	case SDL_EVENT_WINDOW_LEAVE_FULLSCREEN:
+		log_window_event("SDL: Window has left fullscreen mode");
+
+		handle_fullscreen_changed(false);
+		return true;
 
 	case SDL_EVENT_WINDOW_DISPLAY_CHANGED: {
 		const auto new_display_number = event.window.data1;
