@@ -1,7 +1,7 @@
 # Star Wars: Dark Forces
 
 We will continue our trend of featuring a disproportionate amount of LucasArts
-games in our guide. The game we'll tackle next is the [Star Wars: Dark
+games in our guide. The game we'll tackle next is the demo version of [Star Wars: Dark
 Forces](https://www.mobygames.com/game/500/star-wars-dark-forces/), an example
 of the first-person shooter (FPS) genre that has fast software-rendered 3D
 graphics.
@@ -17,7 +17,7 @@ configuration](passport-to-adventure.md#primary-configuration):
 ```ini
 [autoexec]
 @echo off
-mixer master 40 /noshow
+mixer master 50 /noshow
 mode rate=32 delay=1
 mode 80x43
 ```
@@ -30,7 +30,7 @@ What does this accomplish?
   ensures the `echo off` command itself is not printed either (you can prefix
   any command with `@`, and it won't be printed when executed).
 
-- Then we set the master volume to 40% on the next line. The `/noshow`
+- Then we set the master volume to 50% on the next line. The `/noshow`
   prevents the mixer from displaying its current state (this is "silent
   mode").
 
@@ -145,7 +145,7 @@ anything.
 However, even though DOSBox Staging is trying to do its best in such
 situations, mismatching emulated and host refresh rates will always result in
 some visible unevenness of motion. This is especially noticeable in games that
-feature smooth scrolling (e.g., platformers, shoot'em ups, and pinball
+feature smooth scrolling (e.g., platformers, shoot 'em ups, and pinball
 games), and also in fast-paced 3D games, such as Dark Forces.
 
 To achieve the smoothest possible motion, we have two options:
@@ -167,7 +167,7 @@ To achieve the smoothest possible motion, we have two options:
 Note, however, that depending on the type of game, the 60/70 Hz mismatch might
 not matter much or at all. For instance, most adventure, strategy, and
 role-playing games rarely have fast-paced graphics; they generally only update
-the screen in the low 5-20 FPS range. Running the monitor at 70 Hz results in
+the screen in the low 5--20 FPS range. Running the monitor at 70 Hz results in
 very little noticeable improvement with these games.
 
 Another important consideration is that most pre-VGA games don't feature
@@ -198,7 +198,7 @@ off, and that's the end of it.
 But that's only vsync at the level of the emulated VGA card. DOSBox itself
 must also present the emulated frames output by the emulated VGA card to the
 host operating system you're running DOSBox Staging on, and it must do that
-vsync'ed, otherwise we'd still get tearing in fast-paced games like
+vsynced, otherwise we'd still get tearing in fast-paced games like
 Dark Forces.
 
 DOSBox Staging tries its best to automatically detect the conditions where
@@ -211,9 +211,9 @@ on your setup.
     For example, the compositor of most modern operating systems displays the
     content in windowed mode vsynced, so we're getting vsync "for free", and
     additional DOSBox-level vsync would only do harm; on VRR/adaptive sync
-    monitors its best to present the frames non-vsynced and let the monitor
+    monitors it's best to present the frames non-vsynced and let the monitor
     adapt, etc. By default, DOSBox Staging auto-detects all such conditions
-    and auto-configures up the vsync and frame pacing settings accordingly.
+    and auto-configures the vsync and frame pacing settings accordingly.
 
 
 What complicates matters is that not all DOS games do vertical syncing. Games
@@ -226,8 +226,8 @@ on CRTs --- that's the "authentic DOS experience" for you! :sunglasses:
 
 But, as mentioned previously, the good news is that games that don't do vsync
 are usually slower-paced adventure, strategy, and role-playing titles that only
-do about 5-20 FPS anyway, and most of the screen is static. So, a little bit of
-tearing is barely noticeable in these games.
+do about 5--20 FPS anyway, and most of the screen is static. So, a little bit
+of tearing is barely noticeable in these games.
 
 !!! important "Two-stage vsync"
 
@@ -238,7 +238,7 @@ tearing is barely noticeable in these games.
       hardware too (and DOSBox would faithfully emulate this).
 
     - DOSBox Staging might not present the emulated frames to the
-      host operating system vsync'ed, which could result in a _second layer_ of
+      host operating system vsynced, which could result in a _second layer_ of
       tearing, solely introduced by the emulator.
 
     To get zero tearing in a game, _both_ conditions must be met:
@@ -354,9 +354,9 @@ completely smooth). Somewhere around 50&thinsp;000 cycles seems to do the
 trick, which roughly corresponds to a Pentium 90 based on our [table of common
 CPU speeds](beneath-a-steel-sky.md#finding-the-correct-speed-for-a-game). We
 could set that value in our config, or just leave the default value of
-60&thinsp;000 as it seems to do the job fine. We might need to increase the
-cycles value if later levels are more demanding on the CPU, but this is a good
-starting point for now.
+60&thinsp;000 as it seems to do the job fine (which is roughly equivalent to
+Pentium 100). We might need to increase the cycles value if later levels are
+more demanding on the CPU, but this is a good starting point for now.
 
 !!! warning "Running out of steam"
 
@@ -551,7 +551,7 @@ DOS games use Roland GS extensions, it's recommended to use GS-compatible
 SoundFonts for the best results.
 
 One such SoundFont is [GeneralUser GS][generaluser-gs]. Download the latest
-version (v2.0.1 at the time of writing this), unzip the package, then copy the
+version (v2.0.3 at the time of writing this), unzip the package, then copy the
 SoundFont file with the `.sf2` extension into its designated folder:
 
 [generaluser-gs]: https://schristiancollins.com/generaluser.php
@@ -638,7 +638,7 @@ Further comparison recordings can be found on [our wiki](https://github.com/dosb
     ```
 
     This will scale back the volume to 40%. A few SoundFonts are _extremely
-    loud_ --- you need to turn the volume down to 10-20% to get usable levels.
+    loud_ --- you need to turn the volume down to 10--20% to get usable levels.
     It's a mystery what the authors were thinking...
 
 
@@ -657,11 +657,11 @@ Further comparison recordings can be found on [our wiki](https://github.com/dosb
 
     Whenever you configure a game for MIDI sound, you should consult the
     [List of MT-32-compatible computer games](https://www.vogonswiki.com/index.php/List_of_MT-32-compatible_computer_games)
-    first. This contains the hard-earned knowledge of many decades of research
-    and tells you which MIDI module to use for a particular game. The original
-    game manuals very rarely give you this info, and even if they do, the
-    information is often wrong. So you *absolutely* need this list to get the
-    best MIDI music out of a game.
+    first. The list contains the hard-earned knowledge of many decades of
+    research and tells you which MIDI module to use for a particular game. The
+    original game manuals very rarely give you this info, and even if they do,
+    the information is often wrong. So you *absolutely* need this list to get
+    the best MIDI music out of a game.
 
     Quite confusingly, there's a large list of games that claim MT-32
     compatibility but only sound correct on a General MIDI module. Make sure
@@ -672,9 +672,9 @@ Further comparison recordings can be found on [our wiki](https://github.com/dosb
 
 !!! info "A brief history of MIDI in DOS gaming"
 
-    The iconic **Roland MT-32** released, in 1987, was the first sound module
+    The iconic **Roland MT-32** released in 1987 was the first sound module
     that made realistic-sounding music in DOS games a possibility. In 1991,
-    Roland released its successor, the iconic **Roland Sound Canvas SC-55**.
+    Roland released its successor, the **Roland Sound Canvas SC-55**.
 
     The SC-55 shaped DOS gaming history in significant ways: it was the
     world's first device to support the **General MIDI standard**. MIDI only
@@ -700,13 +700,14 @@ Further comparison recordings can be found on [our wiki](https://github.com/dosb
     support both the GM *and* the GS standards to sound correct with DOS
     games.
 
-    The **Yamaha DB50XG** and **MU-series** (e.g., MU50, MU80, MU100, etc.) are such
-    MIDI modules. They can be viewed as more modern-sounding and
+    The **Yamaha DB50XG** and **MU-series** (e.g., MU50, MU80, MU100, etc.)
+    are such MIDI modules. They can be viewed as more modern-sounding and
     higher-quality takes on the original SC-55. They offer excellent SC-55
-    compatibility but with a more polished and punchy  sonic character. In
+    compatibility but with a more polished and punchy sonic character. In
     fact, many prefer them to the SC-55 in certain DOS games. If you are
     curious about how these Yamaha modules stack up against the SC-55, [this
-    article](https://blog.johnnovak.net/2023/03/05/grand-ms-dos-gaming-general-midi-showdown/) might be of interest.
+    article](https://blog.johnnovak.net/2023/03/05/grand-ms-dos-gaming-general-midi-showdown/)
+    might be of interest.
 
 
 
@@ -764,7 +765,7 @@ sound, some Sound Blaster models and clones had "reversed stereo" for some
 inexplicable reason. If people used any of these cards during the development
 of a game, the stereo image would be reversed on normal cards, and vice versa.
 
-Irrespective of the exact reasons, the fact is that some games with stereo
+Regardless of the exact reasons, the fact is that some games with stereo
 digital audio support have the left and right channels reversed. In affected
 games, the channels might be reversed on all Sound Blaster variants, or only
 on certain models.
@@ -820,9 +821,6 @@ Here's the full config of Dark Forces set up for General MIDI sound:
 ```ini
 [sdl]
 fullscreen = on
-
-[mixer]
-compressor = off
 
 [midi]
 # use Sound Canvas for the most authentic SC-55 sound

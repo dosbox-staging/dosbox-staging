@@ -24,7 +24,7 @@ step:
     content:
 
     ```
-    C:\Users\%USERNAME%\AppData\Local\DOSBox\dosbox.exe
+    C:\Users\%USERNAME%\AppData\Local\Programs\DOSBox Staging\dosbox.exe
     ```
 
     That's the default installation path chosen by the installer. `%USERNAME%`
@@ -82,7 +82,7 @@ inside your `Beneath a Steel Sky` game folder.
 Also grab the scan of the [Security
 Manual](https://archive.org/details/beneath-a-steel-sky-security-manual/) and
 the [comic
-book](https://ia802200.us.archive.org/13/items/beneath-a-steel-sky-comic-book/Beneath_a_Steel_Sky.pdf)
+book](https://archive.org/details/beneath-a-steel-sky-comic-book)
 included in the boxed version of the game.
 
 For the visually inclined, this is the structure we'll end up with:
@@ -117,9 +117,7 @@ SKY      RST                  53,720 07/07/1994  7:19a
                 0 dir(s)                      0 bytes free
 ```
 
-We have two `.EXE` files and one text file. `README.TXT` just contains some
-legal notice we don't need to worry about (view it with `more README.TXT` if
-you're curious). `INSTALL.EXE` is what we're after, so run that.
+We have two `.EXE` files. `INSTALL.EXE` is what we're after, so run that.
 
 We're greeted by a pretty standard-looking text-mode installer. Either press
 any key or wait a few seconds to progress to the second screen, where you
@@ -331,10 +329,11 @@ DOSBox emulates the **Sound Blaster 16** by default. This card can emulate all
 earlier Sound Blaster models and offers the widest compatibility with DOS
 games.
 
-But back in the day there were more Sound Blaster variants and clones than
-you could shake a stick at, many with quite different default volume levels.
-We don't know which model this game's developers used, so it's worth trying
-a few. Let's start with a first-revision **Sound Blaster Pro**:
+But back in the day there were more Sound Blaster variants and clones than you
+could shake a stick at, many with quite different default volume levels. We
+don't know which model this game's developers used, so it's worth trying a
+few. Let's start with a secondirst-revision (most common) **Sound Blaster
+Pro**:
 
 ```ini
 [sblaster]
@@ -388,7 +387,7 @@ is the best solution.
 
     Not letting a game adjust volume levels can sometimes backfire, e.g. in a
     game that intelligently lowers OPL music whenever speech is playing. But
-    it's worth a shot --- some games benefit from wrestling control from them
+    it's worth a shot --- some games benefit from wresting control from them
     and putting the mixer into "manual mode".
 
 
@@ -414,8 +413,8 @@ automatic speed calibration by default:
 
 - **Real mode** games: **3000** CPU instructions per millisecond (roughly a
   386SX at 20 MHz)
-- **Protected mode** games: **60,000** instructions per millisecond (roughly
-  a Pentium at 90 MHz)
+- **Protected mode** games: **60&thinsp;000** instructions per millisecond (roughly
+  a Pentium at 100 MHz)
 
 The reasoning: older games are often sensitive to CPU speed and might
 misbehave if it's too fast, hence the conservative default; newer games
@@ -442,7 +441,7 @@ the title bar change:
 SKY.EXE - 60000 cycles/ms - to capture the mouse press...
 ```
 
-`SKY.EXE` is now running, and it's at 60,000 cycles/ms --- our protected-mode
+`SKY.EXE` is now running, and it's at 60&thinsp;000 cycles/ms --- our protected-mode
 default, confirming this is a protected-mode game.
 
 That's the crux of the stuttering: not enough horsepower left for
@@ -499,21 +498,21 @@ popular processors:
 
 <div class="compact center-table" markdown>
 
-| Emulated CPU      |    MHz | Cycles | Year
-|-------------------|-------:|-------:|-----:
-| 8088              |   4.77 |    300 | 1981
-| 286               |      8 |    700 | 1984
-| 286               |     12 |   1500 | 1986
-| **286**           | **25** | **3000** | **1988**
-| 386DX             |     25 |   4500 | 1988
-| 386DX             |     33 |   6000 | 1989
-| 486DX             |     33 | 12&thinsp;000 | 1990
-| 486DX2            |     66 | 25&thinsp;000 | 1992
-| 486DX4            |    100 | 35&thinsp;000 | 1994
-| Intel Pentium     |     90 | 50&thinsp;000 | 1994
-| Intel Pentium     |    100 | 60&thinsp;000 | 1994
-| Intel Pentium MMX |    166 | 100&thinsp;000 | 1997
-| Intel Pentium II  |    300 | 200&thinsp;000 | 1997
+| Emulated CPU        | MHz      | Cycles         | Year
+| ------------------- | -------: | -------:       | -----:
+| 8088                | 4.77     | 300            | 1981
+| 286                 | 8        | 700            | 1984
+| 286                 | 12       | 1500           | 1986
+| **286**             | **25**   | **3000**       | **1988**
+| 386DX               | 25       | 4500           | 1988
+| 386DX               | 33       | 6000           | 1989
+| 486DX               | 33       | 12&thinsp;000  | 1990
+| 486DX2              | 66       | 25&thinsp;000  | 1992
+| 486DX4              | 100      | 35&thinsp;000  | 1994
+| Intel Pentium       | 90       | 50&thinsp;000  | 1994
+| Intel Pentium       | 100      | 60&thinsp;000  | 1994
+| Intel Pentium MMX   | 166      | 100&thinsp;000 | 1997
+| Intel Pentium II    | 300      | 200&thinsp;000 | 1997
 
 </div>
 
@@ -528,10 +527,10 @@ For 2D games from the 90s, an emulated 486DX2/66 handles anything you throw
 at it. For 3D games you'll likely need Pentium or Pentium MMX levels, and
 Pentium II speeds for 3D SVGA gaming at 640×480 or higher. For older
 real-mode games, the default 3000 cycles is a good starting point, but try
-the 300–10,000 range if it needs improvement.
+the 300–10&thinsp;000 range if it needs improvement.
 
 You can fine-tune cycles live with ++ctrl+f11++/++ctrl+f12++ (++cmd+f11++/
-++cmd+f12++ on Mac) --- these increase cycles by 10% or decrease by 20%
+++cmd+f12++ on Mac) --- these decrease cycles by 20% or increase by 10%
 respectively. Once you land on a good setting, update your config with the
 value shown in the title bar.
 
@@ -624,8 +623,9 @@ that tells you the correct model for most well-known titles.
 
 Let's consult the list and see what it says about Beneath a Steel Sky!
 
-> Requires CM-series/LAPC-I for proper MT-32 output. Buffer overflows on
-> MT-32 'old'. Combined MT-32/SB output only possible using ScummVM
+> Buffer overflows on MT-32 'old'. Custom instrument patches use
+> CM-series/LAPC-I's extra sound effects. Combined MT-32/SB output requires
+> ScummVM or fanmade patch
 
 Well, the list knows best, so we'll use the CM-32L for our game (as we've done
 in the above config example).
@@ -678,22 +678,22 @@ and then pressing the left mouse button --- hey, where did the voice-over go?!
 Yeah... you've probably glossed over this little detail in the tip from the
 MT-32 wiki page:
 
-> Combined MT-32/SB output *only possible* using ScummVM
+> Combined MT-32/SB output **requires ScummVM or fanmade patch**
 { style="margin: 1.3rem 0" }
 
-What this means for us ordinary mortals is that the original game can either
-use the MT-32 for MIDI music and sound effects, and you get *no* digital
-speech, or only the Sound Blaster for OPL music, digital sound effects, *and*
-speech. MT-32 MIDI music and sound effects combined with digital
-speech via the Sound Blaster --- the computer says no, buddy.
+What this means for us ordinary mortals is that the original, unpatched game
+can either use the MT-32 for MIDI music and sound effects, and you get *no*
+digital speech, or only the Sound Blaster for OPL music, digital sound
+effects, *and* speech. MT-32 MIDI music and sound effects combined with
+digital speech via the Sound Blaster --- the computer says no, buddy.
 
-The game has just taught us an important life lesson: you can't have
-everything, especially not in the world of older DOS games. You'll have to
-pick what you value most: better music and only subtitles or full
-voice-acting with a slightly worse soundtrack. I'm opting for the latter, and
-remember, we can always enhance the Sound Blaster / AdLib music by adding
-chorus and reverb. This will get us a little bit closer to the MT-32
-soundtrack:
+For those who don't want to bother with fanmade patches, the game has just
+taught us an important life lesson: you can't have everything, especially not
+in the world of older DOS games. You'll have to pick what you value most:
+better music and only subtitles or full voice-acting with a slightly worse
+soundtrack. I'm opting for the latter, and remember, we can always enhance the
+Sound Blaster / AdLib music by adding chorus and reverb. This will get us a
+little bit closer to the MT-32 soundtrack:
 
 ```ini
 [mixer]
@@ -786,9 +786,9 @@ in-game visuals --- fortunately, both were drawn assuming square pixels. The
 floppy disk icon, for instance, looks like a tallish rectangle with aspect
 correction enabled, when it should be a perfect square; human figures and
 circular objects appear slightly elongated too. Revolution was a European
-studio, released the game for PAL Amigas (which have square pixels), and was
-generally Amiga-first --- for such games, disabling aspect ratio correction
-is almost always correct.
+studio that released the game for PAL Amigas (which have square pixels), and
+was generally Amiga-first --- for such games, disabling aspect ratio
+correction is almost always correct.
 
 Rules of thumb:
 
