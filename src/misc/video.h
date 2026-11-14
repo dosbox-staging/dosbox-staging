@@ -52,7 +52,8 @@
 // SDL's window API works in the *native units* of the platform: logical units
 // on macOS and Wayland, and pixels on Windows and X11. We convert window sizes
 // and positions between native and logical units only when calling SDL or
-// handling SDL events (see `to_native()` and `to_logical()` in `sdl_gui.cpp`).
+// handling SDL events (see the comments and helper functions at the top of
+// `sdl_gui.cpp`).
 // Mouse positions are an exception; the mouse emulation works with native
 // units directly.
 //

@@ -244,7 +244,9 @@ specify the size in logical units, pixels, or percentages (see [Logical units,
 pixels, and percentages](#logical-units-pixels-and-percentages) below).
 
 On multi-monitor setups, use [`display`](#display) to select which screen DOSBox
-opens on, and [`window_position`](#window_position) to fine-tune placement.
+opens on, and [`window_position`](#window_position) to fine-tune placement. The
+window position is relative to the top-left corner of the selected screen, and
+moving the window to a different screen updates both settings.
 
 [`window_decorations`](#window_decorations) controls whether the operating
 system's title bar and window borders are shown.
@@ -451,9 +453,9 @@ section.
       position.
 
     - `X,Y` -- Set window position in `X,Y` format in logical units (e.g.,
-      `250,100`). `0,0` is the top-left corner of the screen. The values are
-      multiplied by the OS-level display scaling factor to get the window
-      position in pixels.
+      `250,100`). `0,0` is the top-left corner of the display selected with
+      [`display`](#display). The values are multiplied by the OS-level display
+      scaling factor to get the window position in pixels.
 
     - `X,Ypx` -- Set window position in pixels (e.g., `375,150px`).
 
@@ -466,7 +468,9 @@ section.
 
     !!! note "Notes"
 
-        - Moving the window updates this setting in the same format.
+        - Moving the window updates this setting in the same format. Moving it
+          to a different display also updates the [`display`](#display)
+          setting.
 
         - The position is that of the top-left corner of the window's content area,
           excluding the title bar and window borders.
@@ -567,7 +571,7 @@ section.
 ##### display
 
 :   Number of display to use; values depend on OS and user settings (`0` by
-    default).
+    default). Moving the window to a different display updates this setting.
 
 
 ##### output

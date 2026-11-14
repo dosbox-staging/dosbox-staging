@@ -87,6 +87,11 @@ SDL_Rect to_sdl_rect(const DosBox::Rect& r)
 // positions on all platforms, and convert them to and from native units only
 // when calling SDL.
 //
+// We store window positions relative to the top-left corner of the window's
+// display. Displays can have different scaling factors, so a global position
+// in native units can only be converted to logical units relative to the
+// display it's on.
+//
 // See https://wiki.libsdl.org/SDL3/README-highdpi for details.
 //
 // Returns the display the window is on, or the display we're about to create
@@ -109,10 +114,25 @@ static SDL_DisplayID get_current_display()
 // macOS and Wayland, and the OS-level display scaling factor on Windows and
 // X11 (e.g., 2.0 at 200% scaling).
 //
+static float get_display_content_scale(const SDL_DisplayID display)
+{
+	const auto scale = SDL_GetDisplayContentScale(display);
+	return (scale > 0.0f) ? scale : 1.0f;
+}
+
 static float get_content_scale()
 {
-	const auto scale = SDL_GetDisplayContentScale(get_current_display());
-	return (scale > 0.0f) ? scale : 1.0f;
+	return get_display_content_scale(get_current_display());
+}
+
+// Returns the bounds of the display in native units
+static SDL_Rect get_display_bounds(const SDL_DisplayID display)
+{
+	SDL_Rect bounds = {};
+	if (!SDL_GetDisplayBounds(display, &bounds)) {
+		LOG_WARNING("SDL: Failed to get display bounds: %s", SDL_GetError());
+	}
+	return bounds;
 }
 
 static float get_window_display_scale()
@@ -128,15 +148,6 @@ static float get_window_display_scale()
 static int to_native(const int logical)
 {
 	return WindowGeometry::LogicalToNative(logical, get_content_scale());
-}
-
-// Convert native units to logical units. No-op on macOS and Wayland as the
-// content scale is always 1.0 on these platforms; divides by the content
-// scale factor on Windows and X11 (e.g., by 2.0 on 200% content scaling set
-// in system preferences).
-static int to_logical(const int native)
-{
-	return WindowGeometry::NativeToLogical(native, get_content_scale());
 }
 
 static int size_to_native(const float logical_size)
@@ -750,15 +761,44 @@ static void apply_windowed_size()
 	}
 }
 
+// Returns the windowed position as a global position in native units
+static SDL_Point get_windowed_position_in_native_units()
+{
+	// The display might have been disconnected since we've saved the
+	// position (e.g., while in fullscreen mode); we use the window's
+	// current display then
+	const auto display = get_display_index(sdl.windowed.display)
+	                           ? sdl.windowed.display
+	                           : get_current_display();
+
+	return WindowGeometry::DisplayPositionToNative(
+	        {sdl.windowed.x_pos, sdl.windowed.y_pos},
+	        get_display_bounds(display),
+	        get_display_content_scale(display));
+}
+
+// Converts a global position in native units to logical units relative to the
+// top-left corner of the display
+static SDL_Point to_display_position(const SDL_Point native_position,
+                                     const SDL_DisplayID display)
+{
+	const auto bounds        = get_display_bounds(display);
+	const auto content_scale = get_display_content_scale(display);
+
+	return WindowGeometry::NativeToDisplayPosition(native_position,
+	                                               bounds,
+	                                               content_scale);
+}
+
 static void apply_windowed_position()
 {
 	if (sdl.is_fullscreen) {
 		return;
 	}
-	if (!SDL_SetWindowPosition(sdl.window,
-	                           to_native(sdl.windowed.x_pos),
-	                           to_native(sdl.windowed.y_pos))) {
 
+	const auto position = get_windowed_position_in_native_units();
+
+	if (!SDL_SetWindowPosition(sdl.window, position.x, position.y)) {
 		LOG_WARNING("SDL: Failed to set window position: %s",
 		            SDL_GetError());
 	}
@@ -1482,15 +1522,19 @@ static std::optional<WindowGeometry::PositionSetting> parse_window_position_sett
 	return position;
 }
 
-static void set_windowed_position(const int x, const int y)
+// The position is relative to the top-left corner of the display
+static void set_windowed_position(const SDL_DisplayID display, const int x,
+                                  const int y)
 {
-	sdl.windowed.x_pos = x;
-	sdl.windowed.y_pos = y;
+	sdl.windowed.display = display;
+	sdl.windowed.x_pos   = x;
+	sdl.windowed.y_pos   = y;
 }
 
 static void set_default_windowed_position()
 {
-	set_windowed_position(SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.display_number),
+	set_windowed_position(sdl.display_number,
+	                      SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.display_number),
 	                      SDL_WINDOWPOS_UNDEFINED_DISPLAY(sdl.display_number));
 
 	set_section_property_value("sdl", "window_position", "auto");
@@ -1540,34 +1584,38 @@ static void handle_window_resized(const int native_w, const int native_h)
 	sdl.windowed.resized_at_ms = GetTicks();
 }
 
-// Called when the user or the OS has moved the window. We only update the
-// setting if the position has actually changed, so rounding errors won't
-// alter the user's setting.
-static void handle_window_moved(const int x, const int y)
+// Called when the user or the OS has moved the window. The new position is in
+// native units. We only update the settings if the position has actually
+// changed, so rounding errors won't alter the user's setting.
+static void handle_window_moved(const int native_x, const int native_y)
 {
 	if (sdl.is_fullscreen) {
 		return;
 	}
 
+	const auto display  = get_current_display();
+	const auto position = to_display_position({native_x, native_y}, display);
+
 	// With `window_position = auto`, the windowed position is undefined
 	// until we learn where the window has been placed. That's not a move by
 	// the user, so we keep the 'auto' setting.
 	if (SDL_WINDOWPOS_ISUNDEFINED(sdl.windowed.x_pos)) {
-		set_windowed_position(x, y);
+		set_windowed_position(display, position.x, position.y);
 		return;
 	}
 
-	if (x == sdl.windowed.x_pos && y == sdl.windowed.y_pos) {
+	if (display == sdl.windowed.display && position.x == sdl.windowed.x_pos &&
+	    position.y == sdl.windowed.y_pos) {
 		return;
 	}
-	set_windowed_position(x, y);
+	set_windowed_position(display, position.x, position.y);
 
-	// Positions on displays to the left of or above the primary display are
-	// negative, which 'window_position' doesn't support. We still remember
-	// them so we can restore the window there when leaving fullscreen mode,
-	// but we write 0 to the config settings.
-	auto new_x = std::max(x, 0);
-	auto new_y = std::max(y, 0);
+	// The position is negative if the window extends beyond the left or top
+	// edge of its display, which 'window_position' doesn't support. We
+	// still remember it so we can restore the window there when leaving
+	// fullscreen mode, but we write 0 to the config settings.
+	auto new_x = std::max(position.x, 0);
+	auto new_y = std::max(position.y, 0);
 
 	set_section_property_value(
 	        "sdl",
@@ -1575,6 +1623,13 @@ static void handle_window_moved(const int x, const int y)
 	        WindowGeometry::FormatPosition({new_x, new_y},
 	                                       sdl.windowed.position_unit,
 	                                       get_desktop_geometry()));
+
+	// The window position is relative to the display, so we need to update
+	// the display setting too in case the window has been moved to a
+	// different display
+	if (const auto index = get_display_index(display); index) {
+		set_section_property_value("sdl", "display", format_str("%d", *index));
+	}
 }
 
 void GFX_SaveCurrentWindowSizeAndPosition()
@@ -1584,7 +1639,7 @@ void GFX_SaveCurrentWindowSizeAndPosition()
 	SDL_GetWindowPosition(sdl.window, &r.x, &r.y);
 	SDL_GetWindowSize(sdl.window, &r.w, &r.h);
 
-	handle_window_moved(to_logical(r.x), to_logical(r.y));
+	handle_window_moved(r.x, r.y);
 	handle_window_resized(r.w, r.h);
 }
 
@@ -1661,7 +1716,7 @@ static void configure_window_position()
 	if (position) {
 		const auto [x, y] = WindowGeometry::PositionToLogicalUnits(*position,
 		                                                           desktop);
-		set_windowed_position(x, y);
+		set_windowed_position(get_current_display(), x, y);
 	} else {
 		set_default_windowed_position();
 	}
@@ -1700,8 +1755,10 @@ static RenderBackend* create_renderer()
 #if C_OPENGL
 	if (sdl.render_backend_type == RenderBackendType::OpenGl) {
 		try {
-			return new OpenGlRenderer(to_native(sdl.windowed.x_pos),
-			                          to_native(sdl.windowed.y_pos),
+			const auto position = get_windowed_position_in_native_units();
+
+			return new OpenGlRenderer(position.x,
+			                          position.y,
 			                          size_to_native(sdl.windowed.width),
 			                          size_to_native(sdl.windowed.height),
 			                          get_sdl_window_flags());
@@ -1730,8 +1787,10 @@ static RenderBackend* create_renderer()
 			        "texture_renderer");
 			lowcase(render_driver);
 
-			return new SdlRenderer(to_native(sdl.windowed.x_pos),
-			                       to_native(sdl.windowed.y_pos),
+			const auto position = get_windowed_position_in_native_units();
+
+			return new SdlRenderer(position.x,
+			                       position.y,
 			                       size_to_native(sdl.windowed.width),
 			                       size_to_native(sdl.windowed.height),
 			                       get_sdl_window_flags(),
@@ -2106,7 +2165,7 @@ void GFX_InitAndStartGui()
 	int window_x = 0;
 	int window_y = 0;
 	SDL_GetWindowPosition(sdl.window, &window_x, &window_y);
-	handle_window_moved(to_logical(window_x), to_logical(window_y));
+	handle_window_moved(window_x, window_y);
 
 	// `handle_window_moved()` ignores the position in fullscreen mode, but
 	// if we start in forced-borderless fullscreen mode, the window is still
@@ -2114,7 +2173,11 @@ void GFX_InitAndStartGui()
 	// restore it there when leaving fullscreen mode.
 	if (sdl.fullscreen.mode == FullscreenMode::ForcedBorderless &&
 	    SDL_WINDOWPOS_ISUNDEFINED(sdl.windowed.x_pos)) {
-		set_windowed_position(to_logical(window_x), to_logical(window_y));
+		const auto display  = get_current_display();
+		const auto position = to_display_position({window_x, window_y},
+		                                          display);
+
+		set_windowed_position(display, position.x, position.y);
 	}
 
 	// Assume focus on startup
@@ -2468,8 +2531,9 @@ static bool handle_sdl_windowevent(const SDL_Event& event)
 		return true;
 
 	case SDL_EVENT_WINDOW_MOVED: {
-		const auto x = to_logical(event.window.data1);
-		const auto y = to_logical(event.window.data2);
+		// In native units
+		const auto x = event.window.data1;
+		const auto y = event.window.data2;
 
 		log_window_event("SDL: Window has been moved to %d, %d", x, y);
 
@@ -2846,8 +2910,8 @@ static void init_sdl_config_settings(SectionProp& section)
 
 	auto pint = section.AddInt("display", OnlyAtStart, 0);
 	pint->SetHelp(
-	        "Number of display to use; values depend on OS and user "
-	        "settings (0 by default).");
+	        "Number of display to use; values depend on OS and user settings (0 by default).\n"
+	        "Moving the window to a different display updates this setting.");
 
 	auto pbool = section.AddBool("fullscreen", Always, false);
 	pbool->SetHelp("Start in fullscreen mode ('off' by default).");
@@ -2929,9 +2993,9 @@ static void init_sdl_config_settings(SectionProp& section)
 	        "  auto:      Let the window manager decide the position (default).\n"
 	        "\n"
 	        "  X,Y:       Set window position in X,Y format in logical units (e.g., 250,100).\n"
-	        "             0,0 is the top-left corner of the screen. The values are multiplied\n"
-	        "             by the OS-level display scaling factor to get the window position\n"
-	        "             in pixels.\n"
+	        "             0,0 is the top-left corner of the display selected with 'display'.\n"
+	        "             The values are multiplied by the OS-level display scaling factor to\n"
+	        "             get the window position in pixels.\n"
 	        "\n"
 	        "  X,Ypx:     Set window position in pixels (e.g., 375,150px).\n"
 	        "\n"
