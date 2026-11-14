@@ -5,6 +5,7 @@
 
 #include <optional>
 #include <set>
+#include <string_view>
 #include <vector>
 
 #include "audio/channel_names.h"
@@ -48,6 +49,14 @@ const SynthModel sc55mk2_101 = {Model::Sc55mk2_101,
                                 "mk2_101",
                                 "Roland SC-55mk2 v1.01"};
 
+const SynthModel sc88_model = {Model::Sc88, "sc88", "88", "Roland SC-88", "Emu-SC88.clap"};
+
+const SynthModel sc88pro_model = {Model::Sc88Pro,
+                                  "sc88pro",
+                                  "88pro",
+                                  "Roland SC-88 Pro",
+                                  "Emu-SC88_Pro.clap"};
+
 // Listed in resolution priority order
 const std::vector<const SynthModel*> all_models = {&sc55_121_model,
                                                    &sc55_120_model,
@@ -55,7 +64,9 @@ const std::vector<const SynthModel*> all_models = {&sc55_121_model,
                                                    &sc55_100_model,
                                                    &sc55_200_model,
                                                    &sc55mk2_101,
-                                                   &sc55mk2_100};
+                                                   &sc55mk2_100,
+                                                   &sc88_model,
+                                                   &sc88pro_model};
 
 // Listed in resolution priority order
 const std::vector<const SynthModel*> sc55_models = {&sc55_121_model,
@@ -78,8 +89,14 @@ SoundCanvas::PluginAndModel try_load_plugin(const SoundCanvas::SynthModel& model
 {
 	auto& plugin_manager       = Clap::PluginManager::GetInstance();
 
-	if (auto p = plugin_manager.FindPluginInLibrary("Nuked-SC55.clap",
-	                                                model.display_name_long);
+	// An empty name matches the only plugin of a single-model library
+	const auto is_nuked_sc55 = std::string_view(model.plugin_library) ==
+	                           SoundCanvas::NukedSc55Library;
+
+	const auto plugin_name = is_nuked_sc55 ? model.display_name_long : "";
+
+	if (auto p = plugin_manager.FindPluginInLibrary(model.plugin_library,
+	                                                plugin_name);
 	    p) {
 		const auto plugin_info = *p;
 		
@@ -152,6 +169,10 @@ static float native_sample_rate_hz_for_model(const SoundCanvas::Model model)
 	// Roland SC-55mk2
 	case Model::Sc55mk2_100:
 	case Model::Sc55mk2_101: return 33103.0;
+
+	// Roland SC-88 (the 88emu core renders at 32 kHz)
+	case Model::Sc88:
+	case Model::Sc88Pro: return 32000.0;
 
 	default: assertm(false, "Invalid SoundCanvas::Model"); return 0.0;
 	}
@@ -363,12 +384,14 @@ MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 	const auto denoiser_enabled = get_mixer_section()->GetBool("denoiser");
 	mixer_channel->EnableNoiseGate(denoiser_enabled);
 
-	// Set up channel filter
+	// Set up channel filter; the built-in one was measured on SC-55 units
 	const auto filter_prefs = get_soundcanvas_section()->GetString(
 	        "soundcanvas_filter");
 
+	const auto is_sc55 = (sc_model->model <= Model::Sc55mk2_101);
+
 	if (const auto maybe_bool = parse_bool_setting(filter_prefs)) {
-		const auto filter_enabled = *maybe_bool;
+		const auto filter_enabled = *maybe_bool && is_sc55;
 		setup_filter(mixer_channel, filter_enabled);
 
 	} else if (!mixer_channel->TryParseAndSetCustomFilter(filter_prefs)) {
@@ -379,7 +402,7 @@ MidiDeviceSoundCanvas::MidiDeviceSoundCanvas()
 			        filter_prefs.c_str());
 		}
 
-		const auto filter_enabled = true;
+		const auto filter_enabled = is_sc55;
 		setup_filter(mixer_channel, filter_enabled);
 
 		set_section_property_value("soundcanvas", "soundcanvas_filter", "off");
@@ -489,13 +512,20 @@ void SOUNDCANVAS_ListDevices(MidiDeviceSoundCanvas* device, MoreOutputStrings& o
 	                                                          &sc55mk2_100,
 	                                                          &sc55mk2_101};
 
-	for (const auto& model : models_old_to_new) {
-		const auto display_name = model->display_name_short;
-		output.AddString("%s%s",
-		                 highlight_model(model, display_name).c_str(),
-		                 ColumnDelim);
-	}
-	output.AddString("\n");
+	auto print_models = [&](const std::vector<const SynthModel*>& models) {
+		for (const auto& model : models) {
+			const auto display_name = model->display_name_short;
+			output.AddString("%s%s",
+			                 highlight_model(model, display_name).c_str(),
+			                 ColumnDelim);
+		}
+		output.AddString("\n");
+	};
+
+	print_models(models_old_to_new);
+
+	output.AddString("%s%s", Indent, MSG_Get("SC88_MODELS_LABEL").c_str());
+	print_models({&sc88_model, &sc88pro_model});
 
 	output.AddString("%s---\n", Indent);
 
@@ -533,18 +563,25 @@ static void init_soundcanvas_config_settings(SectionProp& sec_prop)
 
 	                     SoundCanvas::BestModelAlias::Sc55mk2,
 	                     sc55mk2_100.config_name,
-	                     sc55mk2_101.config_name});
+	                     sc55mk2_101.config_name,
+
+	                     sc88_model.config_name,
+	                     sc88pro_model.config_name});
 
 	str_prop->SetHelp(
 	        "Roland Sound Canvas model to use ('auto' by default). Requires the\n"
 	        "'Nuked-SC55.clap' CLAP plugin library in the 'plugins' directory in your DOSBox\n"
 	        "installation or configuration directory. The requested model is matched by\n"
-	        "plugin name within this library. The lookup for the best model is performed\n"
-	        "in order as listed. Possible values:\n"
+	        "plugin name within this library. The SC-88 models need the 'Emu-SC88.clap' and\n"
+	        "'Emu-SC88_Pro.clap' Nuked-SC55-P256 libraries; builds without embedded ROMs\n"
+	        "read them from the 'SC-88' and 'SC-88Pro' subfolders of the ROM directory.\n"
+	        "The lookup for the best model is performed in order as listed. Possible values:\n"
 	        "\n"
 	        "  auto:       Pick the best available model (default).\n"
 	        "  sc55:       Pick the best available original SC-55 model.\n"
 	        "  sc55mk2:    Pick the best available SC-55mk2 model.\n"
+	        "  sc88:       Use the Roland SC-88.\n"
+	        "  sc88pro:    Use the Roland SC-88 Pro.\n"
 	        "  <version>:  Use the exact specified model version (e.g., 'sc55_121').");
 
 	str_prop = sec_prop.AddString("soundcanvas_rom_dir", when_idle, "");
@@ -560,7 +597,7 @@ static void init_soundcanvas_config_settings(SectionProp& sec_prop)
 	        "Filter for the Roland Sound Canvas audio output ('on' by default).\n"
 	        "Possible values:\n"
 	        "\n"
-	        "  on:        Filter the output (default).\n"
+	        "  on:        Filter the output of the SC-55 models (default).\n"
 	        "  off:       Don't filter the output.\n"
 	        "  <custom>:  Custom filter definition; see 'sb_filter' for details.");
 }
@@ -568,6 +605,7 @@ static void init_soundcanvas_config_settings(SectionProp& sec_prop)
 static void register_soundcanvas_text_messages()
 {
 	MSG_Add("SC55_MODELS_LABEL", "SC-55 models    ");
+	MSG_Add("SC88_MODELS_LABEL", "SC-88 models    ");
 	MSG_Add("SOUNDCANVAS_ACTIVE_MODEL_LABEL", "Active model:    ");
 }
 
