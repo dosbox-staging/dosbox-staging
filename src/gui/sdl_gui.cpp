@@ -2553,20 +2553,27 @@ void GFX_CaptureRenderedImage()
 {
 	assert(sdl.renderer);
 
-	// The draw rect can extends beyond the bounds of the window or the
+	// The draw rect can extend beyond the bounds of the window or the
 	// screen in fullscreen when we're "zooming into" the DOS content in
-	// `relative` viewport mode. But rendered captures should always capture
-	// what we see on the screen, so only the visible part of the enlarged
-	// image. Therefore, we need to clip the draw rect to the bounds of the
-	// canvas (the total visible area of the window or screen), and only
-	// capture the resulting output rectangle.
+	// `relative` viewport mode, or when the image has been moved with
+	// `viewport_position`. But rendered captures should always capture what
+	// we see on the screen, so only the visible part of the image.
+	// Therefore, we need to clip the draw rect to the bounds of the canvas
+	// (the total visible area of the window or screen), and only capture
+	// the resulting output rectangle.
 
 	auto canvas_rect_px = sdl.renderer->GetCanvasSizeInPixels();
 	canvas_rect_px.x    = 0.0f;
 	canvas_rect_px.y    = 0.0f;
 
-	const auto output_rect_px = canvas_rect_px.Copy().Intersect(
+	auto output_rect_px = canvas_rect_px.Copy().Intersect(
 	        to_rect(sdl.draw.draw_rect_px));
+
+	// We capture the empty canvas if the image has been moved entirely
+	// outside of it
+	if (output_rect_px.IsEmpty()) {
+		output_rect_px = canvas_rect_px;
+	}
 
 	auto image = sdl.renderer->ReadPixelsPostShader(output_rect_px);
 

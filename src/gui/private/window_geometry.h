@@ -29,7 +29,7 @@ struct SizeSetting {
 	Unit unit = Unit::LogicalUnits;
 };
 
-// A `window_position` setting value
+// A `window_position` or `viewport_position` setting value
 struct PositionSetting {
 	float x   = 0.0f;
 	float y   = 0.0f;
@@ -85,6 +85,11 @@ std::optional<SizeSetting> ParseWindowSizeSetting(const std::string_view value);
 // Parses window positions in 'X,Y', 'X,Ypx', or 'X,Y%' format (case
 // insensitive). Returns nullopt if the value is invalid or negative.
 std::optional<PositionSetting> ParseWindowPositionSetting(const std::string_view value);
+
+// Parses viewport positions in 'X,Y', 'X,Ypx', or 'X,Y%' format (case
+// insensitive). Negative values are allowed. Returns nullopt if the value is
+// invalid.
+std::optional<PositionSetting> ParseViewportPositionSetting(const std::string_view value);
 
 // Converts a window size setting to logical units. Both percentage values are
 // relative to the desktop height. The result is not rounded, so sizes in
