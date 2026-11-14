@@ -67,6 +67,7 @@ target_sources(dosboxcommon PRIVATE
   programs/showpic.cpp
   programs/subst.cpp
   programs/tree.cpp
+  programs/xcopy.cpp
 )
 
 # Windows-only CD-ROM ioctl backend

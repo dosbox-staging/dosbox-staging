@@ -31,6 +31,7 @@
 #include "programs/showpic.h"
 #include "programs/subst.h"
 #include "programs/tree.h"
+#include "programs/xcopy.h"
 #include "shell/autoexec.h"
 
 #if C_DEBUGGER
@@ -91,6 +92,7 @@ void DOS_SetupPrograms()
 	PROGRAMS_MakeFile("SHOWPIC.EXE", ProgramCreate<SHOWPIC>);
 	PROGRAMS_MakeFile("SUBST.EXE", ProgramCreate<SUBST>);
 	PROGRAMS_MakeFile("TREE.COM", ProgramCreate<TREE>);
+	PROGRAMS_MakeFile("XCOPY.EXE", ProgramCreate<XCOPY>);
 
 	// This will allow MOUNT to be invoked as IMGMOUNT for backward
 	// compatibility (with a deprecation warning).

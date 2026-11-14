@@ -79,11 +79,6 @@ struct FileStat_Block {
 
 class DOS_DTA;
 
-struct DosFilename {
-	std::string name = {};
-	std::string ext  = {};
-};
-
 struct FileRegionLock {
 	uint32_t pos = 0;
 	uint32_t len = 0;
