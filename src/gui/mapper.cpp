@@ -8,6 +8,7 @@
 #include <array>
 #include <cassert>
 #include <cctype>
+#include <cmath>
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
@@ -31,6 +32,7 @@
 #include "gui/common.h"
 #include "gui/mapper.h"
 #include "gui/private/common.h"
+#include "gui/private/mapper.h"
 #include "hardware/input/joystick.h"
 #include "hardware/input/keyboard.h"
 #include "hardware/input/mouse.h"
@@ -618,6 +620,20 @@ private:
 
 bool autofire = false;
 
+std::pair<int, int> CircleToSquare(const int x, const int y)
+{
+	const auto max_abs = std::max(std::abs(x), std::abs(y));
+	if (max_abs == 0) {
+		return {x, y};
+	}
+	const auto scale = std::hypot(x, y) / max_abs;
+
+	const auto scale_axis = [scale](const int pos) {
+		return clamp_to_int16(iround(pos * scale));
+	};
+	return {scale_axis(x), scale_axis(y)};
+}
+
 std::optional<int> MAPPER_FindFullRangeAxis(
         const std::span<SDL_GamepadBinding* const> bindings,
         const SDL_GamepadAxis gamepad_axis, const int num_axes)
@@ -863,7 +879,7 @@ public:
 		if (circular_input_enabled) {
 			for (const auto& [x, y] : stick_axes) {
 				std::tie(key_bind_axis_pos[x], key_bind_axis_pos[y]) =
-				        circle_to_square(axis_pos[x], axis_pos[y]);
+				        CircleToSquare(axis_pos[x], axis_pos[y]);
 			}
 		}
 
