@@ -82,8 +82,8 @@ WEBSITE_URL = "https://www.dosbox-staging.org"
 # are excluded from offline builds (via the exclude plugin in
 # mkdocs.yml) and must also be stripped from the nav tree.
 DUMMY_INDEX_PAGES = {
-    "0.83/getting-started/index.md",
-    "0.83/manual/index.md",
+    "0.84/getting-started/index.md",
+    "0.84/manual/index.md",
 }
 
 
