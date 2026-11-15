@@ -12,11 +12,11 @@ hide:
     previous versions.
 
     🚀 **New to DOSBox Staging? Read the [Getting Started
-    guide](../0.83/getting-started/index.md).** This is **not optional** ---
-    it covers the basics that most first-time questions are about.
+    guide](../getting-started/index.md).** This is **not optional** --- it
+    covers the basics that most first-time questions are about.
 
-    📚 **Check the [user manual](../0.83/manual/index.md)** to learn how the
-    new features work and how to configure them.
+    📚 **Check the [user manual](../manual/index.md)** to learn how the new
+    features work and how to configure them.
 
     🔍 **Search the [project website](https://www.dosbox-staging.org/)** using
     the search box in the top-right corner. It searches the *entire* site,

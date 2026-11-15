@@ -12,10 +12,10 @@ hide:
     previous versions.
 
     🚀 **New to DOSBox Staging? Read the [Getting Started
-    guide](../0.83/getting-started/index.md).** This is **not optional** ---
-    it covers the basics that most first-time questions are about.
+    guide](../getting-started/index.md).** This is **not optional** --- it
+    covers the basics that most first-time questions are about.
 
-    📚 **Check the [user manual](../0.83/manual/index.md)** to learn how the
+    📚 **Check the [user manual](../manual/index.md)** to learn how the
     new features work and how to configure them.
 
     🔍 **Search the [project website](https://www.dosbox-staging.org/)** using
@@ -63,7 +63,7 @@ changes and improvements introduced in this version.
 
 For releases before 0.81.0 and the [development snapshot
 builds](development-builds.md), you'll need to do follow [these
-instructions](../0.83/manual/using-dosbox-staging/starting.md#apple-gatekeeper)
+instructions](../0.84/manual/using-dosbox-staging/starting.md#apple-gatekeeper)
 when launching DOSBox Staging for the first time.
 
 
