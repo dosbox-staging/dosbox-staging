@@ -125,7 +125,7 @@ you've actually changed from the defaults for that game.
     integer scaling and shader defaults, and certain MIDI and audio-related
     settings (e.g., sample rate, buffer sizes, volume levels, etc.) We'll
     examine these later. See [Configuration best
-    practices](../../0.83/manual/using-dosbox-staging/configuration.md#configuration-best-practices)
+    practices](../manual/using-dosbox-staging/configuration.md#configuration-best-practices)
     for further tips.
 
 
