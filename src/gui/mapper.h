@@ -7,8 +7,6 @@
 
 #include "dosbox.h"
 
-#include <optional>
-#include <span>
 #include <string>
 #include <vector>
 
@@ -102,20 +100,5 @@ struct KeyPressState {
 };
 
 KeyPressState MAPPER_GetLastKeyPressed();
-
-/**
- * Find the joystick axis that an SDL gamepad binds to a gamepad axis.
- *
- * @param bindings     The gamepad's bindings from SDL_GetGamepadBindings().
- * @param gamepad_axis The gamepad axis, e.g. SDL_GAMEPAD_AXIS_LEFTX.
- * @param num_axes     The number of joystick axes the caller can handle.
- *
- * @return The joystick axis if it covers the full range and is below
- * 'num_axes'; nothing for a button, hat, half axis, a missing binding or a
- * larger axis number.
- */
-std::optional<int> MAPPER_FindFullRangeAxis(std::span<SDL_GamepadBinding* const> bindings,
-                                            SDL_GamepadAxis gamepad_axis,
-                                            int num_axes);
 
 #endif // DOSBOX_MAPPER_H

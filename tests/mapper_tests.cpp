@@ -1,7 +1,6 @@
 // SPDX-FileCopyrightText:  2026 The DOSBox Staging Team
 // SPDX-License-Identifier: GPL-2.0-or-later
 
-#include "gui/mapper.h"
 #include "gui/private/mapper.h"
 
 #include <optional>
@@ -55,7 +54,7 @@ public:
 	std::optional<int> FindAxis(const SDL_GamepadAxis gamepad_axis,
 	                            const int num_axes = MaxAxes) const
 	{
-		return MAPPER_FindFullRangeAxis(pointers, gamepad_axis, num_axes);
+		return FindFullRangeAxis(pointers, gamepad_axis, num_axes);
 	}
 
 private:
@@ -74,7 +73,7 @@ const Bindings XboxBindings({
         full_axis_binding(5, SDL_GAMEPAD_AXIS_RIGHT_TRIGGER),
 });
 
-TEST(MAPPER_FindFullRangeAxis, sticks_and_triggers)
+TEST(FindFullRangeAxis, sticks_and_triggers)
 {
 	EXPECT_EQ(XboxBindings.FindAxis(SDL_GAMEPAD_AXIS_LEFTX), 0);
 	EXPECT_EQ(XboxBindings.FindAxis(SDL_GAMEPAD_AXIS_LEFTY), 1);
@@ -84,7 +83,7 @@ TEST(MAPPER_FindFullRangeAxis, sticks_and_triggers)
 	EXPECT_EQ(XboxBindings.FindAxis(SDL_GAMEPAD_AXIS_RIGHT_TRIGGER), 5);
 }
 
-TEST(MAPPER_FindFullRangeAxis, buttons_and_hats_are_no_axes)
+TEST(FindFullRangeAxis, buttons_and_hats_are_no_axes)
 {
 	SDL_GamepadBinding button = full_axis_binding(0, SDL_GAMEPAD_AXIS_LEFTX);
 	button.input_type   = SDL_GAMEPAD_BINDTYPE_BUTTON;
@@ -100,7 +99,7 @@ TEST(MAPPER_FindFullRangeAxis, buttons_and_hats_are_no_axes)
 	EXPECT_EQ(bindings.FindAxis(SDL_GAMEPAD_AXIS_LEFTY), std::nullopt);
 }
 
-TEST(MAPPER_FindFullRangeAxis, button_outputs_are_skipped)
+TEST(FindFullRangeAxis, button_outputs_are_skipped)
 {
 	// SDL_GAMEPAD_BUTTON_SOUTH and SDL_GAMEPAD_AXIS_LEFTX are both 0
 	SDL_GamepadBinding button_output = full_axis_binding(7, SDL_GAMEPAD_AXIS_LEFTX);
@@ -111,7 +110,7 @@ TEST(MAPPER_FindFullRangeAxis, button_outputs_are_skipped)
 	EXPECT_EQ(bindings.FindAxis(SDL_GAMEPAD_AXIS_LEFTX), std::nullopt);
 }
 
-TEST(MAPPER_FindFullRangeAxis, half_axes_are_no_full_axes)
+TEST(FindFullRangeAxis, half_axes_are_no_full_axes)
 {
 	const Bindings bindings({
 	        axis_binding(2, 0, SDL_JOYSTICK_AXIS_MAX, SDL_GAMEPAD_AXIS_LEFT_TRIGGER),
@@ -121,7 +120,7 @@ TEST(MAPPER_FindFullRangeAxis, half_axes_are_no_full_axes)
 	EXPECT_EQ(bindings.FindAxis(SDL_GAMEPAD_AXIS_RIGHT_TRIGGER), std::nullopt);
 }
 
-TEST(MAPPER_FindFullRangeAxis, inverted_axis)
+TEST(FindFullRangeAxis, inverted_axis)
 {
 	const Bindings bindings({
 	        axis_binding(4, SDL_JOYSTICK_AXIS_MAX, SDL_JOYSTICK_AXIS_MIN, SDL_GAMEPAD_AXIS_RIGHTY),
@@ -129,7 +128,7 @@ TEST(MAPPER_FindFullRangeAxis, inverted_axis)
 	EXPECT_EQ(bindings.FindAxis(SDL_GAMEPAD_AXIS_RIGHTY), 4);
 }
 
-TEST(MAPPER_FindFullRangeAxis, missing_binding)
+TEST(FindFullRangeAxis, missing_binding)
 {
 	EXPECT_EQ(XboxBindings.FindAxis(SDL_GAMEPAD_AXIS_INVALID), std::nullopt);
 
@@ -137,7 +136,7 @@ TEST(MAPPER_FindFullRangeAxis, missing_binding)
 	EXPECT_EQ(no_bindings.FindAxis(SDL_GAMEPAD_AXIS_LEFTX), std::nullopt);
 }
 
-TEST(MAPPER_FindFullRangeAxis, axis_numbers_up_to_num_axes)
+TEST(FindFullRangeAxis, axis_numbers_up_to_num_axes)
 {
 	const Bindings bindings({full_axis_binding(12, SDL_GAMEPAD_AXIS_LEFTX)});
 	EXPECT_EQ(bindings.FindAxis(SDL_GAMEPAD_AXIS_LEFTX), std::nullopt);
@@ -147,7 +146,7 @@ TEST(MAPPER_FindFullRangeAxis, axis_numbers_up_to_num_axes)
 	EXPECT_EQ(XboxBindings.FindAxis(SDL_GAMEPAD_AXIS_RIGHTX, 4), 3);
 }
 
-TEST(MAPPER_FindFullRangeAxis, full_range_binding_after_a_half_axis)
+TEST(FindFullRangeAxis, full_range_binding_after_a_half_axis)
 {
 	const Bindings bindings({
 	        axis_binding(0, 0, SDL_JOYSTICK_AXIS_MAX, SDL_GAMEPAD_AXIS_LEFTX),

@@ -634,9 +634,9 @@ std::pair<int, int> CircleToSquare(const int x, const int y)
 	return {scale_axis(x), scale_axis(y)};
 }
 
-std::optional<int> MAPPER_FindFullRangeAxis(
-        const std::span<SDL_GamepadBinding* const> bindings,
-        const SDL_GamepadAxis gamepad_axis, const int num_axes)
+std::optional<int> FindFullRangeAxis(const std::span<SDL_GamepadBinding* const> bindings,
+                                     const SDL_GamepadAxis gamepad_axis,
+                                     const int num_axes)
 {
 	for (const auto binding : bindings) {
 		assert(binding);
@@ -1029,10 +1029,10 @@ private:
 		// Only take axes below 'axes', which never exceeds MAXAXIS, so
 		// they can index our per-axis arrays
 		const auto find_axis = [&](const SDL_GamepadAxis gamepad_axis) {
-			return MAPPER_FindFullRangeAxis(
-			        {bindings.get(), static_cast<size_t>(num_bindings)},
-			        gamepad_axis,
-			        axes);
+			return FindFullRangeAxis({bindings.get(),
+			                          static_cast<size_t>(num_bindings)},
+			                         gamepad_axis,
+			                         axes);
 		};
 
 		// Trigger buttons that are actually analogue axes need special
