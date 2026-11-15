@@ -3,79 +3,156 @@
 
 #include "gui/mapper.h"
 
+#include <optional>
+#include <utility>
+#include <vector>
+
 #include <gtest/gtest.h>
 
 namespace {
 
 constexpr int MaxAxes = 10;
 
-// An Xbox Series X controller over Bluetooth as SDL3 reports it on Windows
-constexpr auto XboxMapping =
-        "0300fa675e040000130b000024057801,*,a:b0,b:b1,back:b6,dpdown:h0.4,"
-        "dpleft:h0.8,dpright:h0.2,dpup:h0.1,guide:b10,leftshoulder:b4,"
-        "leftstick:b8,lefttrigger:a2,leftx:a0,lefty:a1,rightshoulder:b5,"
-        "rightstick:b9,righttrigger:a5,rightx:a3,righty:a4,start:b7,x:b2,y:b3,";
-
-TEST(MAPPER_FindMappedAxis, sticks_and_triggers)
+SDL_GamepadBinding axis_binding(const int axis, const int axis_min,
+                                const int axis_max, const SDL_GamepadAxis output)
 {
-	EXPECT_EQ(MAPPER_FindMappedAxis(XboxMapping, "leftx", MaxAxes), 0);
-	EXPECT_EQ(MAPPER_FindMappedAxis(XboxMapping, "lefty", MaxAxes), 1);
-	EXPECT_EQ(MAPPER_FindMappedAxis(XboxMapping, "lefttrigger", MaxAxes), 2);
-	EXPECT_EQ(MAPPER_FindMappedAxis(XboxMapping, "rightx", MaxAxes), 3);
-	EXPECT_EQ(MAPPER_FindMappedAxis(XboxMapping, "righty", MaxAxes), 4);
-	EXPECT_EQ(MAPPER_FindMappedAxis(XboxMapping, "righttrigger", MaxAxes), 5);
+	SDL_GamepadBinding binding = {};
+
+	binding.input_type          = SDL_GAMEPAD_BINDTYPE_AXIS;
+	binding.input.axis.axis     = axis;
+	binding.input.axis.axis_min = axis_min;
+	binding.input.axis.axis_max = axis_max;
+
+	binding.output_type          = SDL_GAMEPAD_BINDTYPE_AXIS;
+	binding.output.axis.axis     = output;
+	binding.output.axis.axis_min = SDL_JOYSTICK_AXIS_MIN;
+	binding.output.axis.axis_max = SDL_JOYSTICK_AXIS_MAX;
+	return binding;
 }
 
-TEST(MAPPER_FindMappedAxis, buttons_and_hats_are_no_axes)
+SDL_GamepadBinding full_axis_binding(const int axis, const SDL_GamepadAxis output)
 {
-	EXPECT_EQ(MAPPER_FindMappedAxis(XboxMapping, "a", MaxAxes), std::nullopt);
-	EXPECT_EQ(MAPPER_FindMappedAxis(XboxMapping, "x", MaxAxes), std::nullopt);
-	EXPECT_EQ(MAPPER_FindMappedAxis(XboxMapping, "dpup", MaxAxes), std::nullopt);
+	return axis_binding(axis, SDL_JOYSTICK_AXIS_MIN, SDL_JOYSTICK_AXIS_MAX, output);
 }
 
-TEST(MAPPER_FindMappedAxis, half_axes_are_no_full_axes)
+// Holds the bindings and the pointers to them, the way
+// SDL_GetGamepadBindings() returns them
+class Bindings {
+public:
+	explicit Bindings(std::vector<SDL_GamepadBinding> bindings)
+	        : bindings(std::move(bindings))
+	{
+		for (auto& binding : this->bindings) {
+			pointers.push_back(&binding);
+		}
+	}
+
+	// The pointers refer into 'bindings'
+	Bindings(const Bindings&)            = delete;
+	Bindings& operator=(const Bindings&) = delete;
+
+	std::optional<int> FindAxis(const SDL_GamepadAxis gamepad_axis,
+	                            const int num_axes = MaxAxes) const
+	{
+		return MAPPER_FindFullRangeAxis(pointers, gamepad_axis, num_axes);
+	}
+
+private:
+	std::vector<SDL_GamepadBinding> bindings  = {};
+	std::vector<SDL_GamepadBinding*> pointers = {};
+};
+
+// The axes of an Xbox Series X controller over Bluetooth as SDL3 reports
+// them on Windows
+const Bindings XboxBindings({
+        full_axis_binding(0, SDL_GAMEPAD_AXIS_LEFTX),
+        full_axis_binding(1, SDL_GAMEPAD_AXIS_LEFTY),
+        full_axis_binding(2, SDL_GAMEPAD_AXIS_LEFT_TRIGGER),
+        full_axis_binding(3, SDL_GAMEPAD_AXIS_RIGHTX),
+        full_axis_binding(4, SDL_GAMEPAD_AXIS_RIGHTY),
+        full_axis_binding(5, SDL_GAMEPAD_AXIS_RIGHT_TRIGGER),
+});
+
+TEST(MAPPER_FindFullRangeAxis, sticks_and_triggers)
 {
-	constexpr auto Mapping = "guid,name,lefttrigger:+a2,righttrigger:-a5,";
-	EXPECT_EQ(MAPPER_FindMappedAxis(Mapping, "lefttrigger", MaxAxes),
-	          std::nullopt);
-	EXPECT_EQ(MAPPER_FindMappedAxis(Mapping, "righttrigger", MaxAxes),
-	          std::nullopt);
+	EXPECT_EQ(XboxBindings.FindAxis(SDL_GAMEPAD_AXIS_LEFTX), 0);
+	EXPECT_EQ(XboxBindings.FindAxis(SDL_GAMEPAD_AXIS_LEFTY), 1);
+	EXPECT_EQ(XboxBindings.FindAxis(SDL_GAMEPAD_AXIS_LEFT_TRIGGER), 2);
+	EXPECT_EQ(XboxBindings.FindAxis(SDL_GAMEPAD_AXIS_RIGHTX), 3);
+	EXPECT_EQ(XboxBindings.FindAxis(SDL_GAMEPAD_AXIS_RIGHTY), 4);
+	EXPECT_EQ(XboxBindings.FindAxis(SDL_GAMEPAD_AXIS_RIGHT_TRIGGER), 5);
 }
 
-TEST(MAPPER_FindMappedAxis, inverted_axis)
+TEST(MAPPER_FindFullRangeAxis, buttons_and_hats_are_no_axes)
 {
-	constexpr auto Mapping = "guid,name,righty:a4~,";
-	EXPECT_EQ(MAPPER_FindMappedAxis(Mapping, "righty", MaxAxes), 4);
+	SDL_GamepadBinding button = full_axis_binding(0, SDL_GAMEPAD_AXIS_LEFTX);
+	button.input_type   = SDL_GAMEPAD_BINDTYPE_BUTTON;
+	button.input.button = 1;
+
+	SDL_GamepadBinding hat = full_axis_binding(0, SDL_GAMEPAD_AXIS_LEFTY);
+	hat.input_type         = SDL_GAMEPAD_BINDTYPE_HAT;
+	hat.input.hat.hat      = 0;
+	hat.input.hat.hat_mask = SDL_HAT_UP;
+
+	const Bindings bindings({button, hat});
+	EXPECT_EQ(bindings.FindAxis(SDL_GAMEPAD_AXIS_LEFTX), std::nullopt);
+	EXPECT_EQ(bindings.FindAxis(SDL_GAMEPAD_AXIS_LEFTY), std::nullopt);
 }
 
-TEST(MAPPER_FindMappedAxis, missing_element)
+TEST(MAPPER_FindFullRangeAxis, button_outputs_are_skipped)
 {
-	EXPECT_EQ(MAPPER_FindMappedAxis(XboxMapping, "paddle1", MaxAxes),
-	          std::nullopt);
-	EXPECT_EQ(MAPPER_FindMappedAxis("", "leftx", MaxAxes), std::nullopt);
+	// SDL_GAMEPAD_BUTTON_SOUTH and SDL_GAMEPAD_AXIS_LEFTX are both 0
+	SDL_GamepadBinding button_output = full_axis_binding(7, SDL_GAMEPAD_AXIS_LEFTX);
+	button_output.output_type   = SDL_GAMEPAD_BINDTYPE_BUTTON;
+	button_output.output.button = SDL_GAMEPAD_BUTTON_SOUTH;
+
+	const Bindings bindings({button_output});
+	EXPECT_EQ(bindings.FindAxis(SDL_GAMEPAD_AXIS_LEFTX), std::nullopt);
 }
 
-TEST(MAPPER_FindMappedAxis, whole_element_names_only)
+TEST(MAPPER_FindFullRangeAxis, half_axes_are_no_full_axes)
 {
-	// "ftx" is the end of "leftx", "left" the start of "leftx"
-	EXPECT_EQ(MAPPER_FindMappedAxis(XboxMapping, "ftx", MaxAxes), std::nullopt);
-	EXPECT_EQ(MAPPER_FindMappedAxis(XboxMapping, "left", MaxAxes), std::nullopt);
+	const Bindings bindings({
+	        axis_binding(2, 0, SDL_JOYSTICK_AXIS_MAX, SDL_GAMEPAD_AXIS_LEFT_TRIGGER),
+	        axis_binding(5, 0, SDL_JOYSTICK_AXIS_MIN, SDL_GAMEPAD_AXIS_RIGHT_TRIGGER),
+	});
+	EXPECT_EQ(bindings.FindAxis(SDL_GAMEPAD_AXIS_LEFT_TRIGGER), std::nullopt);
+	EXPECT_EQ(bindings.FindAxis(SDL_GAMEPAD_AXIS_RIGHT_TRIGGER), std::nullopt);
 }
 
-TEST(MAPPER_FindMappedAxis, axis_numbers_up_to_num_axes)
+TEST(MAPPER_FindFullRangeAxis, inverted_axis)
 {
-	constexpr auto Mapping = "guid,name,leftx:a12,";
-	EXPECT_EQ(MAPPER_FindMappedAxis(Mapping, "leftx", MaxAxes), std::nullopt);
-	EXPECT_EQ(MAPPER_FindMappedAxis(Mapping, "leftx", 16), 12);
-	EXPECT_EQ(MAPPER_FindMappedAxis(XboxMapping, "rightx", 3), std::nullopt);
-	EXPECT_EQ(MAPPER_FindMappedAxis(XboxMapping, "rightx", 4), 3);
+	const Bindings bindings({
+	        axis_binding(4, SDL_JOYSTICK_AXIS_MAX, SDL_JOYSTICK_AXIS_MIN, SDL_GAMEPAD_AXIS_RIGHTY),
+	});
+	EXPECT_EQ(bindings.FindAxis(SDL_GAMEPAD_AXIS_RIGHTY), 4);
 }
 
-TEST(MAPPER_FindMappedAxis, invalid_format)
+TEST(MAPPER_FindFullRangeAxis, missing_binding)
 {
-	constexpr auto Mapping = "guid,name,leftx:a,lefty:ab,";
-	EXPECT_EQ(MAPPER_FindMappedAxis(Mapping, "leftx", MaxAxes), std::nullopt);
-	EXPECT_EQ(MAPPER_FindMappedAxis(Mapping, "lefty", MaxAxes), std::nullopt);
+	EXPECT_EQ(XboxBindings.FindAxis(SDL_GAMEPAD_AXIS_INVALID), std::nullopt);
+
+	const Bindings no_bindings({});
+	EXPECT_EQ(no_bindings.FindAxis(SDL_GAMEPAD_AXIS_LEFTX), std::nullopt);
+}
+
+TEST(MAPPER_FindFullRangeAxis, axis_numbers_up_to_num_axes)
+{
+	const Bindings bindings({full_axis_binding(12, SDL_GAMEPAD_AXIS_LEFTX)});
+	EXPECT_EQ(bindings.FindAxis(SDL_GAMEPAD_AXIS_LEFTX), std::nullopt);
+	EXPECT_EQ(bindings.FindAxis(SDL_GAMEPAD_AXIS_LEFTX, 16), 12);
+
+	EXPECT_EQ(XboxBindings.FindAxis(SDL_GAMEPAD_AXIS_RIGHTX, 3), std::nullopt);
+	EXPECT_EQ(XboxBindings.FindAxis(SDL_GAMEPAD_AXIS_RIGHTX, 4), 3);
+}
+
+TEST(MAPPER_FindFullRangeAxis, full_range_binding_after_a_half_axis)
+{
+	const Bindings bindings({
+	        axis_binding(0, 0, SDL_JOYSTICK_AXIS_MAX, SDL_GAMEPAD_AXIS_LEFTX),
+	        full_axis_binding(6, SDL_GAMEPAD_AXIS_LEFTX),
+	});
+	EXPECT_EQ(bindings.FindAxis(SDL_GAMEPAD_AXIS_LEFTX), 6);
 }
 
 } // namespace

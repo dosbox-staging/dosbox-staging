@@ -16,6 +16,7 @@
 #include <memory>
 #include <optional>
 #include <queue>
+#include <span>
 #include <string>
 #include <string_view>
 #include <tuple>
@@ -617,39 +618,32 @@ private:
 
 bool autofire = false;
 
-std::optional<int> MAPPER_FindMappedAxis(const char* sdl_mapping,
-                                         const char* element, const int num_axes)
+std::optional<int> MAPPER_FindFullRangeAxis(
+        const std::span<SDL_GamepadBinding* const> bindings,
+        const SDL_GamepadAxis gamepad_axis, const int num_axes)
 {
-	assert(sdl_mapping);
-	assert(element);
-
-	const std::string_view mapping = sdl_mapping;
-	const auto key                 = std::string(",") + element + ":";
-
-	const auto key_pos = mapping.find(key);
-	if (key_pos == std::string_view::npos) {
-		return {};
-	}
-	auto value = mapping.substr(key_pos + key.size());
-	if (!value.starts_with('a')) {
-		// Not a full axis (a button, hat or half axis)
-		return {};
-	}
-	value.remove_prefix(1);
-	if (value.empty() || !isdigit(value.front())) {
-		// Safety check, this means the string is an invalid format
-		return {};
-	}
-	int axis_number = 0;
-	while (!value.empty() && isdigit(value.front())) {
-		axis_number *= 10;
-		axis_number += value.front() - '0';
-		if (axis_number >= num_axes) {
-			return {};
+	for (const auto binding : bindings) {
+		assert(binding);
+		if (binding->output_type != SDL_GAMEPAD_BINDTYPE_AXIS ||
+		    binding->output.axis.axis != gamepad_axis) {
+			continue;
 		}
-		value.remove_prefix(1);
+		if (binding->input_type != SDL_GAMEPAD_BINDTYPE_AXIS) {
+			continue;
+		}
+		const auto& input = binding->input.axis;
+
+		// An inverted axis has its range swapped
+		const auto [lowest, highest] = std::minmax(input.axis_min,
+		                                           input.axis_max);
+		const auto is_full_range = (lowest == SDL_JOYSTICK_AXIS_MIN &&
+		                            highest == SDL_JOYSTICK_AXIS_MAX);
+
+		if (is_full_range && input.axis >= 0 && input.axis < num_axes) {
+			return input.axis;
+		}
 	}
-	return axis_number;
+	return {};
 }
 
 static int to_magnitude(const int axis_pos)
@@ -868,12 +862,8 @@ public:
 		auto key_bind_axis_pos = axis_pos;
 		if (circular_input_enabled) {
 			for (const auto& [x, y] : stick_axes) {
-				if (x < axes && y < axes) {
-					std::tie(key_bind_axis_pos[x],
-					         key_bind_axis_pos[y]) =
-					        circle_to_square(axis_pos[x],
-					                         axis_pos[y]);
-				}
+				std::tie(key_bind_axis_pos[x], key_bind_axis_pos[y]) =
+				        circle_to_square(axis_pos[x], axis_pos[y]);
 			}
 		}
 
@@ -995,41 +985,60 @@ private:
 	}
 
 	// Detects the trigger axes and the axes of the sticks from the SDL
-	// gamepad mapping
+	// gamepad bindings
 	void DetectGamepadAxes()
 	{
-		auto sdl_mapping = SDL_GetGamepadMappingForID(stick_id);
-		if (!sdl_mapping) {
+		if (!SDL_IsGamepad(stick_id)) {
+			return;
+		}
+		// Opening a gamepad works without the SDL gamepad subsystem,
+		// and without it SDL sends no gamepad events that would make us
+		// rebind
+		const auto gamepad = SDL_OpenGamepad(stick_id);
+		if (!gamepad) {
+			return;
+		}
+		int num_bindings = 0;
+		const auto bindings =
+		        std::unique_ptr<SDL_GamepadBinding*[], decltype(&SDL_free)>(
+		                SDL_GetGamepadBindings(gamepad, &num_bindings),
+		                SDL_free);
+
+		// The bindings are a copy, so the gamepad can be closed
+		SDL_CloseGamepad(gamepad);
+		if (!bindings) {
 			return;
 		}
 
+		// Only take axes below 'axes', which never exceeds MAXAXIS, so
+		// they can index our per-axis arrays
+		const auto find_axis = [&](const SDL_GamepadAxis gamepad_axis) {
+			return MAPPER_FindFullRangeAxis(
+			        {bindings.get(), static_cast<size_t>(num_bindings)},
+			        gamepad_axis,
+			        axes);
+		};
+
 		// Trigger buttons that are actually analogue axes need special
 		// handling
-		for (const auto element : {"lefttrigger", "righttrigger"}) {
-			if (const auto axis = MAPPER_FindMappedAxis(sdl_mapping,
-			                                            element,
-			                                            MAXAXIS)) {
+		for (const auto trigger : {SDL_GAMEPAD_AXIS_LEFT_TRIGGER,
+		                           SDL_GAMEPAD_AXIS_RIGHT_TRIGGER}) {
+			if (const auto axis = find_axis(trigger)) {
 				is_trigger[*axis] = true;
 			}
 		}
 
-		const auto add_stick = [&](const char* x_element,
-		                           const char* y_element) {
-			const auto x = MAPPER_FindMappedAxis(sdl_mapping,
-			                                     x_element,
-			                                     MAXAXIS);
-			const auto y = MAPPER_FindMappedAxis(sdl_mapping,
-			                                     y_element,
-			                                     MAXAXIS);
+		const auto add_stick = [&](const SDL_GamepadAxis x_axis,
+		                           const SDL_GamepadAxis y_axis) {
+			const auto x = find_axis(x_axis);
+			const auto y = find_axis(y_axis);
 			if (x && y && *x != *y && !is_trigger[*x] &&
 			    !is_trigger[*y]) {
 				stick_axes.emplace_back(*x, *y);
 			}
 		};
-		add_stick("leftx", "lefty");
-		add_stick("rightx", "righty");
-
-		SDL_free(sdl_mapping);
+		add_stick(SDL_GAMEPAD_AXIS_LEFTX, SDL_GAMEPAD_AXIS_LEFTY);
+		add_stick(SDL_GAMEPAD_AXIS_RIGHTX, SDL_GAMEPAD_AXIS_RIGHTY);
 	}
 
 	bool is_trigger[MAXAXIS] = {};
