@@ -226,6 +226,56 @@ The `[parameters]` section overrides shader-specific parameters declared in
 the shader source.
 
 
+## Commodore 1084S monitor shader
+
+The `crt/crt-1084` shader emulates the Commodore 1084S, the iconic 15 kHz
+monitor of the Amiga, with phosphor persistence, ghosting, halation, slight
+RGB misconvergence, a warm colour temperature, brightness-dependent
+scanlines, and an aperture grille. It's a port of the built-in `1084` shader
+of the [Amiberry](https://github.com/BlitterStudio/amiberry) Amiga emulator
+(based on Mattias Gustavsson's crtemu).
+
+It's a fixed shader, not part of the adaptive CRT shaders, so set it
+explicitly:
+
+```ini
+[render]
+shader = crt/crt-1084
+crt_color_profile = none
+integer_scaling = off
+```
+
+`crt_color_profile = none` is recommended as the shader applies the 1084S's
+warm colour temperature itself.
+
+Presets:
+
+- `crt/crt-1084` --- The Amiberry look: scanlines with a fixed pitch of about 4
+  screen pixels that drift slowly, independent of the emulated video mode.
+- `crt/crt-1084:locked-scanlines` --- One static scanline per emulated line,
+  and single scanning of double-scanned VGA modes (320&times;200 shows 200
+  lines, as on a 15 kHz monitor).
+
+Parameters (defaults reproduce the Amiberry shader):
+
+| Parameter              | Default | Effect                                        |
+|------------------------|---------|-----------------------------------------------|
+| `PHOSPHOR_PERSISTENCE` | 0.96    | Afterglow decay per frame (0 = no afterglow)  |
+| `GHOSTING`             | 0.24    | Strength of the faint ghost image             |
+| `CURVATURE`            | 0.20    | Screen curvature (0 = flat)                   |
+| `CONVERGENCE`          | 1.00    | RGB misconvergence towards the edges          |
+| `HALATION`             | 0.12    | Glow around bright areas                      |
+| `SCANLINE_STRENGTH`    | 1.00    | Scanline darkness                             |
+| `SCANLINE_LOCK`        | 0       | 1 = one scanline per emulated line            |
+| `MASK_STRENGTH`        | 0.35    | Aperture grille darkness                      |
+| `NOISE`                | 0.008   | Analog noise                                  |
+| `FLICKER`              | 0.001   | Brightness flicker                            |
+
+Unlike the original, the screen curvature never crops the image: crtemu
+zooms in slightly to hide the image edges like a real monitor's overscan,
+which would cut off part of the first text column in DOS programs.
+
+
 ## Configuration settings
 
 You can set the shader in the `[render]` configuration section.
@@ -291,7 +341,8 @@ You can set the shader in the `[render]` configuration section.
 
     - **CRT**: `crt-hyllian`,
       `vga-1080p`, `vga-1080p-fake-double-scan` (all used by the adaptive CRT
-      shaders with different presets)
+      shaders with different presets), `crt-1084` (see
+      [Commodore 1084S monitor shader](#commodore-1084s-monitor-shader))
 
     - **Scaler**: `advinterp2x`, `advinterp3x`, `advmame2x`, `advmame3x`,
       `xbr-lv2-3d`, `xbr-lv2-noblend`, `xbr-lv3`
