@@ -18,6 +18,7 @@ struct ParseResult {
 	std::vector<std::string> input_ids            = {};
 	std::vector<TextureWrapMode> input_wrap_modes = {};
 	ShaderOutputSize output_size                  = {};
+	std::vector<std::string> pre_pass_names       = {};
 };
 
 // Parse all `#pragma` directives from the GLSL source of a shader. Returns

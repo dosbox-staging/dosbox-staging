@@ -187,6 +187,50 @@ TEST(ShaderPragmaParser, OutputSizeMissingValue)
 }
 
 // ----------------------------------------------------------------------------
+// #pragma pre_pass
+// ----------------------------------------------------------------------------
+
+TEST(ShaderPragmaParser, PrePassNoneByDefault)
+{
+	const auto result = Parse("test", "#pragma name Main_Pass1\n");
+
+	ASSERT_TRUE(result.has_value());
+	EXPECT_TRUE(result->pre_pass_names.empty());
+}
+
+TEST(ShaderPragmaParser, PrePassesInOrder)
+{
+	const std::string source =
+	        "#pragma pre_pass _internal/crt-1084/accumulate\n"
+	        "#pragma pre_pass _internal/crt-1084/blend\n";
+
+	const auto result = Parse("test", source);
+
+	ASSERT_TRUE(result.has_value());
+	EXPECT_EQ(result->pre_pass_names,
+	          (std::vector<std::string>{"_internal/crt-1084/accumulate",
+	                                    "_internal/crt-1084/blend"}));
+}
+
+TEST(ShaderPragmaParser, PrePassGlslExtensionIsDropped)
+{
+	const auto result = Parse("test", "#pragma pre_pass crt/foo.glsl\n");
+
+	ASSERT_TRUE(result.has_value());
+	EXPECT_EQ(result->pre_pass_names, (std::vector<std::string>{"crt/foo"}));
+}
+
+TEST(ShaderPragmaParser, PrePassMissingName)
+{
+	EXPECT_FALSE(Parse("test", "#pragma pre_pass\n").has_value());
+}
+
+TEST(ShaderPragmaParser, PrePassTooManyTokens)
+{
+	EXPECT_FALSE(Parse("test", "#pragma pre_pass foo bar\n").has_value());
+}
+
+// ----------------------------------------------------------------------------
 // #pragma parameter
 // ----------------------------------------------------------------------------
 

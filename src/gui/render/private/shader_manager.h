@@ -55,7 +55,10 @@ private:
 	// prevent assignment
 	ShaderManager& operator=(const ShaderManager&) = delete;
 
-	std::optional<Shader> LoadAndBuildShader(const std::string& shader_name);
+	std::optional<Shader> LoadAndBuildShader(const std::string& shader_name,
+	                                         const bool allow_pre_passes = true);
+
+	bool LoadPrePasses(const ShaderInfo& info, const bool force_reload);
 
 	std::optional<std::string> FindShaderAndReadSource(const std::string& shader_name);
 

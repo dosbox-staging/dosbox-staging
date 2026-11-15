@@ -100,6 +100,15 @@ std::optional<std::pair<Shader, ShaderPreset>> ShaderManager::ForceReloadShader(
 	}
 	const auto shader = *maybe_shader;
 
+	// Pick up edits to the pre-pass shaders of multi-pass shaders, too
+	constexpr auto ForceReload = true;
+	if (!LoadPrePasses(shader.info, ForceReload)) {
+		LOG_ERR("RENDER: Error reloading the pre-passes of shader '%s'",
+		        descriptor.shader_name.c_str());
+		glDeleteProgram(shader.program_object);
+		return {};
+	}
+
 	auto replace_cached_shader = [&] {
 		// Replace reloaded shader in the cache
 		const auto& shader_key = descriptor.shader_name;
@@ -140,7 +149,8 @@ std::optional<std::pair<Shader, ShaderPreset>> ShaderManager::ForceReloadShader(
         };
 }
 
-std::optional<Shader> ShaderManager::LoadAndBuildShader(const std::string& shader_name)
+std::optional<Shader> ShaderManager::LoadAndBuildShader(const std::string& shader_name,
+                                                        const bool allow_pre_passes)
 {
 	constexpr auto GlslExtension = ".glsl";
 
@@ -167,6 +177,12 @@ std::optional<Shader> ShaderManager::LoadAndBuildShader(const std::string& shade
 	}
 	const auto pragmas = *maybe_pragmas;
 
+	if (!allow_pre_passes && !pragmas.pre_pass_names.empty()) {
+		LOG_ERR("RENDER: Pre-pass shader '%s' cannot have pre-passes",
+		        shader_name.c_str());
+		return {};
+	}
+
 	Shader shader = {};
 
 	shader.info = {shader_name,
@@ -174,13 +190,49 @@ std::optional<Shader> ShaderManager::LoadAndBuildShader(const std::string& shade
 	               pragmas.input_ids,
 	               pragmas.input_wrap_modes,
 	               pragmas.output_size,
-	               pragmas.preset};
+	               pragmas.preset,
+	               pragmas.pre_pass_names};
 
 	if (!shader.BuildShaderProgram(shader_source)) {
 		LOG_ERR("RENDER: Error loading shader '%s'", shader_name.c_str());
 		return {};
 	}
+
+	constexpr auto ForceReload = false;
+	if (!LoadPrePasses(shader.info, ForceReload)) {
+		LOG_ERR("RENDER: Error loading the pre-passes of shader '%s'",
+		        shader_name.c_str());
+		glDeleteProgram(shader.program_object);
+		return {};
+	}
 	return shader;
+}
+
+// Loads, builds, and caches the pre-pass shaders of a multi-pass main shader,
+// so the shader pipeline can fetch them from the cache when it's (re)created.
+bool ShaderManager::LoadPrePasses(const ShaderInfo& info, const bool force_reload)
+{
+	for (const auto& pre_pass_name : info.pre_pass_names) {
+		if (!force_reload && shader_cache.contains(pre_pass_name)) {
+			continue;
+		}
+
+		constexpr auto AllowPrePasses = false;
+
+		const auto maybe_shader = LoadAndBuildShader(pre_pass_name,
+		                                             AllowPrePasses);
+		if (!maybe_shader) {
+			LOG_ERR("RENDER: Error loading pre-pass shader '%s'",
+			        pre_pass_name.c_str());
+			return false;
+		}
+
+		if (shader_cache.contains(pre_pass_name)) {
+			glDeleteProgram(shader_cache[pre_pass_name].program_object);
+		}
+		shader_cache[pre_pass_name] = *maybe_shader;
+	}
+	return true;
 }
 
 ShaderPreset ShaderManager::LoadShaderPresetOrDefault(const ShaderDescriptor& descriptor)

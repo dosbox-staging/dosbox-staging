@@ -269,6 +269,11 @@ struct ShaderInfo {
 	ShaderOutputSize output_size = ShaderOutputSize::Previous;
 
 	ShaderPreset default_preset = {};
+
+	// Names of the shaders to run right before this shader, in order (set
+	// via `#pragma pre_pass`). Only the main shader can have pre-passes;
+	// they turn it into a multi-pass shader.
+	std::vector<std::string> pre_pass_names = {};
 };
 
 #endif // DOSBOX_SHADER_COMMON_H

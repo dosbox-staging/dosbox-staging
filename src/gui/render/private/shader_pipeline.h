@@ -4,6 +4,7 @@
 #ifndef DOSBOX_SHADER_PIPELINE_H
 #define DOSBOX_SHADER_PIPELINE_H
 
+#include <chrono>
 #include <iterator>
 #include <optional>
 #include <string>
@@ -62,7 +63,7 @@ public:
 	void SetImageAdjustmentSettings(const ImageAdjustmentSettings& settings);
 	void SetDeditheringStrength(const float strength);
 
-	void Render(const GLuint vertex_array_object) const;
+	void Render(const GLuint vertex_array_object);
 
 	// prevent copying
 	ShaderPipeline(const ShaderPipeline&) = delete;
@@ -75,6 +76,7 @@ private:
 
 	void LoadAndAddInternalPasses();
 	void LoadAndAddInternalPassOrExit(const std::string& shader_name);
+	void LoadAndAddPassOrExit(const std::string& shader_name);
 
 	void SetPassOutputSizes();
 	void CreatePassOutputTextures();
@@ -87,12 +89,15 @@ private:
 	std::pair<GLuint, DosBox::Rect> GetPreviousPassOutputTextureAndViewport(
 	        const std::vector<ShaderPass>::iterator pass) const;
 
+	std::pair<GLuint, DosBox::Rect> GetMainShaderInputTextureAndViewport() const;
+
 	GLuint CreateTexture(const DosBox::Rect& size, const bool float_texture) const;
 
 	void UpdatePassTextureUniforms();
 	void UpdateTextureUniforms(const std::vector<ShaderPass>::iterator pass) const;
 
-	void RenderPass(const ShaderPass& pass, const GLuint vertex_array_object) const;
+	void RenderPass(const ShaderPass& pass, const GLuint vertex_array_object,
+	                const float time_s) const;
 
 	struct {
 		bool dedithering_enabled = false;
@@ -121,6 +126,15 @@ private:
 	// Shader passes
 	// ---------------------------------------------------------------------
 	std::vector<ShaderPass> shader_passes = {};
+
+	// Index of the first pass of the main shader (its first pre-pass, or
+	// the main shader itself if it has no pre-passes)
+	size_t main_shader_first_pass_index = 0;
+
+	// Passed to the shaders via the TIME_SECONDS and FRAME_COUNT uniforms
+	std::chrono::steady_clock::time_point start_time =
+	        std::chrono::steady_clock::now();
+	int frame_count = 0;
 
 	// Image adjustments pass params
 	// -----------------------------

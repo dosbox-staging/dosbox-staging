@@ -123,6 +123,26 @@ std::optional<std::string> parse_name_pragma(const std::string& pragma)
 	return parts[0];
 }
 
+std::optional<std::string> parse_pre_pass_pragma(const std::string& pragma)
+{
+	// Pre-pass format (the .glsl extension is optional):
+	//
+	//   #pragma pre_pass _internal/crt-1084/accumulate
+	//
+	const auto parts = split(strip_prefix(pragma, "pre_pass"));
+	if (parts.size() != 1) {
+		return {};
+	}
+
+	constexpr std::string_view GlslExtension = ".glsl";
+
+	auto name = parts[0];
+	if (name.ends_with(GlslExtension)) {
+		name.resize(name.size() - GlslExtension.size());
+	}
+	return name;
+}
+
 std::optional<ShaderOutputSize> parse_output_size_pragma(const std::string& pragma)
 {
 	// Output size format:
@@ -294,6 +314,17 @@ std::optional<ParseResult> Parse(const std::string& shader_name,
 					        input_index, highest_input_index);
 				} else {
 					LOG_ERR("RENDER: Invalid input name pragma: '%s'",
+					        pragma.c_str());
+					has_errors = true;
+				}
+
+			} else if (pragma.starts_with("pre_pass")) {
+				if (const auto maybe_name = parse_pre_pass_pragma(pragma);
+				    maybe_name) {
+
+					result.pre_pass_names.emplace_back(*maybe_name);
+				} else {
+					LOG_ERR("RENDER: Invalid pre-pass pragma: '%s'",
 					        pragma.c_str());
 					has_errors = true;
 				}

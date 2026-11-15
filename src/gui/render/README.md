@@ -47,8 +47,15 @@ This is an overview of the entire shader pipeline:
 
   ImageAdjustments               (always present)
 
+  <MAIN_SHADER_PRE_PASSES>       (optional; set by the main shader)
   <MAIN_SHADER>                  (always present; set by the user)
 ```
+
+Multi-pass main shaders list their extra passes with the
+[pre_pass](#pre_pass) pragma; these run right before the main shader. For
+example, `crt/crt-1084` (Commodore 1084S monitor emulation) adds six
+pre-passes for phosphor persistence, ghosting, and the blur passes of its
+halation effect.
 
 
 ### Shader presets
@@ -100,6 +107,13 @@ The following uniform are passed to the shader passes:
   previous intermediate passes. Useful for ensuring screen-space drawing
   aligns with the output image (e.g., for pixel mask overlays for RGB phosphor
   emulation in CRT shaders). This uniform is always present.
+
+- `TIME_SECONDS` — `float`; seconds since the shader pipeline was created,
+  wrapping around every hour. Set every frame; for animated effects like
+  noise and flicker.
+
+- `FRAME_COUNT` — `int`; number of frames rendered since the shader pipeline
+  was created. Set every frame.
 
 The shader's parameters that can be customised in the presets are also set via
 uniforms; see the description of the `parameter` custom shader pragma below
@@ -173,10 +187,24 @@ Example:
 #### inputN
 
 Specifies the input textures of this shader. The first input is `input0`, the
-second `input1`, and so on. The inputs must reference the names of earlier
+second `input1`, and so on. The inputs reference the names of other
 shaders in the pipeline; the output of the referenced shader is used as the
-input texture. The reserved name `Previous` can also be used to refer to the
-output of the previous shader.
+input texture.
+
+- Referencing an earlier shader gives its output in the current frame.
+
+- Referencing a later shader gives its output from the previous frame
+  (a feedback input, e.g., for phosphor persistence). The output starts as
+  transparent black whenever the pipeline is (re)created. The last shader
+  renders to the window, so it cannot be referenced this way.
+
+The following reserved names can also be used:
+
+- `Previous` — the output of the previous shader.
+
+- `Original` — the input of the main shader, i.e., the output of the last
+  internal pass before the main shader's first pass (its first pre-pass, if
+  it has any).
 
 The input texture sizes in pixels are passed to the shader as `vec2` uniforms
 named `INPUT_SIZE_0`, `INPUT_SIZE_1`, etc. The textures are
@@ -219,6 +247,7 @@ to use the `ShaderName_PassName` convention for multipass shaders.
 The following reserved names cannot be used:
 
 - `Previous`
+- `Original`
 
 Example:
 
@@ -261,6 +290,28 @@ Example:
 
 ```
 #pragma output_size Viewport
+```
+
+
+#### pre_pass
+
+Turns the main shader into a multi-pass shader: each `pre_pass` pragma names
+a shader that runs before the main shader, in the order of the pragmas. The
+names are resolved like the `shader` setting (relative to the `shaders`
+resource directory, `.glsl` extension optional). Pre-pass shaders cannot have
+pre-passes themselves; they're only honoured in the main shader.
+
+Pre-passes use the same pragmas as other shaders (`name`, `inputN`,
+`output_size`, etc.). Declare all user-changeable parameters in the main
+shader: its preset values are set in the pre-passes as well (where a uniform
+of the same name exists). Pre-pass files under `_internal/` are not listed by
+`--list-shaders`.
+
+Example:
+
+```
+#pragma pre_pass _internal/crt-1084/accumulate
+#pragma pre_pass _internal/crt-1084/blend
 ```
 
 

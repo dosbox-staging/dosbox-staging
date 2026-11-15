@@ -3,6 +3,9 @@
 
 #include "private/shader_pipeline.h"
 
+#include <array>
+#include <cmath>
+
 #include "gui/render/private/shader_manager.h"
 
 #include "misc/support.h"
@@ -248,12 +251,21 @@ void ShaderPipeline::LoadAndAddInternalPasses()
 		LoadAndAddInternalPassOrExit("integer-upscale");
 	}
 
+	main_shader_first_pass_index = shader_passes.size();
+
+	assert(main_shader);
+
+	// Pre-passes of multi-pass main shaders (e.g., the phosphor persistence
+	// and blur passes of the 'crt/crt-1084' shader)
+	for (const auto& pre_pass_name : main_shader->info.pre_pass_names) {
+		LoadAndAddPassOrExit(pre_pass_name);
+	}
+
 	// Main shader pass (e.g., a CRT shader, the sharp shader, an upscaler,
 	// etc.)
 	ShaderPass main_pass1            = {};
 	main_pass1.shader.info.pass_name = "Main_Pass1";
 
-	assert(main_shader);
 	main_pass1.shader = *main_shader;
 
 	shader_passes.push_back(main_pass1);
@@ -327,6 +339,20 @@ void ShaderPipeline::CreatePassOutputTextures()
 			    GL_FRAMEBUFFER_COMPLETE) {
 				LOG_ERR("OPENGL: Framebuffer is not complete");
 			}
+
+			// Start from transparent black; passes that read the
+			// previous frame's output of a later pass (feedback
+			// inputs) would see uninitialised memory otherwise.
+			std::array<GLfloat, 4> clear_color = {};
+			glGetFloatv(GL_COLOR_CLEAR_VALUE, clear_color.data());
+
+			glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+			glClear(GL_COLOR_BUFFER_BIT);
+			glClearColor(clear_color[0],
+			             clear_color[1],
+			             clear_color[2],
+			             clear_color[3]);
+
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		}
 	}
@@ -336,12 +362,16 @@ void ShaderPipeline::LoadAndAddInternalPassOrExit(const std::string& shader_name
 {
 	const auto path = std_fs::path("_internal") / shader_name;
 
-	const auto maybe_shader = ShaderManager::GetInstance().LoadShader(
-	        path.string());
+	LoadAndAddPassOrExit(path.string());
+}
+
+void ShaderPipeline::LoadAndAddPassOrExit(const std::string& shader_name)
+{
+	const auto maybe_shader = ShaderManager::GetInstance().LoadShader(shader_name);
 
 	if (!maybe_shader) {
 		E_Exit("OPENGL: Cannot load shader pass '%s' shader, exiting",
-		       path.string().c_str());
+		       shader_name.c_str());
 	}
 
 	ShaderPass pass = {};
@@ -468,13 +498,25 @@ void ShaderPipeline::SetDeditheringStrength(const float strength)
 	}
 }
 
-void ShaderPipeline::Render(const GLuint vertex_array_object) const
+void ShaderPipeline::Render(const GLuint vertex_array_object)
 {
 	assert(IsPipelineComplete());
 
+	// Wrap around every hour to keep enough float precision for the
+	// time-based effects (e.g., the noise and flicker of 'crt/crt-1084')
+	constexpr auto TimeWrapAroundSeconds = 3600.0;
+
+	const std::chrono::duration<double> elapsed = std::chrono::steady_clock::now() -
+	                                              start_time;
+
+	const auto time_s = static_cast<float>(
+	        std::fmod(elapsed.count(), TimeWrapAroundSeconds));
+
 	for (const auto& pass : shader_passes) {
-		RenderPass(pass, vertex_array_object);
+		RenderPass(pass, vertex_array_object, time_s);
 	}
+
+	++frame_count;
 }
 
 ShaderPass& ShaderPipeline::GetShaderPass(const std::string& name)
@@ -491,9 +533,13 @@ ShaderPass& ShaderPipeline::GetShaderPass(const std::string& name)
 }
 
 void ShaderPipeline::RenderPass(const ShaderPass& pass,
-                                const GLuint vertex_array_object) const
+                                const GLuint vertex_array_object,
+                                const float time_s) const
 {
 	glUseProgram(pass.shader.program_object);
+
+	pass.shader.SetUniform1f("TIME_SECONDS", time_s);
+	pass.shader.SetUniform1i("FRAME_COUNT", frame_count);
 
 	glBindFramebuffer(GL_FRAMEBUFFER, pass.out_fbo);
 	glClear(GL_COLOR_BUFFER_BIT);
@@ -550,9 +596,16 @@ void ShaderPipeline::UpdateTextureUniforms(const std::vector<ShaderPass>::iterat
 			in_texture      = texture;
 			in_texture_size = {viewport.w, viewport.h};
 
+		} else if (pass_id == "Original") {
+			const auto [texture,
+			            viewport] = GetMainShaderInputTextureAndViewport();
+
+			in_texture      = texture;
+			in_texture_size = {viewport.w, viewport.h};
+
 		} else {
-			// Only specifying the outputs of previous passes is
-			// valid as input for the current pass
+			// Outputs of earlier passes are rendered in the current
+			// frame
 			bool found = false;
 
 			auto it = pass;
@@ -568,6 +621,24 @@ void ShaderPipeline::UpdateTextureUniforms(const std::vector<ShaderPass>::iterat
 					break;
 				}
 			}
+
+			// Outputs of later passes (feedback inputs) still hold
+			// what they rendered in the previous frame. The last
+			// pass renders to the window, so it cannot be one.
+			for (auto next_it = std::next(pass);
+			     !found && next_it != shader_passes.end();
+			     ++next_it) {
+
+				const auto& p = *next_it;
+				if (p.shader.info.pass_name == pass_id &&
+				    p.out_texture != 0) {
+					in_texture      = p.out_texture;
+					in_texture_size = p.out_viewport;
+
+					found = true;
+				}
+			}
+
 			if (!found) {
 				LOG_ERR("RENDER: Invalid shader pass ID for input texture %zu: %s",
 				        i,
@@ -615,15 +686,34 @@ std::pair<GLuint, DosBox::Rect> ShaderPipeline::GetPreviousPassOutputTextureAndV
 	}
 }
 
+std::pair<GLuint, DosBox::Rect> ShaderPipeline::GetMainShaderInputTextureAndViewport() const
+{
+	if (main_shader_first_pass_index == 0) {
+		return {input_texture.texture, input_texture.size};
+	}
+
+	const auto& pass = shader_passes[main_shader_first_pass_index - 1];
+
+	return {pass.out_texture, pass.out_viewport};
+}
+
 void ShaderPipeline::UpdateMainShaderPassUniforms()
 {
-	const auto& pass   = GetShaderPass("Main_Pass1");
-	const auto& shader = pass.shader;
+	// The pre-passes of multi-pass main shaders get their own defaults
+	// first, then the main shader's preset (parameters are declared in the
+	// main shader).
+	for (auto i = main_shader_first_pass_index; i < shader_passes.size(); ++i) {
+		const auto& shader = shader_passes[i].shader;
 
-	glUseProgram(shader.program_object);
+		glUseProgram(shader.program_object);
 
-	for (const auto& [uniform_name, value] : main_shader_preset.params) {
-		shader.SetUniform1f(uniform_name, value);
+		for (const auto& [uniform_name, value] :
+		     shader.info.default_preset.params) {
+			shader.SetUniform1f(uniform_name, value);
+		}
+		for (const auto& [uniform_name, value] : main_shader_preset.params) {
+			shader.SetUniform1f(uniform_name, value);
+		}
 	}
 }
 
