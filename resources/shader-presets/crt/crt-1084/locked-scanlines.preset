@@ -1,0 +1,9 @@
+# One static scanline per emulated line, with single scanning of the
+# double-scanned VGA modes (e.g., 320x200 shows 200 lines, like on a 15 kHz
+# Commodore 1084S). The rest is the Amiberry look.
+
+[settings]
+force_single_scan = yes
+
+[parameters]
+SCANLINE_LOCK = 1.0
