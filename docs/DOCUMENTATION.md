@@ -415,15 +415,15 @@ repo) only contains the *current* version's content.
 #### Rename the version directory
 
 ```
-cd website
-git mv docs/0.83/manual          docs/0.84/manual
-git mv docs/0.83/getting-started docs/0.84/getting-started
+cd website/docs
+git mv 0.83 0.84
 ```
 
 #### Update `versions.json`
 
-Add the new version at the top of each section's list (descending order).
-The build will warn if the latest version is missing from any section:
+Add the new version at the top of each section's list (descending order) in
+`website/docs/versions.json`. The build will warn if the latest version is
+missing from any section:
 
 ```json
 {
@@ -441,7 +441,8 @@ The build will warn if the latest version is missing from any section:
 
 #### Update `mkdocs.yml`
 
-You'll need to bump the version number from 0.83 to 0.84 in a few places:
+You'll need to bump the version number from 0.83 to 0.84 in
+`website/mkdocs.yml` in a few places:
 
 - **Nav paths** -- every `0.83/manual/...` and `0.83/getting-started/...`
   entry in the `nav:` section.
@@ -459,7 +460,8 @@ You'll need to bump the version number from 0.83 to 0.84 in a few places:
 
 #### Update `hooks/offline.py`
 
-Update `DUMMY_INDEX_PAGES` to use the new version prefix:
+Update `DUMMY_INDEX_PAGES` in `website/hooks/offline.py` to use the new
+version prefix:
 
 ```python
 DUMMY_INDEX_PAGES = {
