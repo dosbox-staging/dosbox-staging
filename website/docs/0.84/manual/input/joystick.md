@@ -51,7 +51,13 @@ USB controllers.
 [`circularinput`](#circularinput) compensates for analog sticks that are
 physically constrained to circular motion; pushing into a corner only reaches
 about 71% of the maximum range, and enabling this maps the circular input to a
-square coordinate space so you get full range in all directions.
+square coordinate space so you get full range in all directions. This also
+helps if you've bound a gamepad stick to keyboard keys in the [key
+mapper](keymapper.md#mapping-controller-buttons-to-keys): without it, pushing
+the stick diagonally presses neither key, so you can't walk diagonally on the
+world map of [Commander Keen
+4](https://www.mobygames.com/game/219/commander-keen-4-secret-of-the-oracle/),
+for example.
 
 [`autofire`](#autofire) toggles each button on and off every frame while held,
 simulating rapid fire for arcade-style and shoot-em-up games.
@@ -86,7 +92,9 @@ section.
 ##### circularinput
 
 :   Enable translation of circular input to square output. Try enabling this
-    if your left analog stick can only move in a circle.
+    if your analog sticks can only move in a circle. Applies to the first
+    emulated joystick and to key bindings on gamepad sticks, so a full
+    diagonal presses both bound keys.
 
     Possible values: `on`, `off` *default*{ .default }
 
