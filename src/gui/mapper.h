@@ -87,8 +87,6 @@ constexpr int MaxBindNameLength = 100;
  * the mapper UI buttons to reflect joystick binds being added / removed.
  *
  * @param event A pointer to an SDL_JoyDeviceEvent whose type must be one of:
- * - SDL_EVENT_GAMEPAD_ADDED
- * - SDL_EVENT_GAMEPAD_REMOVED
  * - SDL_EVENT_JOYSTICK_ADDED
  * - SDL_EVENT_JOYSTICK_REMOVED
  */

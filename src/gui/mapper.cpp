@@ -2645,8 +2645,6 @@ static bool load_binds_from_file(const std::string_view mapperfile_path,
 void MAPPER_CheckEvent(SDL_Event *event)
 {
 	switch (event->type) {
-	case SDL_EVENT_GAMEPAD_ADDED:
-	case SDL_EVENT_GAMEPAD_REMOVED:
 	case SDL_EVENT_JOYSTICK_REMOVED:
 	case SDL_EVENT_JOYSTICK_ADDED:
 		MAPPER_HandleJoyDeviceEvent(&event->jdevice);
@@ -2672,7 +2670,6 @@ KeyPressState MAPPER_GetLastKeyPressed()
 void MAPPER_HandleJoyDeviceEvent(SDL_JoyDeviceEvent* event)
 {
 	switch (event->type) {
-	case SDL_EVENT_GAMEPAD_ADDED:
 	case SDL_EVENT_JOYSTICK_ADDED: {
 		auto index    = event->which;
 		auto joystick = SDL_OpenJoystick(index);
@@ -2681,7 +2678,6 @@ void MAPPER_HandleJoyDeviceEvent(SDL_JoyDeviceEvent* event)
 		SDL_CloseJoystick(joystick);
 		break;
 	}
-	case SDL_EVENT_GAMEPAD_REMOVED:
 	case SDL_EVENT_JOYSTICK_REMOVED: {
 		auto joystick = SDL_GetJoystickFromID(event->which);
 		auto name     = SDL_GetJoystickName(joystick);
@@ -2705,8 +2701,6 @@ void BIND_MappingEvents()
 	while (SDL_PollEvent(&event)) {
 		SDL_ConvertEventToRenderCoordinates(mapper.renderer, &event);
 		switch (event.type) {
-		case SDL_EVENT_GAMEPAD_ADDED:
-		case SDL_EVENT_GAMEPAD_REMOVED:
 		case SDL_EVENT_JOYSTICK_REMOVED:
 		case SDL_EVENT_JOYSTICK_ADDED:
 			MAPPER_HandleJoyDeviceEvent(&event.jdevice);
