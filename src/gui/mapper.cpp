@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cctype>
+#include <cmath>
 #include <cstdarg>
 #include <cstdio>
 #include <cstdlib>
@@ -16,6 +17,7 @@
 #include <optional>
 #include <queue>
 #include <span>
+#include <utility>
 #include <vector>
 
 #include <SDL3/SDL.h>
@@ -26,6 +28,7 @@
 #include "gui/common.h"
 #include "gui/mapper.h"
 #include "gui/private/common.h"
+#include "gui/private/mapper.h"
 #include "hardware/input/joystick.h"
 #include "hardware/input/keyboard.h"
 #include "hardware/input/mouse.h"
@@ -608,6 +611,20 @@ private:
 };
 
 bool autofire = false;
+
+std::pair<int, int> CircleToSquare(const int x, const int y)
+{
+	const auto max_abs = std::max(std::abs(x), std::abs(y));
+	if (max_abs == 0) {
+		return {x, y};
+	}
+	const auto scale = std::hypot(x, y) / max_abs;
+
+	const auto scale_axis = [scale](const int pos) {
+		return clamp_to_int16(iround(pos * scale));
+	};
+	return {scale_axis(x), scale_axis(y)};
+}
 
 // Returns the joystick axis that a gamepad binds to 'gamepad_axis' if it
 // covers the full range, inverted or not; buttons, hats and half axes don't
