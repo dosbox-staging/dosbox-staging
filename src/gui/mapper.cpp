@@ -13,7 +13,9 @@
 #include <cstring>
 #include <list>
 #include <memory>
+#include <optional>
 #include <queue>
+#include <span>
 #include <vector>
 
 #include <SDL3/SDL.h>
@@ -607,6 +609,35 @@ private:
 
 bool autofire = false;
 
+// Returns the joystick axis that a gamepad binds to 'gamepad_axis' if it
+// covers the full range, inverted or not; buttons, hats and half axes don't
+// count
+static std::optional<int> find_full_range_axis(
+        const std::span<const SDL_GamepadBinding* const> bindings,
+        const SDL_GamepadAxis gamepad_axis)
+{
+	for (const auto binding : bindings) {
+		assert(binding);
+		if (binding->output_type != SDL_GAMEPAD_BINDTYPE_AXIS ||
+		    binding->output.axis.axis != gamepad_axis ||
+		    binding->input_type != SDL_GAMEPAD_BINDTYPE_AXIS) {
+			continue;
+		}
+		const auto& input = binding->input.axis;
+
+		// An inverted axis has its range swapped
+		const auto [lowest, highest] = std::minmax(input.axis_min,
+		                                           input.axis_max);
+		const auto is_full_range = (lowest == SDL_JOYSTICK_AXIS_MIN &&
+		                            highest == SDL_JOYSTICK_AXIS_MAX);
+
+		if (is_full_range && input.axis >= 0 && input.axis < MAXAXIS) {
+			return input.axis;
+		}
+	}
+	return {};
+}
+
 static void set_joystick_led(SDL_Joystick* joystick, const Rgb888& color)
 {
 	if (!joystick)
@@ -686,9 +717,7 @@ public:
 		LOG_MSG("MAPPER: Initialised %s with %d axes, %d buttons, and %d hat(s)",
 		        SDL_GetJoystickNameForID(stick_id), axes, buttons, hats);
 
-		// Trigger buttons that are actually analogue axis need special handling
-		// This function detects such triggers and sets the is_trigger variable for them
-		DetectTriggerButtons();
+		DetectGamepadAxes();
 	}
 
 	~CStickBindGroup() override
@@ -922,45 +951,39 @@ private:
 			return "[missing joystick]";
 	}
 
-	void SetTriggerButtonFor(const char* button_name, const char* sdl_mapping)
+	void DetectGamepadAxes()
 	{
-		// Part of the string we care about is in the format of:
-		// "button_name" + ':' + single character button type (a for axis, b for button, h for hat) + axis number
+		if (!SDL_IsGamepad(stick_id)) {
+			return;
+		}
+		auto gamepad = std::unique_ptr<SDL_Gamepad, decltype(&SDL_CloseGamepad)>(
+		        SDL_OpenGamepad(stick_id), SDL_CloseGamepad);
+		if (!gamepad) {
+			return;
+		}
+		int num_bindings = 0;
+		const auto bindings =
+		        std::unique_ptr<SDL_GamepadBinding*[], decltype(&SDL_free)>(
+		                SDL_GetGamepadBindings(gamepad.get(), &num_bindings),
+		                SDL_free);
 
-		const char* substring = strstr(sdl_mapping, button_name);
-		if (!substring) {
+		// The bindings are a copy, so the gamepad can be closed
+		gamepad.reset();
+		if (!bindings) {
 			return;
 		}
-		substring += strlen(button_name);
-		if (*substring != 'a') {
-			// Not an axis so no need to do anything
-			return;
-		}
-		++substring;
-		if (!isdigit(*substring)) {
-			// Safety check, this means the string is an invalid format
-			return;
-		}
-		int axis_number = 0;
-		while (isdigit(*substring)) {
-			axis_number *= 10;
-			axis_number += *substring - '0';
-			++substring;
-		}
-		if (axis_number >= 0 && axis_number < MAXAXIS) {
-			is_trigger[axis_number] = true;
-		}
-	}
+		const std::span<const SDL_GamepadBinding* const> all_bindings = {
+		        bindings.get(), static_cast<size_t>(num_bindings)};
 
-	void DetectTriggerButtons()
-	{
-		auto sdl_mapping = SDL_GetGamepadMappingForID(stick_id);
-		if (!sdl_mapping) {
-			return;
+		// Trigger buttons that are actually analogue axes need special
+		// handling
+		for (const auto trigger : {SDL_GAMEPAD_AXIS_LEFT_TRIGGER,
+		                           SDL_GAMEPAD_AXIS_RIGHT_TRIGGER}) {
+			if (const auto axis = find_full_range_axis(all_bindings,
+			                                           trigger)) {
+				is_trigger[*axis] = true;
+			}
 		}
-		SetTriggerButtonFor("lefttrigger:", sdl_mapping);
-		SetTriggerButtonFor("righttrigger:", sdl_mapping);
-		SDL_free(sdl_mapping);
 	}
 
 	bool is_trigger[MAXAXIS] = {};
