@@ -82,7 +82,7 @@ jobs:
         uses: ./.github/actions/set-common-vars
 
       - name: Set up CMake
-        uses: lukka/get-cmake@f86dd60acae0d132056913e248bdabf0e0580b7a # v4.4.5
+        uses: lukka/get-cmake@16e8153a8b4918849d92aad131befe67a3705daa # v4.5.0
 
       - name: Set up vcpkg
         uses: ./.github/actions/setup-vcpkg
