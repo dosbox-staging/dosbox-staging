@@ -18,6 +18,7 @@
 #include <optional>
 #include <queue>
 #include <span>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -364,6 +365,9 @@ public:
 	}
 	virtual ~CBindGroup() = default;
 	void ActivateBindList(CBindList * list,Bits value,bool ev_trigger);
+	// 'triggered_value' goes to triggered events such as key presses
+	void ActivateBindList(CBindList* list, Bits value, Bits triggered_value,
+	                      bool ev_trigger);
 	void DeactivateBindList(CBindList * list,bool ev_trigger);
 	virtual CBind * CreateConfigBind(char *&buf)=0;
 	virtual CBind * CreateEventBind(SDL_Event * event)=0;
@@ -857,20 +861,36 @@ public:
 				old_button_state[i]=button_pressed[i];
 			}
 		}
-		std::array<Sint16, MAXAXIS> axis_pos = {};
+		std::array<Sint16, MAXAXIS> axis_pos        = {};
+		std::array<int, MAXAXIS> triggered_axis_pos = {};
 		for (int i = 0; i < axes; ++i) {
 			axis_pos[i] = SDL_GetJoystickAxis(sdl_joystick, i);
+			triggered_axis_pos[i] = axis_pos[i];
+		}
+
+		// With 'circularinput', on/off bindings (keys, buttons) on the
+		// gamepad's stick axes also fire on full diagonals
+		if (circular_input_enabled) {
+			for (const auto& [x, y] : stick_axes) {
+				std::tie(triggered_axis_pos[x],
+				         triggered_axis_pos[y]) =
+				        CircleToSquare(axis_pos[x], axis_pos[y]);
+			}
 		}
 
 		for (int i = 0; i < axes; i++) {
-			Sint16 caxis_pos = axis_pos[i];
+			Sint16 caxis_pos         = axis_pos[i];
+			const auto triggered_pos = triggered_axis_pos[i];
 			/* activate bindings for joystick position */
 			if (caxis_pos>1) {
 				if (old_neg_axis_state[i]) {
 					DeactivateBindList(&neg_axis_lists[i],false);
 					old_neg_axis_state[i] = false;
 				}
-				ActivateBindList(&pos_axis_lists[i],caxis_pos,false);
+				ActivateBindList(&pos_axis_lists[i],
+				                 caxis_pos,
+				                 triggered_pos,
+				                 false);
 				old_pos_axis_state[i] = true;
 			} else if (caxis_pos<-1) {
 				if (old_pos_axis_state[i]) {
@@ -879,7 +899,10 @@ public:
 				}
 				if (caxis_pos!=-32768) caxis_pos=(Sint16)abs(caxis_pos);
 				else caxis_pos=32767;
-				ActivateBindList(&neg_axis_lists[i],caxis_pos,false);
+				ActivateBindList(&neg_axis_lists[i],
+				                 caxis_pos,
+				                 std::abs(triggered_pos),
+				                 false);
 				old_neg_axis_state[i] = true;
 			} else {
 				/* center */
@@ -1007,9 +1030,23 @@ private:
 				is_trigger[*axis] = true;
 			}
 		}
+
+		const auto add_stick = [&](const SDL_GamepadAxis x_axis,
+		                           const SDL_GamepadAxis y_axis) {
+			const auto x = find_full_range_axis(all_bindings, x_axis);
+			const auto y = find_full_range_axis(all_bindings, y_axis);
+			if (x && y && *x != *y && !is_trigger[*x] &&
+			    !is_trigger[*y]) {
+				stick_axes.emplace_back(*x, *y);
+			}
+		};
+		add_stick(SDL_GAMEPAD_AXIS_LEFTX, SDL_GAMEPAD_AXIS_LEFTY);
+		add_stick(SDL_GAMEPAD_AXIS_RIGHTX, SDL_GAMEPAD_AXIS_RIGHTY);
 	}
 
 	bool is_trigger[MAXAXIS] = {};
+
+	std::vector<std::pair<int, int>> stick_axes = {};
 
 protected:
 	CBindList *pos_axis_lists = nullptr;
@@ -1316,6 +1353,12 @@ static struct CMapper {
 } mapper;
 
 void CBindGroup::ActivateBindList(CBindList * list,Bits value,bool ev_trigger) {
+	ActivateBindList(list, value, value, ev_trigger);
+}
+
+void CBindGroup::ActivateBindList(CBindList* list, Bits value,
+                                  Bits triggered_value, bool ev_trigger)
+{
 	assert(list);
 	Bitu validmod=0;
 	CBindList_it it;
@@ -1325,7 +1368,12 @@ void CBindGroup::ActivateBindList(CBindList * list,Bits value,bool ev_trigger) {
 		}
 	}
 	for (it = list->begin(); it != list->end(); ++it) {
-		if (validmod==(*it)->mods) (*it)->ActivateBind(value,ev_trigger);
+		if (validmod == (*it)->mods) {
+			const auto bind_value = (*it)->event->IsTrigger()
+			                              ? triggered_value
+			                              : value;
+			(*it)->ActivateBind(bind_value, ev_trigger);
+		}
 	}
 }
 
