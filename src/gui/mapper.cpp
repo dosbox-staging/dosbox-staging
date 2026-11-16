@@ -2824,8 +2824,8 @@ static void QueryJoysticks()
 		return;
 	}
 
-	if (SDL_WasInit(SDL_INIT_JOYSTICK) != SDL_INIT_JOYSTICK) {
-		SDL_InitSubSystem(SDL_INIT_JOYSTICK);
+	if (SDL_WasInit(SDL_INIT_GAMEPAD) != SDL_INIT_GAMEPAD) {
+		SDL_InitSubSystem(SDL_INIT_GAMEPAD);
 	}
 
 	const bool wants_auto_config = joytype & (JOY_AUTO | JOY_ONLY_FOR_MAPPING);
@@ -3221,8 +3221,8 @@ void MAPPER_Destroy() {
 	handlergroup.clear();
 	holdlist.clear();
 
-	// Decrement our reference pointer to the Joystick subsystem
-	SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
+	// Decrement our reference pointer to the Gamepad subsystem
+	SDL_QuitSubSystem(SDL_INIT_GAMEPAD);
 }
 
 static bool should_skip_unchanged_titlebar(const SectionProp* section)
