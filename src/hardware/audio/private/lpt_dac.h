@@ -53,14 +53,18 @@ protected:
 
 	std::string dac_name = {};
 
-	// All LPT devices support data write, status read, and control write
+	// All LPT devices support data write, status read, and control write.
+	// Data and control reads return the last written values, like a
+	// standard parallel port.
 	void BindHandlers(const io_port_t lpt_port, const io_write_f write_data,
 	                  const io_read_f read_status,
 	                  const io_write_f write_control);
 
 	IO_WriteHandleObject data_write_handler    = {};
+	IO_ReadHandleObject data_read_handler      = {};
 	IO_ReadHandleObject status_read_handler    = {};
 	IO_WriteHandleObject control_write_handler = {};
+	IO_ReadHandleObject control_read_handler   = {};
 
 	uint8_t data_reg = Mixer_GetSilentDOSSample<uint8_t>();
 

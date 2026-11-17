@@ -65,11 +65,25 @@ void LptDac::BindHandlers(const io_port_t lpt_port, const io_write_f write_data,
 	// Register port handlers for 8-bit IO
 	data_write_handler.Install(lpt_port, write_data, io_width_t::byte);
 
+	// A standard parallel port reads back the last byte written to its data
+	// and control registers, and some programs rely on it. For example, the
+	// PC port of Dungeon Master ramps the DAC to its 0x80 midpoint by
+	// reading the data port back, and hangs if the read never returns 0x80.
+	const auto read_data = [this](io_port_t, io_width_t) -> io_val_t {
+		return data_reg;
+	};
+	data_read_handler.Install(lpt_port, read_data, io_width_t::byte);
+
 	const auto status_port = static_cast<io_port_t>(lpt_port + 1u);
 	status_read_handler.Install(status_port, read_status, io_width_t::byte);
 
 	const auto control_port = static_cast<io_port_t>(lpt_port + 2u);
 	control_write_handler.Install(control_port, write_control, io_width_t::byte);
+
+	const auto read_control = [this](io_port_t, io_width_t) -> io_val_t {
+		return control_reg.data;
+	};
+	control_read_handler.Install(control_port, read_control, io_width_t::byte);
 }
 
 void LptDac::RenderUpToNow()
@@ -115,7 +129,9 @@ LptDac::~LptDac()
 
 	// Stop the game from accessing the IO ports
 	status_read_handler.Uninstall();
+	data_read_handler.Uninstall();
 	data_write_handler.Uninstall();
+	control_read_handler.Uninstall();
 	control_write_handler.Uninstall();
 
 	// Deregister the mixer channel, after which it's cleaned up
