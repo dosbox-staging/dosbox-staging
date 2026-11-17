@@ -24,7 +24,7 @@ protected:
 private:
 	void WriteData(const io_port_t, const io_val_t value, const io_width_t);
 	uint8_t ReadStatus(const io_port_t, const io_width_t);
-	void WriteControl(const io_port_t, const io_val_t, const io_width_t) {}
+	void WriteControl(const io_port_t, const io_val_t value, const io_width_t);
 };
 
 #endif // DOSBOX_COVOX_H

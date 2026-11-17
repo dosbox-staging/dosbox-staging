@@ -50,3 +50,8 @@ uint8_t Covox::ReadStatus(const io_port_t, const io_width_t)
 {
 	return status_reg.data;
 }
+
+void Covox::WriteControl(const io_port_t, const io_val_t value, const io_width_t)
+{
+	control_reg.data = check_cast<uint8_t>(value);
+}
