@@ -175,14 +175,42 @@ static std::optional<PluginInfo> find_plugin(
 	return {};
 }
 
+static std::optional<PluginInfo> find_plugin_by_id(
+        const std::vector<PluginInfo>& plugin_infos,
+        const std::string& wanted_library_name, const std::string& wanted_plugin_id)
+{
+	for (const auto& info : plugin_infos) {
+		if (info.library_path.filename() == wanted_library_name &&
+		    info.id == wanted_plugin_id) {
+			return info;
+		}
+	}
+	return {};
+}
+
 std::optional<PluginInfo> PluginManager::FindPlugin(
         const std::string& wanted_library_name,
-        const std::string& wanted_plugin_name_or_index, 
-		const PluginFilter filter)
+        const std::string& wanted_plugin_name_or_index, const PluginFilter filter)
 {
 	return find_plugin(GetPluginInfos(filter),
 	                   wanted_library_name,
 	                   wanted_plugin_name_or_index);
+}
+
+const std::vector<PluginInfo>& PluginManager::GetLibraryPluginInfos(
+        const std::string& wanted_library_name)
+{
+	// Once all libraries are enumerated, callers filter by library name
+	if (plugins_enumerated) {
+		return plugin_info_cache;
+	}
+
+	const auto [it, inserted] = library_plugin_info_cache.try_emplace(
+	        wanted_library_name);
+	if (inserted) {
+		it->second = EnumeratePlugins(wanted_library_name);
+	}
+	return it->second;
 }
 
 std::optional<PluginInfo> PluginManager::FindPluginInLibrary(
@@ -193,23 +221,22 @@ std::optional<PluginInfo> PluginManager::FindPluginInLibrary(
 		return {};
 	}
 
-	if (plugins_enumerated) {
-		return find_plugin(plugin_info_cache,
-		                   wanted_library_name,
-		                   wanted_plugin_name_or_index,
-		                   true);
-	}
-
-	const auto [it, inserted] = library_plugin_info_cache.try_emplace(
-	        wanted_library_name);
-	if (inserted) {
-		it->second = EnumeratePlugins(wanted_library_name);
-	}
-
-	return find_plugin(it->second,
+	return find_plugin(GetLibraryPluginInfos(wanted_library_name),
 	                   wanted_library_name,
 	                   wanted_plugin_name_or_index,
 	                   true);
+}
+
+std::optional<PluginInfo> PluginManager::FindPluginInLibraryById(
+        const std::string& wanted_library_name, const std::string& wanted_plugin_id)
+{
+	if (wanted_library_name.empty() || wanted_plugin_id.empty()) {
+		return {};
+	}
+
+	return find_plugin_by_id(GetLibraryPluginInfos(wanted_library_name),
+	                         wanted_library_name,
+	                         wanted_plugin_id);
 }
 
 static bool validate_note_ports(const clap_plugin_t* plugin)

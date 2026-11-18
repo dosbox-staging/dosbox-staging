@@ -340,6 +340,30 @@ TEST_F(ClapLibrary, FiltersEffectsFromListingAndSelection)
 	EXPECT_EQ(selected->id, "org.dosbox-staging.test.second");
 }
 
+TEST_F(ClapLibrary, FindsPluginByExactId)
+{
+	Clap::Library library(library_path);
+	const auto infos        = library.GetPluginInfos();
+	const auto library_name = library_path.filename().string();
+
+	const auto first = Clap::find_plugin_by_id(infos,
+	                                           library_name,
+	                                           "org.dosbox-staging.test");
+	ASSERT_TRUE(first);
+	EXPECT_EQ(first->index, 0);
+
+	const auto second = Clap::find_plugin_by_id(infos,
+	                                            library_name,
+	                                            "org.dosbox-staging.test.second");
+	ASSERT_TRUE(second);
+	EXPECT_EQ(second->index, 1);
+
+	EXPECT_FALSE(Clap::find_plugin_by_id(infos, library_name, "org.dosbox-staging"));
+	EXPECT_FALSE(Clap::find_plugin_by_id(infos,
+	                                     "other.clap",
+	                                     "org.dosbox-staging.test"));
+}
+
 struct TestPlugin {
 	enum class State {
 		Uninitialised,
