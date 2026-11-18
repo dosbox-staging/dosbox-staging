@@ -20,6 +20,7 @@ constexpr auto Clap                 = "CLAP";
 constexpr auto CovoxDac             = "COVOX";
 constexpr auto DiskNoise            = "DISKNOISE";
 constexpr auto DisneySoundSourceDac = "DISNEY";
+constexpr auto Emu88                = "EMU88";
 constexpr auto FluidSynth           = "FSYNTH";
 constexpr auto GravisUltrasound     = "GUS";
 constexpr auto IbmMusicFeatureCard  = "IMFC";
@@ -60,6 +61,7 @@ static std::vector<std::string> AllChannelNames = {
         ChannelName::CovoxDac,
         ChannelName::DiskNoise,
         ChannelName::DisneySoundSourceDac,
+        ChannelName::Emu88,
         ChannelName::FluidSynth,
         ChannelName::GravisUltrasound,
         ChannelName::IbmMusicFeatureCard,
