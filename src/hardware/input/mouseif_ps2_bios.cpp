@@ -110,7 +110,6 @@ static uint8_t rate_hz = 0; // maximum rate at which the mouse state is updated
 static bool scaling_21 = false;
 
 static uint8_t counts_mm = 0;    // counts per mm
-static float counts_rate = 0.0f; // 1.0 is 4 counts per mm
 
 static bool is_reporting = false;
 static bool mode_remote  = false; // true = remote mode, false = stream mode
@@ -445,8 +444,6 @@ static void cmd_set_resolution(const uint8_t new_counts_mm)
 	} else {
 		counts_mm = new_counts_mm;
 	}
-
-	counts_rate = counts_mm / 4.0f;
 }
 
 static void cmd_set_sample_rate(const uint8_t new_rate_hz)
