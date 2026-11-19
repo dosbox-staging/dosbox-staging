@@ -762,12 +762,10 @@ static RealPt ps2_callback   = 0;
 std::vector<uint8_t> bios_buffer = {};
 
 static bool bios_delay_running = false;
-static bool bios_delay_expired = true;
 
 static void bios_delay_handler(uint32_t /*val*/)
 {
 	bios_delay_running = false;
-	bios_delay_expired = true;
 
 	PIC_ActivateIRQ(Mouse::IrqPs2);
 }
@@ -782,14 +780,12 @@ static void bios_maybe_start_delay_timer()
 
 	PIC_AddEvent(bios_delay_handler, timer_delay_ms);
 	bios_delay_running = true;
-	bios_delay_expired = false;
 }
 
 static void bios_cancel_delay_timer()
 {
 	PIC_RemoveEvents(bios_delay_handler);
 	bios_delay_running = false;
-	bios_delay_expired = true;
 }
 
 static bool bios_enable()
