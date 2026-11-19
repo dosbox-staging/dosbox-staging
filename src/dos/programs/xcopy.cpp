@@ -8,6 +8,7 @@
 #include "utils/ascii.h"
 
 #include <array>
+#include <ranges>
 
 extern unsigned int result_errorcode;
 
@@ -91,17 +92,21 @@ void XCOPY::Run()
 		return;
 	}
 
-	const auto maybe_snapshot = BuildSourceSnapshot();
-	if (!maybe_snapshot) {
-		WriteOut(MSG_Get("PROGRAM_XCOPY_FILES_COPIED"), 0);
-		result_errorcode = enum_val(XcopyExitCode::FileNotFoundError);
+	const auto [found_something, snapshot] = BuildSourceSnapshot();
+	const auto [copy_successful, copied_count] = CopyToDestination(snapshot);
+
+	if (!copy_successful) {
+		WriteOut(MSG_Get("PROGRAM_XCOPY_FILES_COPIED"), copied_count);
+		result_errorcode = enum_val(XcopyExitCode::InitializationError);
 		return;
 	}
 
-	const auto [success, copied_count] = CopyToDestination(*maybe_snapshot);
-	if (!success) {
-		result_errorcode = enum_val(XcopyExitCode::InitializationError);
-		// Don't return so we can still show the copied count
+	if (!found_something) {
+		WriteOut(MSG_Get("PROGRAM_XCOPY_FILE_NOT_FOUND"),
+		         to_string(src_spec).c_str());
+		WriteOut(MSG_Get("PROGRAM_XCOPY_FILES_COPIED"), copied_count);
+		result_errorcode = enum_val(XcopyExitCode::FileNotFoundError);
+		return;
 	}
 
 	WriteOut(MSG_Get("PROGRAM_XCOPY_FILES_COPIED"), copied_count);
@@ -239,6 +244,16 @@ bool XCOPY::Initialize()
 {
 	std::string found = {};
 
+	if (cmd->FindExist("/s", true)) {
+		deep_copy = true;
+	}
+
+	if (cmd->FindExist("/e", true)) {
+		// The /e switch implies /s as well
+		deep_copy       = true;
+		copy_empty_dirs = true;
+	}
+
 	// TODO: support all switches
 	if (cmd->FindStringBegin("/", found)) {
 		// found does not contain the leading /, the message key does
@@ -256,27 +271,64 @@ bool XCOPY::Initialize()
 	       InitializeDestination(args.size() == 2 ? args[1] : CurrentDirectory);
 }
 
-std::optional<std::vector<DOS_DTA::Result>> XCOPY::BuildSourceSnapshot()
+std::pair<bool, std::vector<XCopySnapshotEntry>> XCOPY::BuildSourceSnapshot()
 {
 	static constexpr auto FileAttributes = FatAttributeFlags::Archive |
 	                                       FatAttributeFlags::ReadOnly;
 
+	std::vector<XCopySnapshotEntry> snapshot = {};
+
 	const auto original_dta_ptr = dos.dta();
 	dos.dta(dos.tables.tempdta);
 
-	const auto found = find_all(src_path, src_spec, FileAttributes);
+	bool found_something           = false;
+	std::vector<std::string> paths = {};
+	paths.push_back("");
+
+	while (!paths.empty()) {
+		const auto path = paths.back();
+		paths.pop_back();
+		const auto from_path = path_join(src_path, path);
+
+		// First pass: look for files that match the filespec
+		const auto files = find_all(from_path, src_spec, FileAttributes);
+
+		if (!files.empty() && !found_something) {
+			// Display this message only once
+			WriteOut(MSG_Get("PROGRAM_XCOPY_READING_SOURCE"));
+			found_something = true;
+		}
+
+		// We create each directory that is a key in files. Normally,
+		// a directory gets created if it has some files in it, but
+		// if copy_empty_dirs is set, we need to create empty
+		// directories as well.
+		if (!files.empty() || copy_empty_dirs) {
+			snapshot.push_back({path, files});
+		}
+
+		if (!deep_copy) {
+			break;
+		}
+
+		// Second pass: look for directories if deep_copy is true.
+		// attr not exclusive: this will return directories AND files.
+		const auto results = find_all(from_path,
+		                              AllFiles,
+		                              FatAttributeFlags::Directory);
+
+		// Reverse iteration ensures depth-first snapshot construction
+		for (const auto& result : results | std::views::reverse) {
+			// We need to exclude . and .. to prevent endless loops
+			if (result.attr.directory && !result.name.starts_with('.')) {
+				paths.push_back(path_join(path, result.name));
+			}
+		}
+	}
 
 	dos.dta(original_dta_ptr);
 
-	if (found.empty()) {
-		WriteOut(MSG_Get("PROGRAM_XCOPY_FILE_NOT_FOUND"),
-		         to_string(src_spec).c_str());
-		return {};
-	}
-
-	// Inform the user we found something
-	WriteOut(MSG_Get("PROGRAM_XCOPY_READING_SOURCE"));
-	return found;
+	return std::make_pair(found_something, std::move(snapshot));
 }
 
 bool XCOPY::MakeDirectoryTree(const std::string& path)
@@ -383,94 +435,102 @@ std::optional<char> XCOPY::PromptForLetter(const std::string& allowed,
 	return selected;
 }
 
-std::pair<bool, int> XCOPY::CopyToDestination(const std::vector<DOS_DTA::Result>& files)
+std::pair<bool, int> XCOPY::CopyToDestination(const std::vector<XCopySnapshotEntry>& snapshot)
 {
 	int copied_count = 0;
-
-	// Create destination directory if it doesn't exist
-	// TODO: with /e this must be done even if the source matches nothing
-	if (!MakeDirectoryTree(dest_path)) {
-		return std::make_pair(false, copied_count);
-	}
 
 	// We always overwrite if we are ran from a batch file
 	bool overwrite_all = !IsInvokedInteractively();
 
-	for (const DOS_DTA::Result& file : files) {
-		const auto to_file = apply_pattern(file.name, dest_spec);
-		if (DOS_FindDevice(to_file.c_str()) != DOS_DEVICES) {
-			WriteErr(MSG_Get("PROGRAM_XCOPY_RESERVED_DEVICE_DEST"));
-			return std::make_pair(true, copied_count);
+	for (const auto& [path, files] : snapshot) {
+		const auto from_base = path_join(src_path, path);
+		const auto to_base   = path_join(dest_path, path);
+
+		// Make sure the destination path exists
+		if (!files.empty() || copy_empty_dirs) {
+			if (!MakeDirectoryTree(to_base)) {
+				return std::make_pair(false, copied_count);
+			}
 		}
 
-		const auto from_path = path_join(src_path, file.name);
-		const auto to_path = path_join(dest_path, to_file);
-		if (from_path == to_path) {
-			// The original XCOPY implementation doesn't produce an
-			// error in this case, it just stops.
-			WriteErr(MSG_Get("PROGRAM_XCOPY_COPY_ONTO_ITSELF"));
-			return std::make_pair(true, copied_count);
-		}
-
-		uint16_t from_handle = {};
-		if (!DOS_OpenFile(from_path.c_str(), OPEN_READ, &from_handle)) {
-			WriteErr(doserr_msg_get(dos.errorcode), file.name.c_str());
-			return std::make_pair(false, copied_count);
-		}
-
-		if (!overwrite_all && DOS_FileExists(to_path.c_str())) {
-			// Ask the user what to do if the file already exists
-			WriteErr(MSG_Get("PROGRAM_XCOPY_OVERWRITE_PROMPT"),
-			         to_path.c_str());
-
-			const auto maybe_letter = PromptForLetter("yna", true);
-			if (!maybe_letter) {
-				// Prompt aborted
-				DOS_CloseFile(from_handle);
-				return {};
+		for (const DOS_DTA::Result& file : files) {
+			const auto to_file = apply_pattern(file.name, dest_spec);
+			if (DOS_FindDevice(to_file.c_str()) != DOS_DEVICES) {
+				WriteErr(MSG_Get("PROGRAM_XCOPY_RESERVED_DEVICE_DEST"));
+				return std::make_pair(true, copied_count);
 			}
 
-			overwrite_all = maybe_letter == 'a';
-			if (maybe_letter == 'n') {
-				DOS_CloseFile(from_handle);
-				continue;
+			const auto from_path = path_join(from_base, file.name);
+			const auto to_path   = path_join(to_base, to_file);
+			if (from_path == to_path) {
+				// The original XCOPY implementation doesn't
+				// produce an error in this case, it just stops.
+				WriteErr(MSG_Get("PROGRAM_XCOPY_COPY_ONTO_ITSELF"));
+				return std::make_pair(true, copied_count);
 			}
-		} else {
-			WriteOut("%s\n", file.name.c_str());
-		}
 
-		uint16_t to_handle = {};
-		if (!DOS_CreateFile(to_path.c_str(),
-		                    FatAttributeFlags::Archive,
-		                    &to_handle)) {
-			// Without this exception it'll print "File not found",
-			// which would be strange for a file we tried to create.
-			const auto msg = dos.errorcode == DOSERR_FILE_NOT_FOUND
-			                       ? MSG_Get("PROGRAM_XCOPY_FILE_CREATION_ERROR")
-			                       : doserr_msg_get(dos.errorcode);
-			WriteErr(msg, file.name.c_str());
+			uint16_t from_handle = {};
+			if (!DOS_OpenFile(from_path.c_str(), OPEN_READ, &from_handle)) {
+				WriteErr(doserr_msg_get(dos.errorcode),
+				         file.name.c_str());
+				return std::make_pair(false, copied_count);
+			}
+
+			if (!overwrite_all && DOS_FileExists(to_path.c_str())) {
+				// Ask what to do if the file already exists
+				WriteErr(MSG_Get("PROGRAM_XCOPY_OVERWRITE_PROMPT"),
+				         to_path.c_str());
+
+				const auto maybe_letter = PromptForLetter("yna", true);
+				if (!maybe_letter) {
+					// Prompt aborted
+					DOS_CloseFile(from_handle);
+					return std::make_pair(false, copied_count);
+				}
+
+				overwrite_all = maybe_letter == 'a';
+				if (maybe_letter == 'n') {
+					DOS_CloseFile(from_handle);
+					continue;
+				}
+			} else {
+				WriteOut("%s\n", file.name.c_str());
+			}
+
+			uint16_t to_handle = {};
+			if (!DOS_CreateFile(to_path.c_str(),
+			                    FatAttributeFlags::Archive,
+			                    &to_handle)) {
+				// Without this ternary it'll print "File not
+				// found", which would be strange for a file we
+				// tried to create.
+				const auto msg = dos.errorcode == DOSERR_FILE_NOT_FOUND
+				                       ? MSG_Get("PROGRAM_XCOPY_FILE_CREATION_ERROR")
+				                       : doserr_msg_get(dos.errorcode);
+				WriteErr(msg, file.name.c_str());
+				DOS_CloseFile(from_handle);
+				return std::make_pair(false, copied_count);
+			}
+
+			const bool success = CopyFile(from_handle,
+			                              to_handle,
+			                              file.name.c_str());
+
+			if (success) {
+				DOS_SetFileDate(to_handle, file.time, file.date);
+			}
+
 			DOS_CloseFile(from_handle);
-			return std::make_pair(false, copied_count);
+			DOS_CloseFile(to_handle);
+
+			if (!success) {
+				// Try deleting partial destination
+				DOS_UnlinkFile(to_path.c_str());
+				return std::make_pair(false, copied_count);
+			}
+
+			copied_count++;
 		}
-
-		const bool success = CopyFile(from_handle,
-		                              to_handle,
-		                              file.name.c_str());
-
-		if (success) {
-			DOS_SetFileDate(to_handle, file.time, file.date);
-		}
-
-		DOS_CloseFile(from_handle);
-		DOS_CloseFile(to_handle);
-
-		if (!success) {
-			// Try deleting partial destination
-			DOS_UnlinkFile(to_path.c_str());
-			return std::make_pair(false, copied_count);
-		}
-
-		copied_count++;
 	}
 
 	return std::make_pair(true, copied_count);

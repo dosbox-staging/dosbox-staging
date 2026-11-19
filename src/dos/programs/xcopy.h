@@ -12,6 +12,11 @@
 
 inline constexpr DosFilename AllFiles = {.name = "*", .ext = "*"};
 
+struct XCopySnapshotEntry {
+	std::string path;
+	std::vector<DOS_DTA::Result> files;
+};
+
 enum class XcopyExitCode : uint8_t {
 	FileNotFoundError   = 1,
 	CtrlBreakIssued     = 2,
@@ -44,6 +49,12 @@ private:
 	/// The destination file specification (default *.*).
 	DosFilename dest_spec = AllFiles;
 
+	/// Copy entire source subtree.
+	bool deep_copy = false;
+
+	/// Copy empty directories (only used when deep_copy is true).
+	bool copy_empty_dirs = false;
+
 	static void AddMessages();
 
 	[[nodiscard]] bool Initialize();
@@ -52,9 +63,10 @@ private:
 
 	[[nodiscard]] bool InitializeDestination(const std::string& value);
 
-	std::optional<std::vector<DOS_DTA::Result>> BuildSourceSnapshot();
+	std::pair<bool, std::vector<XCopySnapshotEntry>> BuildSourceSnapshot();
 
-	std::pair<bool, int> CopyToDestination(const std::vector<DOS_DTA::Result>& files);
+	std::pair<bool, int> CopyToDestination(
+	        const std::vector<XCopySnapshotEntry>& snapshot);
 
 	bool MakeDirectoryTree(const std::string& path);
 
