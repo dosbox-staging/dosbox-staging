@@ -13,6 +13,7 @@
 #include <string>
 
 #include "private/clap.h"
+#include "private/emu88.h"
 #include "private/fluidsynth.h"
 #include "private/midi_device.h"
 #include "private/mt32.h"
@@ -89,6 +90,9 @@ static std::unique_ptr<MidiDevice> create_device(
 	}
 	if (name == MidiDeviceName::SoundCanvas) {
 		return std::make_unique<MidiDeviceSoundCanvas>();
+	}
+	if (name == MidiDeviceName::Emu88) {
+		return std::make_unique<MidiDeviceEmu88>();
 	}
 	// namespace prefix required to avoid ambiguity with FluidSynth namespace
 	if (name == MidiDeviceName::FluidSynth) {
@@ -754,6 +758,13 @@ void MIDI_ListDevices(MoreOutputStrings& output)
 	                                : nullptr,
 	                        output);
 
+	write_device_name(MidiDeviceName::Emu88);
+
+	EMU88_ListDevices((device_name == MidiDeviceName::Emu88)
+	                          ? dynamic_cast<MidiDeviceEmu88*>(device_ptr)
+	                          : nullptr,
+	                  output);
+
 	write_device_name(MidiDeviceName::FluidSynth);
 
 	FSYNTH_ListDevices((device_name == MidiDeviceName::FluidSynth)
@@ -902,6 +913,11 @@ static void init_mididevice_settings(SectionProp& secprop)
 	                        "                plugin that implements the Sound Canvas to be available;\n"
 	                        "                see the [soundcanvas] section).\n");
 
+	str_prop->SetOptionHelp(MidiDeviceName::Emu88,
+	                        "  88emu:        The internal Roland MT-32, CM and Sound Canvas modules emulated\n"
+	                        "                by 88emu (requires the 88emu CLAP plugin library; see the\n"
+	                        "                [88emu] section).\n");
+
 	str_prop->SetOptionHelp(MidiDeviceName::FluidSynth,
 	                        "  fluidsynth:   The internal FluidSynth MIDI synthesizer (SoundFont player)\n"
 	                        "                (requires the FluidSynth dynamic-link library to be available;\n"
@@ -921,6 +937,7 @@ static void init_mididevice_settings(SectionProp& secprop)
 	                     MidiDeviceName::Mt32,
 #endif
 	                     MidiDeviceName::SoundCanvas,
+	                     MidiDeviceName::Emu88,
 	                     MidiDeviceName::FluidSynth,
 	                     MidiDeviceName::Clap,
 	                     "none"});
@@ -961,7 +978,7 @@ static void init_midiconfig_settings(SectionProp& secprop)
 	str_prop->SetOptionHelp(
 	        "internal_synth",
 	        "  - The setting has no effect when using the internal synthesizers\n"
-	        "    ('mididevice = mt32', 'soundcanvas', 'fluidsynth', or 'clap').\n");
+	        "    ('mididevice = mt32', 'soundcanvas', '88emu', 'fluidsynth', or 'clap').\n");
 
 	str_prop->SetOptionHelp(
 	        "physical_mt32",

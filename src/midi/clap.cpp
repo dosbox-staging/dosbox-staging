@@ -219,8 +219,8 @@ static void init_clap_config_settings(SectionProp& section)
 	        "\n"
 	        "The plugin must declare the 'instrument', 'synthesizer', and 'stereo' features.\n"
 	        "It must accept MIDI on its first note input and have a stereo first audio\n"
-	        "output. Plugins handled by a dedicated MIDI synth (e.g., 'soundcanvas') are\n"
-	        "excluded.");
+	        "output. Plugins handled by a dedicated MIDI synth (e.g., 'soundcanvas' or\n"
+	        "'88emu') are excluded.");
 
 	property = section.AddString("clap_env", WhenIdle, "");
 	property->SetPreserveQuotes(true);

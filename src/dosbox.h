@@ -209,6 +209,7 @@ inline bool is_machine_hercules() {
 #endif // the logging system.
 
 constexpr auto DefaultLogsDir            = "logs";
+constexpr auto DefaultEmu88RomsDir       = "88emu-roms";
 constexpr auto DefaultMt32RomsDir        = "mt32-roms";
 constexpr auto DefaultSoundCanvasRomsDir = "soundcanvas-roms";
 constexpr auto DefaultSoundfontsDir      = "soundfonts";

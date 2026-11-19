@@ -1685,6 +1685,7 @@ void DOSBOX_InitModuleConfigsAndMessages()
 #endif
 	FSYNTH_AddConfigSection(control);
 	SOUNDCANVAS_AddConfigSection(control);
+	EMU88_AddConfigSection(control);
 	CLAP_AddConfigSection(control);
 
 	// The MIDI section must be added *after* all internal MIDI device
