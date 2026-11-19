@@ -41,7 +41,6 @@ const std::vector<DiskGeometry>& BIOS_GetDiskGeometryList()
 callback_number_t call_int13 = 0;
 Bitu diskparm0, diskparm1;
 static uint8_t last_status;
-static uint8_t last_drive;
 uint16_t imgDTASeg;
 RealPt imgDTAPtr;
 DOS_DTA* imgDTA;
@@ -365,7 +364,6 @@ static Bitu INT13_DiskHandler(void)
 	uint8_t sectbuf[512];
 	uint8_t drivenum;
 	Bitu t;
-	last_drive            = reg_dl;
 	drivenum              = GetDosDriveNumber(reg_dl);
 	const bool any_images = has_image(imageDiskList);
 
