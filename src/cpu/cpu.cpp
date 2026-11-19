@@ -199,6 +199,15 @@ static bool maybe_display_switch_to_dynamic_core_warning(const int cycles)
 	}
 }
 
+// The mode whose cycles config was last applied. The titlebar display and
+// the cycles hotkeys are derived from this so they always reflect the cycles
+// config currently in effect, mirroring how legacy cycles mode derives them
+// from `CPU_CycleAutoAdjust` (the config is latched: it's only switched on
+// the first protected mode entry and restored on program exit, so it must
+// not be derived from the transient `cpu.pmode` state).
+//
+static auto last_applied_cycles_mode = CpuMode::Real;
+
 static void set_modern_cycles_config(const CpuMode mode)
 {
 	auto& conf = modern_cycles_config;
@@ -248,9 +257,9 @@ static void set_modern_cycles_config(const CpuMode mode)
 	if (!real_mode_with_max_cycles) {
 		auto_determine_mode.auto_cycles = true;
 	}
-}
 
-static bool is_protected_mode_program = false;
+	last_applied_cycles_mode = mode;
+}
 
 void CPU_RestoreRealModeCyclesConfig()
 {
@@ -272,7 +281,6 @@ void CPU_RestoreRealModeCyclesConfig()
 			set_modern_cycles_config(CpuMode::Real);
 		}
 
-		is_protected_mode_program = false;
 		TITLEBAR_NotifyCyclesChanged();
 	}
 #if C_DYNAMIC_X86 || C_DYNREC
@@ -2180,8 +2188,6 @@ void CPU_SET_CRX(Bitu cr, Bitu value)
 				break;
 			}
 
-			is_protected_mode_program = true;
-
 #if C_DYNAMIC_X86
 			if (auto_determine_mode.auto_core) {
 				CPU_Core_Dyn_X86_Cache_Init(true);
@@ -2956,7 +2962,7 @@ static void cpu_increase_cycles_modern()
 {
 	auto& conf = modern_cycles_config;
 
-	if (cpu.pmode) {
+	if (last_applied_cycles_mode == CpuMode::Protected) {
 		if (conf.protected_mode_auto) {
 			// 'cpu_cycles' controls both real and protected mode;
 			// nothing to do if we're in 'max' mode.
@@ -3048,7 +3054,7 @@ static void cpu_decrease_cycles_modern()
 {
 	auto& conf = modern_cycles_config;
 
-	if (cpu.pmode) {
+	if (last_applied_cycles_mode == CpuMode::Protected) {
 		if (conf.protected_mode_auto) {
 			// 'cpu_cycles' controls both real and protected mode;
 			// Nothing to do if we're in 'max' mode.
@@ -3136,7 +3142,7 @@ std::string CPU_GetCyclesConfigAsString()
 			}
 		};
 
-		if (is_protected_mode_program) {
+		if (last_applied_cycles_mode == CpuMode::Protected) {
 			if (conf.protected_mode_auto) {
 				// 'cpu_cycles' controls both real and protected
 				// mode
