@@ -48,5 +48,6 @@ enum JoystickType {
 
 extern JoystickType joytype;
 extern bool button_wrapping_enabled;
+extern bool circular_input_enabled;
 
 #endif // DOSBOX_JOYSTICK_H
