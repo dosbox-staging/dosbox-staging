@@ -56,6 +56,9 @@ private:
 	/// Copy empty directories (only used when deep_copy is true).
 	bool copy_empty_dirs = false;
 
+	/// Displays a prompt before overwriting an existing file
+	bool display_overwrite_prompt = false;
+
 	/// The snapshot of the source tree, built by BuildSourceSnapshot().
 	std::vector<XCopySnapshotEntry> src_snapshot = {};
 
@@ -83,6 +86,8 @@ private:
 	                                    bool cr_confirms);
 
 	XCopyError FailOnCyclicCopy();
+
+	bool GetDefaultDisplayOverwritePrompt() const;
 
 	void AfterRun(XCopyError error);
 

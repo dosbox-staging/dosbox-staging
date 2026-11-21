@@ -281,6 +281,16 @@ XCopyError XCOPY::Initialize()
 		copy_empty_dirs = true;
 	}
 
+	// /y and /-y are exclusive: this block only removes one, so that
+	// the fallback can catch the other one and produce an error.
+	if (cmd->FindExist("/y", true)) {
+		display_overwrite_prompt = false;
+	} else if (cmd->FindExist("/-y", true)) {
+		display_overwrite_prompt = true;
+	} else {
+		display_overwrite_prompt = GetDefaultDisplayOverwritePrompt();
+	}
+
 	// TODO: support all switches
 	if (cmd->FindStringBegin("/", found)) {
 		// found does not contain the leading /, the message key does
@@ -299,6 +309,21 @@ XCopyError XCOPY::Initialize()
 
 	const auto error = InitializeSource(src);
 	return error == XCopyError::NoError ? InitializeDestination(dest) : error;
+}
+
+bool XCOPY::GetDefaultDisplayOverwritePrompt() const
+{
+	auto copycmd = psp->GetEnvironmentValue("COPYCMD").value_or("");
+	trim(copycmd);
+
+	if (iequals(copycmd, "/y")) {
+		return false;
+	}
+	if (iequals(copycmd, "/-y")) {
+		return true;
+	}
+
+	return IsInvokedInteractively();
 }
 
 XCopyError XCOPY::FailOnCyclicCopy()
@@ -485,8 +510,7 @@ std::optional<char> XCOPY::PromptForLetter(const std::string& allowed,
 
 XCopyError XCOPY::CopyToDestination()
 {
-	// We always overwrite if we are ran from a batch file
-	bool overwrite_all = !IsInvokedInteractively();
+	bool overwrite_all = !display_overwrite_prompt;
 
 	for (const auto& [path, files] : src_snapshot) {
 		const auto from_base = path_join(src_path, path);
