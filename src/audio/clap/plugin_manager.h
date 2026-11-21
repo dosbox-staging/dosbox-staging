@@ -74,6 +74,17 @@ public:
 	// support MIDI and the first audio output port must be stereo.
 	std::unique_ptr<Plugin> LoadPlugin(const PluginInfo& plugin_info);
 
+	// Like LoadPlugin() above, but from a library loaded with GetLibrary().
+	// A library is unloaded when its last plugin instance is destroyed, so
+	// load the library once and pass it here when probing several plugins
+	// of a library whose state is expensive to set up on every load.
+	std::unique_ptr<Plugin> LoadPlugin(const std::shared_ptr<Library>& library,
+	                                   const PluginInfo& plugin_info);
+
+	// Loads the library of the plugin, or returns the one already loaded.
+	// Returns nullptr if the library cannot be loaded.
+	std::shared_ptr<Library> GetLibrary(const PluginInfo& plugin_info);
+
 private:
 	PluginManager()  = default;
 	~PluginManager() = default;

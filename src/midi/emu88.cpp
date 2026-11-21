@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <deque>
+#include <memory>
 #include <set>
 #include <string>
 #include <vector>
@@ -170,7 +171,22 @@ static void set_rom_path_env_var()
 	set_env_var(Emu88::RomPathVariable, env_list.c_str(), Env::Overwrite);
 }
 
-static std::unique_ptr<Clap::Plugin> try_load_plugin(const Emu88::SynthModel& model)
+// Each load of the 88emu library scans its ROM directories and hashes the ROMs
+// from scratch. A library is unloaded with its last plugin instance, so probing
+// several models loads it once and creates every plugin from it.
+static std::shared_ptr<Clap::Library> load_library()
+{
+	auto& plugin_manager = Clap::PluginManager::GetInstance();
+
+	const auto plugin_info = plugin_manager.FindPluginInLibrary(Emu88::LibraryName);
+	if (!plugin_info) {
+		return {};
+	}
+	return plugin_manager.GetLibrary(*plugin_info);
+}
+
+static std::unique_ptr<Clap::Plugin> try_load_plugin(
+        const std::shared_ptr<Clap::Library>& library, const Emu88::SynthModel& model)
 {
 	auto& plugin_manager = Clap::PluginManager::GetInstance();
 
@@ -182,7 +198,7 @@ static std::unique_ptr<Clap::Plugin> try_load_plugin(const Emu88::SynthModel& mo
 	}
 
 	// Fails if the ROMs of the model are missing
-	return plugin_manager.LoadPlugin(*plugin_info);
+	return plugin_manager.LoadPlugin(library, *plugin_info);
 }
 
 struct PluginAndModel {
@@ -207,9 +223,11 @@ static PluginAndModel load_model(const std::string& wanted_model_name)
 		return {false, all_models};
 	}();
 
+	const auto library = load_library();
+
 	for (const auto model : candidate_models) {
 		if (load_first_available || wanted_model_name == model->config_name) {
-			if (auto plugin = try_load_plugin(*model); plugin) {
+			if (auto plugin = try_load_plugin(library, *model); plugin) {
 				return {std::move(plugin), model};
 			}
 		}
@@ -347,9 +365,11 @@ void EMU88_ListDevices(MidiDeviceEmu88* device, MoreOutputStrings& output)
 	if (!available_models_initialised) {
 		set_rom_path_env_var();
 
+		const auto library = load_library();
+
 		available_models.clear();
 		for (const auto m : all_models) {
-			if (try_load_plugin(*m)) {
+			if (try_load_plugin(library, *m)) {
 				available_models.insert(m);
 			}
 		}

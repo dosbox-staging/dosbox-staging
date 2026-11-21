@@ -372,16 +372,27 @@ std::shared_ptr<Library> PluginManager::GetOrLoadLibrary(const std_fs::path& lib
 	}
 }
 
+std::shared_ptr<Library> PluginManager::GetLibrary(const PluginInfo& plugin_info)
+{
+	return GetOrLoadLibrary(plugin_info.library_path);
+}
+
 std::unique_ptr<Plugin> PluginManager::LoadPlugin(const PluginInfo& plugin_info)
+{
+	return LoadPlugin(GetOrLoadLibrary(plugin_info.library_path), plugin_info);
+}
+
+std::unique_ptr<Plugin> PluginManager::LoadPlugin(const std::shared_ptr<Library>& library,
+                                                  const PluginInfo& plugin_info)
 {
 	LOG_DEBUG("CLAP: Loading plugin with ID '%s' from library '%s'",
 	          plugin_info.id.c_str(),
 	          plugin_info.library_path.string().c_str());
 
-	const auto library = GetOrLoadLibrary(plugin_info.library_path);
 	if (!library) {
 		return {};
 	}
+	assert(library->GetPath() == plugin_info.library_path);
 
 	const auto factory = library->GetPluginFactory();
 	if (!factory) {
