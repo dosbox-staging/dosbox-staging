@@ -86,7 +86,7 @@ void XCOPY::Run()
 		return;
 	}
 
-	if (!Initialize()) {
+	if (!Initialize() || IsCyclicCopy()) {
 		WriteOut(MSG_Get("PROGRAM_XCOPY_FILES_COPIED"), 0);
 		result_errorcode = enum_val(XcopyExitCode::InitializationError);
 		return;
@@ -155,8 +155,11 @@ bool XCOPY::InitializeSource(const std::string& value)
 	const auto last_sep_pos = canonicalized.rfind(DosSeparator);
 	assertm(last_sep_pos != std::string::npos,
 	        "Canonicalization ensures a slash is always present");
+	// If last_sep_pos is 2 it means we have a bare drive (X:\). In that
+	// case, include the separator in the path.
+	const auto path_len = last_sep_pos == 2 ? 3 : last_sep_pos;
 
-	src_path = canonicalized.substr(0, last_sep_pos);
+	src_path = canonicalized.substr(0, path_len);
 	src_spec = parse_dos_filename(canonicalized.substr(last_sep_pos + 1));
 	if (!DOS_GetFileAttr(src_path.c_str(), &attr) || !attr.directory) {
 		WriteErr(MSG_Get("PROGRAM_XCOPY_INVALID_PATH"));
@@ -228,7 +231,11 @@ bool XCOPY::InitializeDestination(const std::string& value)
 	assertm(last_sep_pos != std::string::npos,
 	        "Canonicalization ensures a slash is always present");
 
-	dest_path = canonicalized.substr(0, last_sep_pos);
+	// If last_sep_pos is 2 it means we have a bare drive (X:\). In that
+	// case, include the separator in the path.
+	const auto path_len = last_sep_pos == 2 ? 3 : last_sep_pos;
+
+	dest_path = canonicalized.substr(0, path_len);
 	dest_spec = parse_dos_filename(canonicalized.substr(last_sep_pos + 1));
 	if (dest_path.find_last_of("?*") != std::string::npos) {
 		// Canonicalization does not reject directories with wildcards
@@ -269,6 +276,26 @@ bool XCOPY::Initialize()
 
 	return InitializeSource(args[0]) &&
 	       InitializeDestination(args.size() == 2 ? args[1] : CurrentDirectory);
+}
+
+bool XCOPY::IsCyclicCopy()
+{
+	if (deep_copy) {
+		// Ensuring that src_path has a separator at the end makes
+		// the prefix check robust against situations where dest_path
+		// starts with src_path but is a different directory (eg:
+		// C:\FOOBAR with src_path is C:\FOO). Works because both paths
+		// are canonicalized.
+		const auto src_prefix = src_path.ends_with(DosSeparator)
+		                              ? src_path
+		                              : src_path + DosSeparator;
+		if (dest_path.starts_with(src_prefix) || src_path == dest_path) {
+			WriteErr(MSG_Get("PROGRAM_XCOPY_CYCLIC_COPY"));
+			return true;
+		}
+	}
+
+	return false;
 }
 
 std::pair<bool, std::vector<XCopySnapshotEntry>> XCOPY::BuildSourceSnapshot()

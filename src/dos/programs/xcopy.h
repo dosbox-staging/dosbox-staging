@@ -76,6 +76,8 @@ private:
 	std::optional<char> PromptForLetter(const std::string& allowed,
 	                                    bool cr_confirms);
 
+	bool IsCyclicCopy();
+
 	template <typename... Args>
 	void WriteErr(const std::string& format, const Args&... args)
 	{
