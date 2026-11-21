@@ -98,6 +98,12 @@ void XCOPY::Run()
 		return;
 	}
 
+	error = FailOnCyclicCopy();
+	if (error != XCopyError::NoError) {
+		AfterRun(error);
+		return;
+	}
+
 	error = BuildSourceSnapshot();
 	// FileNotFound does not stop the copy: the original XCOPY
 	// implementation creates the destination tree when /e is set.
@@ -169,8 +175,11 @@ XCopyError XCOPY::InitializeSource(const std::string& value)
 	const auto last_sep_pos = canonicalized.rfind(DosSeparator);
 	assertm(last_sep_pos != std::string::npos,
 	        "Canonicalization ensures a slash is always present");
+	// If last_sep_pos is 2 it means we have a bare drive (C:\) on the left
+	// side of the separator, so we should include it in the path.
+	const auto path_len = last_sep_pos == 2 ? 3 : last_sep_pos;
 
-	src_path = canonicalized.substr(0, last_sep_pos);
+	src_path = canonicalized.substr(0, path_len);
 	src_spec = parse_dos_filename(canonicalized.substr(last_sep_pos + 1));
 	if (!DOS_GetFileAttr(src_path.c_str(), &attr) || !attr.directory) {
 		WriteErr(MSG_Get("PROGRAM_XCOPY_INVALID_PATH"));
@@ -242,7 +251,11 @@ XCopyError XCOPY::InitializeDestination(const std::string& value)
 	assertm(last_sep_pos != std::string::npos,
 	        "Canonicalization ensures a slash is always present");
 
-	dest_path = canonicalized.substr(0, last_sep_pos);
+	// If last_sep_pos is 2 it means we have a bare drive (C:\) on the left
+	// side of the separator, so we should include it in the path.
+	const auto path_len = last_sep_pos == 2 ? 3 : last_sep_pos;
+
+	dest_path = canonicalized.substr(0, path_len);
 	dest_spec = parse_dos_filename(canonicalized.substr(last_sep_pos + 1));
 	if (dest_path.find_last_of("?*") != std::string::npos) {
 		// Canonicalization does not reject directories with wildcards
@@ -286,6 +299,26 @@ XCopyError XCOPY::Initialize()
 
 	const auto error = InitializeSource(src);
 	return error == XCopyError::NoError ? InitializeDestination(dest) : error;
+}
+
+XCopyError XCOPY::FailOnCyclicCopy()
+{
+	if (deep_copy) {
+		// Ensuring that src_path has a separator at the end makes
+		// the prefix check robust against situations where dest_path
+		// starts with src_path but is a different directory (eg:
+		// C:\FOOBAR with src_path is C:\FOO). Works because both paths
+		// are canonicalized.
+		const auto src_prefix = src_path.ends_with(DosSeparator)
+		                              ? src_path
+		                              : src_path + DosSeparator;
+		if (dest_path.starts_with(src_prefix) || src_path == dest_path) {
+			WriteErr(MSG_Get("PROGRAM_XCOPY_CYCLIC_COPY"));
+			return XCopyError::Failure;
+		}
+	}
+
+	return XCopyError::NoError;
 }
 
 XCopyError XCOPY::BuildSourceSnapshot()
@@ -580,6 +613,8 @@ void XCOPY::AddMessages()
 	MSG_Add("PROGRAM_XCOPY_GENERAL_FAILURE", "General failure - %s\n");
 
 	MSG_Add("PROGRAM_XCOPY_INSUFFICIENT_DISK_SPACE", "Insufficient disk space\n");
+
+	MSG_Add("PROGRAM_XCOPY_CYCLIC_COPY", "Cannot perform a cyclic copy\n");
 
 	MSG_Add("PROGRAM_XCOPY_RESERVED_DEVICE_SOURCE",
 	        "Cannot copy from a reserved device\n");

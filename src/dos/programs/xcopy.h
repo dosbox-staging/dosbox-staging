@@ -82,6 +82,8 @@ private:
 	std::optional<char> PromptForLetter(const std::string& allowed,
 	                                    bool cr_confirms);
 
+	XCopyError FailOnCyclicCopy();
+
 	void AfterRun(XCopyError error);
 
 	template <typename... Args>
