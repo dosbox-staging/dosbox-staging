@@ -8,6 +8,7 @@
 #include "utils/ascii.h"
 
 #include <array>
+#include <charconv>
 #include <ranges>
 
 extern unsigned int result_errorcode;
@@ -75,6 +76,92 @@ static std::string doserr_msg_get(const uint16_t error_code)
 		return MSG_Get("PROGRAM_XCOPY_LOCK_VIOLATION");
 	default: return MSG_Get("PROGRAM_XCOPY_GENERAL_FAILURE");
 	}
+}
+
+// Stricter than parse_int (disallows +- prefix and whitespace)
+static std::optional<uint32_t> parse_date_field(const std::string_view str)
+{
+	const char* first = str.data();
+	const char* last  = first + str.size();
+	uint32_t value    = 0;
+
+	// Invalid if errored or if we didn't consume the full string
+	const auto [ptr, ec] = std::from_chars(first, last, value);
+	if (ec != std::errc() || ptr != last) {
+		return {};
+	}
+
+	return value;
+}
+
+static std::optional<std::tuple<uint32_t, uint32_t, uint32_t>> split_date(
+        const std::string& str)
+{
+	static constexpr std::string_view DateDelimiters = "./-";
+
+	const size_t delim_pos = str.find_first_of(DateDelimiters);
+	if (delim_pos == std::string::npos) {
+		return {};
+	}
+	const char delimiter = str[delim_pos];
+
+	const auto fields = split_with_empties(str, std::string_view(&delimiter, 1));
+	if (fields.size() != 3) {
+		return {};
+	}
+
+	const auto maybe_first  = parse_date_field(fields[0]);
+	const auto maybe_second = parse_date_field(fields[1]);
+	const auto maybe_third  = parse_date_field(fields[2]);
+
+	if (maybe_first && maybe_second && maybe_third) {
+		return std::make_tuple(*maybe_first, *maybe_second, *maybe_third);
+	}
+
+	return {};
+}
+
+static std::optional<uint16_t> parse_date_arg(const std::string& str)
+{
+	// the first character is always :
+	if (str[0] != ':') {
+		return {};
+	}
+
+	const auto maybe_parts = split_date(str.substr(1));
+	if (!maybe_parts) {
+		return {};
+	}
+
+	uint32_t year  = 0;
+	uint32_t month = 0;
+	uint32_t day   = 0;
+
+	switch (DOS_GetLocaleDateFormat()) {
+	case DosDateFormat::YearMonthDay:
+		std::tie(year, month, day) = *maybe_parts;
+		break;
+	case DosDateFormat::MonthDayYear:
+		std::tie(month, day, year) = *maybe_parts;
+		break;
+	default: // DosDateFormat::DayMonthYear:
+		std::tie(day, month, year) = *maybe_parts;
+		break;
+	}
+
+	// Maps 00-79 to 2000-2079 and 80-99 to 1980-1999. The original
+	// implementation of XCOPY refuses dates before 1980 when the year is
+	// 2 digits only.
+	if (year < 100) {
+		year += year < 80 ? 2000 : 1900;
+	}
+
+	// Reject invalid dates
+	if (!is_date_valid(year, month, day)) {
+		return {};
+	}
+
+	return DOS_PackDate(year, month, day);
 }
 
 void XCOPY::AfterRun(const XCopyError error)
@@ -281,6 +368,15 @@ XCopyError XCOPY::Initialize()
 		copy_empty_dirs = true;
 	}
 
+	if (cmd->FindStringBegin("/d", found, true)) {
+		const auto maybe_value = parse_date_arg(found);
+		if (!maybe_value) {
+			WriteErr(MSG_Get("PROGRAM_XCOPY_INVALID_DATE"));
+			return XCopyError::Failure;
+		}
+		maybe_min_date = maybe_value;
+	}
+
 	// /y and /-y are exclusive: this block only removes one, so that
 	// the fallback can catch the other one and produce an error.
 	if (cmd->FindExist("/y", true)) {
@@ -354,6 +450,7 @@ XCopyError XCOPY::BuildSourceSnapshot()
 	const auto original_dta_ptr = dos.dta();
 	dos.dta(dos.tables.tempdta);
 
+	bool read_msg_displayed        = false;
 	bool found_something           = false;
 	std::vector<std::string> paths = {};
 	paths.push_back("");
@@ -366,18 +463,29 @@ XCopyError XCOPY::BuildSourceSnapshot()
 		// First pass: look for files that match the filespec
 		const auto files = find_all(from_base, src_spec, FileAttributes);
 
-		if (!files.empty() && !found_something) {
-			// Display this message only once
+		found_something |= !files.empty();
+
+		// Filter the files by date
+		std::vector<DOS_DTA::Result> filtered = {};
+		for (const auto& file : files) {
+			if (maybe_min_date && file.date < *maybe_min_date) {
+				continue;
+			}
+			filtered.push_back(file);
+		}
+
+		if (!read_msg_displayed && !filtered.empty()) {
+			// Display this message once if we have files to copy
 			WriteOut(MSG_Get("PROGRAM_XCOPY_READING_SOURCE"));
-			found_something = true;
+			read_msg_displayed = true;
 		}
 
 		// We create each directory that is a key in files. Normally,
 		// a directory gets created if it has some files in it, but
 		// if copy_empty_dirs is set, we need to create empty
 		// directories as well.
-		if (!files.empty() || copy_empty_dirs) {
-			src_snapshot.push_back({path, files});
+		if (!filtered.empty() || copy_empty_dirs) {
+			src_snapshot.push_back({path, std::move(filtered)});
 		}
 
 		if (!deep_copy) {
@@ -619,6 +727,8 @@ void XCOPY::AddMessages()
 	MSG_Add("PROGRAM_XCOPY_INVALID_PATH", "Invalid path\n");
 
 	MSG_Add("PROGRAM_XCOPY_INVALID_DRIVE", "Invalid drive specification\n");
+
+	MSG_Add("PROGRAM_XCOPY_INVALID_DATE", "Invalid date\n");
 
 	MSG_Add("PROGRAM_XCOPY_FILE_NOT_FOUND", "File not found - %s\n");
 

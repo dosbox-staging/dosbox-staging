@@ -59,6 +59,18 @@ private:
 	/// Displays a prompt before overwriting an existing file
 	bool display_overwrite_prompt = false;
 
+	/**
+	 * If present, only copy files changed on or after this value, specified
+	 * in the FAT directory date format:
+	 * <code>
+	 * │F│E│D│C│B│A│9│8│7│6│5│4│3│2│1│0│
+	 * │ │ │ │ │ │ │ │ │ │ │ └─┴─┴─┴─┴─── Day (1-31)
+	 * │ │ │ │ │ │ │ └─┴─┴─┴──────────── Month (1-12)
+	 * └─┴─┴─┴─┴─┴─┴─────────────────── Year (less 1980)
+	 * </code>
+	 */
+	std::optional<uint16_t> maybe_min_date = {};
+
 	/// The snapshot of the source tree, built by BuildSourceSnapshot().
 	std::vector<XCopySnapshotEntry> src_snapshot = {};
 
