@@ -39,6 +39,11 @@ static bool has_invalid_drive_spec(const std::string& path)
 	       !Drives[drive_index(drive)];
 }
 
+static bool is_readonly_drive(const char drive)
+{
+	return Drives[drive_index(drive)]->IsReadOnly();
+}
+
 static std::vector<DOS_DTA::Result> find_all(const std::string& path,
                                              const DosFilename& spec,
                                              const FatAttributeFlags& attr)
@@ -196,6 +201,15 @@ void XCOPY::Run()
 	// implementation creates the destination tree when /e is set.
 	if (error != XCopyError::NoError && error != XCopyError::FileNotFound) {
 		AfterRun(error);
+		return;
+	}
+
+	// The original XCOPY implementation does not eagerly check for
+	// writeability, but waits for the first failure and DOS then shows the
+	// write protect error prompt.
+	if (!src_snapshot.empty() && is_readonly_drive(dest_path[0])) {
+		WriteErr(MSG_Get("PROGRAM_XCOPY_ACCESS_DENIED"), dest_path.c_str());
+		AfterRun(XCopyError::CriticalError);
 		return;
 	}
 
