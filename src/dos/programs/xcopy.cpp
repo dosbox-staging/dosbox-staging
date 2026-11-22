@@ -411,6 +411,9 @@ XCopyError XCOPY::Initialize()
 		clear_archive_attribute  = true;
 	}
 
+	// Discard the /v flag, DOSBox does not implement write with verify
+	cmd->FindExist("/v", true);
+
 	// TODO: support all switches
 	if (cmd->FindStringBegin("/", found)) {
 		// found does not contain the leading /, the message key does
