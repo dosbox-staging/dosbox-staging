@@ -401,6 +401,16 @@ XCopyError XCOPY::Initialize()
 		display_overwrite_prompt = GetDefaultDisplayOverwritePrompt();
 	}
 
+	if (cmd->FindExist("/a", true)) {
+		copy_archived_files_only = true;
+	}
+
+	if (cmd->FindExist("/m", true)) {
+		// The /m switch implies /a as well
+		copy_archived_files_only = true;
+		clear_archive_attribute  = true;
+	}
+
 	// TODO: support all switches
 	if (cmd->FindStringBegin("/", found)) {
 		// found does not contain the leading /, the message key does
@@ -479,10 +489,13 @@ XCopyError XCOPY::BuildSourceSnapshot()
 
 		found_something |= !files.empty();
 
-		// Filter the files by date
+		// Filter the files by date and archive flag, if specified
 		std::vector<DOS_DTA::Result> filtered = {};
 		for (const auto& file : files) {
 			if (maybe_min_date && file.date < *maybe_min_date) {
+				continue;
+			}
+			if (copy_archived_files_only && !file.attr.archive) {
 				continue;
 			}
 			filtered.push_back(file);
@@ -646,7 +659,7 @@ XCopyError XCOPY::CopyToDestination()
 			}
 		}
 
-		for (const DOS_DTA::Result& file : files) {
+		for (const auto& file : files) {
 			const auto to_file = apply_pattern(file.name, dest_spec);
 			if (DOS_FindDevice(to_file.c_str()) != DOS_DEVICES) {
 				// The original XCOPY implementation doesn't
@@ -726,6 +739,15 @@ XCopyError XCOPY::CopyToDestination()
 			}
 
 			copied_count++;
+
+			if (clear_archive_attribute) {
+				FatAttributeFlags attr = file.attr;
+				attr.archive           = false;
+				if (!DOS_SetFileAttr(from_path.c_str(), attr)) {
+					LOG_WARNING("XCOPY: Could not clear archive bit of '%s'",
+					            from_path.c_str());
+				}
+			}
 		}
 	}
 

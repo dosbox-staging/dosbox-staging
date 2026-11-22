@@ -71,6 +71,12 @@ private:
 	 */
 	std::optional<uint16_t> maybe_min_date = {};
 
+	/// Copy only files with the archive attribute set (default false).
+	bool copy_archived_files_only = false;
+
+	/// Clear the archive attribute in the source files (default false).
+	bool clear_archive_attribute = false;
+
 	/// The snapshot of the source tree, built by BuildSourceSnapshot().
 	std::vector<XCopySnapshotEntry> src_snapshot = {};
 
