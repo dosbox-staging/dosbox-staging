@@ -77,6 +77,9 @@ private:
 	/// Clear the archive attribute in the source files (default false).
 	bool clear_archive_attribute = false;
 
+	/// Display a prompt before copying each file.
+	bool display_copy_prompt = false;
+
 	/// The snapshot of the source tree, built by BuildSourceSnapshot().
 	std::vector<XCopySnapshotEntry> src_snapshot = {};
 

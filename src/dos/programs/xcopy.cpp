@@ -235,11 +235,6 @@ void XCOPY::Run()
 
 XCopyError XCOPY::InitializeSource(const std::string& value)
 {
-	if (has_invalid_drive_spec(value)) {
-		WriteErr(MSG_Get("PROGRAM_XCOPY_INVALID_DRIVE"));
-		return XCopyError::Failure;
-	}
-
 	if (DOS_FindDevice(value.c_str()) != DOS_DEVICES) {
 		WriteErr(MSG_Get("PROGRAM_XCOPY_RESERVED_DEVICE_SOURCE"));
 		return XCopyError::Failure;
@@ -292,11 +287,6 @@ XCopyError XCOPY::InitializeSource(const std::string& value)
 
 XCopyError XCOPY::InitializeDestination(const std::string& value)
 {
-	if (has_invalid_drive_spec(value)) {
-		WriteErr(MSG_Get("PROGRAM_XCOPY_INVALID_DRIVE"));
-		return XCopyError::Failure;
-	}
-
 	const auto canonicalized = DOS_Canonicalize(value.c_str());
 	if (canonicalized.empty()) {
 		WriteErr(MSG_Get("PROGRAM_XCOPY_INVALID_PATH"));
@@ -414,7 +404,10 @@ XCopyError XCOPY::Initialize()
 	// Discard the /v flag, DOSBox does not implement write with verify
 	cmd->FindExist("/v", true);
 
-	// TODO: support all switches
+	display_copy_prompt = cmd->FindExist("/p", true);
+
+	const auto display_wait_prompt = cmd->FindExist("/w", true);
+
 	if (cmd->FindStringBegin("/", found)) {
 		// found does not contain the leading /, the message key does
 		WriteErr(MSG_Get("PROGRAM_XCOPY_INVALID_SWITCH"), found.c_str());
@@ -429,6 +422,33 @@ XCopyError XCOPY::Initialize()
 
 	const auto src  = args[0];
 	const auto dest = args.size() == 2 ? args[1] : CurrentDirectory;
+
+	// The original XCOPY implementation checks for drive validity before
+	// the wait prompt
+	if (has_invalid_drive_spec(src) || has_invalid_drive_spec(dest)) {
+		WriteErr(MSG_Get("PROGRAM_XCOPY_INVALID_DRIVE"));
+		return XCopyError::Failure;
+	}
+
+	// This prompt has the purpose of letting the user switch disks when
+	// XCOPY is running from a floppy, so it must be run before src checks.
+	if (display_wait_prompt) {
+		WriteOut(MSG_Get("PROGRAM_XCOPY_WAIT_PROMPT"));
+
+		uint8_t answer = 0;
+		uint16_t count = 1;
+
+		if (!DOS_ReadFile(STDIN, &answer, &count) || count == 0) {
+			LOG_ERR("XCOPY: broken stdin");
+		}
+
+		if (DOSBOX_IsShutdownRequested()) {
+			LOG_INFO("XCOPY: shutdown requested, aborting initialization");
+			return XCopyError::Interrupted;
+		}
+
+		WriteOut("\n");
+	}
 
 	const auto error = InitializeSource(src);
 	return error == XCopyError::NoError ? InitializeDestination(dest) : error;
@@ -498,16 +518,33 @@ XCopyError XCOPY::BuildSourceSnapshot()
 			if (maybe_min_date && file.date < *maybe_min_date) {
 				continue;
 			}
+
 			if (copy_archived_files_only && !file.attr.archive) {
 				continue;
 			}
-			filtered.push_back(file);
-		}
 
-		if (!read_msg_displayed && !filtered.empty()) {
-			// Display this message once if we have files to copy
-			WriteOut(MSG_Get("PROGRAM_XCOPY_READING_SOURCE"));
-			read_msg_displayed = true;
+			if (display_copy_prompt) {
+				const auto from_path = path_join(from_base,
+				                                 file.name);
+				WriteOut(MSG_Get("PROGRAM_XCOPY_COPY_PROMPT"),
+				         from_path.c_str());
+				const auto maybe_letter = PromptForLetter("yn", false);
+				if (!maybe_letter) {
+					// Prompt aborted
+					dos.dta(original_dta_ptr);
+					return XCopyError::Failure;
+				}
+				if (maybe_letter == 'n') {
+					continue;
+				}
+			}
+
+			if (!read_msg_displayed) {
+				WriteOut(MSG_Get("PROGRAM_XCOPY_READING_SOURCE"));
+				read_msg_displayed = true;
+			}
+
+			filtered.push_back(file);
 		}
 
 		// We create each directory that is a key in files. Normally,
@@ -801,6 +838,10 @@ void XCOPY::AddMessages()
 	MSG_Add("PROGRAM_XCOPY_READING_SOURCE", "Reading source file(s)...\n");
 
 	MSG_Add("PROGRAM_XCOPY_OVERWRITE_PROMPT", "Overwrite %s (Yes/No/All)?");
+
+	MSG_Add("PROGRAM_XCOPY_WAIT_PROMPT", "Press any key to begin copying file(s)");
+
+	MSG_Add("PROGRAM_XCOPY_COPY_PROMPT", "%s (Y/N)? ");
 
 	MSG_Add("PROGRAM_XCOPY_FD_PROMPT",
 	        "Does %s specify a file name\n"
