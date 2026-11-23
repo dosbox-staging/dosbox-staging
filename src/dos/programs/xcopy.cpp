@@ -439,11 +439,10 @@ XCopyError XCOPY::Initialize()
 		uint16_t count = 1;
 
 		if (!DOS_ReadFile(STDIN, &answer, &count) || count == 0) {
-			LOG_ERR("XCOPY: broken stdin");
+			LOG_WARNING("XCOPY: broken or empty stdin");
 		}
 
 		if (DOSBOX_IsShutdownRequested()) {
-			LOG_INFO("XCOPY: shutdown requested, aborting initialization");
 			return XCopyError::Interrupted;
 		}
 
@@ -515,6 +514,11 @@ XCopyError XCOPY::BuildSourceSnapshot()
 		// Filter the files by date and archive flag, if specified
 		std::vector<DOS_DTA::Result> filtered = {};
 		for (const auto& file : files) {
+			if (DOSBOX_IsShutdownRequested()) {
+				dos.dta(original_dta_ptr);
+				return XCopyError::Interrupted;
+			}
+
 			if (maybe_min_date && file.date < *maybe_min_date) {
 				continue;
 			}
@@ -529,12 +533,7 @@ XCopyError XCOPY::BuildSourceSnapshot()
 				WriteOut(MSG_Get("PROGRAM_XCOPY_COPY_PROMPT"),
 				         from_path.c_str());
 				const auto maybe_letter = PromptForLetter("yn", false);
-				if (!maybe_letter) {
-					// Prompt aborted
-					dos.dta(original_dta_ptr);
-					return XCopyError::Failure;
-				}
-				if (maybe_letter == 'n') {
+				if (!maybe_letter || maybe_letter == 'n') {
 					continue;
 				}
 			}
@@ -612,9 +611,7 @@ XCopyError XCOPY::CopyFile(const uint16_t source_handle,
 	bool eof                                 = false;
 
 	while (!eof) {
-		// Interrupt the cycle safely when shutting down
 		if (DOSBOX_IsShutdownRequested()) {
-			LOG_WARNING("XCOPY: shutdown requested, aborting copy loop");
 			return XCopyError::Interrupted;
 		}
 
@@ -656,12 +653,11 @@ std::optional<char> XCOPY::PromptForLetter(const std::string& allowed,
 		uint16_t count = 1;
 
 		if (DOSBOX_IsShutdownRequested()) {
-			LOG_INFO("XCOPY: shutdown requested, aborting user prompt loop");
 			return {};
 		}
 
 		if (!DOS_ReadFile(STDIN, &answer, &count) || count == 0) {
-			LOG_ERR("XCOPY: broken stdin, aborting user prompt loop");
+			LOG_WARNING("XCOPY: broken or empty stdin");
 			return {};
 		}
 
@@ -700,6 +696,10 @@ XCopyError XCOPY::CopyToDestination()
 		}
 
 		for (const auto& file : files) {
+			if (DOSBOX_IsShutdownRequested()) {
+				return XCopyError::Interrupted;
+			}
+
 			const auto to_file = apply_pattern(file.name, dest_spec);
 			if (DOS_FindDevice(to_file.c_str()) != DOS_DEVICES) {
 				// The original XCOPY implementation doesn't
@@ -731,17 +731,12 @@ XCopyError XCOPY::CopyToDestination()
 
 				// TODO: make PromptForLetter use WriteErr here
 				const auto maybe_letter = PromptForLetter("yna", true);
-				if (!maybe_letter) {
-					// Prompt aborted
-					DOS_CloseFile(from_handle);
-					return XCopyError::Failure;
-				}
-
-				overwrite_all = maybe_letter == 'a';
-				if (maybe_letter == 'n') {
+				if (!maybe_letter || maybe_letter == 'n') {
 					DOS_CloseFile(from_handle);
 					continue;
 				}
+
+				overwrite_all = maybe_letter == 'a';
 			} else {
 				WriteOut("%s\n", file.name.c_str());
 			}
