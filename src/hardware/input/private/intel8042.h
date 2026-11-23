@@ -8,6 +8,7 @@
 #include <vector>
 
 void I8042_Init();
+void I8042_Destroy();
 
 // Functions for keyboard and mouse emulation code, to provide
 // command responses ('AddByte') and key scancodes / mouse updates

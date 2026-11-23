@@ -724,3 +724,15 @@ void KEYBOARD_Init()
 	keyboard_reset(is_startup);
 	scancode_set(CodeSet1);
 }
+
+void KEYBOARD_Destroy()
+{
+	TIMER_DelTickHandler(&typematic_tick);
+	PIC_RemoveEvents(leds_all_on_expire_handler);
+
+	// Drop the buffered scancodes so they won't be sent to the controller
+	// if the keyboard gets initialised again
+	clear_buffer();
+
+	I8042_Destroy();
+}
