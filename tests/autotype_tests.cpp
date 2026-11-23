@@ -12,8 +12,12 @@
 
 #include "cpu/callback.h"
 #include "dos/dos.h"
+#include "dos/dos_keyboard_layout.h"
 #include "dosbox_test_fixture.h"
+#include "hardware/input/keyboard.h"
+#include "hardware/memory.h"
 #include "hardware/pic.h"
+#include "ints/bios.h"
 #include "shell/command_line.h"
 #include "shell/shell.h"
 
@@ -311,6 +315,123 @@ TEST_F(AutoTypeTest, TypesExtendedKeysIntoChoice)
 {
 	AutoType("-w 0.1 -p 0 down q");
 	EXPECT_EQ(Choice("/s /c:HKPMq /t:q,1"), 3);
+}
+
+// Typing with a non-US keyboard layout. The German layout is used because its
+// Y and Z keys are swapped compared to the US one: the key in the place of the
+// US 'Y' key types 'z', and the other way around.
+//
+class AutoTypeKeyboardLayoutTest : public AutoTypeTest {
+public:
+	void SetUp() override
+	{
+		AutoTypeTest::SetUp();
+		LoadKeyboardLayout("de");
+	}
+
+	void TearDown() override
+	{
+		LoadKeyboardLayout("us");
+		AutoTypeTest::TearDown();
+	}
+
+protected:
+	// Presses and releases a key of the emulated keyboard, like the user
+	// would
+	static void TypeKey(const KBD_KEYS key,
+	                    const KeyTranslation translation = KeyTranslation::KeyboardLayout)
+	{
+		KEYBOARD_AddKey(key, true, translation);
+		KEYBOARD_AddKey(key, false, translation);
+	}
+
+private:
+	static void LoadKeyboardLayout(const std::string& layout)
+	{
+		// The screen font of the code page isn't loaded because that
+		// needs the video BIOS, which the test fixture doesn't set up
+		constexpr auto prefer_rom_font = true;
+
+		uint16_t code_page = 437;
+
+		ASSERT_EQ(DOS_LoadKeyboardLayout(layout, code_page, {}, prefer_rom_font),
+		          KeyboardLayoutResult::OK);
+	}
+};
+
+// Makes sure the keyboard layout is in effect; the other tests would pass
+// without it for the wrong reason
+TEST_F(AutoTypeKeyboardLayoutTest, TypedKeysFollowKeyboardLayout)
+{
+	TypeKey(KBD_y);
+	EXPECT_EQ(ReadInput(1), "z");
+}
+
+TEST_F(AutoTypeKeyboardLayoutTest, KeysCanBypassKeyboardLayout)
+{
+	TypeKey(KBD_y, KeyTranslation::UsKeyboard);
+	EXPECT_EQ(ReadInput(1), "y");
+}
+
+// The requested translation applies to exactly the key it was requested for.
+// All four key presses and releases are queued up in the keyboard before the
+// emulated machine gets to process any of them.
+//
+TEST_F(AutoTypeKeyboardLayoutTest, TranslationIsPerKey)
+{
+	TypeKey(KBD_y, KeyTranslation::UsKeyboard);
+	TypeKey(KBD_y);
+
+	EXPECT_EQ(ReadInput(2), "yz");
+}
+
+// The buttons type the characters they're named after, not the ones the
+// keyboard layout assigns to their keys
+TEST_F(AutoTypeKeyboardLayoutTest, AutoTypedButtonsIgnoreKeyboardLayout)
+{
+	AutoType("-w 0 -p 0 y z Y Z");
+	EXPECT_EQ(ReadInput(4), "yzYZ");
+}
+
+// The autotyped character is read as soon as its button is pressed, so the
+// user's key press arrives while the button is still held down
+TEST_F(AutoTypeKeyboardLayoutTest, KeysTypedWhileAutoTypingFollowKeyboardLayout)
+{
+	AutoType("-w 0 -p 0 y");
+	EXPECT_EQ(ReadInput(1), "y");
+
+	TypeKey(KBD_y);
+	EXPECT_EQ(ReadInput(1), "z");
+}
+
+// A guest that is busy with something else might get to read the autotyped
+// key much later, well after the button has been released. This is simulated
+// by masking the keyboard interrupt while the button is pressed and released.
+//
+TEST_F(AutoTypeKeyboardLayoutTest, AutoTypedKeyReadLateIgnoresKeyboardLayout)
+{
+	constexpr auto keyboard_irq = 1;
+
+	PIC_SetIRQMask(keyboard_irq, true);
+	AutoType("-w 0 -p 0 y");
+
+	constexpr auto until_button_is_released_ms = 2 * HoldMs;
+	RunMachineFor(until_button_is_released_ms);
+
+	// The key hasn't reached the BIOS keyboard buffer yet
+	ASSERT_EQ(mem_readw(BIOS_KEYBOARD_BUFFER_HEAD),
+	          mem_readw(BIOS_KEYBOARD_BUFFER_TAIL));
+
+	PIC_SetIRQMask(keyboard_irq, false);
+	EXPECT_EQ(ReadInput(1), "y");
+}
+
+// The German layout must not get in the way of automating a CHOICE menu. If it
+// did, 'z' would be selected.
+TEST_F(AutoTypeKeyboardLayoutTest, TypesIntoChoiceIgnoringKeyboardLayout)
+{
+	AutoType("-w 0.1 -p 0 y");
+	EXPECT_EQ(Choice("/c:zy /t:z,1"), 2);
 }
 
 } // namespace
