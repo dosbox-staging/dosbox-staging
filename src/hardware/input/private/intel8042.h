@@ -17,7 +17,14 @@ void I8042_Destroy();
 void I8042_AddAuxByte(const uint8_t byte);
 void I8042_AddAuxFrame(const std::vector<uint8_t>& bytes);
 void I8042_AddKbdByte(const uint8_t byte);
-void I8042_AddKbdFrame(const std::vector<uint8_t>& bytes);
+// The bytes of a frame marked as bypassing the keyboard layout are remembered
+// as such until the guest reads them; see `KeyTranslation`
+void I8042_AddKbdFrame(const std::vector<uint8_t>& bytes,
+                       const bool bypasses_keyboard_layout = false);
+
+// Tells if the byte the guest has last read from the data port came from the
+// keyboard and was marked as bypassing the keyboard layout
+bool I8042_DidLastReadKbdByteBypassKeyboardLayout();
 
 bool I8042_IsReadyForAuxFrame();
 bool I8042_IsReadyForKbdFrame();

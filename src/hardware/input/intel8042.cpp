@@ -201,6 +201,11 @@ static auto& is_data_new      = status_byte.is_data_new;
 static auto& is_data_from_aux = status_byte.is_data_from_aux;
 static bool is_data_from_kbd  = false; // not present in status byte
 
+// Whether the byte waiting in the data port, and the one the guest has last
+// read from it, are marked as bypassing the keyboard layout
+static bool is_data_bypassing_keyboard_layout    = false;
+static bool did_last_read_bypass_keyboard_layout = false;
+
 static auto& is_transmit_timeout = status_byte.is_transmit_timeout;
 
 // Controller internal buffer
@@ -211,6 +216,8 @@ static struct {
 	bool is_from_aux = false;
 	bool is_from_kbd = false;
 	bool skip_delay  = false;
+
+	bool bypasses_keyboard_layout = false;
 
 } buffer[BufferSize];
 
@@ -470,12 +477,15 @@ static void maybe_transfer_buffer()
 	is_data_from_kbd = buffer[idx].is_from_kbd;
 	is_data_new      = true;
 
+	is_data_bypassing_keyboard_layout = buffer[idx].bypasses_keyboard_layout;
+
 	restart_delay_timer();
 	activate_irqs_if_needed();
 }
 
 static void buffer_add(const uint8_t byte, const bool is_from_aux = false,
-                       const bool is_from_kbd = false, const bool skip_delay = false)
+                       const bool is_from_kbd = false, const bool skip_delay = false,
+                       const bool bypasses_keyboard_layout = false)
 {
 	if ((is_from_aux && is_disabled_aux) || (is_from_kbd && is_disabled_kbd)) {
 		// Byte came from a device which is currently disabled
@@ -500,6 +510,8 @@ static void buffer_add(const uint8_t byte, const bool is_from_aux = false,
 	buffer[idx].is_from_kbd = is_from_kbd;
 	buffer[idx].skip_delay  = skip_delay || (!is_from_aux && !is_from_kbd);
 
+	buffer[idx].bypasses_keyboard_layout = bypasses_keyboard_layout;
+
 	if (is_from_aux) {
 		++waiting_bytes_from_aux;
 	}
@@ -518,12 +530,14 @@ static void buffer_add_aux(const uint8_t byte, const bool skip_delay = false)
 	buffer_add(byte, is_from_aux, is_from_kbd, skip_delay);
 }
 
-static void buffer_add_kbd(const uint8_t byte)
+static void buffer_add_kbd(const uint8_t byte,
+                           const bool bypasses_keyboard_layout = false)
 {
 	const bool is_from_aux = false;
 	const bool is_from_kbd = true;
+	const bool skip_delay  = false;
 
-	buffer_add(byte, is_from_aux, is_from_kbd);
+	buffer_add(byte, is_from_aux, is_from_kbd, skip_delay, bypasses_keyboard_layout);
 }
 
 // ***************************************************************************
@@ -1016,6 +1030,8 @@ static uint8_t read_data_port_byte()
 
 	const auto ret_val = data_byte;
 
+	did_last_read_bypass_keyboard_layout = is_data_bypassing_keyboard_layout;
+
 	is_data_new      = false; // mark byte as already read
 	is_data_from_aux = false;
 	is_data_from_kbd = false;
@@ -1207,7 +1223,8 @@ void I8042_AddKbdByte(const uint8_t byte)
 	buffer_add_kbd(byte);
 }
 
-void I8042_AddKbdFrame(const std::vector<uint8_t>& bytes)
+void I8042_AddKbdFrame(const std::vector<uint8_t>& bytes,
+                       const bool bypasses_keyboard_layout)
 {
 	assert(bytes.size() < UINT8_MAX);
 
@@ -1220,8 +1237,13 @@ void I8042_AddKbdFrame(const std::vector<uint8_t>& bytes)
 
 	enforce_buffer_space(bytes.size());
 	for (const auto& byte : bytes) {
-		buffer_add_kbd(byte);
+		buffer_add_kbd(byte, bypasses_keyboard_layout);
 	}
+}
+
+bool I8042_DidLastReadKbdByteBypassKeyboardLayout()
+{
+	return did_last_read_bypass_keyboard_layout;
 }
 
 bool I8042_IsReadyForAuxFrame()
@@ -1273,4 +1295,7 @@ void I8042_Destroy()
 
 	delay_running = false;
 	delay_expired = true;
+
+	is_data_bypassing_keyboard_layout    = false;
+	did_last_read_bypass_keyboard_layout = false;
 }
