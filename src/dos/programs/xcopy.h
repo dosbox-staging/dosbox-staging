@@ -80,6 +80,9 @@ private:
 	/// Display a prompt before copying each file.
 	bool display_copy_prompt = false;
 
+	/// Set to true if we should stop attempting to read from stdin.
+	bool is_stdin_broken = false;
+
 	/// The snapshot of the source tree, built by BuildSourceSnapshot().
 	std::vector<XCopySnapshotEntry> src_snapshot = {};
 

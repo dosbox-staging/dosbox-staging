@@ -440,6 +440,7 @@ XCopyError XCOPY::Initialize()
 
 		if (!DOS_ReadFile(STDIN, &answer, &count) || count == 0) {
 			LOG_WARNING("XCOPY: broken or empty stdin");
+			is_stdin_broken = true;
 		}
 
 		if (DOSBOX_IsShutdownRequested()) {
@@ -648,6 +649,11 @@ std::optional<char> XCOPY::PromptForLetter(const std::string& allowed,
 	char selected         = '\0';
 	bool requires_confirm = cr_confirms;
 
+	if (is_stdin_broken) {
+		WriteOut("\n");
+		return {};
+	}
+
 	do {
 		uint8_t answer = 0;
 		uint16_t count = 1;
@@ -658,6 +664,8 @@ std::optional<char> XCOPY::PromptForLetter(const std::string& allowed,
 
 		if (!DOS_ReadFile(STDIN, &answer, &count) || count == 0) {
 			LOG_WARNING("XCOPY: broken or empty stdin");
+			is_stdin_broken = true;
+			WriteOut("\n");
 			return {};
 		}
 
