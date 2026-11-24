@@ -8,7 +8,7 @@
 
 #include <string>
 
-class AUTOTYPE final : public Program {
+class AUTOTYPE : public Program {
 public:
 	AUTOTYPE()
 	{
