@@ -1224,9 +1224,8 @@ void MAPPER_AutoType(std::vector<std::string>& buttons, uint32_t wait_ms,
 	uint32_t running_delay_ms = wait_ms;
 
 	for (auto& button : buttons) {
-		if (button == ",") {
-			running_delay_ms += pace_ms;
-		} else {
+		// A comma is an extra pace delay, not a button
+		if (button != ",") {
 			auto_type_queue.emplace(button);
 
 			PIC_AddEvent(auto_type_queued_button,

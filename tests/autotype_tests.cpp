@@ -220,15 +220,27 @@ TEST_F(AutoTypeTest, WaitsForPaceBetweenButtons)
 	EXPECT_LT(ElapsedMs(), second_button_ms + ToleranceMs);
 }
 
-// A comma delays the next button by at least one more pace
+// Each comma delays the next button by one more pace
 TEST_F(AutoTypeTest, CommaAddsExtraPace)
 {
 	AutoType("-w 0 -p 0.1 a , b");
 
-	constexpr auto second_button_without_comma_ms = HoldMs + 100.0;
+	constexpr auto second_button_ms = HoldMs + 2 * 100.0;
 
 	EXPECT_EQ(ReadInput(2), "ab");
-	EXPECT_GE(ElapsedMs(), second_button_without_comma_ms + 100.0);
+	EXPECT_GE(ElapsedMs(), second_button_ms);
+	EXPECT_LT(ElapsedMs(), second_button_ms + ToleranceMs);
+}
+
+TEST_F(AutoTypeTest, MultipleCommasAddUp)
+{
+	AutoType("-w 0 -p 0.1 a , , b");
+
+	constexpr auto second_button_ms = HoldMs + 3 * 100.0;
+
+	EXPECT_EQ(ReadInput(2), "ab");
+	EXPECT_GE(ElapsedMs(), second_button_ms);
+	EXPECT_LT(ElapsedMs(), second_button_ms + ToleranceMs);
 }
 
 TEST_F(AutoTypeTest, NegativeWaitIsBoundedToZero)
