@@ -6,6 +6,7 @@ add_executable(dosbox_tests
     batch_file_tests.cpp
     bit_view_tests.cpp
     bitops_tests.cpp
+    choice_tests.cpp
     clap_plugin_tests.cpp
     cmd_move_tests.cpp
     config_tests.cpp

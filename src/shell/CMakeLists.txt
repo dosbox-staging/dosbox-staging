@@ -1,5 +1,6 @@
 target_sources(dosboxcommon PRIVATE
   autoexec.cpp
+  choice.cpp
   command_line.cpp
   file_reader.cpp
   shell.cpp
