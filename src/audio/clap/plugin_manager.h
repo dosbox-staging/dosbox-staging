@@ -64,9 +64,26 @@ public:
 	        const std::string& wanted_library_name,
 	        const std::string& wanted_plugin_name_or_index = {});
 
+	// Like FindPluginInLibrary(), but matches the complete plugin ID
+	// exactly.
+	std::optional<PluginInfo> FindPluginInLibraryById(
+	        const std::string& wanted_library_name,
+	        const std::string& wanted_plugin_id);
+
 	// Loads and initialises a CLAP plugin. The first note input port must
 	// support MIDI and the first audio output port must be stereo.
 	std::unique_ptr<Plugin> LoadPlugin(const PluginInfo& plugin_info);
+
+	// Like LoadPlugin() above, but from a library loaded with GetLibrary().
+	// A library is unloaded when its last plugin instance is destroyed, so
+	// load the library once and pass it here when probing several plugins
+	// of a library whose state is expensive to set up on every load.
+	std::unique_ptr<Plugin> LoadPlugin(const std::shared_ptr<Library>& library,
+	                                   const PluginInfo& plugin_info);
+
+	// Loads the library of the plugin, or returns the one already loaded.
+	// Returns nullptr if the library cannot be loaded.
+	std::shared_ptr<Library> GetLibrary(const PluginInfo& plugin_info);
 
 private:
 	PluginManager()  = default;
@@ -80,6 +97,10 @@ private:
 	// Plugin enumeration
 	std::vector<PluginInfo> EnumeratePlugins(
 	        const std::string& wanted_library_name = {});
+
+	// The plugins of a library, or of all libraries once enumerated
+	const std::vector<PluginInfo>& GetLibraryPluginInfos(
+	        const std::string& wanted_library_name);
 
 	std::vector<PluginInfo> plugin_info_cache = {};
 	bool plugins_enumerated                   = false;
