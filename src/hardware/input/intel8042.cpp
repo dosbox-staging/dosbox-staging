@@ -1262,3 +1262,15 @@ void I8042_Init()
 	// Initialize hardware
 	flush_buffer();
 }
+
+void I8042_Destroy()
+{
+	// A pending timer event is lost when the PIC is torn down. Without
+	// resetting the state, the controller would keep waiting for the port
+	// delay to expire and hold back the scancodes after the next init.
+	//
+	PIC_RemoveEvents(delay_handler);
+
+	delay_running = false;
+	delay_expired = true;
+}

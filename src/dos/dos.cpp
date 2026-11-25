@@ -1854,6 +1854,10 @@ public:
 		// DOS is still available.
 		DOS_ClearDrivesAndFiles();
 
+		// The files of the Z: drive are registered again by the next
+		// init; leftovers would shadow them and survive forever.
+		VFILE_RemoveAll();
+
 		// de-init devices, this allows DOSBox to cleanly re-initialize
 		// without throwing an inevitable `DOS: Too many devices added`
 		// exception

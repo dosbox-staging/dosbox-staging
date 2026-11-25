@@ -1815,6 +1815,7 @@ void DOSBOX_DestroyModules()
 	VOODOO_Destroy();
 
 	PCI_Destroy();
+	KEYBOARD_Destroy();
 	VGA_Destroy();
 	DMA_Destroy();
 	CPU_Destroy();

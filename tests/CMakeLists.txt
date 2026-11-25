@@ -3,9 +3,11 @@ find_package(GTest REQUIRED)
 
 add_executable(dosbox_tests
     ansi_code_markup_tests.cpp
+    autotype_tests.cpp
     batch_file_tests.cpp
     bit_view_tests.cpp
     bitops_tests.cpp
+    choice_tests.cpp
     clap_plugin_tests.cpp
     cmd_move_tests.cpp
     config_tests.cpp

@@ -201,6 +201,7 @@ enum class ScanCode : uint8_t {
 };
 
 void KEYBOARD_Init();
+void KEYBOARD_Destroy();
 
 // After calling, it drops all the input until secure mode is enabled - safety
 // measure to prevent malicious user from possibily interupting AUTOEXEC.BAT

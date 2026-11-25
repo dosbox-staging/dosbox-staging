@@ -229,6 +229,15 @@ void VFILE_Remove(const char* name, const char* dir)
 	}
 }
 
+void VFILE_RemoveAll()
+{
+	first_file = {};
+
+	// The first entry is a placeholder; positions start from one
+	vfilenames.resize(1);
+	vfile_pos = 1;
+}
+
 void VFILE_GetPathZDrive(std::string& path, const std::string& dirname)
 {
 	struct stat cstat;

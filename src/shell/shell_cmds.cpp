@@ -13,6 +13,7 @@
 #include <ctime>
 #include <limits>
 #include <map>
+#include <optional>
 #include <regex>
 #include <stack>
 #include <string>
@@ -33,7 +34,9 @@
 #include "misc/ansi_code_markup.h"
 #include "misc/cross.h"
 #include "misc/support.h"
+#include "shell/choice.h"
 #include "shell/command_line.h"
+#include "utils/ascii.h"
 #include "utils/string_utils.h"
 
 // clang-format off
@@ -117,32 +120,91 @@ static char* ExpandDot(const char* args, char* buffer, size_t bufsize)
 	return buffer;
 }
 
-static char read_from_keyboard()
+static bool is_stdin_ready()
 {
-	// Blocks until a key is pressed and removes the key from buffer.
-	reg_ah = is_machine_ega_or_better() ? 0x10 : 0x0;
-	CALLBACK_RunRealInt(0x16);
-	return reg_al;
+	const auto handle = RealHandle(STDIN);
+	if (handle >= DOS_FILES || !Files[handle]) {
+		// Let the read fail
+		return true;
+	}
+
+	// Reading from a file never blocks, so only devices need to be polled
+	const auto device = dynamic_cast<DOS_Device*>(Files[handle].get());
+	if (!device) {
+		return true;
+	}
+
+	// The CON device reports whether a key is waiting in the keyboard
+	// buffer; device drivers loaded by the guest are asked for their
+	// input status.
+	//
+	constexpr uint8_t InputAvailable = 0xff;
+
+	constexpr auto query_input_status = true;
+	return device->GetStatus(query_input_status) == InputAvailable;
 }
 
-static char read_from_keyboard_with_timeout(double timeout_ms, char default_key)
-{
-	const auto start_ms = PIC_FullIndex();
-	while (!CALLBACK_Idle()) {
-		// Check for key but does not block or remove from buffer.
-		reg_ah = is_machine_ega_or_better() ? 0x11 : 0x1;
-		CALLBACK_RunRealInt(0x16);
-		if (!(cpu_regs.flags & FLAG_ZF)) {
-			// Key has been pressed.
-			return read_from_keyboard();
+// CHOICE reads its input from the DOS standard input rather than from the BIOS
+// keyboard services (INT 16h), for two reasons:
+//
+// - The shell implements input redirection and pipes by pointing the STDIN
+//   handle at a file, which the BIOS knows nothing about.
+//
+// - When STDIN is the keyboard, the CON device returns extended keys as two
+//   bytes: a zero, then the scan code. This is how the arrow keys end up
+//   matching the 'H', 'K', 'P', and 'M' choices, just like in MS-DOS.
+//
+class StdinChoiceInput final : public ChoiceInput {
+public:
+	// Reading from the keyboard blocks until a key is pressed, so we need
+	// to poll the input status first to implement the timeout.
+	bool WaitForInput(const int timeout_ms) override
+	{
+		const auto start_ms = PIC_FullIndex();
+
+		// The input is checked again after every run of the emulated
+		// machine, so a key that arrives right at the end of the
+		// timeout still wins.
+		//
+		while (!is_stdin_ready()) {
+			if (PIC_FullIndex() >= start_ms + timeout_ms) {
+				return false;
+			}
+
+			// Run the emulated machine for a bit to advance the
+			// emulated time and to let the keyboard interrupt
+			// handler fill the keyboard buffer.
+			//
+			const auto is_shutdown_requested = CALLBACK_Idle();
+
+			if (is_shutdown_requested) {
+				// This isn't a timeout; let the read abort
+				return true;
+			}
 		}
-		const auto now_ms = PIC_FullIndex();
-		if (now_ms >= start_ms + timeout_ms) {
-			break;
-		}
+		return true;
 	}
-	return default_key;
-}
+
+	// Aborts by returning Ctrl+C if a shutdown has been requested, either
+	// before the read or while it was waiting for a key
+	std::optional<char> Read() override
+	{
+		if (DOSBOX_IsShutdownRequested()) {
+			return Ascii::CtrlC;
+		}
+
+		uint8_t data        = 0;
+		uint16_t bytes_read = 1;
+
+		if (!DOS_ReadFile(STDIN, &data, &bytes_read) || bytes_read == 0) {
+			return {};
+		}
+		if (DOSBOX_IsShutdownRequested()) {
+			return Ascii::CtrlC;
+		}
+		return static_cast<char>(data);
+	}
+};
 
 bool lookup_shell_cmd(std::string name, SHELL_Cmd& shell_cmd)
 {
@@ -2286,36 +2348,31 @@ void DosShell::CMD_CHOICE(char* args)
 	}
 
 	// If a default was given, is it in the choices and is the wait valid?
-	bool do_timeout = has_default && contains(choices, default_choice) &&
-	                  default_wait_s > 0;
+	std::optional<ChoiceTimeout> timeout = {};
+	if (has_default && contains(choices, default_choice) && default_wait_s > 0) {
+		timeout = {default_choice, default_wait_s * 1000};
+	}
 
-	// Begin waiting for input, but maybe break on some conditions
-	constexpr char ctrl_c = 3;
-	char choice           = '\0';
-	while (!contains(choices, choice)) {
-		if (do_timeout) {
-			choice = read_from_keyboard_with_timeout(default_wait_s * 1000,
-			                                         default_choice);
-		} else {
-			choice = read_from_keyboard();
-		}
-		if (always_capitalize) {
-			choice = static_cast<char>(toupper(choice));
-		}
-		if (DOSBOX_IsShutdownRequested()) {
-			break;
-		}
-		if (choice == ctrl_c) {
-			break;
-		}
-		// User pressed a key but not a valid choice.
-		// Cancel the timeout + default choice.
-		do_timeout = false;
+	const ChoiceParams params = {
+	        .choices           = choices,
+	        .is_case_sensitive = !always_capitalize,
+	        .timeout           = timeout,
+	};
+
+	StdinChoiceInput input = {};
+	const auto result      = read_choice(params, input);
+
+	if (result.status == ChoiceStatus::EndOfInput) {
+		WriteOut_NoParsing(MSG_Get("SHELL_CMD_CHOICE_EOF"));
+		dos.return_code = 255;
+		LOG_ERR("CHOICE: Failed, returning errorlevel %u", dos.return_code);
+		return;
 	}
 
 	// Print the choice and return the index (or zero if aborted)
 	const auto num_choices = static_cast<int>(choices.size());
-	if (contains(choices, choice)) {
+	if (result.status == ChoiceStatus::Selected) {
+		const auto choice = result.choice;
 		WriteOut("%c\n", choice);
 		const auto nth_choice = choices.find(choice) % 254 + 1;
 		dos.return_code       = check_cast<uint8_t>(nth_choice);

@@ -326,6 +326,31 @@ TEST_F(DOS_FilesTest, VFILE_Register)
 	EXPECT_TRUE(DOS_FindFirst("Z:\\TEST\\FILENA~3.TXT", 0, false));
 }
 
+// Removing all virtual files leaves a clean slate: directories and files can
+// be registered again under the same names
+TEST_F(DOS_FilesTest, VFILE_RemoveAll)
+{
+	VFILE_Register("TEST", nullptr, 0, "/");
+	VFILE_Register("filename_1.txt", nullptr, 0, "/TEST/");
+	VFILE_Register("ROOT.TXT", nullptr, 0, "");
+
+	ASSERT_TRUE(DOS_FindFirst("Z:\\TEST\\FILENA~1.TXT", 0, false));
+	ASSERT_TRUE(DOS_FileExists("Z:\\ROOT.TXT"));
+	ASSERT_TRUE(DOS_FileExists("Z:\\AUTOEXEC.BAT"));
+
+	VFILE_RemoveAll();
+
+	EXPECT_FALSE(DOS_FindFirst("Z:\\TEST\\FILENA~1.TXT", 0, false));
+	EXPECT_FALSE(DOS_FileExists("Z:\\ROOT.TXT"));
+	EXPECT_FALSE(DOS_FileExists("Z:\\AUTOEXEC.BAT"));
+
+	VFILE_Register("TEST", nullptr, 0, "/");
+	EXPECT_FALSE(DOS_FindFirst("Z:\\TEST\\FILENA~1.TXT", 0, false));
+
+	VFILE_Register("filename_1.txt", nullptr, 0, "/TEST/");
+	EXPECT_TRUE(DOS_FindFirst("Z:\\TEST\\FILENA~1.TXT", 0, false));
+}
+
 // Use shared_ptr instead of unique_ptr as the time cache depends on
 // std::enable_shared_from_this which will matter for certains tests
 static std::shared_ptr<localDrive> create_local_drive(const char* path)

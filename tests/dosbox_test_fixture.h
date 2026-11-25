@@ -14,6 +14,9 @@
 #include "cpu/cpu.h"
 #include "dos/dos.h"
 #include "dosbox.h"
+#include "gui/common.h"
+#include "gui/mapper.h"
+#include "hardware/input/keyboard.h"
 #include "hardware/serialport/serialport.h"
 #include "ints/bios.h"
 #include "shell/autoexec.h"
@@ -50,6 +53,7 @@ public:
 		// sections (e.g. "nosound" in the "mixer" section) are silently
 		// dropped.
 		//
+		GFX_AddConfigSection();
 		DOSBOX_InitModuleConfigsAndMessages();
 
 		const auto config_path = get_config_dir();
@@ -57,11 +61,18 @@ public:
 
 		DOSBOX_Init();
 		CPU_Init();
+		KEYBOARD_Init();
 		MIXER_Init();
 		BIOS_Init();
 		SERIAL_Init();
 		DOS_Init();
 		AUTOEXEC_Init();
+
+		// Creates the mapper's key events, so keys can be pressed via
+		// the mapper (e.g., with `MAPPER_AutoType()`)
+		MAPPER_BindKeys(get_sdl_section());
+
+		SetUpFirstShellProcess();
 	}
 
 	void TearDown() override
@@ -69,14 +80,37 @@ public:
 		DOS_Destroy();
 		SERIAL_Destroy();
 		BIOS_Destroy();
-		CPU_Destroy();
 		MIXER_Destroy();
+		KEYBOARD_Destroy();
+		CPU_Destroy();
 		DOSBOX_Destroy();
+
+		MAPPER_Destroy();
 
 		control = {};
 	}
 
 private:
+	// Makes the first shell the current process and opens its standard
+	// handles on the console, like the shell does at startup. Without
+	// this, there's no standard input and output to read and write.
+	//
+	static void SetUpFirstShellProcess()
+	{
+		DOS_PSP psp(DOS_FIRST_SHELL);
+		psp.MakeNew(0);
+		dos.psp(DOS_FIRST_SHELL);
+
+		uint16_t handle = 0;
+		ASSERT_TRUE(DOS_OpenFile("CON", OPEN_READWRITE, &handle));
+		ASSERT_EQ(handle, STDIN);
+
+		ASSERT_TRUE(DOS_OpenFile("CON", OPEN_READWRITE, &handle));
+		ASSERT_EQ(handle, STDOUT);
+
+		ASSERT_TRUE(DOS_ForceDuplicateEntry(STDOUT, STDERR));
+	}
+
 	CommandLine command_line;
 };
 
