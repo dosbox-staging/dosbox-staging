@@ -206,6 +206,8 @@ public:
 
 enum TypeAction : bool { Press, Release };
 
+static void add_autotyped_key(CEvent& event, const bool is_pressed);
+
 // A helper function that either presses or releases the named button.
 static void type_button(const std::string& button, const TypeAction action)
 {
@@ -216,7 +218,7 @@ static void type_button(const std::string& button, const TypeAction action)
 		return event->GetName() == button_name;
 	});
 	if (it != events.end()) {
-		(*it)->Active(action == TypeAction::Press);
+		add_autotyped_key(**it, action == TypeAction::Press);
 	} else {
 		LOG_ERR("MAPPER: Couldn't find a button named '%s' to %s",
 		        button.c_str(),
@@ -1577,6 +1579,19 @@ public:
 
 	KBD_KEYS key;
 };
+
+// The buttons of AUTOTYPE are named after the keys of the US keyboard, and
+// they must type the same characters regardless of the keyboard layout in use.
+// With the German layout, "y" would type 'z' otherwise.
+//
+static void add_autotyped_key(CEvent& event, const bool is_pressed)
+{
+	if (const auto key_event = dynamic_cast<CKeyEvent*>(&event)) {
+		KEYBOARD_AddKey(key_event->key, is_pressed, KeyTranslation::UsKeyboard);
+	} else {
+		event.Active(is_pressed);
+	}
+}
 
 class CMouseButtonEvent final : public CTriggeredEvent {
 public:

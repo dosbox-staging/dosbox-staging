@@ -208,8 +208,25 @@ void KEYBOARD_Destroy();
 // execution before it applies the secure mode
 void KEYBOARD_WaitForSecureMode();
 
+// How the BIOS turns a key press into a character
+enum class KeyTranslation {
+	// According to the DOS keyboard layout in use
+	KeyboardLayout,
+
+	// As the key of the US keyboard, regardless of the keyboard layout. This
+	// is for typing keys on the user's behalf by their US names.
+	UsKeyboard,
+};
+
 // Simulate key press or release
-void KEYBOARD_AddKey(const KBD_KEYS key_type, const bool is_pressed);
+void KEYBOARD_AddKey(const KBD_KEYS key_type, const bool is_pressed,
+                     const KeyTranslation translation = KeyTranslation::KeyboardLayout);
+
+// The translation requested for the key whose scancode was last read from the
+// keyboard controller. The requested translation travels with the scancodes
+// of the key, so it applies to exactly that key, no matter when the guest gets
+// around to reading it.
+KeyTranslation KEYBOARD_GetLastReadKeyTranslation();
 
 // bit 0: scroll_lock, bit 1: num_lock, bit 2: caps_lock
 // TODO: BIOS does not update LEDs as of yet

@@ -164,6 +164,8 @@ void AUTOTYPE::AddMessages() {
 	        "  entered every [color=white]PACE[reset] seconds. The [color=light-cyan],[reset] character inserts an extra [color=white]PACE[reset] delay.\n"
 	        "  [color=white]WAIT[reset] and [color=white]PACE[reset] default to 2 and 0.5 seconds respectively if not specified.\n"
 	        "  A list of all available button names can be obtained using the -list option.\n"
+	        "  The buttons are named after the keys of the US keyboard and always type the\n"
+	        "  same characters, regardless of the keyboard layout in use.\n"
 	        "\n"
 	        "Examples:\n"
 	        "  [color=light-green]autotype[reset] -list\n"

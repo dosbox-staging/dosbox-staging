@@ -70,7 +70,12 @@ enum class KbdCommand : uint8_t { // PS/2 keyboard port commands
 
 // Internal keyboard scancode buffer
 
-std::vector<uint8_t> buffer[buffer_size] = {};
+struct ScanCodeFrame {
+	std::vector<uint8_t> bytes = {};
+	KeyTranslation translation = KeyTranslation::KeyboardLayout;
+};
+
+static ScanCodeFrame buffer[buffer_size] = {};
 
 static bool buffer_overflowed  = false;
 static size_t buffer_start_idx = 0;
@@ -80,6 +85,9 @@ static size_t buffer_num_used  = 0;
 
 static struct {
 	KBD_KEYS key   = KBD_NONE; // key which went typematic
+
+	KeyTranslation translation = KeyTranslation::KeyboardLayout;
+
 	uint16_t wait  = 0;
 	uint16_t pause = 0;
 	uint16_t rate  = 0;
@@ -160,13 +168,19 @@ static void maybe_transfer_buffer()
 		return;
 	}
 
-	I8042_AddKbdFrame(buffer[buffer_start_idx]);
+	const auto& frame = buffer[buffer_start_idx];
+
+	const auto bypasses_keyboard_layout = (frame.translation ==
+	                                       KeyTranslation::UsKeyboard);
+
+	I8042_AddKbdFrame(frame.bytes, bypasses_keyboard_layout);
 
 	--buffer_num_used;
 	buffer_start_idx = (buffer_start_idx + 1) % buffer_size;
 }
 
-static void buffer_add(const std::vector<uint8_t>& scan_code)
+static void buffer_add(const std::vector<uint8_t>& scan_code,
+                       const KeyTranslation translation)
 {
 	// Ignore unsupported keys, drop everything if buffer overflowed
 	if (scan_code.empty() || buffer_overflowed) {
@@ -183,7 +197,7 @@ static void buffer_add(const std::vector<uint8_t>& scan_code)
 
 	// We can safely add a scancode to the buffer
 	const size_t idx = (buffer_start_idx + buffer_num_used++) % buffer_size;
-	buffer[idx] = scan_code;
+	buffer[idx]      = {scan_code, translation};
 
 	// If possible, transfer the scancode to keyboard controller
 	maybe_transfer_buffer();
@@ -193,7 +207,8 @@ static void buffer_add(const std::vector<uint8_t>& scan_code)
 // Key repetition
 // ***************************************************************************
 
-static void typematic_update(const KBD_KEYS key_type, const bool is_pressed)
+static void typematic_update(const KBD_KEYS key_type, const bool is_pressed,
+                             const KeyTranslation translation)
 {
 	if (key_type == KBD_pause || key_type == KBD_printscreen) {
 		// Key is excluded from being repeated
@@ -203,7 +218,8 @@ static void typematic_update(const KBD_KEYS key_type, const bool is_pressed)
 		} else {
 			repeat.wait = repeat.pause;
 		}
-		repeat.key = key_type;
+		repeat.key         = key_type;
+		repeat.translation = translation;
 	} else if (repeat.key == key_type) {
 		// Currently repeated key being released
 		repeat.key  = KBD_NONE;
@@ -214,7 +230,8 @@ static void typematic_update(const KBD_KEYS key_type, const bool is_pressed)
 #ifdef ENABLE_SCANCODE_SET_3
 static void typematic_update_set3(const KBD_KEYS key_type,
                                   const std::vector<uint8_t>& scan_code,
-                                  const bool is_pressed)
+                                  const bool is_pressed,
+                                  const KeyTranslation translation)
 {
 	// Ignore keys not supported in set 3
 	if (scan_code.empty()) {
@@ -235,7 +252,7 @@ static void typematic_update_set3(const KBD_KEYS key_type,
 	}
 
 	// For all the other keys, follow usual behavior
-	typematic_update(key_type, is_pressed);
+	typematic_update(key_type, is_pressed, translation);
 }
 #endif // ENABLE_SCANCODE_SET_3
 
@@ -261,7 +278,7 @@ static void typematic_tick()
 
 	// Simulate key press
 	constexpr bool is_pressed = true;
-	KEYBOARD_AddKey(repeat.key, is_pressed);
+	KEYBOARD_AddKey(repeat.key, is_pressed, repeat.translation);
 }
 
 // ***************************************************************************
@@ -648,7 +665,8 @@ void KEYBOARD_NotifyReadyForFrame()
 	maybe_transfer_buffer();
 }
 
-void KEYBOARD_AddKey(const KBD_KEYS key_type, const bool is_pressed)
+void KEYBOARD_AddKey(const KBD_KEYS key_type, const bool is_pressed,
+                     const KeyTranslation translation)
 {
 	if (should_wait_for_secure_mode && !control->SecureMode()) {
 		warn_waiting_for_secure_mode();
@@ -664,24 +682,31 @@ void KEYBOARD_AddKey(const KBD_KEYS key_type, const bool is_pressed)
 	switch (code_set) {
 	case CodeSet1:
 		scan_code = KEYBOARD_GetScanCode1(key_type, is_pressed);
-		typematic_update(key_type, is_pressed);
+		typematic_update(key_type, is_pressed, translation);
 		break;
 #ifdef ENABLE_SCANCODE_SET_2
 	case CodeSet2:
 		scan_code = KEYBOARD_GetScanCode2(key_type, is_pressed);
-		typematic_update(key_type, is_pressed);
+		typematic_update(key_type, is_pressed, translation);
 		break;
 #endif // ENABLE_SCANCODE_SET_2
 #ifdef ENABLE_SCANCODE_SET_3
 	case CodeSet3:
 		scan_code = KEYBOARD_GetScanCode3(key_type, is_pressed);
-		typematic_update_set3(key_type, scan_code, is_pressed);
+		typematic_update_set3(key_type, scan_code, is_pressed, translation);
 		break;
 #endif // ENABLE_SCANCODE_SET_3
 	default: assert(false); break;
 	}
 
-	buffer_add(scan_code);
+	buffer_add(scan_code, translation);
+}
+
+KeyTranslation KEYBOARD_GetLastReadKeyTranslation()
+{
+	return I8042_DidLastReadKbdByteBypassKeyboardLayout()
+	             ? KeyTranslation::UsKeyboard
+	             : KeyTranslation::KeyboardLayout;
 }
 
 uint8_t KEYBOARD_GetLedState()

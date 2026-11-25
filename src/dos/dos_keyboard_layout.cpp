@@ -16,6 +16,7 @@
 #include "dos_code_page.h"
 #include "dos_locale.h"
 #include "gui/mapper.h"
+#include "hardware/input/keyboard.h"
 #include "ints/bios_disk.h"
 #include "ints/int10.h"
 #include "utils/math_utils.h"
@@ -812,6 +813,15 @@ static std::unique_ptr<KeyboardLayout> loaded_layout = {};
 bool DOS_LayoutKey(const uint8_t key, const uint8_t flags1,
                    const uint8_t flags2, const uint8_t flags3)
 {
+	// The BIOS handles the keys we don't as the keys of the US keyboard,
+	// which is exactly what a key bypassing the keyboard layout asks for.
+	// The request belongs to the scancode the interrupt handler has just
+	// read from the keyboard controller.
+	//
+	if (KEYBOARD_GetLastReadKeyTranslation() == KeyTranslation::UsKeyboard) {
+		return false;
+	}
+
 	if (loaded_layout) {
 		return loaded_layout->SetLayoutKey(key, flags1, flags2, flags3);
 	} else {
