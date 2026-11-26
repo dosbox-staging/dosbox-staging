@@ -5,6 +5,7 @@
 #include "dosbox.h"
 
 #include <algorithm>
+#include <array>
 #include <cassert>
 #include <cctype>
 #include <cmath>
@@ -856,8 +857,13 @@ public:
 				old_button_state[i]=button_pressed[i];
 			}
 		}
+		std::array<Sint16, MAXAXIS> axis_pos = {};
+		for (int i = 0; i < axes; ++i) {
+			axis_pos[i] = SDL_GetJoystickAxis(sdl_joystick, i);
+		}
+
 		for (int i = 0; i < axes; i++) {
-			Sint16 caxis_pos = SDL_GetJoystickAxis(sdl_joystick, i);
+			Sint16 caxis_pos = axis_pos[i];
 			/* activate bindings for joystick position */
 			if (caxis_pos>1) {
 				if (old_neg_axis_state[i]) {
