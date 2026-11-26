@@ -51,13 +51,6 @@ float PcSpeakerImpulse::CalcImpulse(const double t) const
 	return res;
 }
 
-void PcSpeakerImpulse::HandleWakeUp()
-{
-	if (channel->WakeUp()) {
-		prev_amplitude = NeutralAmplitude;
-	}
-}
-
 void PcSpeakerImpulse::InitializeLut()
 {
 	const auto sample_step = 1.0 /
@@ -76,6 +69,8 @@ void PcSpeakerImpulse::AddImpulse(const float index, const int16_t amplitude)
 	if (amplitude == prev_amplitude) {
 		return;
 	}
+	// A full low-to-high transition keeps the original impulse gain.
+	const auto step = (amplitude - prev_amplitude) * 0.5f;
 	prev_amplitude = amplitude;
 
 	const auto clamped = std::clamp(index, 0.0f, 1.0f);
@@ -95,7 +90,7 @@ void PcSpeakerImpulse::AddImpulse(const float index, const int16_t amplitude)
 
 	for (auto k = k_start; k < k_end; ++k) {
 		waveform[static_cast<size_t>(offset) + static_cast<size_t>(k)] +=
-		        amplitude *
+		        step *
 		        impulse_lut[static_cast<size_t>(phase) +
 		                    static_cast<size_t>(k) * static_cast<size_t>(SincOversamplingFactor)];
 	}
@@ -110,6 +105,18 @@ int16_t PcSpeakerImpulse::OutputAmplitude(const bool speaker_enabled,
 	return (output == OutputState::High) ? PositiveAmplitude : NegativeAmplitude;
 }
 
+int16_t PcSpeakerImpulse::GetOutputAmplitude() const
+{
+	// Divisor 2 has equal high and low times, so the ultrasonic waveform
+	// averages to the midpoint. Divisor 1 has no low half-cycle and stays
+	// high. Paratrooper switches between these levels for its rotor sound.
+	if (port_b.speaker_output && port_b.timer2_gating &&
+	    undersampled_count == 2) {
+		return NeutralAmplitude;
+	}
+	return OutputAmplitude(port_b.speaker_output, pit_counter.GetOutputState());
+}
+
 void PcSpeakerImpulse::ApplyTransitions(const std::vector<PitCounter::Transition>& transitions,
                                         const float index_base,
                                         const bool speaker_enabled)
@@ -122,7 +129,7 @@ void PcSpeakerImpulse::ApplyTransitions(const std::vector<PitCounter::Transition
 
 float PcSpeakerImpulse::SyncPitToTick()
 {
-	HandleWakeUp();
+	channel->WakeUp();
 
 	const auto index = static_cast<float>(PIC_TickIndex());
 	const auto delta = index - pit_last_index;
@@ -147,8 +154,17 @@ void PcSpeakerImpulse::SetPITControl(const PitMode pit_mode)
 #endif
 	const auto index = SyncPitToTick();
 
+	const bool restore_output = undersampled_count == 2;
+	undersampled_count        = 0;
 	const auto t = pit_counter.WriteControl(pit_mode);
 	ApplyTransitions(t, index, port_b.speaker_output);
+	const bool leaving_square_wave = pit_counter.GetMode() != PitMode::SquareWave;
+	if (restore_output || (leaving_square_wave && last_noise_reload_ms.has_value())) {
+		AddImpulse(index, GetOutputAmplitude());
+	}
+	if (leaving_square_wave) {
+		last_noise_reload_ms.reset();
+	}
 }
 
 // Count register written
@@ -162,7 +178,7 @@ void PcSpeakerImpulse::SetCounter(const int counter, const PitMode pit_mode)
 	         pit_counter.IsGateEnabled(),
 	         pit_counter.IsMode3Active(),
 	         static_cast<int>(port_b.speaker_output),
-	         static_cast<int>(have_undersampled_reload));
+	         undersampled_count);
 #endif
 	const auto index = SyncPitToTick();
 
@@ -170,16 +186,26 @@ void PcSpeakerImpulse::SetCounter(const int counter, const PitMode pit_mode)
 	                        pit_mode == PitMode::SquareWaveAlias);
 
 	if (is_square && counter > 0 && counter < MinimumCounter) {
-		// Counter is too high-frequency to represent at our sample
-		// rate. Rapid reloads of undersampled counts are used by some
-		// programs as a noise source; toggle amplitude for each such
-		// reload.
-		const auto now_ms = static_cast<float>(PIC_FullIndex());
-		const auto previous_reload_gap_ms = now_ms - undersampled_reload_ms;
-		const auto is_rapid_reload = have_undersampled_reload &&
-		                             previous_reload_gap_ms >= 0.0f &&
-		                             previous_reload_gap_ms <=
-		                                     MaxUndersampledReloadGapMs;
+		// Stop rendering the previous oscillator. Divisors 1 and 2
+		// have distinct average levels. Keep the rapid-reload noise
+		// approximation for the other ultrasonic divisors.
+		pit_counter.Invalidate();
+
+		const auto previous_count = undersampled_count;
+		undersampled_count        = counter;
+
+		if (counter <= 2) {
+			last_noise_reload_ms.reset();
+			AddImpulse(index, GetOutputAmplitude());
+			return;
+		}
+
+		const auto now_ms = PIC_FullIndex();
+		const auto reload_gap_ms = now_ms - last_noise_reload_ms.value_or(now_ms);
+		const bool is_rapid_reload = last_noise_reload_ms.has_value() &&
+		                             reload_gap_ms >= 0.0 &&
+		                             reload_gap_ms <= MaxUndersampledReloadGapMs;
+		last_noise_reload_ms = now_ms;
 
 		if (port_b.timer2_gating_and_speaker_out.all() && is_rapid_reload) {
 			// Toggle — emit whatever the opposite of current output is
@@ -187,29 +213,23 @@ void PcSpeakerImpulse::SetCounter(const int counter, const PitMode pit_mode)
 			                              ? NegativeAmplitude
 			                              : PositiveAmplitude;
 			AddImpulse(index, toggled);
+		} else if (previous_count == 2) {
+			AddImpulse(index, GetOutputAmplitude());
 		}
 
-		// Stop the PIT from producing further output at the old
-		// frequency. Without this, Advance() keeps oscillating at the
-		// prior valid period.
-		pit_counter.Invalidate();
-
-		have_undersampled_reload = true;
-		undersampled_reload_ms   = now_ms;
 		return;
 	}
 
-	have_undersampled_reload = false;
+	const bool was_undersampled = undersampled_count != 0 ||
+	                              last_noise_reload_ms.has_value();
+	undersampled_count         = 0;
+	last_noise_reload_ms.reset();
 
 	const auto t = pit_counter.WriteCount(counter);
 	ApplyTransitions(t, index, port_b.speaker_output);
 
-	// If a gate-rising edge was suppressed while in undersampled state,
-	// pit_counter.gate is still false. Sync it now so oscillation can start.
-	// In the normal path (gate already synced), EnableGate(true) is a no-op.
-	if (port_b.timer2_gating) {
-		const auto gate_t = pit_counter.EnableGate(true);
-		ApplyTransitions(gate_t, index, port_b.speaker_output);
+	if (was_undersampled) {
+		AddImpulse(index, GetOutputAmplitude());
 	}
 
 #ifdef DEBUG_PCSPEAKER
@@ -232,7 +252,7 @@ void PcSpeakerImpulse::SetType(const PpiPortB& new_port_b)
 	         static_cast<int>(port_b.speaker_output),
 	         static_cast<int>(port_b.timer2_gating),
 	         pit_counter.IsMode3Active(),
-	         static_cast<int>(have_undersampled_reload));
+	         undersampled_count);
 #endif
 	const auto index = SyncPitToTick();
 
@@ -240,26 +260,17 @@ void PcSpeakerImpulse::SetType(const PpiPortB& new_port_b)
 	const bool speaker_enabled = new_port_b.speaker_output;
 	port_b.data                = new_port_b.data;
 
-	const bool gate_triggered = gate_changed && new_port_b.timer2_gating;
-
 	if (gate_changed) {
-		// Don't allow a gate-rising edge to restart the PIT while we
-		// are in the undersampled-suppressed state; the stored period
-		// is ultrasonic. Gate-falling still propagates so modes 2/3
-		// correctly force output HIGH.
-		if (!gate_triggered || !have_undersampled_reload) {
-			const auto t = pit_counter.EnableGate(new_port_b.timer2_gating);
-			ApplyTransitions(t, index, speaker_enabled);
-		}
+		const auto t = pit_counter.EnableGate(new_port_b.timer2_gating);
+		ApplyTransitions(t, index, speaker_enabled);
 	}
 
-	AddImpulse(index,
-	           OutputAmplitude(speaker_enabled, pit_counter.GetOutputState()));
+	AddImpulse(index, GetOutputAmplitude());
 }
 
 void PcSpeakerImpulse::PicCallback(const int requested_frames)
 {
-	HandleWakeUp();
+	channel->WakeUp();
 
 	// Advance PIT to end of this 1 ms tick
 	const auto remaining = 1.0f - pit_last_index;
@@ -289,9 +300,6 @@ void PcSpeakerImpulse::PicCallback(const int requested_frames)
 	}
 
 	// Pad with silence if waveform deque ran out
-	if (remaining_frames > 0) {
-		prev_amplitude = NeutralAmplitude;
-	}
 	while (remaining_frames > 0) {
 		render_buf.emplace_back(NeutralAmplitude);
 		++tally_of_silence;

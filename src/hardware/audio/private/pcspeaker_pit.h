@@ -86,6 +86,10 @@ private:
 	OutputState output_state = OutputState::High;
 	bool counting            = false;
 
+	// A suppressed count leaves the previous period unusable until the
+	// next count load, even if a control word is written in between.
+	bool count_invalidated = false;
+
 	float phase_ms      = 0.0f;
 	float period_ms     = MaxPeriodMs;
 	float half_ms       = MaxPeriodMs / 2.0f;
