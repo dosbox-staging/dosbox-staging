@@ -44,7 +44,7 @@ COMPAT_VARYING vec2 v_texCoord;
 void main()
 {
 	gl_Position = a_position;
-	v_texCoord = vec2(a_position.x + 1.0, 1.0 - a_position.y) / 2.0 * INPUT_TEXTURE_SIZE / INPUT_TEXTURE_SIZE;
+	v_texCoord = vec2(a_position.x + 1.0, 1.0 - a_position.y) / 2.0;
 }
 
 #elif defined(FRAGMENT)
