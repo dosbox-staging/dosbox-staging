@@ -16,6 +16,8 @@
 //    licence in this forum post:
 //        http://board.byuu.org/viewtopic.php?p=57295#p57295
 
+#pragma name Main_Pass1
+
 #define INTERPOLATE_IN_LINEAR_GAMMA 1.0
 
 uniform vec2 INPUT_SIZE_0;
