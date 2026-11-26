@@ -40,7 +40,7 @@ uniform vec2 INPUT_SIZE_0;
 #define COMPAT_PRECISION
 #endif
 
-COMPAT_ATTRIBUTE vec4 a_position;
+layout(location = 0) in vec4 a_position;
 COMPAT_VARYING vec2 v_texCoord;
 
 void main()
