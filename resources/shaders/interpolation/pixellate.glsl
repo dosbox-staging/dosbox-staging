@@ -1,4 +1,4 @@
-#version 120
+#version 330 core
 
 //    Pixellate Shader
 //    Copyright (c) 2011, 2012 Fes
