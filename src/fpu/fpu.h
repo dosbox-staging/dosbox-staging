@@ -5,6 +5,7 @@
 #ifndef DOSBOX_FPU_H
 #define DOSBOX_FPU_H
 
+#include <bit>
 #include <optional>
 
 #ifndef DOSBOX_DOSBOX_H
@@ -17,6 +18,10 @@
 #endif
 
 #include "cpu/mmx.h"
+
+#if !C_FPU_X86
+#include "fpu/float80.h"
+#endif
 
 void FPU_ESC0_Normal(Bitu rm);
 void FPU_ESC0_EA(Bitu func,PhysPt ea);
@@ -35,11 +40,11 @@ void FPU_ESC6_EA(Bitu func,PhysPt ea);
 void FPU_ESC7_Normal(Bitu rm);
 void FPU_ESC7_EA(Bitu func,PhysPt ea);
 
-#include <bit>
-#include <optional>
-
 struct FPU_Reg {
 	double d;
+#if !C_FPU_X86
+	x87::Float value = {};
+#endif
 
 	constexpr FPU_Reg() noexcept : d(0.0) {}
 	constexpr FPU_Reg(double v) noexcept : d(v) {}
@@ -93,22 +98,32 @@ enum FPU_Round : uint8_t {
 };
 
 struct FPU_rec {
-	FPU_Reg regs[9]         = {};
+	FPU_Reg regs[9] = {};
 #if !C_FPU_X86
-    // for FILD/FIST 64-bit memcpy fix
-	int64_t regs_memcpy[9] = {};
+	int64_t regs_memcpy[9] = {}; // Existing fast backend
 #endif
-	FPU_P_Reg p_regs[9]     = {};
-	MMX_reg mmx_regs[8]     = {};
-	FPU_Tag tags[9]         = {};
-	uint16_t cw             = 0;
-	uint16_t cw_mask_all    = 0;
-	uint16_t sw             = 0;
-	uint32_t top            = 0;
-	FPU_Round round         = {};
+	FPU_P_Reg p_regs[9]  = {};
+	MMX_reg mmx_regs[8]  = {};
+	FPU_Tag tags[9]      = {};
+	uint16_t cw          = 0;
+	uint16_t cw_mask_all = 0;
+	uint16_t sw          = 0;
+	uint32_t top         = 0;
+	FPU_Round round      = {};
 };
 
 extern FPU_rec fpu;
+
+#if !C_FPU_X86
+struct FPU_Operations {
+#define FPU_OPERATION(name, args) void(*name) args;
+#include "fpu_operations.h"
+#undef FPU_OPERATION
+};
+extern FPU_Operations fpu_operations;
+void FPU_SelectBackend(const bool accurate);
+bool FPU_IsAccurate();
+#endif
 
 #define TOP fpu.top
 #define STV(i)  ( (fpu.top+ (i) ) & 7 )
