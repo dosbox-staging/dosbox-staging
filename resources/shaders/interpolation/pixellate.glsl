@@ -73,10 +73,10 @@ precision mediump float;
 
 COMPAT_VARYING vec2 v_texCoord;
 
-uniform vec2 rubyOutputSize;
+uniform vec2 OUTPUT_TEXTURE_SIZE;
 uniform sampler2D rubyTexture;
 
-#define OutputSize rubyOutputSize
+#define OutputSize OUTPUT_TEXTURE_SIZE
 #define TextureSize rubyTextureSize
 #define InputSize INPUT_TEXTURE_SIZE
 #define Texture rubyTexture
