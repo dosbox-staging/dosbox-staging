@@ -76,7 +76,6 @@ uniform vec2 OUTPUT_SIZE;
 uniform sampler2D INPUT_TEXTURE_0;
 
 #define OutputSize OUTPUT_SIZE
-#define TextureSize INPUT_SIZE_0
 #define InputSize INPUT_SIZE_0
 #define Texture INPUT_TEXTURE_0
 #define TEX0 v_texCoord
@@ -85,7 +84,7 @@ uniform sampler2D INPUT_TEXTURE_0;
 #define Source Texture
 #define vTexCoord TEX0.xy
 
-#define SourceSize vec4(TextureSize, 1.0 / TextureSize) //either TextureSize or InputSize
+#define SourceSize vec4(InputSize, 1.0 / InputSize)
 #define outsize vec4(OutputSize, 1.0 / OutputSize)
 
 void main()
