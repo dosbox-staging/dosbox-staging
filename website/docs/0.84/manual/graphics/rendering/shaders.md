@@ -287,7 +287,7 @@ You can set the shader in the `[render]` configuration section.
 
     The bundled shaders include:
 
-    - **Interpolation**: `sharp`, `bilinear`, `nearest`, `catmull-rom`
+    - **Interpolation**: `sharp`, `bilinear`, `nearest`, `catmull-rom`, `pixellate`
 
     - **CRT**: `crt-hyllian`,
       `vga-1080p`, `vga-1080p-fake-double-scan` (all used by the adaptive CRT
