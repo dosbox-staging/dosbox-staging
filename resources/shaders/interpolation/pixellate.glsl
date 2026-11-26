@@ -74,12 +74,12 @@ precision mediump float;
 COMPAT_VARYING vec2 v_texCoord;
 
 uniform vec2 OUTPUT_TEXTURE_SIZE;
-uniform sampler2D rubyTexture;
+uniform sampler2D INPUT_TEXTURE;
 
 #define OutputSize OUTPUT_TEXTURE_SIZE
 #define TextureSize rubyTextureSize
 #define InputSize INPUT_TEXTURE_SIZE
-#define Texture rubyTexture
+#define Texture INPUT_TEXTURE
 #define TEX0 v_texCoord
 
 // fragment compatibility #defines
