@@ -19,7 +19,7 @@
 #define INTERPOLATE_IN_LINEAR_GAMMA 1.0
 
 uniform vec2 rubyTextureSize;
-uniform vec2 rubyInputSize;
+uniform vec2 INPUT_TEXTURE_SIZE;
 
 #if defined(VERTEX)
 
@@ -45,7 +45,7 @@ COMPAT_VARYING vec2 v_texCoord;
 void main()
 {
 	gl_Position = a_position;
-	v_texCoord = vec2(a_position.x + 1.0, 1.0 - a_position.y) / 2.0 * rubyInputSize / rubyTextureSize;
+	v_texCoord = vec2(a_position.x + 1.0, 1.0 - a_position.y) / 2.0 * INPUT_TEXTURE_SIZE / rubyTextureSize;
 }
 
 #elif defined(FRAGMENT)
@@ -78,7 +78,7 @@ uniform sampler2D rubyTexture;
 
 #define OutputSize rubyOutputSize
 #define TextureSize rubyTextureSize
-#define InputSize rubyInputSize
+#define InputSize INPUT_TEXTURE_SIZE
 #define Texture rubyTexture
 #define TEX0 v_texCoord
 
