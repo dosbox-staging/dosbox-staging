@@ -18,8 +18,7 @@
 
 #define INTERPOLATE_IN_LINEAR_GAMMA 1.0
 
-uniform vec2 rubyTextureSize;
-uniform vec2 rubyInputSize;
+uniform vec2 INPUT_SIZE_0;
 
 #if defined(VERTEX)
 
@@ -45,7 +44,7 @@ COMPAT_VARYING vec2 v_texCoord;
 void main()
 {
 	gl_Position = a_position;
-	v_texCoord = vec2(a_position.x + 1.0, 1.0 - a_position.y) / 2.0 * rubyInputSize / rubyTextureSize;
+	v_texCoord = vec2(a_position.x + 1.0, 1.0 - a_position.y) / 2.0;
 }
 
 #elif defined(FRAGMENT)
@@ -73,13 +72,13 @@ precision mediump float;
 
 COMPAT_VARYING vec2 v_texCoord;
 
-uniform vec2 rubyOutputSize;
-uniform sampler2D rubyTexture;
+uniform vec2 OUTPUT_SIZE;
+uniform sampler2D INPUT_TEXTURE_0;
 
-#define OutputSize rubyOutputSize
-#define TextureSize rubyTextureSize
-#define InputSize rubyInputSize
-#define Texture rubyTexture
+#define OutputSize OUTPUT_SIZE
+#define TextureSize INPUT_SIZE_0
+#define InputSize INPUT_SIZE_0
+#define Texture INPUT_TEXTURE_0
 #define TEX0 v_texCoord
 
 // fragment compatibility #defines
