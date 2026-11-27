@@ -46,6 +46,7 @@ void PitCounter::Invalidate()
 	mode3_active       = false;
 	mode3_retain_phase = true;
 	counting           = false;
+	count_invalidated  = true;
 }
 
 PitMode PitCounter::Canonical(const PitMode m)
@@ -96,6 +97,7 @@ std::vector<PitCounter::Transition> PitCounter::WriteControl(const PitMode new_m
 std::vector<PitCounter::Transition> PitCounter::WriteCount(const int count)
 {
 	std::vector<Transition> out;
+	count_invalidated = false;
 
 	// Per 8254 spec (Figure 22): count 0 is equivalent to 65536 (2^16)
 	const int effective_count = (count == 0) ? 0x10000 : count;
@@ -172,6 +174,13 @@ std::vector<PitCounter::Transition> PitCounter::EnableGate(const bool new_gate)
 	const bool rising  = !gate && new_gate;
 	const bool falling = gate && !new_gate;
 	gate               = new_gate;
+
+	// Record the pin level even when the old count cannot be restarted.
+	// Loading a fresh count must not manufacture a gate edge.
+	if (rising && count_invalidated) {
+		mode3_retain_phase = false;
+		return out;
+	}
 
 	switch (mode) {
 	case PitMode::InterruptOnTerminalCount:

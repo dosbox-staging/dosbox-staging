@@ -9,6 +9,7 @@
 
 #include <array>
 #include <deque>
+#include <optional>
 #include <string>
 #include <vector>
 
@@ -46,12 +47,7 @@ private:
 	// Output amplitude for a given speaker-enable and PIT output level.
 	static int16_t OutputAmplitude(const bool speaker_enabled,
 	                               const OutputState output);
-
-	// Wake the channel and reset dedup state if we were sleeping. While
-	// asleep the mixer emits silence, so prev_amplitude must be reset to
-	// neutral on wake or AddImpulse may dedup-skip a legitimate emission.
-	// Call at the top of any public entry point that may produce impulses.
-	void HandleWakeUp();
+	int16_t GetOutputAmplitude() const;
 
 	static constexpr auto DeviceName = ChannelName::PcSpeaker;
 	static constexpr auto ModelName  = "impulse";
@@ -121,13 +117,15 @@ private:
 	// Programmable Peripheral Interface (PPI).
 	PpiPortB port_b = {};
 
-	// Undersampled mode 3 reload tracking
-	bool have_undersampled_reload = false;
-	float undersampled_reload_ms  = 0.0f;
+	// The active count controls the averaged output level.
+	int undersampled_count = 0;
 
-	// Amplitude at last impulse. Re-emitting an identical level would apply
-	// another impulse step at the same level and incorrectly bias loudness.
-	int16_t prev_amplitude = NeutralAmplitude;
+	// The last noise reload survives repeated Mode 3 control writes.
+	std::optional<double> last_noise_reload_ms = {};
+
+	// Keep the last level even while the mixer is asleep so the next
+	// transition is relative to the level that the guest left on the pin.
+	int16_t prev_amplitude = NegativeAmplitude;
 
 	std::vector<float> render_buf = {};
 };
