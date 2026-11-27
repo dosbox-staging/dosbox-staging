@@ -3,6 +3,8 @@
 
 #include "xcopy.h"
 
+#include "cpu/callback.h"
+#include "cpu/registers.h"
 #include "misc/support.h"
 #include "more_output.h"
 #include "utils/ascii.h"
@@ -169,9 +171,31 @@ static std::optional<uint16_t> parse_date_arg(const std::string& str)
 	return DOS_PackDate(year, month, day);
 }
 
+// Must be called after CALLBACK_Idle(), which runs the emulated machine
+// so that pending key presses reach the BIOS keyboard buffer.
+static bool has_ctrlc_been_pressed()
+{
+	// Stores in reg_al the pressed key
+	reg_ah = is_machine_ega_or_better() ? 0x11 : 0x1;
+	CALLBACK_RunRealInt(0x16);
+	if (GETFLAG(ZF) || reg_al != Ascii::CtrlC) {
+		return false;
+	}
+
+	// Removes Ctrl+C from the buffer
+	reg_ah = is_machine_ega_or_better() ? 0x10 : 0x0;
+	CALLBACK_RunRealInt(0x16);
+	return true;
+}
+
 void XCOPY::AfterRun(const XCopyError error)
 {
-	WriteOut(MSG_Get("PROGRAM_XCOPY_FILES_COPIED"), copied_count);
+	if (error == XCopyError::Interrupted) {
+		WriteOut("^C\n");
+	} else {
+		WriteOut(MSG_Get("PROGRAM_XCOPY_FILES_COPIED"), copied_count);
+	}
+
 	result_errorcode = enum_val(error);
 }
 
@@ -326,6 +350,11 @@ XCopyError XCOPY::InitializeDestination(const std::string& value)
 		WriteOut(MSG_Get("PROGRAM_XCOPY_FD_PROMPT"),
 		         get_basename(canonicalized).c_str());
 		const auto maybe_letter = PromptForLetter("fd", false);
+
+		if (maybe_letter == Ascii::CtrlC) {
+			return XCopyError::Interrupted;
+		}
+
 		if (!maybe_letter) {
 			return XCopyError::Failure;
 		}
@@ -443,7 +472,7 @@ XCopyError XCOPY::Initialize()
 			is_stdin_broken = true;
 		}
 
-		if (DOSBOX_IsShutdownRequested()) {
+		if (DOSBOX_IsShutdownRequested() || answer == Ascii::CtrlC) {
 			return XCopyError::Interrupted;
 		}
 
@@ -503,6 +532,11 @@ XCopyError XCOPY::BuildSourceSnapshot()
 	paths.push_back("");
 
 	while (!paths.empty()) {
+		if (CALLBACK_Idle() || has_ctrlc_been_pressed()) {
+			dos.dta(original_dta_ptr);
+			return XCopyError::Interrupted;
+		}
+
 		const auto path = paths.back();
 		paths.pop_back();
 		const auto from_base = path_join(src_path, path);
@@ -515,7 +549,7 @@ XCopyError XCOPY::BuildSourceSnapshot()
 		// Filter the files by date and archive flag, if specified
 		std::vector<DOS_DTA::Result> filtered = {};
 		for (const auto& file : files) {
-			if (DOSBOX_IsShutdownRequested()) {
+			if (CALLBACK_Idle() || has_ctrlc_been_pressed()) {
 				dos.dta(original_dta_ptr);
 				return XCopyError::Interrupted;
 			}
@@ -533,7 +567,14 @@ XCopyError XCOPY::BuildSourceSnapshot()
 				                                 file.name);
 				WriteOut(MSG_Get("PROGRAM_XCOPY_COPY_PROMPT"),
 				         from_path.c_str());
+
 				const auto maybe_letter = PromptForLetter("yn", false);
+
+				if (maybe_letter == Ascii::CtrlC) {
+					dos.dta(original_dta_ptr);
+					return XCopyError::Interrupted;
+				}
+
 				if (!maybe_letter || maybe_letter == 'n') {
 					continue;
 				}
@@ -669,11 +710,14 @@ std::optional<char> XCOPY::PromptForLetter(const std::string& allowed,
 			return {};
 		}
 
+		if (answer == Ascii::CtrlC) {
+			return Ascii::CtrlC;
+		}
+
 		// cr_confirms is used to request the user to confirm their
 		// selection with a CR (produced by the Enter key). If false the
 		// loop ends immediately on any valid char.
-		requires_confirm = cr_confirms &&
-		                   answer != Ascii::ControlCode::CarriageReturn;
+		requires_confirm = cr_confirms && answer != Ascii::CarriageReturn;
 
 		const char letter = tolower(answer);
 		if (allowed.contains(letter)) {
@@ -704,7 +748,7 @@ XCopyError XCOPY::CopyToDestination()
 		}
 
 		for (const auto& file : files) {
-			if (DOSBOX_IsShutdownRequested()) {
+			if (CALLBACK_Idle() || has_ctrlc_been_pressed()) {
 				return XCopyError::Interrupted;
 			}
 
@@ -739,6 +783,12 @@ XCopyError XCOPY::CopyToDestination()
 
 				// TODO: make PromptForLetter use WriteErr here
 				const auto maybe_letter = PromptForLetter("yna", true);
+
+				if (maybe_letter == Ascii::CtrlC) {
+					DOS_CloseFile(from_handle);
+					return XCopyError::Interrupted;
+				}
+
 				if (!maybe_letter || maybe_letter == 'n') {
 					DOS_CloseFile(from_handle);
 					continue;
