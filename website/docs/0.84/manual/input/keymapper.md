@@ -79,6 +79,10 @@ play keyboard-only DOS games with a controller. The basic approach:
 4. Repeat for all keys the game uses.
 5. Click **Exit** to return to the game.
 
+If you bind a gamepad's analog stick to the arrow keys, enable
+[`circularinput`](joystick.md#circularinput) so that pushing the stick
+diagonally presses both keys.
+
 !!! tip
 
     When using a controller this way, set `joysticktype = hidden` in the
